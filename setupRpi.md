@@ -61,7 +61,7 @@ This guide assumes you are using a Raspberry pi 3.
         ~ $ sudo du -sh /var/log
         ```
 
-- Setup a direct ethernet connection for connection with CompactRio
+- Setup a direct ethernet connection for connection with NI myRIO
 
     Let your Raspberry Pi acts as a mini-server directly connected to another device
     
@@ -102,16 +102,16 @@ This guide assumes you are using a Raspberry pi 3.
 
 
 
+<!-- 14.	EXFAT stuff 
+sudo apt-get install exfat-fuse exfat-utils
+Rclone install: -->
+
+
 <!-- Connect the Ethernet cable: Plug one end of the cable into the Ethernet port on your Raspberry Pi and the other end into the Ethernet port of the other device.
 Configure Static IP (if necessary): By default, your Raspberry Pi might try to obtain an IP address automatically (DHCP). If you want to directly connect to another device without relying on a DHCP server, you'll need to configure a static IP address on both your Raspberry Pi and the other device.
 For Raspberry Pi: Edit the /etc/dhcpcd.conf file and set a static IP address, subnet mask, gateway (usually your Pi's IP), and DNS server. You can find tutorials on setting static IP for Raspberry Pi online.
 For other device: The method to set a static IP varies depending on your device's operating system. Refer to your device's manual or search online for specific instructions. -->
 
-
-
-<!-- 14.	EXFAT stuff 
-sudo apt-get install exfat-fuse exfat-utils
-Rclone install: -->
 
 
 

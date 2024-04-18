@@ -1,4 +1,4 @@
-# Energy Data Socket
+# Energy Price Data Socket
 
 To communicate data between NI myRIO and Raspberry Pi we will use sockets as they provide lightweight, direct, and efficient communication for resource-constrained devices, with custom data formats and protocols. 
 Sockets enable real-time data exchange between devices, making them suitable for applications where low latency is critical. Web servers might introduce some overhead due to the HTTP request-response cycle.
@@ -21,6 +21,58 @@ Raspberry Pi Python Sockets Tutorial: https://realpython.com/courses/python-sock
 On each NI myRIO, a client socket is created and a connection is established to the server socket's IP address and port number running on the Raspberry Pi.
 
 NI myRIO TCP/IP Communication: https://forums.ni.com/t5/Academic-Hardware-Products-myDAQ/Possible-to-connect-the-myRIO-to-a-router-via-USB-to-Ethernet/td-p/2785470
+
+## Test Data socket connection
+
+Run a simple server program on the Raspberry pi
+
+```Python
+import socket			 
+
+s = socket.socket()		 
+print ("Socket successfully created")
+
+port = 12345			
+
+s.bind(('192.168.0.11', port))		 
+print ("socket binded to %s" %(port)) 
+
+# put the socket into listening mode 
+s.listen(5)	 
+print ("socket is listening")		 
+
+# a forever loop until we interrupt it or 
+# an error occurs 
+while True: 
+
+# Establish connection with client. 
+c, addr = s.accept()	 
+print ('Got connection from', addr )
+
+# send a thank you message to the client. encoding to send byte type. 
+c.send('Thank you for connecting'.encode()) 
+
+# Close the connection with the client 
+c.close()
+
+# Breaking once connection closed
+break
+
+```
+
+Open ssh connection with NI myRIO 
+
+```console
+~ $ ssh admin@192.168.0.11
+```
+
+Run Telnet client
+
+```console
+telnet 192.168.0.10 12345
+```
+
+Message received 'Thank you for connecting'.
 
 
 ## Data structure
