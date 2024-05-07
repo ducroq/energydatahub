@@ -3,7 +3,6 @@ import json
 import configparser
 import logging
 import datetime
-from cerberus import Validator
 
 SETTINGS_FILE_NAME = 'secrets.ini'
 LOGGING_FILE_NAME = 'server.log'
@@ -44,12 +43,11 @@ async def handle_client(reader, writer):
                     }
 
                     writer.write(json.dumps(json_data).encode())
-                    await writer.drain()
                 except Exception as e:
                     logging.error(f"Error writing data to client: {e}")
             else:
                 writer.write(b"Invalid request")
-                await writer.drain()
+            await writer.drain()
         except Exception as e:
             logging.error(f"Error handling client connection: {e}")
     writer.close()
