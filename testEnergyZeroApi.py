@@ -5,10 +5,6 @@ from datetime import datetime, date, timedelta
 
 import pytz
 
-# en deze?
-# https://mijn.easyenergy.com/nl/api/tariff/getapxtariffs?startTimestamp=2020-04-29T22%3A00%3A00.000Z&endTimestamp=2020-04-30T22%3A00%3A00.000Z&grouping=
-# https://pypi.org/project/easyenergy/
-#
 # start = datetime.now() - timedelta(days=1)
 # end = datetime.now() + timedelta(days=1)
 
@@ -34,6 +30,9 @@ async def main() -> None:
 
         print(energy_today)
 
+        gas_today = await client.gas_prices(start_date=today, end_date=today)
+
+        print(gas_today)
 
         print("--- ENERGY TODAY ---")
         print(f"Max price: €{energy_today.extreme_prices[1]}")
@@ -61,7 +60,6 @@ async def main() -> None:
                 start_date=tomorrow,
                 end_date=tomorrow,
             )
-
 
             print(f"Max price: €{energy_tomorrow.extreme_prices[1]}")
             print(f"Min price: €{energy_tomorrow.extreme_prices[0]}")
