@@ -31,27 +31,25 @@ async def handle_client(reader, writer):
                 break
             logging.info(f"Client request received: {data}")
             request = data.decode().lower()
-            if request == "get_data":
-                try:
+            try:
+                if request == "get_data":
                     price_value_1 = 255.0
                     json_data = {
                         "timestamp": get_timestamp(),
                         "electricity_prices": {
-                            "source_1": price_value_1,
-                            # ...
-                            }
+                        "source_1": price_value_1,
+                        # ...
+                        }
                     }
-
                     writer.write(json.dumps(json_data).encode())
-                except Exception as e:
-                    logging.error(f"Error writing data to client: {e}")
-            else:
-                writer.write(b"Invalid request")
-            await writer.drain()
+                else:
+                    writer.write(b"Invalid request")
+                await writer.drain()
+            except Exception as e:
+                logging.error(f"Error writing data to client: {e}")               
         except Exception as e:
             logging.error(f"Error handling client connection: {e}")
     writer.close()
-
 
 async def main():
     try:
