@@ -12,13 +12,14 @@ print(my_api_key)
 country_code = 'NL'
 resolution = '15min'
 
-start = pd.Timestamp(datetime.now() - timedelta(days=1), tz='Europe/Amsterdam')
+start = pd.Timestamp(datetime.now(), tz='Europe/Amsterdam')
 end = pd.Timestamp(datetime.now() + timedelta(days=1), tz='Europe/Amsterdam')
 
 client = EntsoePandasClient(api_key=my_api_key)
 
 ts = client.query_day_ahead_prices(country_code, start=start, end=end) #, resolution=resolution)
+# ts = client.query_wind_and_solar_forecast(country_code, start=start, end=end) #, resolution=resolution)
 
 print(ts.head())
 
-# ts.to_csv('outfile.csv')
+ts.to_csv('outfile.csv')

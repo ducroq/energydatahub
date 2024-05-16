@@ -1,2 +1,4 @@
 **.idea/**
 secrets.ini
+*.json
+*.log
