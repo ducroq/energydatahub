@@ -11,9 +11,24 @@ import pandas as pd
 from configparser import ConfigParser 
 
 # run this from cron, e.g. hourly, e.g.
-#  0 0 * * * /usr/local/bin/python3.12 /home/pi/energyPriceDataHub/energyPriceScraper.py >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
+# 0 * * * * /homi/pi/EnergyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
+#
+# With a runscript like this:
+# #!/bin/bash
 
-OUTPUT_PATH = '' # r'/home/pi/tmp'
+# # Path to your virtual environment
+# VENV_PATH="/home/pi/energyPriceScraper"
+
+# # Activate the virtual environment
+# source "$VENV_PATH/bin/activate"
+
+# # Execute your Python script
+# python /home/pi/energyPriceScraper/energyPriceScraper.py
+
+# # Deactivate the virtual environment
+# deactivate
+
+OUTPUT_PATH = '' # r'/home/pi/tmp/energyData'
 REMOTE_STORAGE_PATH = None # r'gdrive:/data'
 LOGGING_FILE_NAME = 'energyPriceScraper.log'
 
@@ -30,7 +45,7 @@ async def get_energy_zero_data() -> dict:
     Retrieves energy price data from EnergyZero API.
 
     Returns:
-        dict: A dictionary containing the energy price data.
+        dict: A dictionary containing the energy price data [EUR/kWh].
     """
     async with EnergyZero(vat=VatOption.INCLUDE) as client:
         try:
@@ -61,10 +76,12 @@ async def get_Entsoe_data() -> dict:
     Retrieves day-ahead energy price data from Entsoe API.
 
     Returns:
-        dict: A dictionary containing the day-ahead energy price data.
+        dict: A dictionary containing the day-ahead energy price data [EUR/MWh].
     """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    secrets_file = os.path.join(script_dir, 'secrets.ini')
     configur = ConfigParser() 
-    configur.read('secrets.ini')
+    configur.read(secrets_file)
     my_api_key = configur.get('api_keys', 'entsoe')
     country_code = 'NL'
     try:
@@ -112,15 +129,15 @@ if __name__ == "__main__":
 
     entsoe_data = asyncio.run(get_Entsoe_data())
 
-    json_file_name = os.path.join(OUTPUT_PATH, f"rss_{datetime.now().strftime(f"%y%m%d_%H%M%S{local_timezone}")}.json")
+    json_file_name = os.path.join(OUTPUT_PATH, f"data_{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}.json")
     json_data = {'energy zero': energy_zero_data}
     json_data['entsoe'] = entsoe_data
 
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
 
-    # if REMOTE_STORAGE_PATH is not None and REMOTE_STORAGE_PATH is not None:
-    #     try:
-    #         subprocess.run(['rclone', 'copy', OUTPUT_PATH, REMOTE_STORAGE_PATH], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    #     except Exception as e:
-    #         print(str(e))
+    if REMOTE_STORAGE_PATH is not None and REMOTE_STORAGE_PATH is not None:
+        try:
+            subprocess.run(['rclone', 'copy', OUTPUT_PATH, REMOTE_STORAGE_PATH], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as e:
+            print(str(e))
