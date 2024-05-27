@@ -8,30 +8,41 @@ my_api_key = configur.get('api_keys', 'openweather')
 lattitude = configur.get('location', 'lattitude')
 longitude = configur.get('location', 'longitude')
 
-city = "Arnhem"
-country_code = "NL"
-
-url = f"https://api.openweathermap.org/data/2.5/weather?q={city},{country_code}&appid={my_api_key}"
-# https://api.openweathermap.org/data/3.0/onecall/timemachine?lat={lat}&lon={lon}&dt={time}&appid={API key}
-
-# Send GET request
+url = f"https://api.openweathermap.org/data/2.5/weather?lat={lattitude}&lon={longitude}&appid={my_api_key}"
 response = requests.get(url)
 
-# Check for successful response
 if response.status_code == 200:
-  # Parse JSON data
   data = response.json()
+  print(json.dumps(data, indent=4))
+  data["main"]["temp"]
+  data["main"]["humidity"]
+  data["main"]["pressure"]
+  data["weather"][0]["description"]
+  data["wind"]["speed"]
+  data["visibility"]
+  data["clouds"]["all"]
   
-  # Extract relevant weather information
-  # (modify this section to extract desired data)
-  temperature = data["main"]["temp"]  # Temperature in Kelvin
-  weather_description = data["weather"][0]["description"]
+  # # Extract relevant weather information
+  # # (modify this section to extract desired data)
+  # temperature = data["main"]["temp"]  # Temperature in Kelvin
+  # weather_description = data["weather"][0]["description"]
   
-  # Print the weather data
-  print(f"Current weather in {city}, {country_code}:")
-  print(f"  Temperature: {temperature:.2f} Kelvin")
-  print(f"  Description: {weather_description}")
+  # # Print the weather data
+  # print(f"Current weather in {city}, {country_code}:")
+  # print(f"  Temperature: {temperature:.2f} Kelvin")
+  # print(f"  Description: {weather_description}")
 else:
   # Handle API errors
   print("Error:", response.status_code)
 
+
+# url = f"https://api.openweathermap.org/energy/1.0/solar/data?lat={lattitude}&lon={longitude}&date={date}&appid={my_api_key}"
+url = f"https://api.openweathermap.org/energy/1.0/solar/data?lat=60.45&lon=-38.67&date=2023-03-30&tz=+03:00&appid={my_api_key}"
+response = requests.get(url)
+
+if response.status_code == 200:
+  data = response.json()
+  print(json.dumps(data, indent=4))
+else:
+  # Handle API errors
+  print("Error:", response.status_code)

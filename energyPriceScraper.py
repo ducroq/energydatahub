@@ -9,6 +9,7 @@ import pytz
 from entsoe import EntsoePandasClient
 import pandas as pd
 from configparser import ConfigParser 
+import requests
 
 # run this from cron, e.g. hourly, e.g.
 # 0 * * * * /homi/pi/EnergyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
@@ -124,7 +125,52 @@ async def get_Entsoe_data() -> dict:
     except Exception as e:
         logging.error(f"Error retrieving Entsoe data: {e}")     
         return None
+    
+async def get_OpenWheather_data() -> dict:
+    """
+    Retrieves weather data from the OpenWeather API based on the configured latitude and longitude.
 
+    Returns:
+        A dictionary containing the following weather data:
+        - temperature: The current temperature in Kelvin.
+        - humidity: The current humidity percentage.
+        - pressure: The current atmospheric pressure in hPa.
+        - weather_id: The current weather condition ID.
+        - weather_description: A description of the current weather conditions.
+        - wind_speed: The current wind speed in meters per second.
+        - wind_direction: The current wind direction in degrees.
+        - visibility: The current visibility in meters.
+        - cloudiness: The current cloudiness percentage.
+    """
+    try:
+        configur = ConfigParser()
+        configur.read('secrets.ini')
+        my_api_key = configur.get('api_keys', 'openweather')
+        lattitude = configur.get('location', 'lattitude')
+        longitude = configur.get('location', 'longitude')
+
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lattitude}&lon={longitude}&appid={my_api_key}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            # print(json.dumps(data, indent=4))
+            weather_data = {
+                "temperature": data["main"]["temp"],
+                "humidity": data["main"]["humidity"],
+                "pressure": data["main"]["pressure"],
+                "weather_id": data["weather"][0]["id"],
+                "weather_description": data["weather"][0]["description"],
+                "wind_speed": data["wind"]["speed"],
+                "wind_direction": data["wind"]["deg"],
+                "visibility": data["visibility"],
+                "cloudiness": data["clouds"]["all"]
+            }
+            return weather_data
+        else:
+            Exception(f"Error retrieving OpenWeather data: {response.status_code}")
+    except Exception as e:
+        logging.error(f"Error retrieving OpenWeather data: {e}")     
+        return None
 
 if __name__ == "__main__":
     energy_zero_data = asyncio.run(get_energy_zero_data())
@@ -132,12 +178,13 @@ if __name__ == "__main__":
     current_time = datetime.now(local_timezone)
     current_hour_start = current_time.replace(minute=0, second=0, microsecond=0)
     energy_zero_data = {key: value for key, value in energy_zero_data.items() if datetime.fromisoformat(key) >= current_hour_start}
-
     entsoe_data = asyncio.run(get_Entsoe_data())
+    wheather_data = asyncio.run(get_OpenWheather_data())
 
     json_file_name = os.path.join(OUTPUT_PATH, f"data_{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}.json")
     json_data = {'energy zero': energy_zero_data}
     json_data['entsoe'] = entsoe_data
+    json_data['open wheather'] = wheather_data
 
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
