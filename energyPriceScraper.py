@@ -97,7 +97,7 @@ async def get_Entsoe_data() -> dict:
         start_timestamp = pd.Timestamp(current_time, tz='Europe/Amsterdam')
         current_start_timestamp = start_timestamp.replace(year=current_time.year, month=current_time.month, day=current_time.day, hour=current_time.hour, minute=0, second=0, microsecond=0)
         tomorrow = current_time  + timedelta(days = 1)
-        tomorrow_midnight = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+        tomorrow_midnight = tomorrow.replace(hour=23, minute=0, second=0, microsecond=0)
         end_timestamp = pd.Timestamp(tomorrow_midnight, tz='Europe/Amsterdam')
         ts = client.query_day_ahead_prices(country_code, start=current_start_timestamp, end=end_timestamp)
         data_dict = ts.to_dict() # { ts.inde for ts.index in ts.values}
