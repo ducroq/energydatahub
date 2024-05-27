@@ -4,14 +4,15 @@ import json
 
 configur = ConfigParser() 
 configur.read('secrets.ini')
-my_api_key = configur.get('api_keys', 'entsoe')
-print(my_api_key)
+my_api_key = configur.get('api_keys', 'openweather')
+lattitude = configur.get('location', 'lattitude')
+longitude = configur.get('location', 'longitude')
 
 city = "Arnhem"
 country_code = "NL"
 
-# Build the API URL
 url = f"https://api.openweathermap.org/data/2.5/weather?q={city},{country_code}&appid={my_api_key}"
+# https://api.openweathermap.org/data/3.0/onecall/timemachine?lat={lat}&lon={lon}&dt={time}&appid={API key}
 
 # Send GET request
 response = requests.get(url)
