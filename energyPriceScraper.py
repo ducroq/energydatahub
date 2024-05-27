@@ -34,6 +34,12 @@ LOGGING_FILE_NAME = 'energyPriceScraper.log'
 
 local_timezone = pytz.timezone("CET")
 
+try:
+    if not os.path.exists(OUTPUT_PATH):
+        os.makedirs(OUTPUT_PATH)        
+except OSError as e:
+    print(f"Error creating folder: {e}")
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
@@ -109,8 +115,8 @@ async def get_Entsoe_data() -> dict:
         now_hour = list(data.keys())[0]
         next_hour = list(data.keys())[1]
         
-        logging.info(f"Entsoe day ahead price: "
-                     f"Current: {data[now_hour]} EUR/MWh @ {now_hour}, " 
+        logging.info(f"Entsoe day ahead price from: {start_timestamp} to {end_timestamp}\n"
+                     f"Current: {data[now_hour]} EUR/MWh @ {now_hour}\n" 
                      f"Next hour: {data[next_hour]} EUR/MWh @ {next_hour}")
 
         return data
