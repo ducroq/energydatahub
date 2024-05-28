@@ -78,21 +78,24 @@ async def get_energy_zero_data() -> dict:
             logging.error(f"Error retrieving EnergyZero data: {e}")     
             return None
 
-async def get_Entsoe_data() -> dict:
+async def get_Entsoe_data(api_key:str) -> dict:
     """
     Retrieves day-ahead energy price data from Entsoe API.
+
+    Parameters:
+        api_key (str): The Entsoe API key.
 
     Returns:
         dict: A dictionary containing the day-ahead energy price data [EUR/MWh].
     """
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    secrets_file = os.path.join(script_dir, 'secrets.ini')
-    configur = ConfigParser() 
-    configur.read(secrets_file)
-    my_api_key = configur.get('api_keys', 'entsoe')
+    # script_dir = os.path.dirname(os.path.abspath(__file__))
+    # secrets_file = os.path.join(script_dir, 'secrets.ini')
+    # configur = ConfigParser() 
+    # configur.read(secrets_file)
+    # api_key = configur.get('api_keys', 'entsoe')
     country_code = 'NL'
     try:
-        client = EntsoePandasClient(api_key=my_api_key)
+        client = EntsoePandasClient(api_key=api_key)
 
         current_time = datetime.now()
         start_timestamp = pd.Timestamp(current_time, tz='Europe/Amsterdam')
@@ -126,9 +129,14 @@ async def get_Entsoe_data() -> dict:
         logging.error(f"Error retrieving Entsoe data: {e}")     
         return None
     
-async def get_OpenWheather_data() -> dict:
+async def get_OpenWheather_data(api_key:str, lattitude:str, longitude:str) -> dict:
     """
     Retrieves weather data from the OpenWeather API based on the configured latitude and longitude.
+
+    Parameters:
+        api_key (str): The OpenWeather API key.
+        lattitude (str): The lattitude of the location (-90; 90).
+        longitude (str): The longitude of the location (-180; 180).
 
     Returns:
         A dictionary containing the following weather data:
@@ -143,13 +151,7 @@ async def get_OpenWheather_data() -> dict:
         - cloudiness: The current cloudiness percentage.
     """
     try:
-        configur = ConfigParser()
-        configur.read('secrets.ini')
-        my_api_key = configur.get('api_keys', 'openweather')
-        lattitude = configur.get('location', 'lattitude')
-        longitude = configur.get('location', 'longitude')
-
-        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lattitude}&lon={longitude}&appid={my_api_key}"
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lattitude}&lon={longitude}&appid={api_key}"
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
@@ -173,13 +175,23 @@ async def get_OpenWheather_data() -> dict:
         return None
 
 if __name__ == "__main__":
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    secrets_file = os.path.join(script_dir, 'secrets.ini')
+    
+    configur = ConfigParser() 
+    configur.read(secrets_file)
+    entsoe_api_key = configur.get('api_keys', 'entsoe')
+    openweather_api_key = configur.get('api_keys', 'openweather')
+    lattitude = configur.get('location', 'lattitude')
+    longitude = configur.get('location', 'longitude')
+
     energy_zero_data = asyncio.run(get_energy_zero_data())
     energy_zero_data = {key.astimezone(local_timezone).isoformat(): value for key, value in energy_zero_data.prices.items()}
     current_time = datetime.now(local_timezone)
     current_hour_start = current_time.replace(minute=0, second=0, microsecond=0)
     energy_zero_data = {key: value for key, value in energy_zero_data.items() if datetime.fromisoformat(key) >= current_hour_start}
-    entsoe_data = asyncio.run(get_Entsoe_data())
-    wheather_data = asyncio.run(get_OpenWheather_data())
+    entsoe_data = asyncio.run(get_Entsoe_data(api_key=entsoe_api_key))
+    wheather_data = asyncio.run(get_OpenWheather_data(api_key=openweather_api_key, lattitude=lattitude, longitude=longitude))
 
     json_file_name = os.path.join(OUTPUT_PATH, f"data_{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}.json")
     json_data = {'energy zero': energy_zero_data}
