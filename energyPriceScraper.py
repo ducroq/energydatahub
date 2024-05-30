@@ -13,7 +13,8 @@ import requests
 
 # run this from cron, e.g. hourly, e.g.
 # 0 * * * * /homi/pi/EnergyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
-#
+# or every 6 hours:
+# 0 */6 * * * /homi/pi/EnergyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
 # With a runscript like this:
 # #!/bin/bash
 
@@ -82,7 +83,7 @@ async def get_Entsoe_data(api_key:str) -> dict:
     """
     Retrieves day-ahead energy price data from Entsoe API.
 
-    Parameters:
+    Args:
         api_key (str): The Entsoe API key.
 
     Returns:
@@ -129,13 +130,13 @@ async def get_Entsoe_data(api_key:str) -> dict:
         logging.error(f"Error retrieving Entsoe data: {e}")     
         return None
     
-async def get_OpenWeather_data(api_key:str, lattitude:str, longitude:str) -> dict:
+async def get_OpenWeather_data(api_key:str, latitude:str, longitude:str) -> dict:
     """
     Retrieves weather data from the OpenWeather API based on the configured latitude and longitude.
 
-    Parameters:
+    Args:
         api_key (str): The OpenWeather API key.
-        lattitude (str): The lattitude of the location (-90; 90).
+        latitude (str): The latitude of the location (-90; 90).
         longitude (str): The longitude of the location (-180; 180).
 
     Returns:
@@ -151,7 +152,7 @@ async def get_OpenWeather_data(api_key:str, lattitude:str, longitude:str) -> dic
         - cloudiness: The current cloudiness percentage.
     """
     try:
-        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lattitude}&lon={longitude}&appid={api_key}"
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={api_key}"
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
@@ -173,6 +174,40 @@ async def get_OpenWeather_data(api_key:str, lattitude:str, longitude:str) -> dic
     except Exception as e:
         logging.error(f"Error retrieving OpenWeather data: {e}")     
         return None
+    
+
+async def get_OpenWeather_geographical_coordinates_in_NL(api_key:str, plaats:str) -> dict:
+    """
+    Retrieves the geographical coordinates (latitude and longitude) of a specified location in the Netherlands
+    using the OpenWeather API.
+
+    Args:
+        api_key (str): The API key for accessing the OpenWeather API.
+        plaats (str): The name of the location in the Netherlands.
+
+    Returns:
+        dict: A dictionary containing the latitude and longitude of the specified location.
+
+    Raises:
+        Exception: If there is an error retrieving the OpenWeather data.
+
+    """
+    url = f"http://api.openweathermap.org/geo/1.0/direct?q={plaats},?,NL&limit=1&appid={my_api_key}"
+    response = requests.get(url)
+
+    try:
+        if response.status_code == 200:
+            data = response.json()
+            print(json.dumps(data, indent=4))
+            print(data[0]["lat"], data[0]["lon"])
+            latitude = data[0]["lat"]
+            longitude = data[0]["lon"]
+            return {"latitude": latitude, "longitude": longitude}
+        else:
+            Exception(f"Error retrieving OpenWeather data: {response.status_code}") 
+    except Exception as e:
+        logging.error(f"Error retrieving OpenWeather data: {e}")     
+        return None
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -182,8 +217,9 @@ if __name__ == "__main__":
     configur.read(secrets_file)
     entsoe_api_key = configur.get('api_keys', 'entsoe')
     openweather_api_key = configur.get('api_keys', 'openweather')
-    lattitude = configur.get('location', 'lattitude')
-    longitude = configur.get('location', 'longitude')
+    location = get_OpenWeather_geographical_coordinates_in_NL(api_key=openweather_api_key, plaats='Arnhem')
+    latitude = location['latitude']
+    longitude = location['longitude']
 
     energy_zero_data = asyncio.run(get_energy_zero_data())
     energy_zero_data = {key.astimezone(local_timezone).isoformat(): value for key, value in energy_zero_data.prices.items()}
@@ -191,7 +227,7 @@ if __name__ == "__main__":
     current_hour_start = current_time.replace(minute=0, second=0, microsecond=0)
     energy_zero_data = {key: value for key, value in energy_zero_data.items() if datetime.fromisoformat(key) >= current_hour_start}
     entsoe_data = asyncio.run(get_Entsoe_data(api_key=entsoe_api_key))
-    weather_data = asyncio.run(get_OpenWeather_data(api_key=openweather_api_key, lattitude=lattitude, longitude=longitude))
+    weather_data = asyncio.run(get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude))
 
     json_file_name = os.path.join(OUTPUT_PATH, f"data_{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}.json")
     json_data = {'energy zero': energy_zero_data}
