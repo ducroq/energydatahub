@@ -129,7 +129,7 @@ async def get_Entsoe_data(api_key:str) -> dict:
         logging.error(f"Error retrieving Entsoe data: {e}")     
         return None
     
-async def get_OpenWheather_data(api_key:str, lattitude:str, longitude:str) -> dict:
+async def get_OpenWeather_data(api_key:str, lattitude:str, longitude:str) -> dict:
     """
     Retrieves weather data from the OpenWeather API based on the configured latitude and longitude.
 
@@ -177,7 +177,7 @@ async def get_OpenWheather_data(api_key:str, lattitude:str, longitude:str) -> di
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     secrets_file = os.path.join(script_dir, 'secrets.ini')
-    
+
     configur = ConfigParser() 
     configur.read(secrets_file)
     entsoe_api_key = configur.get('api_keys', 'entsoe')
@@ -191,12 +191,12 @@ if __name__ == "__main__":
     current_hour_start = current_time.replace(minute=0, second=0, microsecond=0)
     energy_zero_data = {key: value for key, value in energy_zero_data.items() if datetime.fromisoformat(key) >= current_hour_start}
     entsoe_data = asyncio.run(get_Entsoe_data(api_key=entsoe_api_key))
-    wheather_data = asyncio.run(get_OpenWheather_data(api_key=openweather_api_key, lattitude=lattitude, longitude=longitude))
+    weather_data = asyncio.run(get_OpenWeather_data(api_key=openweather_api_key, lattitude=lattitude, longitude=longitude))
 
     json_file_name = os.path.join(OUTPUT_PATH, f"data_{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}.json")
     json_data = {'energy zero': energy_zero_data}
     json_data['entsoe'] = entsoe_data
-    json_data['open wheather'] = wheather_data
+    json_data['open weather'] = weather_data
 
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
