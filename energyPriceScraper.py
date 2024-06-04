@@ -10,24 +10,19 @@ from entsoe import EntsoePandasClient
 import pandas as pd
 from configparser import ConfigParser 
 import requests
+import meteoserver as meteo
 
 # run this from cron, e.g. hourly, e.g.
-# 0 * * * * /homi/pi/EnergyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
-# or every 6 hours:
-# 0 */6 * * * /homi/pi/EnergyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
+# 0 * * * * /home/pi/energyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
+# or e.g. every 6 hours:
+# 0 */6 * * * /home/pi/energyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
+# or daily at 6:00:
+# 0 6 * * * /home/pi/energyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
 # With a runscript like this:
 # #!/bin/bash
-
-# # Path to your virtual environment
 # VENV_PATH="/home/pi/energyPriceScraper"
-
-# # Activate the virtual environment
 # source "$VENV_PATH/bin/activate"
-
-# # Execute your Python script
 # python /home/pi/energyPriceScraper/energyPriceScraper.py
-
-# # Deactivate the virtual environment
 # deactivate
 
 OUTPUT_PATH = '' # r'/home/pi/tmp/energyData'
@@ -175,7 +170,6 @@ async def get_OpenWeather_data(api_key:str, latitude:str, longitude:str) -> dict
         logging.error(f"Error retrieving OpenWeather data: {e}")     
         return None
     
-
 async def get_OpenWeather_geographical_coordinates_in_NL(api_key:str, plaats:str) -> dict:
     """
     Retrieves the geographical coordinates (latitude and longitude) of a specified location in the Netherlands
@@ -192,16 +186,16 @@ async def get_OpenWeather_geographical_coordinates_in_NL(api_key:str, plaats:str
         Exception: If there is an error retrieving the OpenWeather data.
 
     """
-    url = f"http://api.openweathermap.org/geo/1.0/direct?q={plaats},?,NL&limit=1&appid={my_api_key}"
+    url = f"http://api.openweathermap.org/geo/1.0/direct?q={plaats},?,NL&limit=1&appid={api_key}"
     response = requests.get(url)
 
     try:
         if response.status_code == 200:
             data = response.json()
-            print(json.dumps(data, indent=4))
-            print(data[0]["lat"], data[0]["lon"])
+            # print(json.dumps(data, indent=4))
             latitude = data[0]["lat"]
             longitude = data[0]["lon"]
+            logging.info(f"OpenWeather geographical coordinates for {plaats}: {latitude}, {longitude}")
             return {"latitude": latitude, "longitude": longitude}
         else:
             Exception(f"Error retrieving OpenWeather data: {response.status_code}") 
@@ -209,18 +203,24 @@ async def get_OpenWeather_geographical_coordinates_in_NL(api_key:str, plaats:str
         logging.error(f"Error retrieving OpenWeather data: {e}")     
         return None
 
+# TODO: get more relevant entsoe data
+
+
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     secrets_file = os.path.join(script_dir, 'secrets.ini')
-
+# get the api keys and location from the secrets.ini file
     configur = ConfigParser() 
     configur.read(secrets_file)
     entsoe_api_key = configur.get('api_keys', 'entsoe')
     openweather_api_key = configur.get('api_keys', 'openweather')
-    location = get_OpenWeather_geographical_coordinates_in_NL(api_key=openweather_api_key, plaats='Arnhem')
+    meteoserver_api_key = configur.get('api_keys', 'meteo')
+    plaats = configur.get('location', 'plaats')
+# get the geographical coordinates of the location
+    location = asyncio.run(get_OpenWeather_geographical_coordinates_in_NL(api_key=openweather_api_key, plaats=plaats))
     latitude = location['latitude']
     longitude = location['longitude']
-
+# get the energy price data
     energy_zero_data = asyncio.run(get_energy_zero_data())
     energy_zero_data = {key.astimezone(local_timezone).isoformat(): value for key, value in energy_zero_data.prices.items()}
     current_time = datetime.now(local_timezone)
@@ -228,15 +228,28 @@ if __name__ == "__main__":
     energy_zero_data = {key: value for key, value in energy_zero_data.items() if datetime.fromisoformat(key) >= current_hour_start}
     entsoe_data = asyncio.run(get_Entsoe_data(api_key=entsoe_api_key))
     weather_data = asyncio.run(get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude))
-
-    json_file_name = os.path.join(OUTPUT_PATH, f"data_{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}.json")
-    json_data = {'energy zero': energy_zero_data}
-    json_data['entsoe'] = entsoe_data
-    json_data['open weather'] = weather_data
-
+# write the data to a json file
+    json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_energy_price_forecasts.json")
+    json_data = {}
+    json_data['energy zero price forecast'] = energy_zero_data
+    json_data['entsoe price forecast'] = entsoe_data
+    json_data['open weather forecast'] = weather_data
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
-
+# get the weather forecast data and write the data to a json file
+    data = meteo.read_json_url_weatherforecast(meteoserver_api_key, plaats, model='HARMONIE')  # Option 1: HARMONIE/HiRLAM
+    json_data = data.to_dict(orient='records')
+    json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_weather_forecast.json")
+    with open(json_file_name, 'w', encoding='utf-8') as fp:
+        json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
+# get the sun forecast data and write the data to a json file
+    current, forecast, location = meteo.read_json_url_sunData(meteoserver_api_key, plaats, loc=True, numeric=False)
+    json_data = forecast.to_dict(orient='records')
+    # json_data['current'] = current.to_dict(orient='records')    
+    json_file_name = os.path.join(f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
+    with open(json_file_name, 'w', encoding='utf-8') as fp:
+        json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
+# copy the data to remote storage
     if REMOTE_STORAGE_PATH is not None and REMOTE_STORAGE_PATH is not None:
         try:
             subprocess.run(['rclone', 'copy', OUTPUT_PATH, REMOTE_STORAGE_PATH], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -15,8 +15,6 @@ plaats = configur.get('location', 'plaats')
 
 local_timezone = pytz.timezone("CET")
 
-# TODO: convert forecasts to json and dump
-
 # Weather forecast #################################################################################
 
 # Print some help:
