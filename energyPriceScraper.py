@@ -241,8 +241,7 @@ if __name__ == "__main__":
                         #   "pressure": "hPa",
                         #   "wind_speed": "m/s"}
     json_data['metadata'] = {"energy_zero_source": "EnergyZero API v2.1",
-                             "entsoe_source": "ENTSO-E Transparency Platform API v1.3",
-                             "run_time": datetime.now().strftime('%y%m%d_%H%M%S')}    
+                             "entsoe_source": "ENTSO-E Transparency Platform API v1.3"}    
                             #  "weather_source": "OpenWeatherMap API v2.5"}
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
@@ -281,8 +280,7 @@ if __name__ == "__main__":
     }
     json_data['metadata'] = {"plaats": plaats,
                              "data_timezone": local_timezone,
-                             "model": "HARMONIE (Benelux)",
-                             "run_time": datetime.now().strftime('%y%m%d_%H%M%S')}
+                             "model": "HARMONIE (Benelux)"}
     json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_weather_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
@@ -306,8 +304,7 @@ if __name__ == "__main__":
     }
     # json_data['current'] = current.to_dict(orient='records')    
     json_data['metadata'] = {"plaats": plaats,
-                             "data_timezone": local_timezone,
-                             "run_time": datetime.now().strftime('%y%m%d_%H%M%S')}    
+                             "data_timezone": local_timezone}    
     json_file_name = os.path.join(f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
@@ -316,4 +313,4 @@ if __name__ == "__main__":
         try:
             subprocess.run(['rclone', 'copy', OUTPUT_PATH, REMOTE_STORAGE_PATH], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception as e:
-            print(str(e))
+            logging.error(f"Error copying data to remote storage: {e}")
