@@ -1,13 +1,21 @@
-"""Example Python script using the Meteoserver module."""
-
+import os
+import json
+import pytz
 import meteoserver as meteo
 from configparser import ConfigParser 
+from datetime import datetime
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+secrets_file = os.path.join(script_dir, 'secrets.ini')
 
 configur = ConfigParser() 
-configur.read('secrets.ini')
+configur.read(secrets_file)
 my_api_key = configur.get('api_keys', 'meteo')
 plaats = configur.get('location', 'plaats')
 
+local_timezone = pytz.timezone("CET")
+
+# TODO: convert forecasts to json and dump
 
 # Weather forecast #################################################################################
 
@@ -30,8 +38,13 @@ data = meteo.read_json_url_weatherforecast(my_api_key, plaats, model='HARMONIE')
 print(data)
 
 # Write the downloaded data to a json file:
-meteo.write_json_file_weatherforecast('WeatherForecast3.json', plaats, data)
-
+# meteo.write_json_file_weatherforecast('WeatherForecast3.json', plaats, data)
+json_data = {}
+json_data['plaats'] = plaats
+json_data['forecast'] = data.to_dict(orient='records')
+json_file_name = os.path.join(f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_weather_forecast.json")
+with open(json_file_name, 'w', encoding='utf-8') as fp:
+    json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
 
 
 # Sun forecast #####################################################################################
@@ -57,4 +70,12 @@ print("\nSun/weather forecast for the selected location/region:")
 print(forecast)
 
 # Write the downloaded data to a json file:
-meteo.write_json_file_sunData('SunData1.json', location, current, forecast)
+# meteo.write_json_file_sunData('SunData1.json', location, current, forecast)
+json_data = {}
+json_data['plaats'] = location
+json_data['current'] = current.to_dict(orient='records')
+json_data['forecast'] = forecast.to_dict(orient='records')
+    
+json_file_name = os.path.join(f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
+with open(json_file_name, 'w', encoding='utf-8') as fp:
+    json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
