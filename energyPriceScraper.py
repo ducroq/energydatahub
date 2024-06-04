@@ -104,10 +104,10 @@ async def get_Entsoe_data(api_key:str) -> dict:
         formatted_keys = [t.strftime('%Y-%m-%dT%H:%M:%S+02:00') for t in data_dict.keys()]
         data = dict(zip(formatted_keys, data_dict.values()))
 
+        # Other interesting data from Entsoe API:
         # ts = client.query_wind_and_solar_forecast(country_code, start=today, end=tomorrow)
         # logging.info(f"Entsoe wind and solar forecast: {ts}")
 
-        # Other interesting data from Entsoe API:
         # query_aggregated_bids, query_load, query_load_forecast, query_wind_and_solar_generation_forecast,
         # query_activated_balancing_energy_prices, query_imbalance_prices, query_imbalance_volumes,
         # query_procured_balancing_capacity, query_activated_balancing_energy
@@ -203,6 +203,7 @@ async def get_OpenWeather_geographical_coordinates_in_NL(api_key:str, plaats:str
         logging.error(f"Error retrieving OpenWeather data: {e}")     
         return None
 
+# TODO: add annotation fields to json files, according t Cluade to make them self-explanatory
 # TODO: get more relevant entsoe data
 
 
@@ -233,19 +234,80 @@ if __name__ == "__main__":
     json_data = {}
     json_data['energy zero price forecast'] = energy_zero_data
     json_data['entsoe price forecast'] = entsoe_data
-    json_data['open weather forecast'] = weather_data
+    # json_data['open weather forecast'] = weather_data
+    json_data['units'] = {"energy_price": "EUR/kWh",
+                          "entsoe_price": "EUR/MWh"}
+                        #   "temperature": "K",
+                        #   "pressure": "hPa",
+                        #   "wind_speed": "m/s"}
+    json_data['metadata'] = {"energy_zero_source": "EnergyZero API v2.1",
+                             "entsoe_source": "ENTSO-E Transparency Platform API v1.3",
+                             "run_time": datetime.now().strftime('%y%m%d_%H%M%S')}    
+                            #  "weather_source": "OpenWeatherMap API v2.5"}
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
 # get the weather forecast data and write the data to a json file
     data = meteo.read_json_url_weatherforecast(meteoserver_api_key, plaats, model='HARMONIE')  # Option 1: HARMONIE/HiRLAM
-    json_data = data.to_dict(orient='records')
+    json_data = {}
+    json_data['weather forecast'] = data.to_dict(orient='records')
+    json_data['units'] = {
+        "temp": "°C",
+        "winds (mean wind velocity)": "m/s",
+        "windb (mean wind force)": "Beaufort",
+        "windknp (mean wind velocity)": "knots",
+        "windkmh (mean wind velocity)": "km/h",
+        "windr (wind direction)": "°",
+        "windrltr (wind direction)": "abbreviation",
+        "gust (wind gust, GFS only)": "m/s",
+        "gustb (wind gust, GFS only)": "Beaufort",
+        "gustkt (wind gust, GFS only)": "knots",
+        "gustkmh (wind gust, GFS only)": "km/h",
+        "vis (visibility)": "m",
+        "neersl (precipitation)": "mm",
+        "luchtd (air pressure)": "mbar / hPa",
+        "luchtdmmhg (air pressure)": "mm Hg",
+        "luchtdinhg (air pressure)": "inch Hg",
+        "rv (relative humidity)": "%",
+        "gr (global horizontal radiation)": "W/m²",
+        "hw (high cloud cover)": "%",
+        "mw (medium cloud cover)": "%",
+        "lw (low cloud cover)": "%",
+        "tw (total cloud cover)": "%",
+        "cape (convective available potential energy, GFS only)": "J/kg",
+        "cond": "weather condition code",
+        "ico": "weather icon code",
+        "samenv": "text",
+        "icoon": "image name"
+    }
+    json_data['metadata'] = {"plaats": plaats,
+                             "data_timezone": local_timezone,
+                             "model": "HARMONIE (Benelux)",
+                             "run_time": datetime.now().strftime('%y%m%d_%H%M%S')}
     json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_weather_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
 # get the sun forecast data and write the data to a json file
     current, forecast, location = meteo.read_json_url_sunData(meteoserver_api_key, plaats, loc=True, numeric=False)
-    json_data = forecast.to_dict(orient='records')
+    json_data = {}
+    json_data['sun forecast'] = forecast.to_dict(orient='records')
+    json_data['units'] = {
+        "temp": "°C",
+        "elev (sun altitude at the start of the current hour)": "°",
+        "az (sun azimuth at the start of the current hour,  N=0, E=90)": "°",
+        "gr (global horizontal radiation intensity)": "J/hr/cm²",
+        "gr_w (global horizontal radiation intensity)": "W/m²",
+        "sd (number of sunshine minutes in the current hour)": "min",
+        "tc (total cloud cover)": "%",
+        "lc (low-cloud cover)": "%",
+        "mc (intermediate-cloud cover)": "%",
+        "hc (high-cloud cover)": "%",
+        "vis (visibility)": "m",
+        "prec (total precipitation in the current hour)": "mm(/h)"
+    }
     # json_data['current'] = current.to_dict(orient='records')    
+    json_data['metadata'] = {"plaats": plaats,
+                             "data_timezone": local_timezone,
+                             "run_time": datetime.now().strftime('%y%m%d_%H%M%S')}    
     json_file_name = os.path.join(f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
