@@ -1,4 +1,5 @@
 entsoe
 easyenergy
 requests
+meteoserver
 
