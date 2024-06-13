@@ -13,21 +13,21 @@ import requests
 import meteoserver as meteo
 
 # run this from cron, e.g. hourly, e.g.
-# 0 * * * * /home/pi/energyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
+# 0 * * * * /home/pi/energyDataScraper/run_script.sh >> /home/pi/tmp/energyDataScraper.py.log 2>&1
 # or e.g. every 6 hours:
-# 0 */6 * * * /home/pi/energyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
+# 0 */6 * * * /home/pi/energyDataScraper/run_script.sh >> /home/pi/tmp/energyDataScraper.py.log 2>&1
 # or daily at 6:00:
-# 0 6 * * * /home/pi/energyPriceScraper/run_script.sh >> /home/pi/tmp/energyPriceScraper.py.log 2>&1
+# 0 6 * * * /home/pi/energyDataScraper/run_script.sh >> /home/pi/tmp/energyDataScraper.py.log 2>&1
 # With a runscript like this:
 # #!/bin/bash
-# VENV_PATH="/home/pi/energyPriceScraper"
+# VENV_PATH="/home/pi/energyDataScraper"
 # source "$VENV_PATH/bin/activate"
-# python /home/pi/energyPriceScraper/energyPriceScraper.py
+# python /home/pi/energyDataScraper/energyDataScraper.py
 # deactivate
 
 OUTPUT_PATH = '' # r'/home/pi/tmp/energyData'
 REMOTE_STORAGE_PATH = None # r'gdrive:/data'
-LOGGING_FILE_NAME = 'energyPriceScraper.log'
+LOGGING_FILE_NAME = 'energyDataScraper.log'
 
 local_timezone = pytz.timezone("CET")
 
@@ -36,6 +36,10 @@ try:
         os.makedirs(OUTPUT_PATH)        
 except OSError as e:
     print(f"Error creating folder: {e}")
+
+file_list = [f for f in os.listdir(OUTPUT_PATH) if f.endswith(".json")]
+for f in file_list:
+    os.remove(os.path.join(OUTPUT_PATH, f))
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -305,7 +309,7 @@ if __name__ == "__main__":
     # json_data['current'] = current.to_dict(orient='records')    
     json_data['metadata'] = {"plaats": plaats,
                              "data_timezone": local_timezone}    
-    json_file_name = os.path.join(f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
+    json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
 # copy the data to remote storage
