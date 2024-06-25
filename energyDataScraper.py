@@ -11,6 +11,7 @@ import pandas as pd
 from configparser import ConfigParser 
 import requests
 import meteoserver as meteo
+import shutil
 
 # run this from cron, e.g. hourly, e.g.
 # 0 * * * * /home/pi/energyDataScraper/run_script.sh >> /home/pi/tmp/energyDataScraper.py.log 2>&1
@@ -207,8 +208,8 @@ async def get_OpenWeather_geographical_coordinates_in_NL(api_key:str, plaats:str
         logging.error(f"Error retrieving OpenWeather data: {e}")     
         return None
 
-# TODO: add annotation fields to json files, according t Cluade to make them self-explanatory
 # TODO: get more relevant entsoe data
+# TODO: add other price sources
 
 
 if __name__ == "__main__":
@@ -234,7 +235,7 @@ if __name__ == "__main__":
     entsoe_data = asyncio.run(get_Entsoe_data(api_key=entsoe_api_key))
     weather_data = asyncio.run(get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude))
 # write the data to a json file
-    json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_energy_price_forecasts.json")
+    json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_energy_price_forecast.json")
     json_data = {}
     json_data['energy zero price forecast'] = energy_zero_data
     json_data['entsoe price forecast'] = entsoe_data
@@ -249,6 +250,9 @@ if __name__ == "__main__":
                             #  "weather_source": "OpenWeatherMap API v2.5"}
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
+    # # copy the data to a current file to be downloaded by a client
+    # shutil.copy(json_file_name, os.path.join(OUTPUT_PATH, "energy_price_forecast.json"))    
+
 # get the weather forecast data and write the data to a json file
     data = meteo.read_json_url_weatherforecast(meteoserver_api_key, plaats, model='HARMONIE')  # Option 1: HARMONIE/HiRLAM
     json_data = {}
@@ -288,6 +292,9 @@ if __name__ == "__main__":
     json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_weather_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
+    # # copy the data to a current file to be downloaded by a client
+    # shutil.copy(json_file_name, os.path.join(OUTPUT_PATH, "weather_forecast.json"))    
+
 # get the sun forecast data and write the data to a json file
     current, forecast, location = meteo.read_json_url_sunData(meteoserver_api_key, plaats, loc=True, numeric=False)
     json_data = {}
@@ -312,6 +319,9 @@ if __name__ == "__main__":
     json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
+    # # copy the data to a current file to be downloaded by a client
+    # shutil.copy(json_file_name, os.path.join(OUTPUT_PATH, "sun_forecast.json"))    
+
 # copy the data to remote storage
     if REMOTE_STORAGE_PATH is not None and REMOTE_STORAGE_PATH is not None:
         try:
