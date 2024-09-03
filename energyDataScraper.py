@@ -14,39 +14,48 @@ import meteoserver as meteo
 import shutil
 
 # run this from cron, e.g. hourly, e.g.
-# 0 * * * * /home/pi/energyDataScraper/run_script.sh >> /home/pi/tmp/energyDataScraper.py.log 2>&1
+# 0 * * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/energyDataHub.py.log 2>&1
 # or e.g. every 6 hours:
-# 0 */6 * * * /home/pi/energyDataScraper/run_script.sh >> /home/pi/tmp/energyDataScraper.py.log 2>&1
+# 0 */6 * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/energyDataHub.py.log 2>&1
 # or daily at 6:00:
-# 0 6 * * * /home/pi/energyDataScraper/run_script.sh >> /home/pi/tmp/energyDataScraper.py.log 2>&1
+# 0 6 * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/energyDataHub.py.log 2>&1
 # With a runscript like this:
 # #!/bin/bash
-# VENV_PATH="/home/pi/energyDataScraper"
+# VENV_PATH="/home/pi/energyDataHub"
 # source "$VENV_PATH/bin/activate"
-# python /home/pi/energyDataScraper/energyDataScraper.py
+# python /home/pi/energyDataHub/energyDataScraper.py
 # deactivate
 
-OUTPUT_PATH = '' # r'/home/pi/tmp/energyData'
+OUTPUT_PATH = None # r'/home/pi/tmp/energyData'
 REMOTE_STORAGE_PATH = None # r'gdrive:/data'
 LOGGING_FILE_NAME = 'energyDataScraper.log'
 
-local_timezone = pytz.timezone("CET")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+output_path = OUTPUT_PATH if OUTPUT_PATH is not None else os.path.join(script_dir, 'data')
 
 try:
-    if not os.path.exists(OUTPUT_PATH):
-        os.makedirs(OUTPUT_PATH)        
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)        
 except OSError as e:
     print(f"Error creating folder: {e}")
 
-file_list = [f for f in os.listdir(OUTPUT_PATH) if f.endswith(".json")]
+file_list = [f for f in os.listdir(output_path) if f.endswith(".json")]
 for f in file_list:
-    os.remove(os.path.join(OUTPUT_PATH, f))
+    os.remove(os.path.join(output_path, f))
 
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
-    handlers=[logging.StreamHandler(), logging.FileHandler(os.path.join(OUTPUT_PATH, LOGGING_FILE_NAME))]
-)
+    handlers=[logging.StreamHandler(), logging.FileHandler(os.path.join(output_path, LOGGING_FILE_NAME))]
+    )
+
+local_timezone = pytz.timezone("CET")
+
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s %(levelname)s %(message)s',
+#     handlers=[logging.StreamHandler(), logging.FileHandler(os.path.join(OUTPUT_PATH, LOGGING_FILE_NAME))]
+# )
 
 async def get_energy_zero_data() -> dict:
     """
@@ -213,7 +222,6 @@ async def get_OpenWeather_geographical_coordinates_in_NL(api_key:str, plaats:str
 
 
 if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
     secrets_file = os.path.join(script_dir, 'secrets.ini')
 # get the api keys and location from the secrets.ini file
     configur = ConfigParser() 
@@ -235,7 +243,7 @@ if __name__ == "__main__":
     entsoe_data = asyncio.run(get_Entsoe_data(api_key=entsoe_api_key))
     weather_data = asyncio.run(get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude))
 # write the data to a json file
-    json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_energy_price_forecast.json")
+    json_file_name = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_energy_price_forecast.json")
     json_data = {}
     json_data['energy zero price forecast'] = energy_zero_data
     json_data['entsoe price forecast'] = entsoe_data
@@ -250,8 +258,8 @@ if __name__ == "__main__":
                             #  "weather_source": "OpenWeatherMap API v2.5"}
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
-    # # copy the data to a current file to be downloaded by a client
-    # shutil.copy(json_file_name, os.path.join(OUTPUT_PATH, "energy_price_forecast.json"))    
+    # copy the data to a current file to be downloaded by a client
+    shutil.copy(json_file_name, os.path.join(output_path, "energy_price_forecast.json"))    
 
 # get the weather forecast data and write the data to a json file
     data = meteo.read_json_url_weatherforecast(meteoserver_api_key, plaats, model='HARMONIE')  # Option 1: HARMONIE/HiRLAM
@@ -289,11 +297,11 @@ if __name__ == "__main__":
     json_data['metadata'] = {"plaats": plaats,
                              "data_timezone": local_timezone,
                              "model": "HARMONIE (Benelux)"}
-    json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_weather_forecast.json")
+    json_file_name = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_weather_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
-    # # copy the data to a current file to be downloaded by a client
-    # shutil.copy(json_file_name, os.path.join(OUTPUT_PATH, "weather_forecast.json"))    
+    # copy the data to a current file to be downloaded by a client
+    shutil.copy(json_file_name, os.path.join(output_path, "weather_forecast.json"))    
 
 # get the sun forecast data and write the data to a json file
     current, forecast, location = meteo.read_json_url_sunData(meteoserver_api_key, plaats, loc=True, numeric=False)
@@ -316,15 +324,15 @@ if __name__ == "__main__":
     # json_data['current'] = current.to_dict(orient='records')    
     json_data['metadata'] = {"plaats": plaats,
                              "data_timezone": local_timezone}    
-    json_file_name = os.path.join(OUTPUT_PATH, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
+    json_file_name = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}{local_timezone}_sun_forecast.json")
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
-    # # copy the data to a current file to be downloaded by a client
-    # shutil.copy(json_file_name, os.path.join(OUTPUT_PATH, "sun_forecast.json"))    
+    # copy the data to a current file to be downloaded by a client
+    shutil.copy(json_file_name, os.path.join(output_path, "sun_forecast.json"))    
 
 # copy the data to remote storage
     if REMOTE_STORAGE_PATH is not None and REMOTE_STORAGE_PATH is not None:
         try:
-            subprocess.run(['rclone', 'copy', OUTPUT_PATH, REMOTE_STORAGE_PATH], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(['rclone', 'copy', output_path, REMOTE_STORAGE_PATH], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception as e:
             logging.error(f"Error copying data to remote storage: {e}")
