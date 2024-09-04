@@ -26,7 +26,7 @@ import shutil
 # python /home/pi/energyDataHub/energyDataScraper.py
 # deactivate
 
-OUTPUT_PATH = None # r'/home/pi/tmp/energyData'
+OUTPUT_PATH = '/data' # None # r'/home/pi/tmp/energyData'
 REMOTE_STORAGE_PATH = None # r'gdrive:/data'
 LOGGING_FILE_NAME = 'energyDataScraper.log'
 
