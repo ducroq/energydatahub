@@ -21,6 +21,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Create data directory
+      run: mkdir -p data        
+
     - name: Collect data
       run: python energyDataScraper.py
 
