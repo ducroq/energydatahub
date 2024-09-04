@@ -2,4 +2,4 @@ entsoe-py
 easyenergy
 requests
 meteoserver
-
+energyzero
