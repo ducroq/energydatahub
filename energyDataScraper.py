@@ -259,7 +259,8 @@ if __name__ == "__main__":
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
     # copy the data to a current file to be downloaded by a client
-    shutil.copy(json_file_name, os.path.join(output_path, "energy_price_forecast.json"))    
+    shutil.copy(json_file_name, os.path.join(output_path, "energy_price_forecast.json"))
+    logging.info(f"energy_price_forecast data written to {json_file_name} and {os.path.join(output_path, "energy_price_forecast.json")}")
 
 # get the weather forecast data and write the data to a json file
     data = meteo.read_json_url_weatherforecast(meteoserver_api_key, plaats, model='HARMONIE')  # Option 1: HARMONIE/HiRLAM
@@ -302,6 +303,7 @@ if __name__ == "__main__":
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
     # copy the data to a current file to be downloaded by a client
     shutil.copy(json_file_name, os.path.join(output_path, "weather_forecast.json"))    
+    logging.info(f"weather_forecast data written to {json_file_name} and {os.path.join(output_path, "weather_forecast.json")}")
 
 # get the sun forecast data and write the data to a json file
     current, forecast, location = meteo.read_json_url_sunData(meteoserver_api_key, plaats, loc=True, numeric=False)
@@ -329,6 +331,7 @@ if __name__ == "__main__":
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
     # copy the data to a current file to be downloaded by a client
     shutil.copy(json_file_name, os.path.join(output_path, "sun_forecast.json"))    
+    logging.info(f"sun_forecast data written to {json_file_name} and {os.path.join(output_path, "sun_forecast.json")}")
 
 # copy the data to remote storage
     if REMOTE_STORAGE_PATH is not None and REMOTE_STORAGE_PATH is not None:
