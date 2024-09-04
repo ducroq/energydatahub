@@ -24,6 +24,11 @@ jobs:
     - name: Collect data
       run: python energyDataScraper.py
 
+    - name: Copy JSON files to docs folder
+      run: |
+        mkdir -p docs
+        cp data/*.json docs/      
+
     - name: Commit and push if changed
       run: |
         git config --global user.email "action@github.com"
