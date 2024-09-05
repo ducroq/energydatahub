@@ -33,19 +33,37 @@ jobs:
     - name: Copy JSON files to docs folder
       run: |
         mkdir -p docs
-        cp data/*.json docs/      
+        cp data/*.json docs/
+
+    - name: List contents of data and docs directories
+      run: |
+        echo "Contents of data directory:"
+        ls -la data/
+        echo "Contents of docs directory:"
+        ls -la docs/        
 
     - name: Commit and push if changed
       run: |
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
-        git add data/*.json docs/*.json
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update data" && git push)
+        git add -f data/*.json docs/*.json
+        git status
+        git diff --staged --name-status
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update energy data and rotate old data" && git push)
       env:
-        GITHUB_TOKEN: ${{ secrets.PAT }}
+        GITHUB_TOKEN: ${{ secrets.PAT }}  
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.PAT }}
         publish_dir: ./docs        
+
+    - name: Verify deployment
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Contents of current directory:"
+        ls -la
+        echo "Contents of docs directory:"
+        ls -la docs/        
