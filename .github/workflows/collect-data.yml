@@ -2,7 +2,7 @@ name: Collect and Publish Data
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+    - cron: '0 16 * * *'  # Runs daily at midnight UTC
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
@@ -30,17 +30,28 @@ jobs:
     - name: Collect data
       run: python energyDataScraper.py
 
-    - name: Copy JSON files to docs folder
+    # - name: Rotate data (keep last 30 days)
+    #   run: |
+    #     find data -name "*_energy_price_forecast.json" -type f -mtime +30 -delete
+    #     find data -name "*_weather_forecast.json" -type f -mtime +30 -delete
+    #     find data -name "*_sun_forecast.json" -type f -mtime +30 -delete      
+
+    # - name: Copy JSON files to docs folder
+    #   run: |
+    #     mkdir -p docs
+    #     cp data/*.json docs/
+
+    - name: Prepare docs folder with only current data
       run: |
         mkdir -p docs
-        cp data/*.json docs/
+        cp data/*forecast.json docs/  # Copy only the current forecast files without dates        
 
-    - name: List contents of data and docs directories
-      run: |
-        echo "Contents of data directory:"
-        ls -la data/
-        echo "Contents of docs directory:"
-        ls -la docs/        
+    # - name: List contents of data and docs directories
+    #   run: |
+    #     echo "Contents of data directory:"
+    #     ls -la data/
+    #     echo "Contents of docs directory:"
+    #     ls -la docs/        
 
     - name: Commit and push if changed
       run: |
@@ -49,7 +60,7 @@ jobs:
         git add -f data/*.json docs/*.json
         git status
         git diff --staged --name-status
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update energy data and rotate old data" && git push)
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update energy data" && git push)
       env:
         GITHUB_TOKEN: ${{ secrets.PAT }}  
 
@@ -59,11 +70,11 @@ jobs:
         github_token: ${{ secrets.PAT }}
         publish_dir: ./docs        
 
-    - name: Verify deployment
-      run: |
-        echo "Current directory:"
-        pwd
-        echo "Contents of current directory:"
-        ls -la
-        echo "Contents of docs directory:"
-        ls -la docs/        
+    # - name: Verify deployment
+    #   run: |
+    #     echo "Current directory:"
+    #     pwd
+    #     echo "Contents of current directory:"
+    #     ls -la
+    #     echo "Contents of docs directory:"
+    #     ls -la docs/
