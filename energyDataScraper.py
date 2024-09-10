@@ -98,21 +98,16 @@ async def get_Entsoe_data(api_key:str) -> dict:
     Returns:
         dict: A dictionary containing the day-ahead energy price data [EUR/MWh].
     """
-    # script_dir = os.path.dirname(os.path.abspath(__file__))
-    # secrets_file = os.path.join(script_dir, 'secrets.ini')
-    # configur = ConfigParser() 
-    # configur.read(secrets_file)
-    # api_key = configur.get('api_keys', 'entsoe')
     country_code = 'NL'
     try:
         client = EntsoePandasClient(api_key=api_key)
 
         current_time = datetime.now()
-        start_timestamp = pd.Timestamp(current_time, tz='Europe/Amsterdam')
+        start_timestamp = pd.Timestamp(current_time) #, tz='Europe/Amsterdam')
         current_start_timestamp = start_timestamp.replace(year=current_time.year, month=current_time.month, day=current_time.day, hour=current_time.hour, minute=0, second=0, microsecond=0)
         tomorrow = current_time  + timedelta(days = 1)
         tomorrow_midnight = tomorrow.replace(hour=23, minute=0, second=0, microsecond=0)
-        end_timestamp = pd.Timestamp(tomorrow_midnight, tz='Europe/Amsterdam')
+        end_timestamp = pd.Timestamp(tomorrow_midnight) #, tz='Europe/Amsterdam')
         ts = client.query_day_ahead_prices(country_code, start=current_start_timestamp, end=end_timestamp)
         data_dict = ts.to_dict() # { ts.inde for ts.index in ts.values}
         formatted_keys = [t.strftime('%Y-%m-%dT%H:%M:%S+02:00') for t in data_dict.keys()]
@@ -248,14 +243,10 @@ if __name__ == "__main__":
     json_data['energy zero price forecast'] = energy_zero_data
     json_data['entsoe price forecast'] = entsoe_data
     # json_data['open weather forecast'] = weather_data
-    json_data['units'] = {"energy_price": "EUR/kWh",
+    json_data['units'] = {"energy_zero_price": "EUR/kWh (incl. VAT)",
                           "entsoe_price": "EUR/MWh"}
-                        #   "temperature": "K",
-                        #   "pressure": "hPa",
-                        #   "wind_speed": "m/s"}
     json_data['metadata'] = {"energy_zero_source": "EnergyZero API v2.1",
                              "entsoe_source": "ENTSO-E Transparency Platform API v1.3"}    
-                            #  "weather_source": "OpenWeatherMap API v2.5"}
     with open(json_file_name, 'w', encoding='utf-8') as fp:
         json.dump(json_data, fp, indent=4, sort_keys=True, default=str)
     # copy the data to a current file to be downloaded by a client
