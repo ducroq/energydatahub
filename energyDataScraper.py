@@ -50,6 +50,7 @@ logging.basicConfig(
     )
 
 local_timezone = pytz.timezone("CET")
+country_code = 'NL'
 
 # logging.basicConfig(
 #     level=logging.DEBUG,
@@ -98,16 +99,15 @@ async def get_Entsoe_data(api_key:str) -> dict:
     Returns:
         dict: A dictionary containing the day-ahead energy price data [EUR/MWh].
     """
-    country_code = 'NL'
     try:
         client = EntsoePandasClient(api_key=api_key)
 
         current_time = datetime.now()
-        start_timestamp = pd.Timestamp(current_time) #, tz='Europe/Amsterdam')
+        start_timestamp = pd.Timestamp(current_time, tz='UTC')
         current_start_timestamp = start_timestamp.replace(year=current_time.year, month=current_time.month, day=current_time.day, hour=current_time.hour, minute=0, second=0, microsecond=0)
         tomorrow = current_time  + timedelta(days = 1)
         tomorrow_midnight = tomorrow.replace(hour=23, minute=0, second=0, microsecond=0)
-        end_timestamp = pd.Timestamp(tomorrow_midnight) #, tz='Europe/Amsterdam')
+        end_timestamp = pd.Timestamp(tomorrow_midnight, tz='UTC')
         ts = client.query_day_ahead_prices(country_code, start=current_start_timestamp, end=end_timestamp)
         data_dict = ts.to_dict() # { ts.inde for ts.index in ts.values}
         formatted_keys = [t.strftime('%Y-%m-%dT%H:%M:%S+02:00') for t in data_dict.keys()]
@@ -133,6 +133,48 @@ async def get_Entsoe_data(api_key:str) -> dict:
     except Exception as e:
         logging.error(f"Error retrieving Entsoe data: {e}")     
         return None
+    
+async def get_Epex_spot_data() -> dict:
+    """
+    Retrieves day-ahead Epex energy price data.
+
+    Returns:
+        dict: A dictionary containing the day-ahead energy price data [EUR/MWh].
+    """
+    url = 'https://api.awattar.at/v1/marketdata?'
+    try:
+        # current_time = datetime.now()
+        # start_timestamp = pd.Timestamp(current_time)
+        # tomorrow = current_time  + timedelta(days = 1)
+        # tomorrow_midnight = tomorrow.replace(hour=23, minute=0, second=0, microsecond=0)
+        # end_timestamp = pd.Timestamp(tomorrow_midnight)
+
+        # start_timestamp = int(start_timestamp.timestamp())
+        # end_timestamp = int(end_timestamp.timestamp())
+
+        # response = requests.get(url=url + f'start={start_timestamp}000&end={end_timestamp}000')
+        # response_df = pd.DataFrame(response.json()['data'])
+        # response_df['start_date'] = pd.to_datetime(response_df.start_timestamp, unit='ms')
+
+
+        # ts = client.query_day_ahead_prices(country_code, start=current_start_timestamp, end=end_timestamp)
+        # data_dict = ts.to_dict() # { ts.inde for ts.index in ts.values}        
+
+
+
+
+        # now_hour = list(data.keys())[0]
+        # next_hour = list(data.keys())[1]
+        
+        # logging.info(f"Entsoe day ahead price from: {start_timestamp} to {end_timestamp}\n"
+        #              f"Current: {data[now_hour]} EUR/MWh @ {now_hour}\n" 
+        #              f"Next hour: {data[next_hour]} EUR/MWh @ {next_hour}")
+
+        return data
+
+    except Exception as e:
+        logging.error(f"Error retrieving Entsoe data: {e}")     
+        return None    
     
 async def get_OpenWeather_data(api_key:str, latitude:str, longitude:str) -> dict:
     """
@@ -212,8 +254,6 @@ async def get_OpenWeather_geographical_coordinates_in_NL(api_key:str, plaats:str
         logging.error(f"Error retrieving OpenWeather data: {e}")     
         return None
 
-# TODO: get more relevant entsoe data
-# TODO: add other price sources
 
 
 if __name__ == "__main__":
@@ -229,7 +269,7 @@ if __name__ == "__main__":
     location = asyncio.run(get_OpenWeather_geographical_coordinates_in_NL(api_key=openweather_api_key, plaats=plaats))
     latitude = location['latitude']
     longitude = location['longitude']
-# get the energy price data
+# get the data
     energy_zero_data = asyncio.run(get_energy_zero_data())
     energy_zero_data = {key.astimezone(local_timezone).isoformat(): value for key, value in energy_zero_data.prices.items()}
     current_time = datetime.now(local_timezone)
