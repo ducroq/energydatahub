@@ -3,3 +3,5 @@ easyenergy
 requests
 meteoserver
 energyzero
+nordpool
+pyluchtmeetnet
