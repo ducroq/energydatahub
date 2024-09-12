@@ -2,7 +2,6 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 import logging
 from energyzero import EnergyZero, VatOption
-import pytz
 
 async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> dict:
     """
@@ -60,6 +59,8 @@ async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> dict
 
 # Example usage
 async def main():
+    import pytz
+
     logging.basicConfig(level=logging.INFO)
     
     cest = pytz.timezone('Europe/Amsterdam')
