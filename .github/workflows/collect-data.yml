@@ -28,7 +28,7 @@ jobs:
       run: mkdir -p data        
 
     - name: Collect data
-      run: python energyDataScraper.py
+      run: python energy_data_fetcher.py
 
     # - name: Rotate data (keep last 30 days)
     #   run: |
