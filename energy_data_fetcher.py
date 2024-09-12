@@ -13,6 +13,7 @@ from energy_zero_price_fetcher import get_Energy_zero_data
 from epex_price_fetcher import get_Epex_data
 from open_weather_client import get_OpenWeather_data, get_OpenWeather_geographical_coordinates_in_NL
 from meteoserver_client import get_MeteoServer_weather_forecast_data, get_MeteoServer_sun_forecast
+from nordpool_data_fetcher import get_Elspot_data
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
@@ -60,17 +61,19 @@ async def fetch_data(config: ConfigParser, start_time: datetime, end_time: datet
         get_Entsoe_data(entsoe_api_key, country_code, start_time=start_time, end_time=end_time),
         get_Energy_zero_data(start_time=start_time, end_time=end_time),
         get_Epex_data(start_time=start_time, end_time=end_time),
+        get_Elspot_data(area=country_code, start_time=start_time, end_time=end_time),
         get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude),
         get_MeteoServer_weather_forecast_data(meteoserver_api_key, plaats),
         get_MeteoServer_sun_forecast(meteoserver_api_key, plaats)
     ]
 
-    entsoe_data, energy_zero_data, epex_data, open_weather_data, meteo_weather_data, meteo_sun_data = await asyncio.gather(*tasks)
+    entsoe_data, energy_zero_data, epex_data, elspot_data, open_weather_data, meteo_weather_data, meteo_sun_data = await asyncio.gather(*tasks)
 
     return {
         'entsoe': entsoe_data,
         'energy_zero': energy_zero_data,
         'epex': epex_data,
+        'elspot': elspot_data,
         'weather_forecast': meteo_weather_data,
         'sun_forecast': meteo_sun_data
     }
@@ -105,15 +108,18 @@ async def main() -> None:
             'energy zero price forecast': data['energy_zero'],
             'entsoe price forecast': data['entsoe'],
             'epex price forecast': data['epex'],
+            'elspot price forecast': data['elspot'],
             'price units': {
                 "energy zero": "EUR/kWh (incl. VAT)",
                 "entsoe": "EUR/MWh",
-                "epex": "EUR/MWh"
+                "epex": "EUR/MWh",
+                "elspot": "EUR/MWh"
             },
             'data sources': {
                 "energy zero": "EnergyZero API v2.1",
                 "entsoe": "ENTSO-E Transparency Platform API v1.3",
-                "epex": "Awattar API"
+                "epex": "Awattar API",
+                "elspot": "Nordpool API"
             }
         }
         write_json_file(energy_price_forecast, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_energy_price_forecast.json", output_path)
