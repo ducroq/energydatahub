@@ -43,7 +43,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
         raise ValueError("End time must be provided")
     
     # Ensure start and end times are in the specified timezone
-    tz = start_time.tzinfo or timezone.utc
+    tz = start_time.tzinfo
     start_time = start_time.astimezone(tz)
     end_time = end_time.astimezone(tz)
     
@@ -87,7 +87,8 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
 
                 for item in response_data['forecast']:
                     naive_item_time = datetime.strptime(item.pop('cet'), '%d-%m-%Y %H:%M')
-                    localized_item_time = tz.localize(naive_item_time)
+                    # localized_item_time = tz.localize(naive_item_time)
+                    localized_item_time = naive_item_time.astimezone(tz)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
                         processed_data['sun forecast'][localized_item_time.isoformat()] = processed_item
@@ -119,7 +120,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
         raise ValueError("End time must be provided")
     
     # Ensure start and end times are in the specified timezone
-    tz = start_time.tzinfo or timezone.utc
+    tz = start_time.tzinfo
     start_time = start_time.astimezone(tz)
     end_time = end_time.astimezone(tz)
 
@@ -177,7 +178,8 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
 
                 for item in response_data['data']:
                     naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
-                    localized_item_time = tz.localize(naive_item_time)
+                    localized_item_time = naive_item_time.astimezone(tz)
+                    # localized_item_time = tz.localize(naive_item_time)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
                         processed_data['weather forecast'][localized_item_time.isoformat()] = processed_item                        
