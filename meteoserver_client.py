@@ -8,6 +8,19 @@ from time_zone_helpers import compare_timezones
 # TODO: extract liveweer data from MeteoServer API, https://data.meteoserver.nl/api/liveweer_synop.php?lat=52.1052957&long=5.1706729&key=7daf22bed0&select=1
 # TODO: extract current sun forecast from response_data['current'][0] and add to sun forecast data
 
+def convert_value(value):
+    if value == '-':
+        return None  # Using None instead of NaN for JSON compatibility
+    elif value.lower() == 'none':
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            return value  # Keep as string if it's not a number
+        
 async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> dict:
     """
     Retrieves sun forecast data from MeteoServer API for a specified location and time interval.
@@ -76,7 +89,8 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                     naive_item_time = datetime.strptime(item.pop('cet'), '%d-%m-%Y %H:%M')
                     localized_item_time = tz.localize(naive_item_time)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
-                        processed_data['sun forecast'][localized_item_time.isoformat()] = item
+                        processed_item = {key: convert_value(value) for key, value in item.items()}
+                        processed_data['sun forecast'][localized_item_time.isoformat()] = processed_item
     except Exception as e:
         logging.error(f"Error fetching sun forecast data: {e}")
 
@@ -165,7 +179,8 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
                     naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
                     localized_item_time = tz.localize(naive_item_time)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
-                        processed_data['weather forecast'][localized_item_time.isoformat()] = item
+                        processed_item = {key: convert_value(value) for key, value in item.items()}
+                        processed_data['weather forecast'][localized_item_time.isoformat()] = processed_item                        
     except Exception as e:
         logging.error(f"Error fetching weather forecast data: {e}")
 
