@@ -1,4 +1,5 @@
 from timezonefinder import TimezoneFinder
+import reverse_geocoder as rg
 from datetime import datetime, tzinfo
 import pytz
 from zoneinfo import ZoneInfo
@@ -9,6 +10,18 @@ def get_timezone(lat:float, lon:float) -> ZoneInfo:
     if timezone_str is None:
         return None
     return ZoneInfo(timezone_str)
+
+def get_timezone_and_country(lat, lng):
+    tf = TimezoneFinder()
+    timezone_str = tf.timezone_at(lat=lat, lng=lng)
+    
+    # Get country code
+    result = rg.search((lat, lng), mode=1)  # mode=1 returns only one result
+    country_code = result[0]['cc']
+    
+    if timezone_str is None:
+        return None, country_code
+    return ZoneInfo(timezone_str), country_code
 
 def compare_timezones(current_time: datetime, lat: float, lon: float) -> tuple[bool, str]:
     coord_tz = get_timezone(lat, lon)
@@ -47,6 +60,10 @@ if __name__ == "__main__":
     # Example usage
     latitude = 48.8566  # Paris latitude
     longitude = 2.3522  # Paris longitude
+
+    # Example with country code retrieval
+    zone_info, country_code = get_timezone_and_country(latitude, longitude)
+    print(f"Timezone: {zone_info}, Country code: {country_code}")
 
     # Example with matching timezone
     current_time_paris = datetime.now(ZoneInfo("Europe/Paris"))
