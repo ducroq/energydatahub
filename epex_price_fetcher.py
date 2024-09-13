@@ -4,13 +4,13 @@ from datetime import datetime, timedelta, timezone
 import pytz
 import pandas as pd
 
-async def get_Epex_data(start_time: datetime = None, end_time: datetime = None) -> dict:
+async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
     """
     Retrieves Epex energy price data for a specified time range.
 
     Args:
-        start_time (datetime, optional): The start of the time range. 
-        end_time (datetime, optional): The end of the time range. 
+        start_time (datetime): The start of the time range. 
+        end_time (datetime): The end of the time range. 
 
     Returns:
         dict: A dictionary containing the day-ahead energy price data [EUR/MWh].
