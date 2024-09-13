@@ -5,15 +5,15 @@ import json
 import asyncio
 import logging
 from typing import Dict, Any
-import pytz
 from configparser import ConfigParser
 
 from entsoe_client import get_Entsoe_data
 from energy_zero_price_fetcher import get_Energy_zero_data
 from epex_price_fetcher import get_Epex_data
-from open_weather_client import get_OpenWeather_data, get_OpenWeather_geographical_coordinates_in_NL
+from open_weather_client import get_OpenWeather_data
 from meteoserver_client import get_MeteoServer_weather_forecast_data, get_MeteoServer_sun_forecast
 from nordpool_data_fetcher import get_Elspot_data
+from time_zone_helpers import get_timezone, get_timezone_and_country
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
@@ -51,11 +51,11 @@ async def fetch_data(config: ConfigParser, start_time: datetime, end_time: datet
     entsoe_api_key = config.get('api_keys', 'entsoe')
     openweather_api_key = config.get('api_keys', 'openweather')
     meteoserver_api_key = config.get('api_keys', 'meteo')
-    plaats = config.get('location', 'plaats')
-    country_code = config.get('location', 'country_code')
-
-    location = await get_OpenWeather_geographical_coordinates_in_NL(api_key=openweather_api_key, plaats=plaats)
-    latitude, longitude = location['latitude'], location['longitude']
+    latitude = float(config.get('location', 'latitude'))
+    longitude = float(config.get('location', 'longitude'))
+    tz, country_code = get_timezone_and_country(latitude, longitude)
+    start_time = start_time.astimezone(tz)
+    end_time = end_time.astimezone(tz)    
 
     tasks = [
         get_Entsoe_data(entsoe_api_key, country_code, start_time=start_time, end_time=end_time),
@@ -63,8 +63,8 @@ async def fetch_data(config: ConfigParser, start_time: datetime, end_time: datet
         get_Epex_data(start_time=start_time, end_time=end_time),
         get_Elspot_data(area=country_code, start_time=start_time, end_time=end_time),
         get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude),
-        get_MeteoServer_weather_forecast_data(meteoserver_api_key, plaats),
-        get_MeteoServer_sun_forecast(meteoserver_api_key, plaats)
+        get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude=latitude, longitude=longitude, start_time=start_time, end_time=end_time),
+        get_MeteoServer_sun_forecast(meteoserver_api_key, latitude=latitude, longitude=longitude, start_time=start_time, end_time=end_time)
     ]
 
     entsoe_data, energy_zero_data, epex_data, elspot_data, open_weather_data, meteo_weather_data, meteo_sun_data = await asyncio.gather(*tasks)
@@ -96,8 +96,7 @@ async def main() -> None:
     ensure_output_directory(output_path)
 
     config = load_config(script_dir)
-    local_timezone = pytz.timezone(config.get('location', 'timezone'))
-    current_time = datetime.now(local_timezone)
+    current_time = datetime.now()
     tomorrow_midnight = (current_time + timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=999999)
 
     try:
