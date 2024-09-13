@@ -1,7 +1,7 @@
 entsoe-py
 easyenergy
 requests
-meteoserver
 energyzero
 nordpool
 pyluchtmeetnet
+timezonefinder
