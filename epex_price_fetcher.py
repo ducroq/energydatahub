@@ -2,8 +2,6 @@ import aiohttp
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-import pytz
-import pandas as pd
 
 async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
     """
@@ -59,6 +57,8 @@ async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
 
 # Example usage
 async def main():
+    import pytz
+
     cest = pytz.timezone('Europe/Amsterdam')
     
     current_time = datetime.now(cest)
@@ -68,7 +68,7 @@ async def main():
     spot_data = await get_Epex_data(start_time=current_time, end_time=tomorrow_midnight)
     print("\nFirst 5 data points:")
     for timestamp, price in list(spot_data.items())[:5]:
-        print(f"Timestamp (UTC): {timestamp}, Price: {price} EUR/MWh")
+        print(f"Timestamp: {timestamp}, Price: {price} EUR/MWh")
 
 if __name__ == "__main__":
     asyncio.run(main())

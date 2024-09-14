@@ -77,7 +77,7 @@ async def main():
     print(f"Total data points: {len(nordpool_data)}")
     print("\nFirst 5 data points:")
     for timestamp, price in list(nordpool_data.items())[:5]:
-        print(f"Timestamp (UTC): {timestamp}, Price: {price} EUR/MWh")
+        print(f"Timestamp: {timestamp}, Price: {price} EUR/MWh")
 
 if __name__ == "__main__":
     asyncio.run(main())
