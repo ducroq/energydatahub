@@ -3,10 +3,7 @@ import logging
 import aiohttp
 from datetime import datetime, timedelta, timezone
 import pytz
-from time_zone_helpers import compare_timezones
-
-# TODO: extract liveweer data from MeteoServer API, https://data.meteoserver.nl/api/liveweer_synop.php?lat=52.1052957&long=5.1706729&key=7daf22bed0&select=1
-# TODO: extract current sun forecast from response_data['current'][0] and add to sun forecast data
+from timezone_helpers import compare_timezones
 
 def convert_value(value):
     if value == '-':
@@ -87,7 +84,6 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
 
                 for item in response_data['forecast']:
                     naive_item_time = datetime.strptime(item.pop('cet'), '%d-%m-%Y %H:%M')
-                    # localized_item_time = tz.localize(naive_item_time)
                     localized_item_time = naive_item_time.astimezone(tz)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
@@ -179,7 +175,6 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
                 for item in response_data['data']:
                     naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
                     localized_item_time = naive_item_time.astimezone(tz)
-                    # localized_item_time = tz.localize(naive_item_time)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
                         processed_data['weather forecast'][localized_item_time.isoformat()] = processed_item                        

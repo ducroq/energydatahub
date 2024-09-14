@@ -13,7 +13,7 @@ from epex_price_fetcher import get_Epex_data
 from open_weather_client import get_OpenWeather_data
 from meteoserver_client import get_MeteoServer_weather_forecast_data, get_MeteoServer_sun_forecast
 from nordpool_data_fetcher import get_Elspot_data
-from time_zone_helpers import get_timezone, get_timezone_and_country
+from timezone_helpers import get_timezone_and_country
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
@@ -21,7 +21,12 @@ SECRETS_FILE_NAME = 'secrets.ini'
 OUTPUT_FOLDER_NAME = 'data'
 output_path = os.path.join(os.getcwd(), OUTPUT_FOLDER_NAME)
 
-# setup logging
+# TODO: extract intraday price data fro Nordpool API, https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,EUR&endDate=2021-10-01&startDate=2021-09-30&area=SYS&format=json
+# TODO: extract liveweer data from MeteoServer API, https://data.meteoserver.nl/api/liveweer_synop.php?lat=52.1052957&long=5.1706729&key=7daf22bed0&select=1
+# TODO: extract current sun forecast from response_data['current'][0] and add to sun forecast data
+
+
+# Setup logging
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',

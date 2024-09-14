@@ -72,7 +72,7 @@ async def main():
     print(f"Total data points: {len(energy_zero_data)}")
     print("\nFirst 5 data points:")
     for timestamp, price in list(energy_zero_data.items())[:5]:
-        print(f"Timestamp (UTC): {timestamp}, Price: {price} EUR/kWh")
+        print(f"Timestamp: {timestamp}, Price: {price} EUR/kWh")
 
 if __name__ == "__main__":
     asyncio.run(main())
