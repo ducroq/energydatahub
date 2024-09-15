@@ -59,7 +59,6 @@ async def get_Elspot_data(country_code: str, start_time: datetime, end_time: dat
 
     except Exception as e:
         logging.error(f"Error retrieving Nordpool data: {e}")
-        logging.error(f"Error details: country_code={country_code}, start_time={start_time}, end_time={end_time}")
         return {}
 
 # Example usage

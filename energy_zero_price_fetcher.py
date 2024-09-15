@@ -54,7 +54,6 @@ async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> dict
 
     except Exception as e:
         logging.error(f"Error retrieving EnergyZero data: {e}")
-        logging.error(f"Error details: start_time={start_time}, end_time={end_time}")
         return {}
 
 # Example usage
