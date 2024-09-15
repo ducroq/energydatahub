@@ -138,7 +138,7 @@ async def main() -> None:
                     os.path.join(output_path, "sun_forecast.json"))
 
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logging.error(e)
 
 if __name__ == "__main__":
     asyncio.run(main())

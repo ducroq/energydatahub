@@ -48,7 +48,7 @@ async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
         url = f"{base_url}?start={params['start']}&end={params['end']}"
         async with session.get(url) as response:
             if response.status != 200:
-                logging.error(f"Error: Unable to fetch data. Status code: {response.status}")
+                logging.error(f"Unable to fetch data. Status code: {response.status}")
                 return processed_data
 
             data = await response.json()

@@ -47,7 +47,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
         try:
             tz = pytz.timezone(str(tz))
         except:
-            logging.warning(f"Warning: Couldn't create a pytz timezone object")
+            logging.warning(f"Couldn't create a pytz timezone object")
     start_time = start_time.astimezone(tz)
     end_time = end_time.astimezone(tz)
 
@@ -55,7 +55,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
     
     match, message = compare_timezones(start_time, latitude, longitude)
     if not match:
-        logging.warning(f"Warning: Timezone mismatch: {message}")
+        logging.warning(f"Timezone mismatch: {message}")
 
     processed_data = {}
     processed_data['units'] = {
@@ -81,7 +81,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
 
             async with session.get(url) as response:
                 if response.status != 200:
-                    logging.error(f"Error: Unable to fetch data. Status code: {response.status}")
+                    logging.error(f"Unable to fetch data. Status code: {response.status}")
                     return processed_data
 
                 response_data = await response.json()
@@ -132,7 +132,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
         try:
             tz = pytz.timezone(str(tz))
         except:
-            logging.warning(f"Warning: Couldn't create a pytz timezone object")    
+            logging.warning(f"Couldn't create a pytz timezone object")    
     start_time = start_time.astimezone(tz)
     end_time = end_time.astimezone(tz)
 
@@ -140,7 +140,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
 
     match, message = compare_timezones(start_time, latitude, longitude)
     if not match:
-        logging.warning(f"Warning: Timezone mismatch: {message}")
+        logging.warning(f"Timezone mismatch: {message}")
 
     processed_data = {}
     processed_data['source'] = 'MeteoServer'
@@ -182,7 +182,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
 
             async with session.get(url) as response:
                 if response.status != 200:
-                    logging.error(f"Error: Unable to fetch data. Status code: {response.status}")
+                    logging.error(f"Unable to fetch data. Status code: {response.status}")
                     return processed_data
 
                 response_data = await response.json()
