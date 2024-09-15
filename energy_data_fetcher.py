@@ -71,19 +71,6 @@ async def fetch_data(config: ConfigParser, start_time: datetime, end_time: datet
     meteo_weather_data = await get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude, longitude, start_time, end_time)
     meteo_sun_data = await get_MeteoServer_sun_forecast(meteoserver_api_key, latitude, longitude, start_time, end_time)
 
-
-    # tasks = [
-    #     get_Entsoe_data(entsoe_api_key, country_code, start_time=start_time, end_time=end_time),
-    #     get_Energy_zero_data(start_time=start_time, end_time=end_time),
-    #     get_Epex_data(start_time=start_time, end_time=end_time),
-    #     get_Elspot_data(area=country_code, start_time=start_time, end_time=end_time),
-    #     get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude),
-    #     get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude=latitude, longitude=longitude, start_time=start_time, end_time=end_time),
-    #     get_MeteoServer_sun_forecast(meteoserver_api_key, latitude=latitude, longitude=longitude, start_time=start_time, end_time=end_time)
-    # ]
-
-    # entsoe_data, energy_zero_data, epex_data, elspot_data, open_weather_data, meteo_weather_data, meteo_sun_data = await asyncio.gather(*tasks)
-
     return {
         'entsoe': entsoe_data,
         'energy_zero': energy_zero_data,

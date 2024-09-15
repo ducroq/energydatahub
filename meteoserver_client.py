@@ -1,8 +1,9 @@
 import asyncio
 import logging
 import aiohttp
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from timezone_helpers import compare_timezones
+import pytz
 
 def convert_value(value):
     if value == '-':
@@ -40,6 +41,13 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
     
     # Ensure start and end times are in the specified timezone
     tz = start_time.tzinfo
+
+    if not isinstance(tz, pytz.BaseTzInfo):
+        # If it's not a pytz timezone, try to create one
+        try:
+            tz = pytz.timezone(str(tz))
+        except:
+            logging.warning(f"Warning: Couldn't create a pytz timezone object")
     start_time = start_time.astimezone(tz)
     end_time = end_time.astimezone(tz)
     
@@ -83,7 +91,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
 
                 for item in response_data['forecast']:
                     naive_item_time = datetime.strptime(item.pop('cet'), '%d-%m-%Y %H:%M')
-                    localized_item_time = naive_item_time.astimezone(tz)
+                    localized_item_time = tz.localize(naive_item_time)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
                         processed_data['sun forecast'][localized_item_time.isoformat()] = processed_item
