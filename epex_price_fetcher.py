@@ -35,6 +35,8 @@ async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
     start_time = start_time.astimezone(tz)
     end_time = end_time.astimezone(tz)
 
+    logging.info(f"Querying Epex API from {start_time} to {end_time}")
+
     params = {
         'start': int(start_time.timestamp() * 1000),
         'end': int(end_time.timestamp() * 1000)

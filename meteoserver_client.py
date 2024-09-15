@@ -50,6 +50,8 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
             logging.warning(f"Warning: Couldn't create a pytz timezone object")
     start_time = start_time.astimezone(tz)
     end_time = end_time.astimezone(tz)
+
+    logging.info(f"Querying Meteo server from {start_time} to {end_time}")
     
     match, message = compare_timezones(start_time, latitude, longitude)
     if not match:
@@ -124,8 +126,17 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
     
     # Ensure start and end times are in the specified timezone
     tz = start_time.tzinfo
+
+    if not isinstance(tz, pytz.BaseTzInfo):
+        # If it's not a pytz timezone, try to create one
+        try:
+            tz = pytz.timezone(str(tz))
+        except:
+            logging.warning(f"Warning: Couldn't create a pytz timezone object")    
     start_time = start_time.astimezone(tz)
     end_time = end_time.astimezone(tz)
+
+    logging.info(f"Querying Meteo server from {start_time} to {end_time}")
 
     match, message = compare_timezones(start_time, latitude, longitude)
     if not match:
