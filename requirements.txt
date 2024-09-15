@@ -5,3 +5,4 @@ energyzero
 nordpool
 pyluchtmeetnet
 timezonefinder
+reverse_geocoder
