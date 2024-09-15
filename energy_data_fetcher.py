@@ -23,8 +23,9 @@ output_path = os.path.join(os.getcwd(), OUTPUT_FOLDER_NAME)
 
 # TODO: extract intraday price data fro Nordpool API, https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,EUR&endDate=2021-10-01&startDate=2021-09-30&area=SYS&format=json
 # TODO: extract liveweer data from MeteoServer API, https://data.meteoserver.nl/api/liveweer_synop.php?lat=52.1052957&long=5.1706729&key=7daf22bed0&select=1
-# TODO: extract current sun forecast from response_data['current'][0] and add to sun forecast data
-
+# TODO: extract current sun from response_data['current'][0] and add to sun forecast data
+# TODO: extract current ait quality data from Luchtmeetnet API, https://api.luchtmeetnet.nl/open_api/measurements?component=NO2&location_code=NL10204&start=2021-10-01T00:00:00Z&end=2021-10-01T23:59:59Z
+# TODO: possibly extract "Copernicus Atmosphere Monitoring Service (CAMS)" data from https://atmosphere.copernicus.eu/catalogue#/
 
 # Setup logging
 logging.basicConfig(
@@ -60,19 +61,28 @@ async def fetch_data(config: ConfigParser, start_time: datetime, end_time: datet
     longitude = float(config.get('location', 'longitude'))
     tz, country_code = get_timezone_and_country(latitude, longitude)
     start_time = start_time.astimezone(tz)
-    end_time = end_time.astimezone(tz)    
+    end_time = end_time.astimezone(tz)
 
-    tasks = [
-        get_Entsoe_data(entsoe_api_key, country_code, start_time=start_time, end_time=end_time),
-        get_Energy_zero_data(start_time=start_time, end_time=end_time),
-        get_Epex_data(start_time=start_time, end_time=end_time),
-        get_Elspot_data(area=country_code, start_time=start_time, end_time=end_time),
-        get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude),
-        get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude=latitude, longitude=longitude, start_time=start_time, end_time=end_time),
-        get_MeteoServer_sun_forecast(meteoserver_api_key, latitude=latitude, longitude=longitude, start_time=start_time, end_time=end_time)
-    ]
+    entsoe_data = await get_Entsoe_data(entsoe_api_key, country_code, start_time, end_time)
+    energy_zero_data = await get_Energy_zero_data(start_time, end_time)
+    epex_data = await get_Epex_data(start_time, end_time)
+    elspot_data = await get_Elspot_data(country_code, start_time, end_time)
+    open_weather_data = await get_OpenWeather_data(openweather_api_key, latitude, longitude)
+    meteo_weather_data = await get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude, longitude, start_time, end_time)
+    meteo_sun_data = await get_MeteoServer_sun_forecast(meteoserver_api_key, latitude, longitude, start_time, end_time)
 
-    entsoe_data, energy_zero_data, epex_data, elspot_data, open_weather_data, meteo_weather_data, meteo_sun_data = await asyncio.gather(*tasks)
+
+    # tasks = [
+    #     get_Entsoe_data(entsoe_api_key, country_code, start_time=start_time, end_time=end_time),
+    #     get_Energy_zero_data(start_time=start_time, end_time=end_time),
+    #     get_Epex_data(start_time=start_time, end_time=end_time),
+    #     get_Elspot_data(area=country_code, start_time=start_time, end_time=end_time),
+    #     get_OpenWeather_data(api_key=openweather_api_key, latitude=latitude, longitude=longitude),
+    #     get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude=latitude, longitude=longitude, start_time=start_time, end_time=end_time),
+    #     get_MeteoServer_sun_forecast(meteoserver_api_key, latitude=latitude, longitude=longitude, start_time=start_time, end_time=end_time)
+    # ]
+
+    # entsoe_data, energy_zero_data, epex_data, elspot_data, open_weather_data, meteo_weather_data, meteo_sun_data = await asyncio.gather(*tasks)
 
     return {
         'entsoe': entsoe_data,
