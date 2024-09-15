@@ -193,7 +193,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
 
                 for item in response_data['data']:
                     naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
-                    localized_item_time = naive_item_time.astimezone(tz)
+                    localized_item_time = tz.localize(naive_item_time)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
                         processed_data['weather forecast'][localized_item_time.isoformat()] = processed_item                        
