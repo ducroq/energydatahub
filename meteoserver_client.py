@@ -2,7 +2,6 @@ import asyncio
 import logging
 import aiohttp
 from datetime import datetime, timedelta, timezone
-import pytz
 from timezone_helpers import compare_timezones
 
 def convert_value(value):
@@ -125,6 +124,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
         logging.warning(f"Warning: Timezone mismatch: {message}")
 
     processed_data = {}
+    processed_data['source'] = 'MeteoServer'
     processed_data['units'] = { 
         "temp": "°C",
         "winds (mean wind velocity)": "m/s",
@@ -185,7 +185,9 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
 
 async def main():
     import os
+    import pytz
     from configparser import ConfigParser
+    from timezone_helpers import get_timezone_and_country
 
     logging.basicConfig(level=logging.INFO)
     script_dir = os.path.dirname(os.path.abspath(__file__))

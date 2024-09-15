@@ -26,8 +26,6 @@ async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> dict
         start_time = start_time.astimezone(tz)
         end_time = end_time.astimezone(tz)
 
-        logging.info(f"Querying EnergyZero API from {start_time} to {end_time}")
-
         async with EnergyZero(vat=VatOption.INCLUDE) as client:
             electricity = await client.energy_prices(start_date=start_time.date(), end_date=end_time.date())
             
