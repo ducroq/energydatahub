@@ -4,6 +4,20 @@ from datetime import datetime, tzinfo
 import pytz
 from zoneinfo import ZoneInfo
 
+# Ensure start and end times are in the specified timezone
+def ensure_timezone(start_time: datetime, end_time: datetime) -> tuple[datetime, datetime, ZoneInfo]:
+    tz = start_time.tzinfo
+
+    if not isinstance(tz, pytz.BaseTzInfo):
+        # If it's not a pytz timezone, try to create one
+        try:
+            tz = pytz.timezone(str(tz))
+        except:
+            raise ValueError("Could not create a pytz timezone object")
+    start_time = start_time.astimezone(tz)
+    end_time = end_time.astimezone(tz)
+    return start_time, end_time, tz
+
 def get_timezone(lat:float, lon:float) -> ZoneInfo:
     tf = TimezoneFinder()
     timezone_str = tf.timezone_at(lat=float(lat), lng=float(lon))
