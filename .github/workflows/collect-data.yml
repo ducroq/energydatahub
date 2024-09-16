@@ -2,7 +2,7 @@ name: Collect and Publish Data
 
 on:
   schedule:
-    - cron: '0 14 * * *'  # Runs daily at 14:00 UTC (16:00 CET / 18:00 CEST)
+    - cron: '0 16 * * *'  # Runs daily at 16:00 UTC (18:00 CET / 20:00 CEST)
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
