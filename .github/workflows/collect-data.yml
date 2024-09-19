@@ -44,7 +44,7 @@ jobs:
     - name: Prepare docs folder with only current data
       run: |
         mkdir -p docs
-        cp data/*forecast.json docs/  # Copy only the current forecast files without dates        
+        cp data/air_quality.json data/energy_price_forecast.json data/sun_forecast.json data/weather_forecast.json docs/  # Copy only the current forecast files
 
     # - name: List contents of data and docs directories
     #   run: |
