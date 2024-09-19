@@ -24,10 +24,6 @@ async def get_Elspot_data(country_code: str, start_time: datetime, end_time: dat
         if end_time is None:
             raise ValueError("End time must be provided")
         
-        # # Ensure start and end times are in the specified timezone
-        # tz = start_time.tzinfo or timezone.utc
-        # start_time = start_time.astimezone(tz)
-        # end_time = end_time.astimezone(tz)
         start_time, end_time, tz = ensure_timezone(start_time, end_time)
 
         logging.info(f"Querying Nordpool API for {country_code} from {start_time} to {end_time}")

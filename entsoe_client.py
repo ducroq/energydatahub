@@ -33,9 +33,6 @@ async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime,
 
         client = EntsoePandasClient(api_key=api_key)
 
-        # This would be the synchronous way to query the data
-        # ts = client.query_day_ahead_prices(country_code, start=start_timestamp, end=end_timestamp)
-
         # Use partial to create a function with keyword arguments
         query_func = partial(client.query_day_ahead_prices, 
                              country_code=country_code, 
