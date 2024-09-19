@@ -64,10 +64,10 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                     return processed_data
 
                 response_data = await response.json()
-                print(response_data)
+                # print(response_data)
                 processed_data['metadata'] = {
                     "plaats": response_data['plaatsnaam'][0]['plaats'],
-                    "station": response_data['current'][0]['station'], 
+                    # "station": response_data['current'][0]['station'], 
                 }
                 for item in response_data['forecast']:
                     naive_item_time = datetime.strptime(item.pop('cet'), '%d-%m-%Y %H:%M')
