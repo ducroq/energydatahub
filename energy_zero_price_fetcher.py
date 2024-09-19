@@ -1,7 +1,8 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import logging
 from energyzero import EnergyZero, VatOption
+from timezone_helpers import ensure_timezone
 
 async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> dict:
     """
@@ -22,9 +23,11 @@ async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> dict
             raise ValueError("End time must be provided")
         
         # Ensure start and end times are in the specified timezone
-        tz = start_time.tzinfo or timezone.utc
-        start_time = start_time.astimezone(tz)
-        end_time = end_time.astimezone(tz)
+        start_time, end_time, tz = ensure_timezone(start_time, end_time)
+
+        # tz = start_time.tzinfo or timezone.utc
+        # start_time = start_time.astimezone(tz)
+        # end_time = end_time.astimezone(tz)
 
         logging.info(f"Querying EnergyZero API from {start_time} to {end_time}")
 

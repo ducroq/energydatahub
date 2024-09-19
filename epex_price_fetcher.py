@@ -1,7 +1,8 @@
 import aiohttp
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from timezone_helpers import ensure_timezone
 
 async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
     """
@@ -30,10 +31,11 @@ async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
     #     'end': int(end_timestamp.timestamp() * 1000)
     # }
 
-    # Ensure start and end times are in the specified timezone
-    tz = start_time.tzinfo or timezone.utc
-    start_time = start_time.astimezone(tz)
-    end_time = end_time.astimezone(tz)
+    # # Ensure start and end times are in the specified timezone
+    # tz = start_time.tzinfo or timezone.utc
+    # start_time = start_time.astimezone(tz)
+    # end_time = end_time.astimezone(tz)
+    start_time, end_time, tz = ensure_timezone(start_time, end_time)
 
     logging.info(f"Querying Epex API from {start_time} to {end_time}")
 
