@@ -25,10 +25,6 @@ async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> dict
         # Ensure start and end times are in the specified timezone
         start_time, end_time, tz = ensure_timezone(start_time, end_time)
 
-        # tz = start_time.tzinfo or timezone.utc
-        # start_time = start_time.astimezone(tz)
-        # end_time = end_time.astimezone(tz)
-
         logging.info(f"Querying EnergyZero API from {start_time} to {end_time}")
 
         async with EnergyZero(vat=VatOption.INCLUDE) as client:

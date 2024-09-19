@@ -23,18 +23,6 @@ async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
     if end_time is None:
         raise ValueError("End time must be provided")
 
-    # # Convert to pandas Timestamp for consistent handling
-    # start_timestamp = pd.Timestamp(start_time).tz_convert('UTC')
-    # end_timestamp = pd.Timestamp(end_time).tz_convert('UTC')
-    # params = {
-    #     'start': int(start_timestamp.timestamp() * 1000),
-    #     'end': int(end_timestamp.timestamp() * 1000)
-    # }
-
-    # # Ensure start and end times are in the specified timezone
-    # tz = start_time.tzinfo or timezone.utc
-    # start_time = start_time.astimezone(tz)
-    # end_time = end_time.astimezone(tz)
     start_time, end_time, tz = ensure_timezone(start_time, end_time)
 
     logging.info(f"Querying Epex API from {start_time} to {end_time}")

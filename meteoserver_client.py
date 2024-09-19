@@ -4,7 +4,6 @@ import aiohttp
 from datetime import datetime, timedelta
 from timezone_helpers import ensure_timezone, compare_timezones
 from helpers import convert_value
-import pytz
 
         
 async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> dict:
@@ -172,7 +171,6 @@ async def main():
     import os
     import pytz
     from configparser import ConfigParser
-    from timezone_helpers import get_timezone_and_country
 
     logging.basicConfig(level=logging.INFO)
     script_dir = os.path.dirname(os.path.abspath(__file__))

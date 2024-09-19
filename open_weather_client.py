@@ -80,7 +80,6 @@ async def main():
     configur = ConfigParser() 
     configur.read(secrets_file)
     openweather_api_key = configur.get('api_keys', 'openweather')
-    meteoserver_api_key = configur.get('api_keys', 'meteo')
 
     api_key = openweather_api_key
     plaats = "Amsterdam"
