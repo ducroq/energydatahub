@@ -114,11 +114,11 @@ async def main() -> None:
 
     config = load_config(script_dir)
     current_time = datetime.now()
-    tomorrow_midnight = (current_time + timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=999999)
+    tomorrow = (current_time + timedelta(days=1))
     yesterday = current_time - timedelta(days=1)
 
     try:
-        fore_cast_data = await fetch_forecast_data(config, current_time, tomorrow_midnight)
+        fore_cast_data = await fetch_forecast_data(config, current_time, tomorrow)
         reported_data = await fetch_reported_data(config, yesterday, current_time)
         
         # Prepare and write energy price forecast
