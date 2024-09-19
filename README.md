@@ -6,7 +6,7 @@ https://docs.github.com/en/actions/using-github-hosted-runners/using-github-host
 https://ducroq.github.io/energydatahub/sun_forecast.json
 https://ducroq.github.io/energydatahub/energy_price_forecast.json
 https://ducroq.github.io/energydatahub/weather_forecast.json
-
+https://ducroq.github.io/energydatahub/air_quality.json
 
 
 

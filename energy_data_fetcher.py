@@ -13,6 +13,7 @@ from epex_price_fetcher import get_Epex_data
 from open_weather_client import get_OpenWeather_data
 from meteoserver_client import get_MeteoServer_weather_forecast_data, get_MeteoServer_sun_forecast
 from nordpool_data_fetcher import get_Elspot_data
+from luchtmeetnet_data_fetcher import get_luchtmeetnet_data
 from timezone_helpers import get_timezone_and_country
 
 # Constants
@@ -52,7 +53,7 @@ def load_config(script_dir: str) -> ConfigParser:
     config.read(secrets_file)
     return config
 
-async def fetch_data(config: ConfigParser, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
+async def fetch_forecast_data(config: ConfigParser, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
     """Fetch data from various APIs."""
     entsoe_api_key = config.get('api_keys', 'entsoe')
     openweather_api_key = config.get('api_keys', 'openweather')
@@ -80,6 +81,20 @@ async def fetch_data(config: ConfigParser, start_time: datetime, end_time: datet
         'sun_forecast': meteo_sun_data
     }
 
+async def fetch_reported_data(config: ConfigParser, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
+    """Fetch data from various APIs."""
+    latitude = float(config.get('location', 'latitude'))
+    longitude = float(config.get('location', 'longitude'))
+    tz, country_code = get_timezone_and_country(latitude, longitude)
+    start_time = start_time.astimezone(tz)
+    end_time = end_time.astimezone(tz)
+
+    luchtmeetnet_data = await get_luchtmeetnet_data(latitude, longitude, start_time, end_time)
+
+    return {
+        'air_quality': luchtmeetnet_data,
+    }
+
 def write_json_file(data: Dict[str, Any], filename: str, output_path: str) -> None:
     """Write data to a JSON file."""
     full_path = os.path.join(output_path, filename)
@@ -100,16 +115,18 @@ async def main() -> None:
     config = load_config(script_dir)
     current_time = datetime.now()
     tomorrow_midnight = (current_time + timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=999999)
+    yesterday = current_time - timedelta(days=1)
 
     try:
-        data = await fetch_data(config, current_time, tomorrow_midnight)
-
+        fore_cast_data = await fetch_forecast_data(config, current_time, tomorrow_midnight)
+        reported_data = await fetch_reported_data(config, yesterday, current_time)
+        
         # Prepare and write energy price forecast
         energy_price_forecast = {
-            'energy zero price forecast': data['energy_zero'],
-            'entsoe price forecast': data['entsoe'],
-            'epex price forecast': data['epex'],
-            'elspot price forecast': data['elspot'],
+            'energy zero price forecast': fore_cast_data['energy_zero'],
+            'entsoe price forecast': fore_cast_data['entsoe'],
+            'epex price forecast': fore_cast_data['epex'],
+            'elspot price forecast': fore_cast_data['elspot'],
             'price units': {
                 "energy zero": "EUR/kWh (incl. VAT)",
                 "entsoe": "EUR/MWh",
@@ -128,14 +145,19 @@ async def main() -> None:
                     os.path.join(output_path, "energy_price_forecast.json"))
 
         # Write weather forecast
-        write_json_file(data['weather_forecast'], f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast.json", output_path)
+        write_json_file(fore_cast_data['weather_forecast'], f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast.json", output_path)
         shutil.copy(os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast.json"), 
                     os.path.join(output_path, "weather_forecast.json"))
 
         # Write sun forecast
-        write_json_file(data['sun_forecast'], f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json", output_path)
+        write_json_file(fore_cast_data['sun_forecast'], f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json", output_path)
         shutil.copy(os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json"), 
                     os.path.join(output_path, "sun_forecast.json"))
+        
+        # Write air quality report
+        write_json_file(reported_data['air_quality'], f"{datetime.now().strftime('%y%m%d_%H%M%S')}_air_quality.json", output_path)
+        shutil.copy(os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_air_quality.json"), 
+                    os.path.join(output_path, "air_quality.json"))
 
     except Exception as e:
         logging.error(e)

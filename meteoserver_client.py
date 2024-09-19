@@ -2,21 +2,10 @@ import asyncio
 import logging
 import aiohttp
 from datetime import datetime, timedelta
-from timezone_helpers import compare_timezones
+from timezone_helpers import ensure_timezone, compare_timezones
+from helpers import convert_value
 import pytz
 
-def convert_value(value):
-    if value == '-':
-        return None  # Using None instead of NaN for JSON compatibility
-    elif value.lower() == 'none':
-        return None
-    try:
-        return int(value)
-    except ValueError:
-        try:
-            return float(value)
-        except ValueError:
-            return value  # Keep as string if it's not a number
         
 async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> dict:
     """
@@ -39,17 +28,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
     if end_time is None:
         raise ValueError("End time must be provided")
     
-    # Ensure start and end times are in the specified timezone
-    tz = start_time.tzinfo
-
-    if not isinstance(tz, pytz.BaseTzInfo):
-        # If it's not a pytz timezone, try to create one
-        try:
-            tz = pytz.timezone(str(tz))
-        except:
-            logging.warning(f"Couldn't create a pytz timezone object")
-    start_time = start_time.astimezone(tz)
-    end_time = end_time.astimezone(tz)
+    start_time, end_time, tz = ensure_timezone(start_time, end_time)
 
     logging.info(f"Querying Meteo server from {start_time} to {end_time}")
     
@@ -72,7 +51,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
         "vis (visibility)": "m",
         "prec (total precipitation in the current hour)": "mm(/h)"
     }
-    processed_data['sun forecast'] = {}
+    processed_data['data'] = {}
     processed_data['metadata'] = {}
 
     try:
@@ -89,14 +68,12 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                     "plaats": response_data['plaatsnaam'][0]['plaats'],
                     "station": response_data['current'][0]['station'], 
                 }
-                processed_data['sun forecast'] = {}
-
                 for item in response_data['forecast']:
                     naive_item_time = datetime.strptime(item.pop('cet'), '%d-%m-%Y %H:%M')
                     localized_item_time = tz.localize(naive_item_time)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
-                        processed_data['sun forecast'][localized_item_time.isoformat()] = processed_item
+                        processed_data['data'][localized_item_time.isoformat()] = processed_item
     except Exception as e:
         logging.error(f"Error fetching sun forecast data: {e}")
 
@@ -124,17 +101,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
     if end_time is None:
         raise ValueError("End time must be provided")
     
-    # Ensure start and end times are in the specified timezone
-    tz = start_time.tzinfo
-
-    if not isinstance(tz, pytz.BaseTzInfo):
-        # If it's not a pytz timezone, try to create one
-        try:
-            tz = pytz.timezone(str(tz))
-        except:
-            logging.warning(f"Couldn't create a pytz timezone object")    
-    start_time = start_time.astimezone(tz)
-    end_time = end_time.astimezone(tz)
+    start_time, end_time, tz = ensure_timezone(start_time, end_time)
 
     logging.info(f"Querying Meteo server from {start_time} to {end_time}")
 
@@ -173,8 +140,8 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
         "samenv": "text",
         "icoon": "image name"
     }
-    processed_data['weather forecast'] = {}
     processed_data['metadata'] = {}
+    processed_data['data'] = {}
 
     try:
         async with aiohttp.ClientSession() as session:
@@ -190,13 +157,12 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
                     "plaats": response_data['plaatsnaam'][0]['plaats'],
                     "model": 'HARMONIE'
                 }
-
                 for item in response_data['data']:
                     naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
                     localized_item_time = tz.localize(naive_item_time)
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
-                        processed_data['weather forecast'][localized_item_time.isoformat()] = processed_item                        
+                        processed_data['data'][localized_item_time.isoformat()] = processed_item                        
     except Exception as e:
         logging.error(f"Error fetching weather forecast data: {e}")
 
@@ -230,7 +196,7 @@ async def main():
         print(f"Weather forecast for {latitude}, {longitude}:")
         print(f"Model: {weather_forecast_data['metadata']['model']}")
         print("\nFirst 3 forecast entries:")
-        for timestamp, entry in list(weather_forecast_data['weather forecast'].items())[:3]:
+        for timestamp, entry in list(weather_forecast_data['data'].items())[:3]:
             print(f"Timestamp: {timestamp}, data: {entry}")
         print("\nUnits:")
         for key, value in list(weather_forecast_data['units'].items())[:5]:  # Print first 5 units
@@ -243,7 +209,7 @@ async def main():
         print(f"Sun forecast for {latitude}, {longitude}:")
         print(sun_forecast_data['metadata'])
         print("\nFirst 3 forecast entries:")
-        for timestamp, entry in list(sun_forecast_data['sun forecast'].items())[:3]:
+        for timestamp, entry in list(sun_forecast_data['data'].items())[:3]:
             print(f"Timestamp: {timestamp}, data: {entry}")
         print("\nUnits:")
         for key, value in list(sun_forecast_data['units'].items())[:5]:  # Print first 5 units
