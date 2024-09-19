@@ -36,11 +36,6 @@ jobs:
     #     find data -name "*_weather_forecast.json" -type f -mtime +30 -delete
     #     find data -name "*_sun_forecast.json" -type f -mtime +30 -delete      
 
-    # - name: Copy JSON files to docs folder
-    #   run: |
-    #     mkdir -p docs
-    #     cp data/*.json docs/
-
     - name: Prepare docs folder with only current data
       run: |
         mkdir -p docs
