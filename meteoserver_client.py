@@ -67,19 +67,25 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                 }
                 if 'current' in response_data:
                     processed_data['metadata']['station'] = response_data['current'][0]['station']
-                    for item in response_data['forecast']:
-                        naive_item_time = datetime.strptime(item.pop('cet'), '%d-%m-%Y %H:%M')
-                        localized_item_time = tz.localize(naive_item_time)
-                        if localized_item_time >= start_time and localized_item_time <= end_time:
-                            processed_item = {key: convert_value(value) for key, value in item.items()}
-                            processed_data['data'][localized_item_time.isoformat()] = processed_item
+                if 'forecast' in response_data:
+                    data = response_data['forecast']
                 elif 'data' in response_data:
-                    for item in response_data['data']:
-                        naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
-                        localized_item_time = tz.localize(naive_item_time)
-                        if localized_item_time >= start_time and localized_item_time <= end_time:
-                            processed_item = {key: convert_value(value) for key, value in item.items()}
-                            processed_data['data'][localized_item_time.isoformat()] = processed_item
+                    data = response_data['data']
+                for item in data:
+                    item_time = item.pop('tijd_nl') if 'tijd_nl' in item else item.pop('cet') if 'cet' in item else None
+                    naive_item_time = datetime.strptime(item_time, '%d-%m-%Y %H:%M')
+                    localized_item_time = tz.localize(naive_item_time)
+                    if localized_item_time >= start_time and localized_item_time <= end_time:
+                        processed_item = {key: convert_value(value) for key, value in item.items()}
+                        processed_data['data'][localized_item_time.isoformat()] = processed_item
+                
+                # elif 'data' in response_data:
+                #     for item in response_data['data']:
+                #         naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
+                #         localized_item_time = tz.localize(naive_item_time)
+                #         if localized_item_time >= start_time and localized_item_time <= end_time:
+                #             processed_item = {key: convert_value(value) for key, value in item.items()}
+                #             processed_data['data'][localized_item_time.isoformat()] = processed_item
     except Exception as e:
         logging.error(f"Error fetching sun forecast data: {e}")
 
