@@ -62,7 +62,6 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                     logging.error(f"Unable to fetch data. Status code: {response.status}")
                     return processed_data
                 response_data = await response.json()
-                logging.info(response_data)
                 processed_data['metadata'] = {
                     "plaats": response_data['plaatsnaam'][0]['plaats'],
                 }
@@ -75,10 +74,9 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                             processed_item = {key: convert_value(value) for key, value in item.items()}
                             processed_data['data'][localized_item_time.isoformat()] = processed_item
                 elif 'data' in response_data:
-                    for item in response_data['data'][0]:
+                    for item in response_data['data']:
                         naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
                         localized_item_time = tz.localize(naive_item_time)
-                        print(localized_item_time)
                         if localized_item_time >= start_time and localized_item_time <= end_time:
                             processed_item = {key: convert_value(value) for key, value in item.items()}
                             processed_data['data'][localized_item_time.isoformat()] = processed_item
