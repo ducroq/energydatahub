@@ -1,0 +1,70 @@
+2024-09-19 16:46:01,973 DEBUG Using proactor: IocpProactor
+2024-09-19 16:46:01,977 INFO Output directory ensured: C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data
+2024-09-19 16:46:02,778 INFO Querying Entsoe API for NL from 2024-09-19 14:46:01.985436+00:00 to 2024-09-20 21:59:59.999999+00:00
+2024-09-19 16:46:02,787 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202409181500', 'periodEnd': '202409212200'}
+2024-09-19 16:46:02,789 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2024-09-19 16:46:04,500 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202409181500&periodEnd=202409212200 HTTP/1.1" 200 None
+2024-09-19 16:46:06,297 INFO Entsoe day ahead price from: 2024-09-19 14:46:01.985436+00:00 to 2024-09-20 21:59:59.999999+00:00
+Current: 90.83 EUR/MWh @ 2024-09-19T17:00:00+02:00
+Next hour: 114.01 EUR/MWh @ 2024-09-19T18:00:00+02:00
+2024-09-19 16:46:06,299 INFO Querying EnergyZero API from 2024-09-19 16:46:01.985436+02:00 to 2024-09-20 23:59:59.999999+02:00
+2024-09-19 16:46:06,412 INFO EnergyZero electricity price from: 2024-09-19 16:46:01.985436+02:00 to 2024-09-20 23:59:59.999999+02:00
+Current: 0.11 EUR/kWh @ 2024-09-19T17:00:00+02:00
+Next hour: 0.13 EUR/kWh @ 2024-09-19T18:00:00+02:00
+Max: 0.18 EUR/kWh @ 2024-09-20T17:00:00+00:00
+Min: 0 EUR/kWh @ 2024-09-19T10:00:00+00:00
+Average: 0.09 EUR/kWh
+2024-09-19 16:46:06,415 INFO Querying Epex API from 2024-09-19 16:46:01.985436+02:00 to 2024-09-20 23:59:59.999999+02:00
+2024-09-19 16:46:06,489 INFO Querying Nordpool API for NL from 2024-09-19 16:46:01.985436+02:00 to 2024-09-20 23:59:59.999999+02:00
+2024-09-19 16:46:06,490 DEBUG Starting new HTTPS connection (1): www.nordpoolgroup.com:443
+2024-09-19 16:46:07,074 DEBUG https://www.nordpoolgroup.com:443 "GET /api/marketdata/page/10?currency=EUR&endDate=20-09-2024 HTTP/1.1" 200 36608
+2024-09-19 16:46:07,096 INFO Nordpool Elspot price for NL from: 2024-09-19 16:46:01.985436+02:00 to 2024-09-20 23:59:59.999999+02:00
+Current: 72.38 EUR/MWh @ 2024-09-19T22:00:00+00:18
+Next hour: 74.04 EUR/MWh @ 2024-09-19T23:00:00+00:18
+2024-09-19 16:46:07,158 INFO Querying Meteo server from 2024-09-19 16:46:01.985436+02:00 to 2024-09-20 23:59:59.999999+02:00
+2024-09-19 16:46:07,712 INFO Querying Meteo server from 2024-09-19 16:46:01.985436+02:00 to 2024-09-20 23:59:59.999999+02:00
+2024-09-19 16:46:08,705 INFO Querying Luchtmeetnet server from 2024-09-18 16:46:01.985436+02:00 to 2024-09-19 16:46:01.985436+02:00
+2024-09-19 16:46:08,706 INFO Fetching Luchtmeetnet station list
+2024-09-19 16:46:09,673 INFO Fetching Luchtmeetnet station data, pls have patience
+2024-09-19 16:46:24,811 INFO Finding station closest to 51.966472, 5.94009
+2024-09-19 16:46:24,812 INFO Fetching air quality indicator for station NL54004, Arnhem Velperbroek
+2024-09-19 16:46:24,967 INFO Fetching measurements for station NL54004, Arnhem Velperbroek
+2024-09-19 16:46:26,060 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_energy_price_forecast.json
+2024-09-19 16:46:26,088 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_weather_forecast.json
+2024-09-19 16:46:26,100 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_sun_forecast.json
+2024-09-19 16:46:26,111 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_air_quality.json
+2024-09-22 18:02:13,039 DEBUG Using selector: EpollSelector
+2024-09-22 18:02:13,039 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2024-09-22 18:02:14,049 INFO Querying Entsoe API for NL from 2024-09-22 18:02:13.040230+00:00 to 2024-09-23 18:02:13.040230+00:00
+2024-09-22 18:02:14,053 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202409211800', 'periodEnd': '202409241800'}
+2024-09-22 18:02:14,054 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2024-09-22 18:02:19,412 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202409211800&periodEnd=202409241800 HTTP/11" 200 None
+2024-09-22 18:02:19,489 INFO Entsoe day ahead price from: 2024-09-22 18:02:13.040230+00:00 to 2024-09-23 18:02:13.040230+00:00
+Current: 109.35 EUR/MWh @ 2024-09-22T21:00:00+02:00
+Next hour: 98.76 EUR/MWh @ 2024-09-22T22:00:00+02:00
+2024-09-22 18:02:19,489 INFO Querying EnergyZero API from 2024-09-22 20:02:13.040230+02:00 to 2024-09-23 20:02:13.040230+02:00
+2024-09-22 18:02:19,894 INFO EnergyZero electricity price from: 2024-09-22 20:02:13.040230+02:00 to 2024-09-23 20:02:13.040230+02:00
+Current: 0.13 EUR/kWh @ 2024-09-22T21:00:00+02:00
+Next hour: 0.12 EUR/kWh @ 2024-09-22T22:00:00+02:00
+Max: 0.34 EUR/kWh @ 2024-09-23T17:00:00+00:00
+Min: 0 EUR/kWh @ 2024-09-22T11:00:00+00:00
+Average: 0.11 EUR/kWh
+2024-09-22 18:02:19,895 INFO Querying Epex API from 2024-09-22 20:02:13.040230+02:00 to 2024-09-23 20:02:13.040230+02:00
+2024-09-22 18:02:20,852 INFO Querying Nordpool API for NL from 2024-09-22 20:02:13.040230+02:00 to 2024-09-23 20:02:13.040230+02:00
+2024-09-22 18:02:20,853 DEBUG Starting new HTTPS connection (1): www.nordpoolgroup.com:443
+2024-09-22 18:02:42,202 DEBUG https://www.nordpoolgroup.com:443 "GET /api/marketdata/page/10?currency=EUR&endDate=23-09-2024 HTTP/11" 200 345740
+2024-09-22 18:02:42,717 INFO Nordpool Elspot price for NL from: 2024-09-22 20:02:13.040230+02:00 to 2024-09-23 20:02:13.040230+02:00
+Current: 87.3 EUR/MWh @ 2024-09-22T22:00:00+00:18
+Next hour: 80.15 EUR/MWh @ 2024-09-22T23:00:00+00:18
+2024-09-22 18:02:42,957 INFO Querying Meteo server from 2024-09-22 20:02:13.040230+02:00 to 2024-09-23 20:02:13.040230+02:00
+2024-09-22 18:02:43,920 INFO Querying Meteo server from 2024-09-22 20:02:13.040230+02:00 to 2024-09-23 20:02:13.040230+02:00
+2024-09-22 18:02:45,682 INFO Querying Luchtmeetnet server from 2024-09-21 20:02:13.040230+02:00 to 2024-09-22 20:02:13.040230+02:00
+2024-09-22 18:02:45,682 INFO Fetching Luchtmeetnet station list
+2024-09-22 18:02:47,764 INFO Fetching Luchtmeetnet station data, pls have patience
+2024-09-22 18:03:05,387 INFO Finding station closest to 51.966472, 5.94009
+2024-09-22 18:03:05,388 INFO Fetching air quality indicator for station NL54004, Arnhem Velperbroek
+2024-09-22 18:03:05,952 INFO Fetching measurements for station NL54004, Arnhem Velperbroek
+2024-09-22 18:03:07,077 INFO Data written to /home/runner/work/energydatahub/energydatahub/data/240922_180307_energy_price_forecast.json
+2024-09-22 18:03:07,078 INFO Data written to /home/runner/work/energydatahub/energydatahub/data/240922_180307_weather_forecast.json
+2024-09-22 18:03:07,079 INFO Data written to /home/runner/work/energydatahub/energydatahub/data/240922_180307_sun_forecast.json
+2024-09-22 18:03:07,080 INFO Data written to /home/runner/work/energydatahub/energydatahub/data/240922_180307_air_quality.json
