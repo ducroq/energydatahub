@@ -78,14 +78,6 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         processed_item = {key: convert_value(value) for key, value in item.items()}
                         processed_data['data'][localized_item_time.isoformat()] = processed_item
-                
-                # elif 'data' in response_data:
-                #     for item in response_data['data']:
-                #         naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
-                #         localized_item_time = tz.localize(naive_item_time)
-                #         if localized_item_time >= start_time and localized_item_time <= end_time:
-                #             processed_item = {key: convert_value(value) for key, value in item.items()}
-                #             processed_data['data'][localized_item_time.isoformat()] = processed_item
     except Exception as e:
         logging.error(f"Error fetching sun forecast data: {e}")
 
