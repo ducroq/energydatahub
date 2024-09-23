@@ -56,6 +56,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
     try:
         async with aiohttp.ClientSession() as session:
             url = f"{base_url}?lat={latitude}&long={longitude}&key={api_key}"
+            logging.info(f"Fetching sun forecast data from {url}")
 
             async with session.get(url) as response:
                 if response.status != 200:
@@ -150,6 +151,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
     try:
         async with aiohttp.ClientSession() as session:
             url = f"{base_url}?lat={latitude}&long={longitude}&key={api_key}"
+            logging.info(f"Fetching weather forecast data from {url}")
 
             async with session.get(url) as response:
                 if response.status != 200:
@@ -160,7 +162,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
                 processed_data['metadata'] = {
                     "plaats": response_data['plaatsnaam'][0]['plaats'],
                     "model": 'HARMONIE'
-                }
+                }            
                 for item in response_data['data']:
                     naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
                     localized_item_time = tz.localize(naive_item_time)
