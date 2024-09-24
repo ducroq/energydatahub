@@ -66,6 +66,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                 processed_data['metadata'] = {
                     "plaats": response_data['plaatsnaam'][0]['plaats'],
                 }
+                # something is wrong here. The data is not always in the same format?
                 if 'current' in response_data:
                     processed_data['metadata']['station'] = response_data['current'][0]['station']
                 if 'forecast' in response_data:
