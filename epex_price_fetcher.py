@@ -3,8 +3,9 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from timezone_helpers import ensure_timezone
+from data_types import EnhancedDataSet
 
-async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
+async def get_Epex_data(start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
     Retrieves Epex energy price data for a specified time range.
 
@@ -13,8 +14,7 @@ async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
         end_time (datetime): The end of the time range. 
 
     Returns:
-        dict: A dictionary containing the day-ahead energy price data [EUR/MWh].
-              Keys are ISO-formatted timestamps in UTC, values are market prices.
+        EnhancedDataSet: An EnhancedDataSet containing the Epex data.
     """
     base_url = 'https://api.awattar.at/v1/marketdata'
 
@@ -41,11 +41,30 @@ async def get_Epex_data(start_time: datetime, end_time: datetime) -> dict:
                 logging.error(f"Unable to fetch data. Status code: {response.status}")
                 return processed_data
 
-            data = await response.json()
-            for item in data['data']:
-                item_time = datetime.fromtimestamp(item['start_timestamp'] / 1000, tz=tz)
-                processed_data[item_time.isoformat()] = item['marketprice']
-    return processed_data
+            data = await response.json()            
+
+            dataset = EnhancedDataSet(
+                metadata={
+                    'data_type': 'energy_price',
+                    'source': 'Awattar API',
+                    'country_code': 'NL',
+                    'units': 'EUR/MWh',
+                    'start_time': start_time.isoformat(),
+                    'end_time': end_time.isoformat()},        
+                data = {datetime.fromtimestamp(item['start_timestamp'] / 1000, tz=tz).isoformat(): item['marketprice'] for item in data['data']}
+            )
+
+            if dataset.data:
+                now_hour = list(dataset['data'].keys())[0]
+                next_hour = list(dataset['data'].keys())[1]
+                logging.info(f"EnergyZero day ahead price from: {start_time} to {end_time}\n"
+                            f"Current: {dataset['data'][now_hour]} EUR/MWh @ now_hour\n" 
+                            f"Next hour: {dataset['data'][next_hour]} EUR/MWh @ next_hour")
+            else:
+                logging.warning(f"No data retrieved for the specified time range: {start_time} to {end_time}")            
+
+            return dataset
+
 
 # Example usage
 async def main():
@@ -58,8 +77,10 @@ async def main():
     tomorrow_midnight = tomorrow.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     spot_data = await get_Epex_data(start_time=current_time, end_time=tomorrow_midnight)
+
+    print(f"Total data points: {len(spot_data.data)}")
     print("\nFirst 5 data points:")
-    for timestamp, price in list(spot_data.items())[:5]:
+    for timestamp, price in list(spot_data.data.items())[:5]:
         print(f"Timestamp: {timestamp}, Price: {price} EUR/MWh")
 
 if __name__ == "__main__":

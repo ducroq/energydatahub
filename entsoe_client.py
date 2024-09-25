@@ -4,10 +4,9 @@ import pandas as pd
 from entsoe import EntsoePandasClient
 import logging
 from functools import partial
-from typing import List, Dict, Any
 from data_types import EnhancedDataSet
 
-async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime, end_time: datetime) -> dict:
+async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
     Retrieves day-ahead energy price data from Entsoe API for a specified time range.
 
@@ -18,8 +17,7 @@ async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime,
         end_time (datetime): The end of the time range.
 
     Returns:
-        dict: A dictionary containing the day-ahead energy price data [EUR/MWh].
-              Keys are ISO-formatted timestamps in UTC, values are market prices.
+        EnhancedDataSet: An EnhancedDataSet containing the Entsoe data.
     """
     try:
         if start_time is None:
@@ -43,7 +41,7 @@ async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime,
 
         # EntsoePandasClient is not async, so we run it in a separate thread
         loop = asyncio.get_running_loop()
-        ts = await loop.run_in_executor(None, query_func)
+        data = await loop.run_in_executor(None, query_func)
 
         dataset = EnhancedDataSet(
             metadata={
@@ -52,8 +50,8 @@ async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime,
                 'country_code': 'NL',
                 'units': 'EUR/MWh',
                 'start_time': start_timestamp.isoformat(),
-                'end_time': end_timestamp.isoformat()},        
-            data = {t.isoformat(): price for t, price in ts.items()}
+                'end_time': end_timestamp.isoformat()},
+            data = {timestamp.isoformat(): price for timestamp, price in data.items() if start_time <= timestamp < end_time}
         )
 
         if dataset.data:
@@ -62,20 +60,10 @@ async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime,
             logging.info(f"Entsoe day ahead price from: {start_timestamp} to {end_timestamp}\n"
                          f"Current: {dataset['data'][now_hour]} EUR/MWh @ now_hour\n" 
                          f"Next hour: {dataset['data'][next_hour]} EUR/MWh @ next_hour")
+        else:
+            logging.warning(f"No data retrieved for the specified time range: {start_time} to {end_time}")            
 
         return dataset
-         
-        # # Convert the pandas Series to a dictionary
-        # data = {t.isoformat(): price for t, price in ts.items()}
-
-        # # # Log some information about the retrieved data
-        # # now_hour = list(data.keys())[0]
-        # # next_hour = list(data.keys())[1]
-        # # logging.info(f"Entsoe day ahead price from: {start_timestamp} to {end_timestamp}\n"
-        # #              f"Current: {data[now_hour]} EUR/MWh @ {now_hour}\n" 
-        # #              f"Next hour: {data[next_hour]} EUR/MWh @ {next_hour}")
-
-        # return data
 
     except Exception as e:
         logging.error(f"Error retrieving Entsoe data: {e}")     
@@ -101,6 +89,8 @@ async def main():
     tomorrow_midnight = (current_time + timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=999999)
 
     entsoe_data = await get_Entsoe_data(entsoe_api_key, country_code, start_time=current_time, end_time=tomorrow_midnight)
+
+    # print(entsoe_data.to_dict())
     print(f"Total data points: {len(entsoe_data.data)}")
     print("\nFirst 5 data points:")
     for timestamp, price in list(entsoe_data.data.items())[:5]:

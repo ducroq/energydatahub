@@ -1,34 +1,57 @@
 import json
 from datetime import datetime, timedelta
 from typing import Dict, Any
+import math
 
 def convert_value(value):
-    if type(value) == int or type(value) == float:
-        return value
-    if value == '-':
-        return None  # Using None instead of NaN for JSON compatibility
-    elif value.lower() == 'none':
+    none_strings = ['', '-', 'n/a', 'nan', 'null', 'none', 'inf', '-inf', 'infinity', '-infinity']
+    
+    # Handle None input
+    if value is None:
         return None
+    
+    # Check for float infinity and NaN
+    if isinstance(value, float):
+        if math.isinf(value) or math.isnan(value):
+            return None
+        return value
+    
+    # If it's a string, convert to lowercase for comparison
+    if isinstance(value, str):
+        value_lower = value.strip().lower()
+        if value_lower in none_strings:
+            return None
+    
+    # If it's already an int, return as is
+    if isinstance(value, int):
+        return value
+    
+    # Try converting to int, then float
     try:
         return int(value)
-    except ValueError:
+    except (ValueError, TypeError):
         try:
-            return float(value)
-        except ValueError:
-            return value  # Keep as string if it's not a number
+            float_value = float(value)
+            # Check again for infinity and NaN after conversion
+            if math.isinf(float_value) or math.isnan(float_value):
+                return None
+            return float_value
+        except (ValueError, TypeError):
+            # If it's not a number, return the original value
+            return value
 
 class EnhancedDataSet:
     def __init__(self, metadata: Dict[str, Any], data: Dict[str, Any]):
         self.metadata = metadata
-        self.metadata['data_type_version'] = "2.0"
-
         data_type = metadata['data_type']
         if data_type == 'energy_price':
              self.data = self.validate_energy_prices(data)
         # TODO: Add more validation rules, e.g. for other data types?
 
     def validate_energy_prices(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        print(data)
         validated_data = {timestamp: convert_value(value) for timestamp, value in data.items()}
+        print(validated_data)
         return validated_data    
 
     def __getitem__(self, key):
@@ -47,9 +70,39 @@ class EnhancedDataSet:
             'metadata': self.metadata,
             'data': self.data
         }
+    
+    def write_dataset_to_json(self, filename: str):
+        def json_serializer(obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            raise TypeError(f"Type {type(obj)} not serializable")
 
-    def to_json(self):
-        return json.dumps(self.to_dict(), indent=2, default=str)
+        with open(filename, 'w') as f:
+            json.dump(self.to_dict(), f, indent=2, default=json_serializer)
+        print(f"Data written to {filename}")   
+    
+class CombinedDataSet:
+    def __init__(self):
+        self.datasets = {}
+        self.version = "2.0"
+
+    def add_dataset(self, name: str, dataset: EnhancedDataSet):
+        self.datasets[name] = dataset.to_dict()
+
+    def to_dict(self):
+        return {
+            'version': self.version,
+            **self.datasets
+        }
+    
+    def write_to_json(self, filename: str):
+        def json_serializer(obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            raise TypeError(f"Type {type(obj)} not serializable")
+
+        with open(filename, 'w') as f:
+            json.dump(self.to_dict(), f, indent=2, default=json_serializer)
 
 if __name__ == "__main__":
     energy_prices = EnhancedDataSet(
@@ -59,7 +112,8 @@ if __name__ == "__main__":
                   'units': 'EUR/MWh'},        
         data = {datetime.now().isoformat(): 50.5,
                 (datetime.now() + timedelta(hours=1)).isoformat(): -5,
-                (datetime.now() + timedelta(hours=2)).isoformat(): '-'},
+                (datetime.now() + timedelta(hours=2)).isoformat(): '-',
+                (datetime.now() + timedelta(hours=3)).isoformat(): 'Infinity'}
     )
 
-    print(energy_prices.to_json())
+    print(energy_prices.to_dict())
