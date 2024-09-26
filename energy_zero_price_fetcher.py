@@ -53,7 +53,7 @@ async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> Enha
     
     except Exception as e:
         logging.error(f"Error retrieving EnergyZero data: {e}")
-        return {}
+        return None
 
 # Example usage
 async def main():

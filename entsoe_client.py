@@ -67,7 +67,7 @@ async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime,
 
     except Exception as e:
         logging.error(f"Error retrieving Entsoe data: {e}")     
-        return {}
+        return None
 
 # Example usage
 async def main():
