@@ -4,9 +4,10 @@ import aiohttp
 from datetime import datetime, timedelta
 from timezone_helpers import ensure_timezone, compare_timezones
 from helpers import convert_value
+from data_types import EnhancedDataSet
 
         
-async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> dict:
+async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
     Retrieves sun forecast data from MeteoServer API for a specified location and time interval.
 
@@ -109,46 +110,14 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
     
     start_time, end_time, tz = ensure_timezone(start_time, end_time)
 
-    logging.info(f"Querying Meteo server from {start_time} to {end_time}")
+    logging.info(f"Querying MeteoServer from {start_time} to {end_time}")
 
     match, message = compare_timezones(start_time, latitude, longitude)
     if not match:
         logging.warning(f"Timezone mismatch: {message}")
 
-    processed_data = {}
-    processed_data['source'] = 'MeteoServer'
-    processed_data['units'] = { 
-        "temp": "°C",
-        "winds (mean wind velocity)": "m/s",
-        "windb (mean wind force)": "Beaufort",
-        "windknp (mean wind velocity)": "knots",
-        "windkmh (mean wind velocity)": "km/h",
-        "windr (wind direction)": "°",
-        "windrltr (wind direction)": "abbreviation",
-        "gust (wind gust, GFS only)": "m/s",
-        "gustb (wind gust, GFS only)": "Beaufort",
-        "gustkt (wind gust, GFS only)": "knots",
-        "gustkmh (wind gust, GFS only)": "km/h",
-        "vis (visibility)": "m",
-        "neersl (precipitation)": "mm",
-        "luchtd (air pressure)": "mbar / hPa",
-        "luchtdmmhg (air pressure)": "mm Hg",
-        "luchtdinhg (air pressure)": "inch Hg",
-        "rv (relative humidity)": "%",
-        "gr (global horizontal radiation)": "W/m²",
-        "hw (high cloud cover)": "%",
-        "mw (medium cloud cover)": "%",
-        "lw (low cloud cover)": "%",
-        "tw (total cloud cover)": "%",
-        "cape (convective available potential energy, GFS only)": "J/kg",
-        "cond": "weather condition code",
-        "ico": "weather icon code",
-        "samenv": "text",
-        "icoon": "image name"
-    }
-    processed_data['metadata'] = {}
-    processed_data['data'] = {}
-
+    exclude_fields = ['tijd', 'tijd_nl', 'loc', 'offset', 'samenv']
+    
     try:
         async with aiohttp.ClientSession() as session:
             url = f"{base_url}?lat={latitude}&long={longitude}&key={api_key}"
@@ -157,23 +126,79 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
             async with session.get(url) as response:
                 if response.status != 200:
                     logging.error(f"Unable to fetch data. Status code: {response.status}")
-                    return processed_data
+                    return None
 
                 response_data = await response.json()
-                processed_data['metadata'] = {
-                    "plaats": response_data['plaatsnaam'][0]['plaats'],
-                    "model": 'HARMONIE'
-                }            
+
+                data = {}
                 for item in response_data['data']:
-                    naive_item_time = datetime.strptime(item.pop('tijd_nl'), '%d-%m-%Y %H:%M')
-                    localized_item_time = tz.localize(naive_item_time)
-                    if localized_item_time >= start_time and localized_item_time <= end_time:
-                        processed_item = {key: convert_value(value) for key, value in item.items()}
-                        processed_data['data'][localized_item_time.isoformat()] = processed_item                        
+                    timestamp = datetime.fromtimestamp(int(item['tijd']), tz=tz)
+                    if start_time <= timestamp < end_time:
+                        data[timestamp.isoformat()] = {}
+                        
+                        for key, value in item.items():
+                            if key in exclude_fields:
+                                continue
+                            # if isinstance(value, list):	
+                            #     value = value[0]  # workaround: for some reason the weather value is a list with one item
+                            if isinstance(value, dict):
+                                for sub_key, sub_value in value.items():
+                                    if sub_key in exclude_fields:
+                                        continue
+                                    data[timestamp.isoformat()][f"{key}_{sub_key}"] = sub_value
+                            else:
+                                data[timestamp.isoformat()][key] = value            
+                dataset = EnhancedDataSet(
+                    metadata = {
+                        'data_type': 'weather',
+                        'source': 'MeteoServer API',
+                        'model': 'HARMONIE',
+                        'city': response_data['plaatsnaam'][0]['plaats'],
+                        'units': {
+                            "temp": "°C",
+                            "winds (mean wind velocity)": "m/s",
+                            "windb (mean wind force)": "Beaufort",
+                            "windknp (mean wind velocity)": "knots",
+                            "windkmh (mean wind velocity)": "km/h",
+                            "windr (wind direction)": "°",
+                            "windrltr (wind direction)": "abbreviation",
+                            "gust (wind gust, GFS only)": "m/s",
+                            "gustb (wind gust, GFS only)": "Beaufort",
+                            "gustkt (wind gust, GFS only)": "knots",
+                            "gustkmh (wind gust, GFS only)": "km/h",
+                            "vis (visibility)": "m",
+                            "neersl (precipitation)": "mm",
+                            "luchtd (air pressure)": "mbar / hPa",
+                            "luchtdmmhg (air pressure)": "mm Hg",
+                            "luchtdinhg (air pressure)": "inch Hg",
+                            "rv (relative humidity)": "%",
+                            "gr (global horizontal radiation)": "W/m²",
+                            "hw (high cloud cover)": "%",
+                            "mw (medium cloud cover)": "%",
+                            "lw (low cloud cover)": "%",
+                            "tw (total cloud cover)": "%",
+                            "cape (convective available potential energy, GFS only)": "J/kg",
+                            "cond": "weather condition code",
+                            "ico": "weather icon code",
+                            "icoon": "image name"
+                        },
+                        'start_time': start_time.isoformat(),
+                        'end_time': end_time.isoformat()},
+                    data = data
+                )
+
+                if dataset.data:
+                    now_hour = list(dataset['data'].keys())[0]
+                    next_hour = list(dataset['data'].keys())[1]
+                    logging.info(f"MeteoServer forecast from {start_time} to {end_time}\n"
+                                f"Current: {dataset['data'][now_hour]}\n" 
+                                f"Next hour: {dataset['data'][next_hour]}")
+                else:
+                    logging.warning(f"No data retrieved for the specified time range: {start_time} to {end_time}")   
+                return dataset
     except Exception as e:
         logging.error(f"Error fetching weather forecast data: {e}")
-
-    return processed_data    
+        return None
 
 async def main():
     import os
@@ -197,17 +222,12 @@ async def main():
     tomorrow = current_time + timedelta(days=1)
     tomorrow_midnight = tomorrow.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-    weather_forecast_data = await get_MeteoServer_weather_forecast_data(api_key, latitude, longitude, current_time, tomorrow_midnight)
-    if weather_forecast_data:
-        print(f"Weather forecast for {latitude}, {longitude}:")
-        print(f"Model: {weather_forecast_data['metadata']['model']}")
-        print("\nFirst 3 forecast entries:")
-        for timestamp, entry in list(weather_forecast_data['data'].items())[:3]:
-            print(f"Timestamp: {timestamp}, data: {entry}")
-        print("\nUnits:")
-        for key, value in list(weather_forecast_data['units'].items())[:5]:  # Print first 5 units
+    weather_data = await get_MeteoServer_weather_forecast_data(api_key, latitude, longitude, current_time, tomorrow_midnight)
+    if weather_data:
+        print(f"Weather data for {weather_data.metadata['city']}:")
+        for key, value in weather_data.data.items():
             print(f"{key}: {value}")
-    else:
+    else:    
         print(f"Failed to retrieve forecast data for {latitude}, {longitude}")
 
     sun_forecast_data = await get_MeteoServer_sun_forecast(api_key, latitude, longitude, current_time, tomorrow_midnight)

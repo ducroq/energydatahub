@@ -46,12 +46,22 @@ class EnhancedDataSet:
         data_type = metadata['data_type']
         if data_type == 'energy_price':
              self.data = self.validate_energy_prices(data)
+        elif data_type == 'weather':
+            self.data = self.validate_weather_data(data)
         # TODO: Add more validation rules, e.g. for other data types?
 
+    def validate_weather_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        validated_data = {}
+        for timestamp, values in data.items():
+            validated_values = {}
+            for key, value in values.items():
+                # todo for all data points
+                validated_values[key] = convert_value(value)
+            validated_data[timestamp] = validated_values
+        return validated_data
+
     def validate_energy_prices(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        print(data)
         validated_data = {timestamp: convert_value(value) for timestamp, value in data.items()}
-        print(validated_data)
         return validated_data    
 
     def __getitem__(self, key):
@@ -87,6 +97,10 @@ class CombinedDataSet:
         self.version = "2.0"
 
     def add_dataset(self, name: str, dataset: EnhancedDataSet):
+        if name in self.datasets:
+            raise ValueError(f"Dataset with name {name} already exists")
+        if dataset is None:
+            return
         self.datasets[name] = dataset.to_dict()
 
     def to_dict(self):
