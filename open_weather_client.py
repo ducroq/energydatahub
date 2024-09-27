@@ -27,7 +27,7 @@ async def get_OpenWeather_data(api_key: str, latitude: float, longitude: float, 
         if end_time is None:
             raise ValueError("End time must be provided")
         
-        start_time, end_time, tz = ensure_timezone(start_time, end_time)
+        start_time, end_time, timezone = ensure_timezone(start_time, end_time)
 
         logging.info(f"Querying OpenWeather from {start_time} to {end_time}")
         
@@ -47,7 +47,7 @@ async def get_OpenWeather_data(api_key: str, latitude: float, longitude: float, 
                 response_data = await response.json()
                 data = {}
                 for item in response_data['list']:
-                    timestamp = datetime.fromtimestamp(item['dt'], tz=tz)
+                    timestamp = datetime.fromtimestamp(item['dt'], tz=timezone)
                     if start_time <= timestamp < end_time:
                         data[timestamp.isoformat()] = {}
                         
@@ -71,8 +71,8 @@ async def get_OpenWeather_data(api_key: str, latitude: float, longitude: float, 
                         'city': response_data['city']['name'],
                         'id': response_data['city']['id'],
                         'population': response_data['city']['population'],
-                        'sunrise': datetime.fromtimestamp(response_data['city']['sunrise'], tz=tz).isoformat(),
-                        'sunset': datetime.fromtimestamp(response_data['city']['sunset'], tz=tz).isoformat(),
+                        'sunrise': datetime.fromtimestamp(response_data['city']['sunrise'], tz=timezone).isoformat(),
+                        'sunset': datetime.fromtimestamp(response_data['city']['sunset'], tz=timezone).isoformat(),
                         'units': {
                             "temp": "°C",
                             "humidity": "%",
