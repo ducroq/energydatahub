@@ -46,16 +46,14 @@ class EnhancedDataSet:
         data_type = metadata['data_type']
         if data_type == 'energy_price':
              self.data = self.validate_energy_prices(data)
-        elif data_type == 'weather':
+        elif data_type == 'weather' or data_type == 'sun':
             self.data = self.validate_weather_data(data)
-        # TODO: Add more validation rules, e.g. for other data types?
-
+        
     def validate_weather_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         validated_data = {}
         for timestamp, values in data.items():
             validated_values = {}
             for key, value in values.items():
-                # todo for all data points
                 validated_values[key] = convert_value(value)
             validated_data[timestamp] = validated_values
         return validated_data
@@ -81,7 +79,7 @@ class EnhancedDataSet:
             'data': self.data
         }
     
-    def write_dataset_to_json(self, filename: str):
+    def write_to_json(self, filename: str):
         def json_serializer(obj):
             if isinstance(obj, datetime):
                 return obj.isoformat()
