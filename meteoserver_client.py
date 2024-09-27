@@ -3,11 +3,10 @@ import logging
 import aiohttp
 from datetime import datetime, timedelta
 from timezone_helpers import ensure_timezone, compare_timezones
-from helpers import convert_value
 from data_types import EnhancedDataSet
 
-max_nr_of_attempts = 10
-delay_between_attempts = 2
+MAX_ATTEMPTS = 10
+RETRY_DELAY = 2
 
 async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
@@ -42,7 +41,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
     try:
         url = f"{base_url}?lat={latitude}&long={longitude}&key={api_key}"
         logging.info(f"Fetching sun forecast data from {url}")
-        for attempt_nr in range(max_nr_of_attempts): # Retry a number of times, since the API returns wrong response sometimes
+        for attempt_nr in range(MAX_ATTEMPTS): # Retry a number of times, since the API returns wrong response sometimes
             async with aiohttp.ClientSession() as session:
                 logging.info(f"Attempt nr {attempt_nr+1} to fetch sun forecast data")
                 async with session.get(url) as response:
@@ -51,7 +50,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                         return None
                     response_data = await response.json()
                     if 'forecast' not in response_data:  # Check response data
-                        await asyncio.sleep(delay_between_attempts)  # Delay before retrying
+                        await asyncio.sleep(RETRY_DELAY)  # Delay before retrying
                         continue
                     data = {}
                     for item in response_data['forecast']:
@@ -142,7 +141,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
     try:
         url = f"{base_url}?lat={latitude}&long={longitude}&key={api_key}"
         logging.info(f"Fetching weather forecast data from {url}")
-        for attempt_nr in range(max_nr_of_attempts): # Retry a number of times, since the API returns wrong response sometimes
+        for attempt_nr in range(MAX_ATTEMPTS): # Retry a number of times, since the API returns wrong response sometimes
             async with aiohttp.ClientSession() as session:
                 logging.info(f"Attempt nr {attempt_nr+1} to fetch weather forecast data")
                 async with session.get(url) as response:
@@ -151,7 +150,7 @@ async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, l
                         return None
                     response_data = await response.json()
                     if 'data' not in response_data: # Check response data
-                        await asyncio.sleep(delay_between_attempts)  # Delay before retrying
+                        await asyncio.sleep(RETRY_DELAY)  # Delay before retrying
                         continue
                     data = {}
                     for item in response_data['data']:
