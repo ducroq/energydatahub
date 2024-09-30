@@ -33,55 +33,55 @@ Next hour: 74.04 EUR/MWh @ 2024-09-19T23:00:00+00:18
 2024-09-19 16:46:26,088 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_weather_forecast.json
 2024-09-19 16:46:26,100 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_sun_forecast.json
 2024-09-19 16:46:26,111 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_air_quality.json
-2024-09-29 16:14:31,484 DEBUG Using selector: EpollSelector
-2024-09-29 16:14:31,485 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2024-09-29 16:14:32,506 INFO Querying Entsoe API for NL from 2024-09-29 16:14:32.505183+00:00 to 2024-09-30 16:14:32.505183+00:00
-2024-09-29 16:14:32,510 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202409281600', 'periodEnd': '202410011600'}
-2024-09-29 16:14:32,512 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2024-09-29 16:14:33,339 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202409281600&periodEnd=202410011600 HTTP/11" 200 None
-2024-09-29 16:14:33,399 INFO Entsoe day ahead price from: 2024-09-29 16:14:32.505183+00:00 to 2024-09-30 16:14:32.505183+00:00
-Current: 166.16 EUR/MWh @ now_hour
-Next hour: 109.09 EUR/MWh @ next_hour
-2024-09-29 16:14:33,400 INFO Querying EnergyZero API from 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-2024-09-29 16:14:33,941 INFO EnergyZero day ahead price from: 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-Current: 0.21 EUR/MWh @ now_hour
-Next hour: 0.13 EUR/MWh @ next_hour
-2024-09-29 16:14:33,941 INFO Querying Epex API from 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-2024-09-29 16:14:34,277 INFO EnergyZero day ahead price from: 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-Current: 135.91 EUR/MWh @ now_hour
-Next hour: 95.62 EUR/MWh @ next_hour
-2024-09-29 16:14:34,278 INFO Querying Nordpool API for NL from 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-2024-09-29 16:14:34,279 DEBUG Starting new HTTPS connection (1): www.nordpoolgroup.com:443
-2024-09-29 16:14:35,245 DEBUG https://www.nordpoolgroup.com:443 "GET /api/marketdata/page/10?currency=EUR&endDate=30-09-2024 HTTP/11" 200 36463
-2024-09-29 16:14:35,354 INFO EnergyZero day ahead price from: 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-Current: 18.57 EUR/MWh @ now_hour
-Next hour: 10.82 EUR/MWh @ next_hour
-2024-09-29 16:14:35,355 INFO Querying OpenWeather from 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-2024-09-29 16:14:36,041 INFO Fetching OpenWeather forecast data from https://api.openweathermap.org/data/2.5/forecast?lat=51.966472&lon=5.94009&units=metric&appid=4852b00585c8d9000573557d530ac9e7
-2024-09-29 16:14:36,042 INFO OpenWeather forecast from 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-Current: {'main_temp': 12.39, 'main_feels_like': 11.46, 'main_temp_min': 10.86, 'main_temp_max': 12.39, 'main_pressure': 1024, 'main_sea_level': 1024, 'main_grnd_level': 1020, 'main_humidity': 68, 'main_temp_kf': 1.53, 'weather_id': 804, 'weather_main': 'Clouds', 'weather_description': 'overcast clouds', 'weather_icon': '04n', 'clouds_all': 100, 'wind_speed': 2.87, 'wind_deg': 103, 'wind_gust': 6.46, 'visibility': 10000}
-Next hour: {'main_temp': 10.69, 'main_feels_like': 9.64, 'main_temp_min': 9.46, 'main_temp_max': 10.69, 'main_pressure': 1023, 'main_sea_level': 1023, 'main_grnd_level': 1018, 'main_humidity': 70, 'main_temp_kf': 1.23, 'weather_id': 804, 'weather_main': 'Clouds', 'weather_description': 'overcast clouds', 'weather_icon': '04n', 'clouds_all': 99, 'wind_speed': 3.68, 'wind_deg': 120, 'wind_gust': 10.55, 'visibility': 10000}
-2024-09-29 16:14:36,043 INFO Querying MeteoServer from 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-2024-09-29 16:14:36,494 INFO Fetching weather forecast data from https://data.meteoserver.nl/api/uurverwachting.php?lat=51.966472&long=5.94009&key=7daf22bed0
-2024-09-29 16:14:36,494 INFO Attempt nr 1 to fetch weather forecast data
-2024-09-29 16:14:38,951 INFO Attempt nr 2 to fetch weather forecast data
-2024-09-29 16:14:41,417 INFO Attempt nr 3 to fetch weather forecast data
-2024-09-29 16:14:43,868 INFO Attempt nr 4 to fetch weather forecast data
-2024-09-29 16:14:46,386 INFO Attempt nr 5 to fetch weather forecast data
-2024-09-29 16:14:48,757 INFO Attempt nr 6 to fetch weather forecast data
-2024-09-29 16:14:51,091 INFO Attempt nr 7 to fetch weather forecast data
-2024-09-29 16:14:53,588 INFO Attempt nr 8 to fetch weather forecast data
-2024-09-29 16:14:55,948 INFO Attempt nr 9 to fetch weather forecast data
-2024-09-29 16:14:58,285 INFO Attempt nr 10 to fetch weather forecast data
-2024-09-29 16:15:00,624 INFO Querying Meteo server from 2024-09-29 18:14:32.505183+02:00 to 2024-09-30 18:14:32.505183+02:00
-2024-09-29 16:15:01,080 INFO Fetching sun forecast data from https://data.meteoserver.nl/api/solar.php?lat=51.966472&long=5.94009&key=7daf22bed0
-2024-09-29 16:15:01,080 INFO Attempt nr 1 to fetch sun forecast data
-2024-09-29 16:15:03,416 INFO Attempt nr 2 to fetch sun forecast data
-2024-09-29 16:15:05,802 INFO Attempt nr 3 to fetch sun forecast data
-2024-09-29 16:15:08,296 INFO Attempt nr 4 to fetch sun forecast data
-2024-09-29 16:15:10,771 INFO Attempt nr 5 to fetch sun forecast data
-2024-09-29 16:15:13,137 INFO Attempt nr 6 to fetch sun forecast data
-2024-09-29 16:15:15,478 INFO Attempt nr 7 to fetch sun forecast data
-2024-09-29 16:15:17,812 INFO Attempt nr 8 to fetch sun forecast data
-2024-09-29 16:15:20,177 INFO Attempt nr 9 to fetch sun forecast data
-2024-09-29 16:15:22,511 INFO Attempt nr 10 to fetch sun forecast data
+2024-09-30 16:15:37,584 DEBUG Using selector: EpollSelector
+2024-09-30 16:15:37,584 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2024-09-30 16:15:38,606 INFO Querying Entsoe API for NL from 2024-09-30 16:15:38.605035+00:00 to 2024-10-01 16:15:38.605035+00:00
+2024-09-30 16:15:38,618 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202409291600', 'periodEnd': '202410021600'}
+2024-09-30 16:15:38,620 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2024-09-30 16:15:40,336 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202409291600&periodEnd=202410021600 HTTP/11" 200 None
+2024-09-30 16:15:40,392 INFO Entsoe day ahead price from: 2024-09-30 16:15:38.605035+00:00 to 2024-10-01 16:15:38.605035+00:00
+Current: 66.56 EUR/MWh @ now_hour
+Next hour: 50.0 EUR/MWh @ next_hour
+2024-09-30 16:15:40,393 INFO Querying EnergyZero API from 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+2024-09-30 16:15:40,998 INFO EnergyZero day ahead price from: 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+Current: 0.08 EUR/MWh @ now_hour
+Next hour: 0.06 EUR/MWh @ next_hour
+2024-09-30 16:15:40,998 INFO Querying Epex API from 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+2024-09-30 16:15:41,382 INFO EnergyZero day ahead price from: 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+Current: 102.28 EUR/MWh @ now_hour
+Next hour: 71.94 EUR/MWh @ next_hour
+2024-09-30 16:15:41,382 INFO Querying Nordpool API for NL from 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+2024-09-30 16:15:41,384 DEBUG Starting new HTTPS connection (1): www.nordpoolgroup.com:443
+2024-09-30 16:15:42,983 DEBUG https://www.nordpoolgroup.com:443 "GET /api/marketdata/page/10?currency=EUR&endDate=01-10-2024 HTTP/11" 200 35954
+2024-09-30 16:15:43,144 INFO EnergyZero day ahead price from: 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+Current: 3.21 EUR/MWh @ now_hour
+Next hour: 0.07 EUR/MWh @ next_hour
+2024-09-30 16:15:43,145 INFO Querying OpenWeather from 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+2024-09-30 16:15:43,696 INFO Fetching OpenWeather forecast data from https://api.openweathermap.org/data/2.5/forecast?lat=51.966472&lon=5.94009&units=metric&appid=4852b00585c8d9000573557d530ac9e7
+2024-09-30 16:15:43,698 INFO OpenWeather forecast from 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+Current: {'main_temp': 13.42, 'main_feels_like': 13.25, 'main_temp_min': 13.42, 'main_temp_max': 14.09, 'main_pressure': 1006, 'main_sea_level': 1006, 'main_grnd_level': 1002, 'main_humidity': 93, 'main_temp_kf': -0.67, 'weather_id': 500, 'weather_main': 'Rain', 'weather_description': 'light rain', 'weather_icon': '10n', 'clouds_all': 100, 'wind_speed': 7.42, 'wind_deg': 184, 'wind_gust': 14.69, 'visibility': 10000, 'rain_3h': 2.65}
+Next hour: {'main_temp': 13.55, 'main_feels_like': 13.31, 'main_temp_min': 13.55, 'main_temp_max': 13.78, 'main_pressure': 1006, 'main_sea_level': 1006, 'main_grnd_level': 1003, 'main_humidity': 90, 'main_temp_kf': -0.23, 'weather_id': 500, 'weather_main': 'Rain', 'weather_description': 'light rain', 'weather_icon': '10n', 'clouds_all': 100, 'wind_speed': 7.76, 'wind_deg': 207, 'wind_gust': 14.67, 'visibility': 10000, 'rain_3h': 1}
+2024-09-30 16:15:43,698 INFO Querying MeteoServer from 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+2024-09-30 16:15:44,152 INFO Fetching weather forecast data from https://data.meteoserver.nl/api/uurverwachting.php?lat=51.966472&long=5.94009&key=7daf22bed0
+2024-09-30 16:15:44,153 INFO Attempt nr 1 to fetch weather forecast data
+2024-09-30 16:15:46,796 INFO Attempt nr 2 to fetch weather forecast data
+2024-09-30 16:15:49,464 INFO Attempt nr 3 to fetch weather forecast data
+2024-09-30 16:15:52,109 INFO Attempt nr 4 to fetch weather forecast data
+2024-09-30 16:15:54,759 INFO Attempt nr 5 to fetch weather forecast data
+2024-09-30 16:15:57,398 INFO Attempt nr 6 to fetch weather forecast data
+2024-09-30 16:16:02,202 INFO Attempt nr 7 to fetch weather forecast data
+2024-09-30 16:16:04,683 INFO Attempt nr 8 to fetch weather forecast data
+2024-09-30 16:16:07,995 INFO Attempt nr 9 to fetch weather forecast data
+2024-09-30 16:16:10,631 INFO Attempt nr 10 to fetch weather forecast data
+2024-09-30 16:16:13,278 INFO Querying Meteo server from 2024-09-30 18:15:38.605035+02:00 to 2024-10-01 18:15:38.605035+02:00
+2024-09-30 16:16:13,729 INFO Fetching sun forecast data from https://data.meteoserver.nl/api/solar.php?lat=51.966472&long=5.94009&key=7daf22bed0
+2024-09-30 16:16:13,729 INFO Attempt nr 1 to fetch sun forecast data
+2024-09-30 16:16:17,018 INFO Attempt nr 2 to fetch sun forecast data
+2024-09-30 16:16:19,507 INFO Attempt nr 3 to fetch sun forecast data
+2024-09-30 16:16:22,146 INFO Attempt nr 4 to fetch sun forecast data
+2024-09-30 16:16:26,462 INFO Attempt nr 5 to fetch sun forecast data
+2024-09-30 16:16:29,153 INFO Attempt nr 6 to fetch sun forecast data
+2024-09-30 16:16:33,051 INFO Attempt nr 7 to fetch sun forecast data
+2024-09-30 16:16:35,732 INFO Attempt nr 8 to fetch sun forecast data
+2024-09-30 16:16:38,478 INFO Attempt nr 9 to fetch sun forecast data
+2024-09-30 16:16:43,724 INFO Attempt nr 10 to fetch sun forecast data
