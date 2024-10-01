@@ -31,11 +31,11 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
 
     start_time, end_time, timezone = ensure_timezone(start_time, end_time)
 
-    logging.info(f"Querying Meteo server from {start_time} to {end_time}")
-
     match, message = compare_timezones(start_time, latitude, longitude)
     if not match:
         logging.warning(f"Timezone mismatch: {message}")
+
+    logging.info(f"Querying Meteo server from {start_time} to {end_time}")
 
     exclude_fields = ['time', 'cet']
     try:
@@ -68,8 +68,10 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                                         data[timestamp.isoformat()][f"{key}_{sub_key}"] = sub_value
                                 else:
                                     data[timestamp.isoformat()][key] = value
+                    print(response_data['plaatsnaam'])
+                    print(response_data['current'])
                     dataset = EnhancedDataSet(
-                        metadata = {
+                        metadata = {                
                             'data_type': 'sun',
                             'source': 'MeteoServer API',
                             'city': response_data['plaatsnaam'][0]['plaats'],
@@ -105,7 +107,7 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
             raise ValueError(f"Meteo server gives unexpected response during {attempt_nr+1} attempts")
     except Exception as e:
         logging.error(f"Error fetching sun forecast data: {e}")
-        return None
+    return None
 
 async def get_MeteoServer_weather_forecast_data(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> dict:
     """
