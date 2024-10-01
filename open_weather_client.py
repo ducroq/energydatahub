@@ -62,13 +62,15 @@ async def get_OpenWeather_data(api_key: str, latitude: float, longitude: float, 
                                         continue
                                     data[timestamp.isoformat()][f"{key}_{sub_key}"] = sub_value
                             else:
-                                data[timestamp.isoformat()][key] = value            
+                                data[timestamp.isoformat()][key] = value      
                 dataset = EnhancedDataSet(
                     metadata = {
                         'data_type': 'weather',
                         'source': 'OpenWeather API 2.5',
                         'country_code': 'NL',
                         'city': response_data['city']['name'],
+                        'latitude': response_data['city']['coord']['lat'],
+                        'longitude': response_data['city']['coord']['lon'],                        
                         'id': response_data['city']['id'],
                         'population': response_data['city']['population'],
                         'sunrise': datetime.fromtimestamp(response_data['city']['sunrise'], tz=timezone).isoformat(),

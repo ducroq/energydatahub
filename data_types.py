@@ -46,7 +46,7 @@ class EnhancedDataSet:
         data_type = metadata['data_type']
         if data_type == 'energy_price':
              self.data = self.validate_energy_prices(data)
-        elif data_type == 'weather' or data_type == 'sun':
+        elif data_type == 'weather' or data_type == 'sun' or data_type == 'air':
             self.data = self.validate_weather_data(data)
         
     def validate_weather_data(self, data: Dict[str, Any]) -> Dict[str, Any]:

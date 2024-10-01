@@ -2,10 +2,11 @@ import asyncio
 import logging
 import aiohttp
 from datetime import datetime, timedelta
-from timezone_helpers import ensure_timezone
-from helpers import convert_value, closest
+from timezone_helpers import ensure_timezone, compare_timezones
+from helpers import closest
+from data_types import EnhancedDataSet
 
-async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> dict:
+async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
     Retrieves air quality data from Luchtmeetnet for a specified location, component, and time range.
     See https://www.luchtmeetnet.nl/informatie/luchtkwaliteit/klassen-luchtkwaliteit
@@ -17,7 +18,7 @@ async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: d
         end_time (datetime): The end of the time range.
 
     Returns:
-        dict: A dictionary containing the air quality data.
+        EnhancedDataSet: An EnhancedDataSet containing Luchtmeetnet data.
     """
     base_url = 'https://api.luchtmeetnet.nl/open_api'
 
@@ -28,13 +29,11 @@ async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: d
     
     start_time, end_time, tz = ensure_timezone(start_time, end_time)
 
-    logging.info(f"Querying Luchtmeetnet server from {start_time} to {end_time}")
+    match, message = compare_timezones(start_time, latitude, longitude)
+    if not match:
+        logging.warning(f"Timezone mismatch: {message}")
 
-    processed_data = {}
-    processed_data['source'] = "Luchtmeetnet"
-    processed_data['metadata'] = {}
-    processed_data['data'] = {}
-    processed_data['units'] = {'all': 'µg/m³'}
+    logging.info(f"Querying Luchtmeetnet server from {start_time} to {end_time}")
 
     try:
         async with aiohttp.ClientSession() as session:
@@ -44,7 +43,7 @@ async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: d
             async with session.get(url) as response:
                 if response.status != 200:
                     logging.error(f"Unable to fetch data. Status code: {response.status}")
-                    return processed_data
+                    return None
                 response_data = await response.json()
                 page_list = list(response_data['pagination']['page_list'])
                 
@@ -53,7 +52,7 @@ async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: d
                 async with session.get(url) as response:
                     if response.status != 200:
                         logging.error(f"Unable to fetch data. Status code: {response.status}")
-                        return processed_data
+                        return None
                     response_data = await response.json()
                     station_list.extend(response_data['data'])
 
@@ -63,63 +62,73 @@ async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: d
                 async with session.get(url) as response:
                     if response.status != 200:
                         logging.error(f"Unable to fetch data. Status code: {response.status}")
-                        return processed_data
+                        return None
                     response_data = await response.json()
                     if response_data['data']['geometry']['type'] == 'point' and response_data['data']['geometry']['coordinates']:
                         station['latitude'] = response_data['data']['geometry']['coordinates'][1]
                         station['longitude'] = response_data['data']['geometry']['coordinates'][0]
                         station['components'] = response_data['data']['components']
                         station['location'] = response_data['data']['location']
-                        # station['municipality'] = response_data['data']['municipality']
-                        # station['organisation'] = response_data['data']['organisation']
-                        # station['description'] = response_data['data']['description']['EN']
-                        # station['url'] = response_data['data']['url']
-                        # station['province'] = response_data['data']['province']
-                        # station['year_start'] = response_data['data']['year_start']
+                        station['municipality'] = response_data['data']['municipality']
 
             logging.info(f"Finding station closest to {latitude}, {longitude}")
             closest_station = closest(station_list, {"latitude": latitude, "longitude": longitude})
-            processed_data['metadata'] = {
-                "station code": closest_station['number'],
-                "location": closest_station['location'],
-                "latitude": closest_station['latitude'],
-                "longitude": closest_station['longitude'],
-                "components": closest_station['components']
-            }
           
             logging.info(f"Fetching air quality indicator for station {closest_station['number']}, {closest_station['location']}")
             url = f"{base_url}/lki?station_number={closest_station['number']}&order_by=timestamp_measured&order_direction=desc"
+            data = {}
             async with session.get(url) as response:
                 if response.status != 200:
                     logging.error(f"Unable to fetch data. Status code: {response.status}")
-                    return processed_data
+                    return None
                 response_data = await response.json()
                 for item in response_data['data']:
                     aware_item_time = datetime.strptime(item.pop('timestamp_measured'), '%Y-%m-%dT%H:%M:%S%z')
                     localized_item_time = aware_item_time.astimezone(tz) # correct timezone
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         timestamp_key = localized_item_time.isoformat()
-                        processed_data['data'][timestamp_key] = {'AQI': convert_value(item['value'])}
+                        data.setdefault(timestamp_key, {})['AQI'] = item['value']
            
             logging.info(f"Fetching measurements for station {closest_station['number']}, {closest_station['location']}")
             url = f"{base_url}/stations/{closest_station['number']}/measurements?order_by=timestamp_measured&order_direction=desc"
             async with session.get(url) as response:
                 if response.status != 200:
                     logging.error(f"Unable to fetch data. Status code: {response.status}")
-                    return processed_data
+                    return None
                 response_data = await response.json()
                 for item in response_data['data']:
                     aware_item_time = datetime.strptime(item.pop('timestamp_measured'), '%Y-%m-%dT%H:%M:%S%z')
                     localized_item_time = aware_item_time.astimezone(tz) # correct timezone
                     if localized_item_time >= start_time and localized_item_time <= end_time:
                         timestamp_key = localized_item_time.isoformat()
-                        inner_dict = processed_data['data'].setdefault(timestamp_key, {})
-                        inner_dict[item['formula']] = convert_value(item['value'])
-             
+                        data.setdefault(timestamp_key, {})[item['formula']] = item['value']
+            dataset = EnhancedDataSet(
+                metadata = {        
+                    'data_type': 'air',
+                    'source': 'Luchtmeetnet API',
+                    'city': closest_station['municipality'],
+                    'station': closest_station['number'],
+                    'latitude': closest_station['latitude'],
+                    'longitude': closest_station['longitude'],
+                    'components': closest_station['components'],
+                    'units': {
+                        'all': 'µg/m³'
+                    },
+                    'start_time': start_time.isoformat(),
+                    'end_time': end_time.isoformat()},
+                data = data
+            )
+
+            if dataset.data:
+                now_hour = list(dataset['data'].keys())[0]
+                logging.info(f"Luchtmeetnet data from {start_time} to {end_time}\n"
+                            f"Current: {dataset['data'][now_hour]}\n")
+            else:
+                logging.warning(f"No data retrieved for the specified time range: {start_time} to {end_time}")
+            return dataset 
     except Exception as e:
         logging.error(f"Error fetching luchtmeetnet data: {e}") 
-
-    return processed_data
+    return None
 
 # Example usage
 async def main():
