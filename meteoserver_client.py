@@ -68,8 +68,6 @@ async def get_MeteoServer_sun_forecast(api_key: str, latitude: float, longitude:
                                         data[timestamp.isoformat()][f"{key}_{sub_key}"] = sub_value
                                 else:
                                     data[timestamp.isoformat()][key] = value
-                    print(response_data['plaatsnaam'])
-                    print(response_data['current'])
                     dataset = EnhancedDataSet(
                         metadata = {                
                             'data_type': 'sun',
