@@ -68,10 +68,19 @@ async def main() -> None:
         tomorrow = tomorrow.astimezone(timezone)
         yesterday = yesterday.astimezone(timezone)
 
-        entsoe_data = await get_Entsoe_data(entsoe_api_key, country_code, today, tomorrow)
-        energy_zero_data = await get_Energy_zero_data(today, tomorrow)
-        epex_data = await get_Epex_data(today, tomorrow)
-        elspot_data = await get_Elspot_data(country_code, today, tomorrow)
+        tasks = [
+            get_Entsoe_data(entsoe_api_key, country_code, today, tomorrow),
+            get_Energy_zero_data(today, tomorrow),
+            get_Epex_data(today, tomorrow),
+            get_OpenWeather_data(openweather_api_key, latitude, longitude, today, tomorrow),
+            get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude, longitude, today, tomorrow),
+            get_MeteoServer_sun_forecast(meteoserver_api_key, latitude, longitude, today, tomorrow),
+            get_Elspot_data(country_code, today, tomorrow),
+            get_luchtmeetnet_data(latitude, longitude, yesterday, today)
+        ]
+
+        results = await asyncio.gather(*tasks)
+        entsoe_data, energy_zero_data, epex_data, open_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data = results
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -83,8 +92,6 @@ async def main() -> None:
             combined_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "energy_price_forecast.json"))
 
-        open_weather_data = await get_OpenWeather_data(openweather_api_key, latitude, longitude, today, tomorrow)
-        meteo_weather_data = await get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude, longitude, today, tomorrow)
         combined_data = CombinedDataSet()
         combined_data.add_dataset('OpenWeather', open_weather_data)
         combined_data.add_dataset('MeteoServer', meteo_weather_data)
@@ -93,13 +100,11 @@ async def main() -> None:
             combined_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "weather_forecast.json"))
 
-        meteo_sun_data = await get_MeteoServer_sun_forecast(meteoserver_api_key, latitude, longitude, today, tomorrow)        
         if meteo_sun_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json")
             meteo_sun_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "sun_forecast.json"))
 
-        luchtmeetnet_data = await get_luchtmeetnet_data(latitude, longitude, yesterday, today)
         if luchtmeetnet_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_air_history.json")
             luchtmeetnet_data.write_to_json(full_path)
