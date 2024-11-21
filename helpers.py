@@ -1,4 +1,24 @@
+import os
+import logging
 from math import cos, asin, sqrt
+from configparser import ConfigParser
+
+def ensure_output_directory(path: str) -> None:
+    """Ensure the output directory exists."""
+    try:
+        os.makedirs(path, exist_ok=True)
+        logging.info(f"Output directory ensured: {path}")
+    except OSError as e:
+        logging.error(f"Error creating folder: {e}")
+        raise
+
+def load_config(script_dir: str, filename: str) -> ConfigParser:
+    """Load configuration from the secrets file."""
+    config = ConfigParser()
+    secrets_file = os.path.join(script_dir, filename)
+    config.read(secrets_file)
+    return config
+
 
 def convert_value(value):
     if type(value) == int or type(value) == float:
