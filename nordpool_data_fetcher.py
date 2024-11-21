@@ -5,6 +5,7 @@ from nordpool import elspot
 from functools import partial
 from timezone_helpers import ensure_timezone
 from data_types import EnhancedDataSet
+import platform
 
 async def get_Elspot_data(country_code: str, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
@@ -86,4 +87,8 @@ async def main():
         print(f"Timestamp: {timestamp}, Price: {price} EUR/MWh")        
 
 if __name__ == "__main__":
+    # Set appropriate event loop policy for Windows
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())        
+
     asyncio.run(main())

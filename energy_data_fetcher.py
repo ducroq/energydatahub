@@ -1,10 +1,13 @@
 import os
+import json
 import shutil
 from datetime import datetime, timedelta
 import asyncio
 import logging
-from configparser import ConfigParser
+import base64
+import platform
 
+from helpers import ensure_output_directory, load_config
 from data_types import CombinedDataSet
 from entsoe_client import get_Entsoe_data
 from energy_zero_price_fetcher import get_Energy_zero_data
@@ -14,9 +17,11 @@ from meteoserver_client import get_MeteoServer_weather_forecast_data, get_MeteoS
 from nordpool_data_fetcher import get_Elspot_data
 from luchtmeetnet_data_fetcher import get_luchtmeetnet_data
 from timezone_helpers import get_timezone_and_country
+from secure_data_handler import SecureDataHandler
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
+SETTINGS_FILE_NAME = 'settings.ini'
 SECRETS_FILE_NAME = 'secrets.ini'
 OUTPUT_FOLDER_NAME = 'data'
 output_path = os.path.join(os.getcwd(), OUTPUT_FOLDER_NAME)
@@ -30,35 +35,24 @@ logging.basicConfig(
         logging.FileHandler(os.path.join(output_path, LOGGING_FILE_NAME))]
     )
 
-def ensure_output_directory(path: str) -> None:
-    """Ensure the output directory exists."""
-    try:
-        os.makedirs(path, exist_ok=True)
-        logging.info(f"Output directory ensured: {path}")
-    except OSError as e:
-        logging.error(f"Error creating folder: {e}")
-        raise
-
-def load_config(script_dir: str) -> ConfigParser:
-    """Load configuration from the secrets file."""
-    config = ConfigParser()
-    secrets_file = os.path.join(script_dir, SECRETS_FILE_NAME)
-    config.read(secrets_file)
-    return config
-
 async def main() -> None:
     """Main function to orchestrate the data fetching and writing process."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     ensure_output_directory(output_path)
 
     try:
-        config = load_config(script_dir)
-        entsoe_api_key = config.get('api_keys', 'entsoe')
-        openweather_api_key = config.get('api_keys', 'openweather')
-        meteoserver_api_key = config.get('api_keys', 'meteo')
+        config = load_config(script_dir, SETTINGS_FILE_NAME)
         latitude = float(config.get('location', 'latitude'))
         longitude = float(config.get('location', 'longitude'))
         timezone, country_code = get_timezone_and_country(latitude, longitude)
+
+        config = load_config(script_dir, SECRETS_FILE_NAME)        
+        entsoe_api_key = config.get('api_keys', 'entsoe')
+        openweather_api_key = config.get('api_keys', 'openweather')
+        meteoserver_api_key = config.get('api_keys', 'meteo')
+        encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))
+        hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
+        handler = SecureDataHandler(encryption_key, hmac_key)
 
         current_time = datetime.now()
         tomorrow = (current_time + timedelta(days=1))
@@ -90,6 +84,13 @@ async def main() -> None:
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_energy_price_forecast.json")
             combined_data.write_to_json(full_path)
+            data = json.load(open(full_path, 'r'))
+            encrypted = handler.encrypt_and_sign(data)
+
+            with open(full_path, 'w') as f:
+                json.dump(encrypted, f, indent=2)
+
+            # TODO:opslaan en een decrypt functie maken!
             shutil.copy(full_path, os.path.join(output_path, "energy_price_forecast.json"))
 
         combined_data = CombinedDataSet()
@@ -114,4 +115,8 @@ async def main() -> None:
         logging.error(e)
 
 if __name__ == "__main__":
+    # Set appropriate event loop policy for Windows
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())        
+
     asyncio.run(main())
