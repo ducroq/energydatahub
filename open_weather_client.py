@@ -4,6 +4,7 @@ import aiohttp
 from datetime import datetime
 from data_types import EnhancedDataSet
 from timezone_helpers import ensure_timezone, compare_timezones
+import platform
 
 async def get_OpenWeather_data(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
@@ -30,7 +31,7 @@ async def get_OpenWeather_data(api_key: str, latitude: float, longitude: float, 
         start_time, end_time, timezone = ensure_timezone(start_time, end_time)
 
         logging.info(f"Querying OpenWeather from {start_time} to {end_time}")
-        
+
         match, message = compare_timezones(start_time, latitude, longitude)
         if not match:
             logging.warning(f"Timezone mismatch: {message}")        
@@ -171,4 +172,8 @@ async def main():
         print(f"Failed to retrieve coordinates for {plaats}")
 
 if __name__ == "__main__":
+    # Set appropriate event loop policy for Windows
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())        
+
     asyncio.run(main())

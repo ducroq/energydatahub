@@ -4,6 +4,7 @@ import aiohttp
 from datetime import datetime, timedelta
 from timezone_helpers import ensure_timezone, compare_timezones
 from data_types import EnhancedDataSet
+import platform
 
 MAX_ATTEMPTS = 10
 RETRY_DELAY = 2
@@ -264,4 +265,8 @@ async def main():
         print(f"Failed to retrieve sun forecast data for {latitude}, {longitude}")
 
 if __name__ == "__main__":
+    # Set appropriate event loop policy for Windows
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())        
+
     asyncio.run(main())
