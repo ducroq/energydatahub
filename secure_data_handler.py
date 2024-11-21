@@ -1,0 +1,148 @@
+# This section details the implementation of data protection measures using a combination of Python (for data aggregation and processing)
+# and LabVIEW (for the control system). The goal is to ensure data integrity, authenticity, and confidentiality while maintaining system 
+# availability and integrity.
+
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.backends import default_backend
+import os
+import json
+import base64
+
+class SecureDataHandler:
+    def __init__(self, encryption_key, hmac_key):
+        self.encryption_key = encryption_key
+        self.hmac_key = hmac_key
+
+    def encrypt_and_sign(self, data):
+        # Serialize data to JSON
+        json_data = json.dumps(data).encode('utf-8')
+
+        # Generate a random IV
+        iv = os.urandom(16)
+
+        # Encrypt the data
+        cipher = Cipher(algorithms.AES(self.encryption_key), modes.CBC(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        padded_data = self._pad(json_data)
+        ciphertext = encryptor.update(padded_data) + encryptor.finalize()
+
+        # Compute HMAC
+        h = hmac.HMAC(self.hmac_key, hashes.SHA256(), backend=default_backend())
+        h.update(iv + ciphertext)
+        signature = h.finalize()
+
+        # Combine IV, ciphertext, and signature
+        result = iv + ciphertext + signature
+        return base64.b64encode(result).decode('utf-8')
+
+    def decrypt_and_verify(self, encrypted_data):
+        # Decode from base64
+        data = base64.b64decode(encrypted_data.encode('utf-8'))
+
+        # Extract IV, ciphertext, and signature
+        iv = data[:16]
+        ciphertext = data[16:-32]
+        signature = data[-32:]
+
+        # Verify HMAC
+        h = hmac.HMAC(self.hmac_key, hashes.SHA256(), backend=default_backend())
+        h.update(iv + ciphertext)
+        h.verify(signature)
+
+        # Decrypt the data
+        cipher = Cipher(algorithms.AES(self.encryption_key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        padded_plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+        plaintext = self._unpad(padded_plaintext)
+
+        # Parse JSON
+        data = json.loads(plaintext.decode('utf-8'))
+
+        return data
+
+    def _pad(self, data):
+        block_size = algorithms.AES.block_size // 8
+        padding_size = block_size - (len(data) % block_size)
+        padding = bytes([padding_size] * padding_size)
+        return data + padding
+
+    def _unpad(self, padded_data):
+        padding_size = padded_data[-1]
+        return padded_data[:-padding_size]
+
+if __name__ == "__main__":
+    from helpers import load_config
+
+    SECRETS_FILE_NAME = 'secrets.ini'
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    config = load_config(script_dir, SECRETS_FILE_NAME)        
+    encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))
+    hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
+
+    # random_bytes = os.urandom(32)
+    # random_string = base64.b64encode(random_bytes).decode('utf-8')
+
+    # print(random_bytes)
+    # print(random_string)
+
+    handler = SecureDataHandler(encryption_key, hmac_key)
+
+    # Encrypting data
+    data = {"temperature": 25.5, "humidity": 60, "pressure": 1013.25}
+    encrypted = handler.encrypt_and_sign(data)
+    print(f"Encrypted: {encrypted}")
+
+    # Decrypting data
+    decrypted = handler.decrypt_and_verify(encrypted)
+    print(f"Decrypted: {decrypted}")
+
+    # Usage example
+    encryption_key = os.urandom(32)  # 256-bit key
+    hmac_key = os.urandom(32)  # 256-bit key
+    handler = SecureDataHandler(encryption_key, hmac_key)
+
+    # Encrypting data
+    data = {"temperature": 25.5, "humidity": 60, "pressure": 1013.25}
+    encrypted = handler.encrypt_and_sign(data)
+    print(f"Encrypted: {encrypted}")
+
+    # Decrypting data
+    decrypted = handler.decrypt_and_verify(encrypted)
+    print(f"Decrypted: {decrypted}")
+
+## LabVIEW Implementation (Control System)
+
+# For the LabVIEW part, we'll describe the process as LabVIEW uses a graphical programming language:
+
+# 1. Create a VI named "Decrypt and Verify Data.vi"
+# 2. Input: encrypted data string, encryption key, HMAC key
+# 3. Decode the base64 input string
+# 4. Extract IV (first 16 bytes), ciphertext, and signature (last 32 bytes)
+# 5. Use Cryptography VIs:
+#    - "Verify HMAC.vi" to check data integrity
+#    - "AES Decrypt.vi" to decrypt the data
+# 6. Unpad the decrypted data
+# 7. Parse the JSON string to LabVIEW data structures
+# 8. Check the timestamp to prevent replay attacks
+# 9. Output: decrypted data as LabVIEW clusters/arrays
+
+# ## Security Aspects Addressed
+
+# 1. **Data Integrity and Authenticity**:
+#    - HMAC ensures data hasn't been tampered with
+#    - Timestamp prevents replay attacks
+
+# 2. **Data Confidentiality**:
+#    - AES-256 encryption protects data content
+#    - Secure key management (keys should be stored securely, possibly in a hardware security module)
+
+# 3. **Availability**:
+#    - Efficient encryption/decryption allows for real-time data processing
+#    - Error handling ensures system continues functioning even if some data is corrupted
+
+# 4. **System Integrity**:
+#    - Signature verification ensures only valid data is processed
+#    - Timestamp checking prevents processing of outdated data

@@ -4,6 +4,7 @@ import logging
 from energyzero import EnergyZero, VatOption
 from timezone_helpers import ensure_timezone
 from data_types import EnhancedDataSet
+import platform
 
 async def get_Energy_zero_data(start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
@@ -73,4 +74,8 @@ async def main():
         print(f"Timestamp: {timestamp}, Price: {price} EUR/kWh")
 
 if __name__ == "__main__":
+    # Set appropriate event loop policy for Windows
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) 
+
     asyncio.run(main())
