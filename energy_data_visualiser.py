@@ -70,7 +70,7 @@ def plot_prices(df, dark_mode=False):
    sns.lineplot(data=df, x='timestamp', y='price', hue='source', marker='o', palette=color_dict)
    
    plt.grid(color=grid_color, linestyle='-', linewidth=1)
-   plt.title(f'Energy Prices\n{df.timestamp.min().strftime("%Y-%m-%d %H:%M")} to {df.timestamp.max().strftime("%Y-%m-%d %H:%M")}')
+   plt.title(f'Energy price forecasts\n{df.timestamp.min().strftime("%Y-%m-%d %H:%M")} to {df.timestamp.max().strftime("%Y-%m-%d %H:%M")}')
    plt.xlabel('Time')
    plt.ylabel('Price (EUR/MWh)')
    plt.xticks(rotation=45)
@@ -89,7 +89,7 @@ def main():
     try:
         df = load_multiple_files(start_date, end_date)
         
-        plot = plot_prices(df, dark_mode=True)  # or False for light mode
+        plot = plot_prices(df, dark_mode=False)
         output_file = 'price_comparison_range.png'
         plot.savefig(output_file)
         print(f"Plot saved as {output_file}")
