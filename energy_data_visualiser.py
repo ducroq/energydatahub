@@ -1,3 +1,4 @@
+import re
 import json
 import pandas as pd
 import seaborn as sns
@@ -6,6 +7,10 @@ from datetime import datetime, timedelta
 import glob
 import os
 import pytz
+import base64
+
+from secure_data_handler import SecureDataHandler
+from helpers import load_config
 
 BASE_PATH = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data"
 
@@ -50,6 +55,14 @@ def load_multiple_files(start_date, end_date):
     df = pd.DataFrame(all_data)
     return df.sort_values('timestamp')
 
+
+def is_encrypted(json_data):
+    if isinstance(json_data, str):
+        # Check if it's a single long string with base64 characters
+        base64_pattern = r'^[A-Za-z0-9+/=]+$'
+        return bool(re.match(base64_pattern, json_data.strip()))
+    return False
+
 def plot_prices(df, dark_mode=False):
    color_dict = {
        'entsoe': '#8884d8',
@@ -78,7 +91,45 @@ def plot_prices(df, dark_mode=False):
    
    return plt
 
-def main():
+def load_price_forecast_json_file(json_file, handler):
+    timezone = pytz.timezone('Europe/Amsterdam')
+
+    try:
+        with open(os.path.join(BASE_PATH, json_file), 'r') as f:
+            data = json.load(f)
+
+        if is_encrypted(data):
+            print("Data is encrypted, decrypting...")
+            data = handler.decrypt_and_verify(data)
+
+        ret_data = []
+        for source in ['entsoe', 'energy_zero', 'epex', 'elspot']:
+            if source in data:
+                source_data = data[source]['data']
+                for timestamp, price in source_data.items():
+                    dt = pd.to_datetime(timestamp).tz_convert(timezone)
+
+                    if source == 'energy_zero':
+                        price_float = float(price) * 1000 if isinstance(price, (int, float, str)) else None
+                    else:
+                        price_float = float(price) if isinstance(price, (int, float, str)) else None
+                    if price_float is not None:
+                        ret_data.append({
+                            'timestamp': dt,
+                            'price': price_float,
+                            'source': source
+                        })
+
+        df = pd.DataFrame(ret_data)
+
+        return df.sort_values('timestamp')
+        
+    except Exception as e:
+        print(f"Error in main: {e}")
+
+
+ todo add this to main function
+def main_time_interval():
     # Define time interval
     timezone = pytz.timezone('Europe/Amsterdam')
     end_date = datetime.now(timezone)
@@ -103,4 +154,20 @@ def main():
         print(f"Error in main: {e}")
 
 if __name__ == "__main__":
-    main()
+    SECRETS_FILE_NAME = 'secrets.ini'
+    json_file = 'energy_price_forecast.json'
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))    
+    config = load_config(script_dir, SECRETS_FILE_NAME)        
+    encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))
+    hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
+    handler = SecureDataHandler(encryption_key, hmac_key)
+
+    df = load_price_forecast_json_file(json_file, handler)
+
+    plot = plot_prices(df, dark_mode=False)
+    output_file = 'price_comparison_range.png'
+    plot.savefig(output_file)
+    print(f"Plot saved as {output_file}")
+
+    # main_single_file()
