@@ -86,11 +86,8 @@ async def main() -> None:
             combined_data.write_to_json(full_path)
             data = json.load(open(full_path, 'r'))
             encrypted = handler.encrypt_and_sign(data)
-
             with open(full_path, 'w') as f:
                 json.dump(encrypted, f, indent=2)
-
-            # TODO:opslaan en een decrypt functie maken!
             shutil.copy(full_path, os.path.join(output_path, "energy_price_forecast.json"))
 
         combined_data = CombinedDataSet()
@@ -98,7 +95,10 @@ async def main() -> None:
         combined_data.add_dataset('MeteoServer', meteo_weather_data)
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast.json")
-            combined_data.write_to_json(full_path)
+            encrypted_data = handler.encrypt_and_sign(combined_data.to_dict())
+            with open(full_path, 'w') as f:
+                f.write(encrypted_data)
+            # combined_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "weather_forecast.json"))
 
         if meteo_sun_data:
