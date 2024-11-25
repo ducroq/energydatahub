@@ -2,8 +2,8 @@ import asyncio
 import logging
 import aiohttp
 from datetime import datetime
-from data_types import EnhancedDataSet
-from timezone_helpers import ensure_timezone, compare_timezones
+from core.data_types import EnhancedDataSet
+from core.timezone_helpers import ensure_timezone, compare_timezones
 import platform
 
 async def get_OpenWeather_data(api_key: str, latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
