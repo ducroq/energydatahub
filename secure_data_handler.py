@@ -14,7 +14,7 @@ class SecureDataHandler:
         self.encryption_key = encryption_key
         self.hmac_key = hmac_key
 
-    def encrypt_and_sign(self, data):
+    def encrypt_and_sign(self, data) -> str:
         # Serialize data to JSON
         json_data = json.dumps(data).encode('utf-8')
 
@@ -36,7 +36,7 @@ class SecureDataHandler:
         result = iv + ciphertext + signature
         return base64.b64encode(result).decode('utf-8')
 
-    def decrypt_and_verify(self, encrypted_data):
+    def decrypt_and_verify(self, encrypted_data) -> dict:
         # Decode from base64
         data = base64.b64decode(encrypted_data.encode('utf-8'))
 
