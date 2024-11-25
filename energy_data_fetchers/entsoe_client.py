@@ -4,7 +4,7 @@ import pandas as pd
 from entsoe import EntsoePandasClient
 import logging
 from functools import partial
-from data_types import EnhancedDataSet
+from core.data_types import EnhancedDataSet
 
 async def get_Entsoe_data(api_key: str, country_code: str, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """

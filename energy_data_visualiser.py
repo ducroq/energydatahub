@@ -9,8 +9,8 @@ import os
 import pytz
 import base64
 
-from secure_data_handler import SecureDataHandler
-from helpers import load_config
+from core.secure_data_handler import SecureDataHandler
+from core.helpers import load_config
 
 
 def load_price_forecast_range(start_date, end_date, file_path='data', handler: SecureDataHandler = None):
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     plot = plot_prices(df, dark_mode=True)
 
-    output_file = 'price_comparison_range.png'
-    plot.savefig(output_file)
+    # output_file = 'price_comparison_range.png'
+    # plot.savefig(output_file)
 
     plt.show()
