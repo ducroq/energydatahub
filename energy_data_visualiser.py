@@ -12,18 +12,21 @@ import base64
 from secure_data_handler import SecureDataHandler
 from helpers import load_config
 
-BASE_PATH = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data"
 
-def load_multiple_files(start_date, end_date):
+def load_price_forecast_range(start_date, end_date, file_path='data', handler: SecureDataHandler = None):
     timezone = start_date.tzinfo
     
     all_data = []
-    json_files = glob.glob(os.path.join(BASE_PATH, '*energy_price_forecast.json'))
+    json_files = glob.glob(os.path.join(file_path, '*energy_price_forecast.json'))
     
     for file in json_files:
         try:
             with open(file, 'r') as f:
                 data = json.load(f)
+
+            if is_encrypted(data):
+                print("Data is encrypted, decrypting...")
+                data = handler.decrypt_and_verify(data)                
             
             for source in ['entsoe', 'energy_zero', 'epex', 'elspot']:
                 if source in data:
@@ -54,7 +57,6 @@ def load_multiple_files(start_date, end_date):
     
     df = pd.DataFrame(all_data)
     return df.sort_values('timestamp')
-
 
 def is_encrypted(json_data):
     if isinstance(json_data, str):
@@ -91,11 +93,11 @@ def plot_prices(df, dark_mode=False):
    
    return plt
 
-def load_price_forecast_json_file(json_file, handler):
+def load_price_forecast(json_file: str, handler: SecureDataHandler):
     timezone = pytz.timezone('Europe/Amsterdam')
 
     try:
-        with open(os.path.join(BASE_PATH, json_file), 'r') as f:
+        with open(json_file, 'r') as f:
             data = json.load(f)
 
         if is_encrypted(data):
@@ -127,35 +129,9 @@ def load_price_forecast_json_file(json_file, handler):
     except Exception as e:
         print(f"Error in main: {e}")
 
-
- todo add this to main function
-def main_time_interval():
-    # Define time interval
-    timezone = pytz.timezone('Europe/Amsterdam')
-    end_date = datetime.now(timezone)
-    start_date = end_date - timedelta(days=100)
-    
-    print(f"Looking for data between {start_date} and {end_date}")
-    
-    try:
-        df = load_multiple_files(start_date, end_date)
-        
-        plot = plot_prices(df, dark_mode=False)
-        output_file = 'price_comparison_range.png'
-        plot.savefig(output_file)
-        print(f"Plot saved as {output_file}")
-        
-        # Print summary statistics
-        print("\nPrice statistics by source:")
-        stats = df.groupby('source')['price'].agg(['mean', 'min', 'max'])
-        print(stats.round(2))
-        
-    except Exception as e:
-        print(f"Error in main: {e}")
-
 if __name__ == "__main__":
     SECRETS_FILE_NAME = 'secrets.ini'
-    json_file = 'energy_price_forecast.json'
+    BASE_PATH = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data"
 
     script_dir = os.path.dirname(os.path.abspath(__file__))    
     config = load_config(script_dir, SECRETS_FILE_NAME)        
@@ -163,11 +139,19 @@ if __name__ == "__main__":
     hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
     handler = SecureDataHandler(encryption_key, hmac_key)
 
-    df = load_price_forecast_json_file(json_file, handler)
+    # json_file = os.path.join(BASE_PATH, 'energy_price_forecast.json')
+    # df = load_price_forecast(json_file, handler)
 
-    plot = plot_prices(df, dark_mode=False)
+    # Define time interval
+    timezone = pytz.timezone('Europe/Amsterdam')
+    end_date = datetime.now(timezone)
+    start_date = end_date - timedelta(days=10)
+
+    df = load_price_forecast_range(start_date, end_date, BASE_PATH, handler)
+
+    plot = plot_prices(df, dark_mode=True)
+
     output_file = 'price_comparison_range.png'
     plot.savefig(output_file)
-    print(f"Plot saved as {output_file}")
 
-    # main_single_file()
+    plt.show()
