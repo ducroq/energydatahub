@@ -7,8 +7,10 @@ import logging
 import base64
 import platform
 
-from helpers import ensure_output_directory, load_config
-from data_types import CombinedDataSet
+from core.helpers import ensure_output_directory, load_config
+from core.data_types import CombinedDataSet
+from core.timezone_helpers import get_timezone_and_country
+from core.secure_data_handler import SecureDataHandler
 from energy_data_fetchers.entsoe_client import get_Entsoe_data
 from energy_data_fetchers.energy_zero_price_fetcher import get_Energy_zero_data
 from energy_data_fetchers.epex_price_fetcher import get_Epex_data
@@ -16,8 +18,6 @@ from energy_data_fetchers.nordpool_data_fetcher import get_Elspot_data
 from weather_data_fetchers.open_weather_client import get_OpenWeather_data
 from weather_data_fetchers.meteoserver_client import get_MeteoServer_weather_forecast_data, get_MeteoServer_sun_forecast
 from weather_data_fetchers.luchtmeetnet_data_fetcher import get_luchtmeetnet_data
-from timezone_helpers import get_timezone_and_country
-from secure_data_handler import SecureDataHandler
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
@@ -83,6 +83,7 @@ async def main() -> None:
         combined_data.add_dataset('elspot', elspot_data)
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_energy_price_forecast.json")
+todo: make more efficient
             combined_data.write_to_json(full_path)
             data = json.load(open(full_path, 'r'))
             encrypted = handler.encrypt_and_sign(data)

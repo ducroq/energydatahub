@@ -14,21 +14,21 @@ import meteoserver as meteo
 import shutil
 
 # run this from cron, e.g. hourly, e.g.
-# 0 * * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/energyDataHub.py.log 2>&1
+# 0 * * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/local_data_fetcher.py.log 2>&1
 # or e.g. every 6 hours:
-# 0 */6 * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/energyDataHub.py.log 2>&1
+# 0 */6 * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/local_data_fetcher.py.log 2>&1
 # or daily at 6:00:
-# 0 6 * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/energyDataHub.py.log 2>&1
+# 0 6 * * * /home/pi/energyDataHub/run_script.sh >> /home/pi/tmp/local_data_fetcher.py.log 2>&1
 # With a runscript like this:
 # #!/bin/bash
 # VENV_PATH="/home/pi/energyDataHub"
 # source "$VENV_PATH/bin/activate"
-# python /home/pi/energyDataHub/energyDataScraper.py
+# python /home/pi/energyDataHub/local_data_fetcher.py
 # deactivate
 
 OUTPUT_PATH = os.path.join(os.getcwd(), 'data') # None # r'/home/pi/tmp/energyData'
 REMOTE_STORAGE_PATH = None # r'gdrive:/data'
-LOGGING_FILE_NAME = 'energyDataScraper.log'
+LOGGING_FILE_NAME = 'local_data_fetcher.log'
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 output_path = OUTPUT_PATH if OUTPUT_PATH is not None else os.path.join(script_dir, 'data')

@@ -7,7 +7,7 @@ VENV_PATH="/home/pi/energyDataHub"
 source "$VENV_PATH/bin/activate"
 
 # Execute your Python script
-python /home/pi/energyDataHub/energyDataScraper.py
+python /home/pi/energyDataHub/local_data_fetcher.py
 
 # Deactivate the virtual environment
 deactivate
