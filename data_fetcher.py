@@ -83,7 +83,7 @@ async def main() -> None:
         combined_data.add_dataset('elspot', elspot_data)
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_energy_price_forecast.json")
-todo: make more efficient
+# todo: make more efficient
             combined_data.write_to_json(full_path)
             data = json.load(open(full_path, 'r'))
             encrypted = handler.encrypt_and_sign(data)
