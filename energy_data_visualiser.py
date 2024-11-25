@@ -131,7 +131,6 @@ def load_price_forecast(json_file: str, handler: SecureDataHandler):
 
 if __name__ == "__main__":
     SECRETS_FILE_NAME = 'secrets.ini'
-    BASE_PATH = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data"
 
     script_dir = os.path.dirname(os.path.abspath(__file__))    
     config = load_config(script_dir, SECRETS_FILE_NAME)        
@@ -139,15 +138,16 @@ if __name__ == "__main__":
     hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
     handler = SecureDataHandler(encryption_key, hmac_key)
 
-    # json_file = os.path.join(BASE_PATH, 'energy_price_forecast.json')
+    # json_file = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\energy_price_forecast.json"
     # df = load_price_forecast(json_file, handler)
 
     # Define time interval
     timezone = pytz.timezone('Europe/Amsterdam')
     end_date = datetime.now(timezone)
     start_date = end_date - timedelta(days=10)
-
-    df = load_price_forecast_range(start_date, end_date, BASE_PATH, handler)
+    
+    data_folder = r"C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\05. Data\2409-2411"
+    df = load_price_forecast_range(start_date, end_date, data_folder, handler)
 
     plot = plot_prices(df, dark_mode=True)
 
