@@ -113,22 +113,6 @@ if __name__ == "__main__":
     decrypted = handler.decrypt_and_verify(encrypted)
     print(f"Decrypted: {decrypted}")
 
-## LabVIEW Implementation (Control System)
-
-# For the LabVIEW part, we'll describe the process as LabVIEW uses a graphical programming language:
-
-# 1. Create a VI named "Decrypt and Verify Data.vi"
-# 2. Input: encrypted data string, encryption key, HMAC key
-# 3. Decode the base64 input string
-# 4. Extract IV (first 16 bytes), ciphertext, and signature (last 32 bytes)
-# 5. Use Cryptography VIs:
-#    - "Verify HMAC.vi" to check data integrity
-#    - "AES Decrypt.vi" to decrypt the data
-# 6. Unpad the decrypted data
-# 7. Parse the JSON string to LabVIEW data structures
-# 8. Check the timestamp to prevent replay attacks
-# 9. Output: decrypted data as LabVIEW clusters/arrays
-
 # ## Security Aspects Addressed
 
 # 1. **Data Integrity and Authenticity**:
