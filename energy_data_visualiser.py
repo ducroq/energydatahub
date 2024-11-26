@@ -138,8 +138,8 @@ if __name__ == "__main__":
     hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
     handler = SecureDataHandler(encryption_key, hmac_key)
 
-    # json_file = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\energy_price_forecast.json"
-    # df = load_price_forecast(json_file, handler)
+    # file_name = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\energy_price_forecast.json"
+    # df = load_price_forecast(file_name, handler)
 
     # Define time interval
     timezone = pytz.timezone('Europe/Amsterdam')
