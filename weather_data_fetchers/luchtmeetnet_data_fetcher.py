@@ -2,9 +2,9 @@ import asyncio
 import logging
 import aiohttp
 from datetime import datetime, timedelta
-from core.timezone_helpers import ensure_timezone, compare_timezones
-from core.helpers import closest
-from core.data_types import EnhancedDataSet
+from utils.timezone_helpers import ensure_timezone, compare_timezones
+from utils.helpers import closest
+from utils.data_types import EnhancedDataSet
 
 async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """
@@ -134,7 +134,7 @@ async def get_luchtmeetnet_data(latitude: float, longitude: float, start_time: d
 async def main():
     import os
     from configparser import ConfigParser
-    from core.timezone_helpers import get_timezone_and_country
+    from utils.timezone_helpers import get_timezone_and_country
 
     logging.basicConfig(level=logging.INFO)
     script_dir = os.path.dirname(os.path.abspath(__file__))
