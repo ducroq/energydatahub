@@ -2,8 +2,8 @@ import aiohttp
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from core.timezone_helpers import ensure_timezone
-from core.data_types import EnhancedDataSet
+from utils.timezone_helpers import ensure_timezone
+from utils.data_types import EnhancedDataSet
 
 async def get_Epex_data(start_time: datetime, end_time: datetime) -> EnhancedDataSet:
     """

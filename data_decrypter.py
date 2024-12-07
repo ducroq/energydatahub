@@ -3,8 +3,8 @@ import json
 import base64
 from datetime import datetime
 
-from core.secure_data_handler import SecureDataHandler
-from core.helpers import load_config
+from utils.secure_data_handler import SecureDataHandler
+from utils.helpers import load_config
 
 SECRETS_FILE_NAME = 'secrets.ini'
 SETTINGS_FILE_NAME = 'settings.ini'

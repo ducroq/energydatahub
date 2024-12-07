@@ -9,8 +9,8 @@ import os
 import pytz
 import base64
 
-from core.secure_data_handler import SecureDataHandler
-from core.helpers import load_config
+from utils.secure_data_handler import SecureDataHandler
+from utils.helpers import load_config
 
 
 def load_price_forecast_range(start_date, end_date, file_path='data', handler: SecureDataHandler = None):
