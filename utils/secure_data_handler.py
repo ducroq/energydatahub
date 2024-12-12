@@ -72,7 +72,7 @@ class SecureDataHandler:
         return padded_data[:-padding_size]
 
 if __name__ == "__main__":
-    from core.helpers import load_config
+    from utils.helpers import load_config
 
     SECRETS_FILE_NAME = 'secrets.ini'
 
