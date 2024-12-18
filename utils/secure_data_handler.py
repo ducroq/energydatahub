@@ -1,7 +1,3 @@
-# This section details the implementation of data protection measures using a combination of Python (for data aggregation and processing)
-# and LabVIEW (for the control system). The goal is to ensure data integrity, authenticity, and confidentiality while maintaining system 
-# availability and integrity.
-
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.backends import default_backend
@@ -113,20 +109,3 @@ if __name__ == "__main__":
     decrypted = handler.decrypt_and_verify(encrypted)
     print(f"Decrypted: {decrypted}")
 
-# ## Security Aspects Addressed
-
-# 1. **Data Integrity and Authenticity**:
-#    - HMAC ensures data hasn't been tampered with
-#    - Timestamp prevents replay attacks
-
-# 2. **Data Confidentiality**:
-#    - AES-256 encryption protects data content
-#    - Secure key management (keys should be stored securely, possibly in a hardware security module)
-
-# 3. **Availability**:
-#    - Efficient encryption/decryption allows for real-time data processing
-#    - Error handling ensures system continues functioning even if some data is corrupted
-
-# 4. **System Integrity**:
-#    - Signature verification ensures only valid data is processed
-#    - Timestamp checking prevents processing of outdated data
