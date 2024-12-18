@@ -1,11 +1,3 @@
-# energyDataHub
-
-https://ducroq.github.io/energydatahub/sun_forecast.json
-https://ducroq.github.io/energydatahub/energy_price_forecast.json
-https://ducroq.github.io/energydatahub/weather_forecast.json
-https://ducroq.github.io/energydatahub/air_quality.json
-
-
 # Energy Data Hub
 
 A Python-based system for collecting, processing, and publishing energy price and weather forecast data for energy optimization applications. The system fetches data from multiple sources including ENTSO-E, Energy Zero, EPEX SPOT, Nord Pool Elspot, OpenWeather, and MeteoServer.
