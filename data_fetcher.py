@@ -7,7 +7,7 @@ import logging
 import base64
 import platform
 
-from utils.helpers import ensure_output_directory, load_config
+from utils.helpers import ensure_output_directory, load_settings, load_secrets
 from utils.data_types import CombinedDataSet
 from utils.timezone_helpers import get_timezone_and_country
 from utils.secure_data_handler import SecureDataHandler
@@ -41,13 +41,13 @@ async def main() -> None:
     ensure_output_directory(output_path)
 
     try:
-        config = load_config(script_dir, SETTINGS_FILE_NAME)
+        config = load_settings(script_dir, SETTINGS_FILE_NAME)
         latitude = float(config.get('location', 'latitude'))
         longitude = float(config.get('location', 'longitude'))
         timezone, country_code = get_timezone_and_country(latitude, longitude)
         encryption = bool(config.getint('data', 'encryption'))
 
-        config = load_config(script_dir, SECRETS_FILE_NAME)        
+        config = load_secrets(script_dir, SECRETS_FILE_NAME)        
         entsoe_api_key = config.get('api_keys', 'entsoe')
         openweather_api_key = config.get('api_keys', 'openweather')
         meteoserver_api_key = config.get('api_keys', 'meteo')
