@@ -12,13 +12,57 @@ def ensure_output_directory(path: str) -> None:
         logging.error(f"Error creating folder: {e}")
         raise
 
-def load_config(script_dir: str, filename: str) -> ConfigParser:
-    """Load configuration from the secrets file."""
+def load_config(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser:
+    """
+    Load configuration from environment variables or secrets file.
+    
+    Args:
+        script_dir (str): Directory containing the secrets file
+        filename (str): Name of the secrets file (default: 'secrets.ini')
+        
+    Returns:
+        ConfigParser: Configuration with either environment variables or file contents
+        
+    Raises:
+        RuntimeError: If neither environment variables nor secrets file are available
+    """
     config = ConfigParser()
+    
+    # Check for environment variables first
+    env_vars = {
+        'ENTSOE_API_KEY': os.getenv('ENTSOE_API_KEY'),
+        'OPENWEATHER_API_KEY': os.getenv('OPENWEATHER_API_KEY'),
+        'METEO_API_KEY': os.getenv('METEO_API_KEY')
+    }
+    
+    # If all required environment variables are present, use them
+    if all(env_vars.values()):
+        logging.info("Using configuration from environment variables")
+        config['api_keys'] = {
+            'entsoe': env_vars['ENTSOE_API_KEY'],
+            'openweather': env_vars['OPENWEATHER_API_KEY'],
+            'meteo': env_vars['METEO_API_KEY']
+        }
+        # Set default location if not provided in environment
+        config['location'] = {
+            'latitude': os.getenv('LATITUDE', '51.9851'),  # Default to Arnhem
+            'longitude': os.getenv('LONGITUDE', '5.8987')
+        }
+        return config
+    
+    # Fall back to secrets file if environment variables aren't available
     secrets_file = os.path.join(script_dir, filename)
-    config.read(secrets_file)
-    return config
-
+    if os.path.exists(secrets_file):
+        logging.info(f"Using configuration from {filename}")
+        config.read(secrets_file)
+        return config
+    
+    # If neither source is available, raise an error with clear message
+    raise RuntimeError(
+        "No configuration found. Either:\n"
+        "1. Set environment variables (ENTSOE_API_KEY, OPENWEATHER_API_KEY, METEO_API_KEY), or\n"
+        f"2. Create a {filename} file in {script_dir}"
+    )
 
 def convert_value(value):
     if type(value) == int or type(value) == float:
