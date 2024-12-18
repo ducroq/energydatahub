@@ -1,56 +1,114 @@
 # energyDataHub
 
-https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners
-
-
 https://ducroq.github.io/energydatahub/sun_forecast.json
 https://ducroq.github.io/energydatahub/energy_price_forecast.json
 https://ducroq.github.io/energydatahub/weather_forecast.json
 https://ducroq.github.io/energydatahub/air_quality.json
 
 
+# Energy Data Hub
 
+A Python-based system for collecting, processing, and publishing energy price and weather forecast data for energy optimization applications. The system fetches data from multiple sources including ENTSO-E, Energy Zero, EPEX SPOT, Nord Pool Elspot, OpenWeather, and MeteoServer.
 
-## Suggestions for a good README
+## Features
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- Automated data collection from multiple energy price and weather sources
+- Data validation and standardization
+- Secure data encryption for published data
+- Automated GitHub Actions workflow for regular data updates
+- Support for both local and cloud-based deployment
+- Integration with LabVIEW and National Instruments hardware
 
-## Name
-Choose a self-explaining name for your project.
+## Published Data
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Encrypted data is published to the following endpoints:
+- [Energy Price Forecast](https://ducroq.github.io/energydatahub/energy_price_forecast.json)
+- [Weather Forecast](https://ducroq.github.io/energydatahub/weather_forecast.json)
+- [Sun Forecast](https://ducroq.github.io/energydatahub/sun_forecast.json)
+- [Air Quality Data](https://ducroq.github.io/energydatahub/air_quality.json)
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## Requirements
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- Python 3.x
+- Required Python packages listed in `requirements.txt`
+- API keys for various data sources
+- Internet connection for data fetching
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## Local Setup
+
+1. Clone the repository
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Create a `settings.ini` file in the project root with the following structure:
+```ini
+[location]
+latitude = YOUR_LATITUDE
+longitude = YOUR_LONGITUDE
+
+[data]
+encryption = 1
+```
+Here data is a flag setting encryption on/off.
+
+4. Create a `secrets.ini` file in the project root with the following structure:
+```ini
+[api_keys]
+entsoe = YOUR_ENTSOE_API_KEY
+openweather = YOUR_OPENWEATHER_API_KEY
+meteo = YOUR_METEOSERVER_API_KEY
+
+[security_keys]
+encryption = YOUR_BASE64_ENCODED_ENCRYPTION_KEY
+hmac = YOUR_BASE64_ENCODED_HMAC_KEY
+```
+
+## GitHub Actions Setup
+
+For running the data collection workflow on GitHub Actions, the following secrets need to be configured in your repository:
+
+- `PAT`: GitHub Personal Access Token with repo scope
+- `ENCRYPTION_KEY`: Base64 encoded encryption key
+- `HMAC_KEY`: Base64 encoded HMAC key
+- `ENTSOE_API_KEY`: ENTSO-E API key
+- `OPENWEATHER_API_KEY`: OpenWeather API key
+- `METEO_API_KEY`: MeteoServer API key
+- `GOOGLE_API_KEY`: Google API key (if using Google services)
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Local Data Collection
+```bash
+python data_fetcher.py
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### Manual GitHub Actions Trigger
+You can manually trigger the data collection workflow from the Actions tab in your GitHub repository.
+
+## Data Sources
+
+- ENTSO-E: European Network of Transmission System Operators for Electricity
+- Energy Zero: Dutch energy price provider
+- EPEX SPOT: European Power Exchange
+- Nord Pool Elspot: Nordic power exchange
+- OpenWeather: Weather data provider
+- MeteoServer: Dutch weather service provider
+- Luchtmeetnet: Dutch air quality monitoring network
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Security
+
+All published data is encrypted using industry-standard encryption methods. To decrypt the data, you'll need the appropriate encryption and HMAC keys.
+
+## Project Status
+
+Active development - Regular updates and maintenance ongoing.
