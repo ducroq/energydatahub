@@ -28,11 +28,14 @@ jobs:
       run: mkdir -p data        
 
     - name: Collect data
-      env:
+      env:        
+        ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+        HMAC_KEY: ${{ secrets.HMAC_KEY }}
         ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
         OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         METEO_API_KEY: ${{ secrets.METEO_API_KEY }}
-        ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}    
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}       
+        
       run: python data_fetcher.py
 
     # - name: Rotate data (keep last 30 days)
