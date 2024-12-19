@@ -10,8 +10,7 @@ import pytz
 import base64
 
 from utils.secure_data_handler import SecureDataHandler
-from utils.helpers import load_config
-
+from utils.helpers import load_config, load_data_file
 
 def load_price_forecast_range(start_date, end_date, file_path='data', handler: SecureDataHandler = None):
     timezone = start_date.tzinfo
@@ -21,12 +20,7 @@ def load_price_forecast_range(start_date, end_date, file_path='data', handler: S
     
     for file in json_files:
         try:
-            with open(file, 'r') as f:
-                data = json.load(f)
-
-            if is_encrypted(data):
-                print("Data is encrypted, decrypting...")
-                data = handler.decrypt_and_verify(data)                
+            data = load_data_file(file, handler)
             
             for source in ['entsoe', 'energy_zero', 'epex', 'elspot']:
                 if source in data:
@@ -97,12 +91,7 @@ def load_price_forecast(json_file: str, handler: SecureDataHandler):
     timezone = pytz.timezone('Europe/Amsterdam')
 
     try:
-        with open(json_file, 'r') as f:
-            data = json.load(f)
-
-        if is_encrypted(data):
-            print("Data is encrypted, decrypting...")
-            data = handler.decrypt_and_verify(data)
+        data = load_data_file("data/energy_price_forecast.json", handler)
 
         ret_data = []
         for source in ['entsoe', 'energy_zero', 'epex', 'elspot']:
@@ -138,15 +127,16 @@ if __name__ == "__main__":
     hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
     handler = SecureDataHandler(encryption_key, hmac_key)
 
-    # file_name = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\energy_price_forecast.json"
+    # file_name = r"data\energy_price_forecast.json"
     # df = load_price_forecast(file_name, handler)
+    # print(df)
 
     # Define time interval
     timezone = pytz.timezone('Europe/Amsterdam')
     end_date = datetime.now(timezone)
     start_date = end_date - timedelta(days=10)
     
-    data_folder = r"C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\05. Data\2409-2411"
+    data_folder = r"..\..\05. Data\2409-2411"
     df = load_price_forecast_range(start_date, end_date, data_folder, handler)
 
     plot = plot_prices(df, dark_mode=True)

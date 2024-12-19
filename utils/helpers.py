@@ -1,7 +1,10 @@
 import os
+import re
+import json
 import logging
 from math import cos, asin, sqrt
 from configparser import ConfigParser
+from typing import Any, Dict
 
 def ensure_output_directory(path: str) -> None:
     """Ensure the output directory exists."""
@@ -170,4 +173,83 @@ def closest(data, v):
         key=lambda p: distance(
             v["latitude"], v["longitude"], p["latitude"], p["longitude"]
         ),
-    )        
+    )
+
+def detect_file_type(content: str) -> str:
+    """
+    Detect whether file content is JSON or encrypted Base64.
+    
+    Args:
+        content (str): The file content to analyze
+        
+    Returns:
+        str: 'json' or 'encrypted'
+    """
+    # Try to detect if it's base64 encoded
+    base64_pattern = r'^[A-Za-z0-9+/=]+$'
+    if re.match(base64_pattern, content.strip()):
+        return 'encrypted'
+    
+    # Try to detect if it's JSON
+    try:
+        json.loads(content)
+        return 'json'
+    except json.JSONDecodeError:
+        raise ValueError("File content is neither valid JSON nor base64 encoded")
+    
+def save_data_file(
+    data: Dict[str, Any],
+    file_path: str,
+    handler: Any = None,
+    encrypt: bool = False
+) -> None:
+    """
+    Save data to a file, optionally encrypting it.
+    
+    Args:
+        data (dict): The data to save
+        file_path (str): Path where to save the file
+        handler (SecureDataHandler, optional): Handler for encrypting data
+        encrypt (bool): Whether to encrypt the data
+    """
+    try:
+        if encrypt:
+            if handler is None:
+                raise ValueError("Encryption requested but no handler provided")
+            encrypted_data = handler.encrypt_and_sign(data)
+            with open(file_path, 'w') as f:
+                f.write(encrypted_data)
+        else:
+            with open(file_path, 'w') as f:
+                json.dump(data, f, indent=2)
+    except Exception as e:
+        logging.error(f"Error saving file {file_path}: {e}")
+        raise
+    
+def load_data_file(file_path: str, handler: Any = None) -> Dict[str, Any]:
+    """
+    Load data from a file, automatically detecting if it's encrypted or plain JSON.
+    
+    Args:
+        file_path (str): Path to the file to load
+        handler (SecureDataHandler, optional): Handler for decrypting data
+        
+    Returns:
+        dict: The loaded data
+    """
+    try:
+        with open(file_path, 'r') as f:
+            content = f.read().strip()
+        
+        file_type = detect_file_type(content)
+        
+        if file_type == 'encrypted':
+            if handler is None:
+                raise ValueError("Encrypted file found but no handler provided")
+            return handler.decrypt_and_verify(content)
+        else:
+            return json.loads(content)
+            
+    except Exception as e:
+        logging.error(f"Error loading file {file_path}: {e}")
+        raise
