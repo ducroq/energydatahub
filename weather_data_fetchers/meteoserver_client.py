@@ -1,3 +1,54 @@
+"""
+Internet data acquisition for energy applications
+--------------------------------------------------
+Part of the Energy Data Integration Project at HAN University of Applied Sciences.
+
+File: meteoserver_client.py
+Created: 2024-11-23
+Updated: 2024-12-19
+
+Author: Jeroen Veen
+        HAN University of Applied Sciences
+        Arnhem, the Netherlands
+Contributors:
+    
+Copyright (c) 2024 HAN University of Applied Sciences
+All rights reserved.
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+Project Contributors:
+    - HAN H2 LAB IPKW Development Team
+    Initial development and integration with energy conversion systems
+
+Description:
+    Client for retrieving detailed weather and solar radiation forecasts from
+    MeteoServer. Handles both general weather data and specific solar radiation
+    predictions using the HARMONIE weather model. Specializes in Dutch weather
+    conditions and solar forecasting.
+
+Dependencies:
+    - aiohttp: Async HTTP client
+    Required local packages:
+    - utils.timezone_helpers: Timezone handling utilities
+    - utils.data_types: Standardized data structures
+
+Usage:
+    async def main():
+        weather_data = await get_MeteoServer_weather_forecast_data(
+            api_key, latitude, longitude, start_time, end_time)
+        sun_data = await get_MeteoServer_sun_forecast(
+            api_key, latitude, longitude, start_time, end_time)
+
+Notes:
+    - Requires valid MeteoServer API key
+    - Uses HARMONIE model for weather predictions
+    - Provides detailed solar radiation forecasts
+    - Implements automatic retry mechanism
+    - All data includes comprehensive unit information
+    - Handles both weather and specialized solar radiation data
+"""
 import asyncio
 import logging
 import aiohttp
