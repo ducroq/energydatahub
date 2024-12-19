@@ -1,5 +1,56 @@
+"""
+Internet data acquisition for energy applications
+--------------------------------------------------
+Part of the Energy Data Integration Project at HAN University of Applied Sciences.
+
+File: data_fetcher.py
+Created: 2024-10-19
+Updated: 2024-12-19
+
+Author: Jeroen Veen
+        HAN University of Applied Sciences
+        Arnhem, the Netherlands
+Contributors:        
+
+Copyright (c) 2024 HAN University of Applied Sciences
+All rights reserved.
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+Project Contributors:
+    - HAN H2 LAB IPKW Development Team
+    Initial development and integration with energy conversion systems
+
+Description:
+    Main orchestrator for fetching energy and weather data from various external APIs.
+    Handles data collection, validation, and storage for day-ahead energy prices,
+    weather forecasts, solar data, and air quality measurements.
+
+Dependencies:
+    - aiohttp: For async HTTP requests
+    - pytz: Timezone handling
+    - pandas: Data manipulation
+    - cryptography: Data encryption/decryption
+    Required local packages:
+    - utils.*
+    - energy_data_fetchers.*
+    - weather_data_fetchers.*
+
+Usage:
+    Can be run directly:
+        python data_fetcher.py
+    Or imported as a module:
+        from data_fetcher import main
+        asyncio.run(main())
+
+Notes:
+    - Requires configuration in secrets.ini for API keys
+    - Implements automated retry mechanisms for API failures
+    - Supports both encrypted and unencrypted data storage
+    - All timestamps handled in UTC and converted to local timezone
+"""
 import os
-import json
 import shutil
 from datetime import datetime, timedelta
 import asyncio
@@ -7,7 +58,7 @@ import logging
 import base64
 import platform
 
-from utils.helpers import ensure_output_directory, load_settings, load_secrets
+from utils.helpers import ensure_output_directory, load_settings, load_secrets, save_data_file
 from utils.data_types import CombinedDataSet
 from utils.timezone_helpers import get_timezone_and_country
 from utils.secure_data_handler import SecureDataHandler
@@ -95,6 +146,7 @@ async def main() -> None:
         combined_data = CombinedDataSet()
         combined_data.add_dataset('OpenWeather', open_weather_data)
         combined_data.add_dataset('MeteoServer', meteo_weather_data)
+        # TODO: REPLACE WITH save_data_file
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast.json")
             if encryption:

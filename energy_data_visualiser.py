@@ -1,5 +1,58 @@
+"""
+Internet data acquisition for energy applications
+--------------------------------------------------
+Part of the Energy Data Integration Project at HAN University of Applied Sciences.
+
+File: energy_data_visualiser.py
+Created: 2024-11-23
+Updated: 2024-12-19
+
+Author: Jeroen Veen
+        HAN University of Applied Sciences
+        Arnhem, the Netherlands
+Contributors:
+
+Copyright (c) 2024 HAN University of Applied Sciences
+All rights reserved.
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+Project Contributors:
+    - HAN H2 LAB IPKW Development Team
+    Initial development and integration with energy conversion systems
+
+Description:
+    Visualization tool for analyzing and comparing energy price data from multiple
+    sources (ENTSO-E, EnergyZero, EPEX, Elspot). Supports both historical data
+    analysis and current price comparisons with customizable date ranges and
+    visualization options.
+
+Dependencies:
+    - pandas: Data manipulation and analysis
+    - matplotlib: Base plotting library
+    - seaborn: Enhanced plotting and styling
+    - pytz: Timezone handling
+    Required local packages:
+    - utils.secure_data_handler: For encrypted data handling
+    - utils.helpers: Configuration and file loading utilities
+
+Usage:
+    Run with current data:
+        df = load_price_forecast("data/energy_price_forecast.json", handler)
+        plot_prices(df, dark_mode=True)
+        
+    Run with historical data range:
+        df = load_price_forecast_range(start_date, end_date, data_folder, handler)
+        plot_prices(df, dark_mode=True)
+
+Notes:
+    - Supports both encrypted and unencrypted JSON data files
+    - Handles timezone-aware timestamps in Europe/Amsterdam timezone
+    - Automatically converts EnergyZero prices from EUR/kWh to EUR/MWh
+    - Provides dark mode option for visualizations
+"""
 import re
-import json
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt

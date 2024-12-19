@@ -1,3 +1,56 @@
+"""
+Internet data acquisition for energy applications
+--------------------------------------------------
+Part of the Energy Data Integration Project at HAN University of Applied Sciences.
+
+File: open_weather_client.py
+Created: 2024-11-23
+Updated: 2024-12-19
+
+Author: Jeroen Veen
+        HAN University of Applied Sciences
+        Arnhem, the Netherlands
+Contributors:
+
+Copyright (c) 2024 HAN University of Applied Sciences
+All rights reserved.
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+Project Contributors:
+    - HAN H2 LAB IPKW Development Team
+    Initial development and integration with energy conversion systems
+
+Description:
+    Client for retrieving weather forecast data from the OpenWeather API.
+    Provides detailed weather predictions including temperature, humidity,
+    pressure, wind conditions, and cloud cover. Supports both current
+    conditions and forecast retrieval.
+
+Dependencies:
+    - aiohttp: Async HTTP client
+    Required local packages:
+    - utils.timezone_helpers: Timezone management and validation
+    - utils.data_types: Standardized data structures
+
+Usage:
+    async def main():
+        weather_data = await get_OpenWeather_data(
+            api_key, latitude, longitude, start_time, end_time)
+        
+        # For location lookup:
+        coords = await get_OpenWeather_geographical_coordinates_in_NL(
+            api_key, plaats)
+
+Notes:
+    - Requires valid OpenWeather API key
+    - Supports geographical coordinates lookup for Dutch locations
+    - Implements comprehensive error handling
+    - All measurements include units
+    - Provides both metric and imperial unit conversion
+    - Handles timezone differences automatically
+"""
 import asyncio
 import logging
 import aiohttp

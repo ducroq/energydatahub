@@ -1,3 +1,51 @@
+"""
+Internet data acquisition for energy applications
+--------------------------------------------------
+Part of the Energy Data Integration Project at HAN University of Applied Sciences.
+
+File: luchtmeetnet_data_fetcher.py
+Created: 2024-11-23
+Updated: 2024-12-19
+
+Author: Jeroen Veen
+        HAN University of Applied Sciences
+        Arnhem, the Netherlands
+Contributors:
+
+Copyright (c) 2024 HAN University of Applied Sciences
+All rights reserved.
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+Project Contributors:
+    - HAN H2 LAB IPKW Development Team
+    Initial development and integration with energy conversion systems
+
+Description:
+    Client for retrieving air quality data from the Dutch National Air Quality
+    Monitoring Network (Luchtmeetnet). Provides historical and current air quality
+    measurements from the nearest monitoring station, including AQI, NO2, PM10,
+    and other pollutant levels.
+
+Dependencies:
+    - aiohttp: Async HTTP client
+    Required local packages:
+    - utils.helpers: Distance calculation and data handling
+    - utils.timezone_helpers: Timezone handling utilities
+    - utils.data_types: Standardized data structures
+
+Usage:
+    async def main():
+        data = await get_luchtmeetnet_data(latitude, longitude, start_time, end_time)
+
+Notes:
+    - Automatically selects nearest monitoring station
+    - All measurements in µg/m³
+    - Includes Air Quality Index (AQI) calculations
+    - Supports historical data retrieval
+    - Implements error handling and data validation
+"""
 import asyncio
 import logging
 import aiohttp

@@ -1,3 +1,49 @@
+"""
+Internet data acquisition for energy applications
+--------------------------------------------------
+Part of the Energy Data Integration Project at HAN University of Applied Sciences.
+
+File: nordpool_data_fetcher.py
+Created: 2024-11-23
+Updated: 2024-12-19
+
+Author: Jeroen Veen
+        HAN University of Applied Sciences
+        Arnhem, the Netherlands
+Contributors:
+
+Copyright (c) 2024 HAN University of Applied Sciences
+All rights reserved.
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+Project Contributors:
+    - HAN H2 LAB IPKW Development Team
+    Initial development and integration with energy conversion systems
+
+Description:
+    Client for retrieving energy price data from the Nord Pool Elspot market.
+    Handles day-ahead price data from the Nordic and Baltic power exchange,
+    providing context for Dutch energy prices through cross-market comparison.
+
+Dependencies:
+    - nordpool: Nord Pool API client
+    Required local packages:
+    - utils.data_types: For standardized data structures
+    - utils.timezone_helpers: Timezone handling utilities
+
+Usage:
+    async def main():
+        data = await get_Elspot_data(country_code, start_time, end_time)
+
+Notes:
+    - Returns prices in EUR/MWh
+    - Focuses on day-ahead market prices
+    - Implements error handling and logging
+    - All timestamps are timezone-aware and standardized
+    - Provides broader market context through Nordic/Baltic price data
+"""
 import asyncio
 from datetime import datetime, timedelta
 import logging

@@ -1,3 +1,48 @@
+"""
+Internet data acquisition for energy applications
+--------------------------------------------------
+Part of the Energy Data Integration Project at HAN University of Applied Sciences.
+
+File: epex_price_fetcher.py
+Created: 2024-11-23
+Updated: 2024-12-19
+
+Author: Jeroen Veen
+        HAN University of Applied Sciences
+        Arnhem, the Netherlands
+Contributors:
+
+Copyright (c) 2024 HAN University of Applied Sciences
+All rights reserved.
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+Project Contributors:
+    - HAN H2 LAB IPKW Development Team
+    Initial development and integration with energy conversion systems
+
+Description:
+    Client for retrieving energy price data from the EPEX SPOT market via the
+    Awattar API. Handles day-ahead market prices for the European Power Exchange,
+    focusing on the Dutch market segment.
+
+Dependencies:
+    - aiohttp: Async HTTP client
+    Required local packages:
+    - utils.data_types: For standardized data structures
+    - utils.timezone_helpers: Timezone handling utilities
+
+Usage:
+    async def main():
+        data = await get_Epex_data(start_time, end_time)
+
+Notes:
+    - Returns prices in EUR/MWh
+    - Uses Awattar API as data source
+    - Implements error handling and logging
+    - Supports async operations for efficient data retrieval
+"""
 import aiohttp
 import asyncio
 import logging
