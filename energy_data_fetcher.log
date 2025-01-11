@@ -33,57 +33,57 @@ Next hour: 74.04 EUR/MWh @ 2024-09-19T23:00:00+00:18
 2024-09-19 16:46:26,088 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_weather_forecast.json
 2024-09-19 16:46:26,100 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_sun_forecast.json
 2024-09-19 16:46:26,111 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_air_quality.json
-2025-01-10 16:15:18,691 DEBUG Using selector: EpollSelector
-2025-01-10 16:15:18,692 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2025-01-10 16:15:19,608 INFO Using configuration from environment variables
-2025-01-10 16:15:19,609 INFO Querying Entsoe API for NL from 2025-01-10 16:15:19.608939+00:00 to 2025-01-11 16:15:19.608939+00:00
-2025-01-10 16:15:19,613 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202501091600', 'periodEnd': '202501121600'}
-2025-01-10 16:15:19,614 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-01-10 16:15:19,627 INFO Querying EnergyZero API from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-2025-01-10 16:15:19,628 INFO Querying Epex API from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-2025-01-10 16:15:19,628 INFO Querying OpenWeather from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-2025-01-10 16:15:20,052 INFO Querying MeteoServer from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-2025-01-10 16:15:20,497 INFO Fetching weather forecast data from https://data.meteoserver.nl/api/uurverwachting.php?lat=51.966472&long=5.94009&key=7daf22bed0
-2025-01-10 16:15:20,498 INFO Attempt nr 1 to fetch weather forecast data
-2025-01-10 16:15:20,726 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202501091600&periodEnd=202501121600 HTTP/1.1" 200 13057
-2025-01-10 16:15:20,757 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202501091600', 'periodEnd': '202501121600'}
-2025-01-10 16:15:20,937 INFO Querying Meteo server from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-2025-01-10 16:15:20,937 INFO Fetching sun forecast data from https://data.meteoserver.nl/api/solar.php?lat=51.966472&long=5.94009&key=7daf22bed0
-2025-01-10 16:15:20,938 INFO Attempt nr 1 to fetch sun forecast data
-2025-01-10 16:15:20,938 INFO Querying Nordpool API for NL from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-2025-01-10 16:15:20,940 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
-2025-01-10 16:15:21,312 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPrices?currency=EUR&market=DayAhead&deliveryArea=NL&date=2025-01-11 HTTP/1.1" 200 None
-2025-01-10 16:15:21,387 INFO Querying Luchtmeetnet server from 2025-01-09 17:15:19.608939+01:00 to 2025-01-10 17:15:19.608939+01:00
-2025-01-10 16:15:21,387 INFO Fetching Luchtmeetnet station list
-2025-01-10 16:15:21,390 INFO EnergyZero day ahead price from: 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-Current: 118.88 EUR/MWh @ now_hour
-Next hour: 104.09 EUR/MWh @ next_hour
-2025-01-10 16:15:21,511 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202501091600&periodEnd=202501121600 HTTP/1.1" 200 933
-2025-01-10 16:15:21,517 DEBUG Encoding detection: utf_8 is most likely the one.
-2025-01-10 16:15:21,517 DEBUG NoMatchingDataError: for offset 100
-2025-01-10 16:15:21,520 INFO Entsoe day ahead price from: 2025-01-10 16:15:19.608939+00:00 to 2025-01-11 16:15:19.608939+00:00
-Current: 144.15 EUR/MWh @ now_hour
-Next hour: 141.1 EUR/MWh @ next_hour
-2025-01-10 16:15:21,539 INFO EnergyZero day ahead price from: 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-Current: 144.41 EUR/MWh @ now_hour
-Next hour: 141.45 EUR/MWh @ next_hour
-2025-01-10 16:15:21,540 INFO Fetching OpenWeather forecast data from https://api.openweathermap.org/data/2.5/forecast?lat=51.966472&lon=5.94009&units=metric&appid=4852b00585c8d9000573557d530ac9e7
-2025-01-10 16:15:21,541 INFO OpenWeather forecast from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-Current: {'main_temp': 2.96, 'main_feels_like': -0.53, 'main_temp_min': 1.66, 'main_temp_max': 2.96, 'main_pressure': 1018, 'main_sea_level': 1018, 'main_grnd_level': 1016, 'main_humidity': 83, 'main_temp_kf': 1.3, 'weather_id': 804, 'weather_main': 'Clouds', 'weather_description': 'overcast clouds', 'weather_icon': '04n', 'clouds_all': 85, 'wind_speed': 3.82, 'wind_deg': 259, 'wind_gust': 9.49, 'visibility': 10000}
-Next hour: {'main_temp': 1.61, 'main_feels_like': -1.14, 'main_temp_min': 0.61, 'main_temp_max': 1.61, 'main_pressure': 1019, 'main_sea_level': 1019, 'main_grnd_level': 1017, 'main_humidity': 90, 'main_temp_kf': 1, 'weather_id': 500, 'weather_main': 'Rain', 'weather_description': 'light rain', 'weather_icon': '10n', 'clouds_all': 81, 'wind_speed': 2.53, 'wind_deg': 279, 'wind_gust': 4.5, 'visibility': 10000, 'rain_3h': 0.1}
-2025-01-10 16:15:21,754 INFO EnergyZero day ahead price from: 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-Current: 0.17 EUR/MWh @ now_hour
+2025-01-11 16:13:43,863 DEBUG Using selector: EpollSelector
+2025-01-11 16:13:43,863 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2025-01-11 16:13:44,802 INFO Using configuration from environment variables
+2025-01-11 16:13:44,803 INFO Querying Entsoe API for NL from 2025-01-11 16:13:44.802625+00:00 to 2025-01-12 16:13:44.802625+00:00
+2025-01-11 16:13:44,807 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202501101600', 'periodEnd': '202501131600'}
+2025-01-11 16:13:44,808 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-01-11 16:13:44,821 INFO Querying EnergyZero API from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+2025-01-11 16:13:44,822 INFO Querying Epex API from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+2025-01-11 16:13:44,823 INFO Querying OpenWeather from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+2025-01-11 16:13:45,252 INFO Querying MeteoServer from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+2025-01-11 16:13:45,443 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202501101600&periodEnd=202501131600 HTTP/1.1" 200 13048
+2025-01-11 16:13:45,470 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202501101600', 'periodEnd': '202501131600'}
+2025-01-11 16:13:45,684 INFO Fetching weather forecast data from https://data.meteoserver.nl/api/uurverwachting.php?lat=51.966472&long=5.94009&key=7daf22bed0
+2025-01-11 16:13:45,684 INFO Attempt nr 1 to fetch weather forecast data
+2025-01-11 16:13:45,802 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202501101600&periodEnd=202501131600 HTTP/1.1" 200 933
+2025-01-11 16:13:45,810 DEBUG Encoding detection: utf_8 is most likely the one.
+2025-01-11 16:13:45,810 DEBUG NoMatchingDataError: for offset 100
+2025-01-11 16:13:46,107 INFO Querying Meteo server from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+2025-01-11 16:13:46,107 INFO Fetching sun forecast data from https://data.meteoserver.nl/api/solar.php?lat=51.966472&long=5.94009&key=7daf22bed0
+2025-01-11 16:13:46,108 INFO Attempt nr 1 to fetch sun forecast data
+2025-01-11 16:13:46,108 INFO Querying Nordpool API for NL from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+2025-01-11 16:13:46,110 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-01-11 16:13:46,525 INFO Querying Luchtmeetnet server from 2025-01-10 17:13:44.802625+01:00 to 2025-01-11 17:13:44.802625+01:00
+2025-01-11 16:13:46,525 INFO Fetching Luchtmeetnet station list
+2025-01-11 16:13:46,528 INFO Entsoe day ahead price from: 2025-01-11 16:13:44.802625+00:00 to 2025-01-12 16:13:44.802625+00:00
+Current: 124.1 EUR/MWh @ now_hour
+Next hour: 135.0 EUR/MWh @ next_hour
+2025-01-11 16:13:46,540 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPrices?currency=EUR&market=DayAhead&deliveryArea=NL&date=2025-01-12 HTTP/1.1" 200 None
+2025-01-11 16:13:46,546 INFO EnergyZero day ahead price from: 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+Current: 140.6 EUR/MWh @ now_hour
+Next hour: 115.0 EUR/MWh @ next_hour
+2025-01-11 16:13:46,682 INFO Fetching OpenWeather forecast data from https://api.openweathermap.org/data/2.5/forecast?lat=51.966472&lon=5.94009&units=metric&appid=4852b00585c8d9000573557d530ac9e7
+2025-01-11 16:13:46,684 INFO OpenWeather forecast from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+Current: {'main_temp': 0.33, 'main_feels_like': -3, 'main_temp_min': 0.33, 'main_temp_max': 0.7, 'main_pressure': 1028, 'main_sea_level': 1028, 'main_grnd_level': 1026, 'main_humidity': 94, 'main_temp_kf': -0.37, 'weather_id': 803, 'weather_main': 'Clouds', 'weather_description': 'broken clouds', 'weather_icon': '04n', 'clouds_all': 66, 'wind_speed': 2.88, 'wind_deg': 326, 'wind_gust': 7.92, 'visibility': 10000}
+Next hour: {'main_temp': 0.02, 'main_feels_like': -3.18, 'main_temp_min': -0.04, 'main_temp_max': 0.02, 'main_pressure': 1030, 'main_sea_level': 1030, 'main_grnd_level': 1029, 'main_humidity': 90, 'main_temp_kf': 0.06, 'weather_id': 802, 'weather_main': 'Clouds', 'weather_description': 'scattered clouds', 'weather_icon': '03n', 'clouds_all': 30, 'wind_speed': 2.68, 'wind_deg': 342, 'wind_gust': 5.77, 'visibility': 10000}
+2025-01-11 16:13:46,696 INFO EnergyZero day ahead price from: 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+Current: 126.82 EUR/MWh @ now_hour
+Next hour: 120.1 EUR/MWh @ next_hour
+2025-01-11 16:13:46,883 INFO EnergyZero day ahead price from: 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+Current: 0.15 EUR/MWh @ now_hour
 Next hour: 0.17 EUR/MWh @ next_hour
-2025-01-10 16:15:21,912 INFO MeteoServer forecast from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-Current: {'temp': 2, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 257, 'windrltr': 'ZW', 'vis': 7183, 'neersl': 0, 'luchtd': 1018.7, 'luchtdmmhg': 764.1, 'luchtdinhg': 30.08, 'hw': 0, 'mw': 0, 'lw': 4, 'tw': 4, 'rv': 86, 'gr': 0, 'gr_w': 0, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 5, 'ico': 7, 'icoon': 'helderenacht'}
-Next hour: {'temp': 1, 'winds': 2, 'windb': 2, 'windknp': 4, 'windkmh': 7.2, 'windr': 261, 'windrltr': 'W', 'vis': 4591, 'neersl': 0, 'luchtd': 1019.1, 'luchtdmmhg': 764.4, 'luchtdinhg': 30.09, 'hw': 0, 'mw': 0, 'lw': 31, 'tw': 31, 'rv': 91, 'gr': 0, 'gr_w': 0, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 3, 'ico': 3, 'icoon': 'nachtbewolkt'}
-2025-01-10 16:15:22,117 INFO OpenWeather forecast from 2025-01-10 17:15:19.608939+01:00 to 2025-01-11 17:15:19.608939+01:00
-Current: {'elev': -19.45, 'az': 259.12, 'temp': 2, 'gr_w': 0, 'gr': 0, 'sd': 0, 'tc': 71, 'lc': 71, 'mc': 0, 'hc': 0, 'vis': 25000, 'prec': 0}
-Next hour: {'elev': -28.63, 'az': 270.59, 'temp': 2, 'gr_w': 0, 'gr': 0, 'sd': 0, 'tc': 88, 'lc': 88, 'mc': 0, 'hc': 0, 'vis': 25000, 'prec': 0}
-2025-01-10 16:15:23,918 INFO Fetching Luchtmeetnet station data, pls have patience
-2025-01-10 16:16:13,560 INFO Finding station closest to 51.966472, 5.94009
-2025-01-10 16:16:13,561 INFO Fetching air quality indicator for station NL54004, Arnhem Velperbroek
-2025-01-10 16:16:14,574 INFO Fetching measurements for station NL54004, Arnhem Velperbroek
-2025-01-10 16:16:14,893 INFO Luchtmeetnet data from 2025-01-09 17:15:19.608939+01:00 to 2025-01-10 17:15:19.608939+01:00
-Current: {'AQI': 5, 'BCWB': 0.11, 'FN': 1.07, 'NO': 31.06, 'NO2': 48.62, 'PM25': 4.87, 'PM10': 8.82}
+2025-01-11 16:13:47,115 INFO MeteoServer forecast from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+Current: {'temp': 0, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 258, 'windrltr': 'W', 'vis': 513, 'neersl': 0, 'luchtd': 1029.3, 'luchtdmmhg': 772, 'luchtdinhg': 30.4, 'hw': 0, 'mw': 0, 'lw': 100, 'tw': 100, 'rv': 99, 'gr': 0, 'gr_w': 0, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 2, 'ico': 2, 'icoon': 'bewolkt'}
+Next hour: {'temp': 0, 'winds': 2, 'windb': 2, 'windknp': 4, 'windkmh': 7.2, 'windr': 260, 'windrltr': 'W', 'vis': 2168, 'neersl': 0, 'luchtd': 1030.2, 'luchtdmmhg': 772.7, 'luchtdinhg': 30.42, 'hw': 0, 'mw': 0, 'lw': 100, 'tw': 100, 'rv': 99, 'gr': 0, 'gr_w': 0, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 2, 'ico': 2, 'icoon': 'bewolkt'}
+2025-01-11 16:13:47,640 INFO OpenWeather forecast from 2025-01-11 17:13:44.802625+01:00 to 2025-01-12 17:13:44.802625+01:00
+Current: {'elev': -19.27, 'az': 259.16, 'temp': 1, 'gr_w': 0, 'gr': 0, 'sd': 0, 'tc': 5, 'lc': 5, 'mc': 0, 'hc': 0, 'vis': 25000, 'prec': 0}
+Next hour: {'elev': -28.45, 'az': 270.63, 'temp': 1, 'gr_w': 0, 'gr': 0, 'sd': 0, 'tc': 5, 'lc': 5, 'mc': 0, 'hc': 0, 'vis': 25000, 'prec': 0}
+2025-01-11 16:13:49,452 INFO Fetching Luchtmeetnet station data, pls have patience
+2025-01-11 16:14:44,126 INFO Finding station closest to 51.966472, 5.94009
+2025-01-11 16:14:44,126 INFO Fetching air quality indicator for station NL54004, Arnhem Velperbroek
+2025-01-11 16:14:45,730 INFO Fetching measurements for station NL54004, Arnhem Velperbroek
+2025-01-11 16:14:47,798 INFO Luchtmeetnet data from 2025-01-10 17:13:44.802625+01:00 to 2025-01-11 17:13:44.802625+01:00
+Current: {'AQI': 5, 'BCWB': 0.63, 'FN': 2.63, 'NO': 56.04, 'NO2': 57.68, 'PM25': 11.97, 'PM10': 13.35}
 
