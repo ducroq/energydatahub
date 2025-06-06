@@ -33,62 +33,61 @@ Next hour: 74.04 EUR/MWh @ 2024-09-19T23:00:00+00:18
 2024-09-19 16:46:26,088 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_weather_forecast.json
 2024-09-19 16:46:26,100 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_sun_forecast.json
 2024-09-19 16:46:26,111 INFO Data written to C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\240919_164626_air_quality.json
-2025-06-05 16:18:00,352 DEBUG Using selector: EpollSelector
-2025-06-05 16:18:00,353 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2025-06-05 16:18:01,258 INFO Using configuration from environment variables
-2025-06-05 16:18:01,258 INFO Querying Entsoe API for NL from 2025-06-05 16:18:01.258342+00:00 to 2025-06-06 16:18:01.258342+00:00
-2025-06-05 16:18:01,262 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202506041600', 'periodEnd': '202506071600'}
-2025-06-05 16:18:01,264 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-06-05 16:18:01,276 INFO Querying EnergyZero API from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-2025-06-05 16:18:01,276 INFO Querying Epex API from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-2025-06-05 16:18:01,277 INFO Querying OpenWeather from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-2025-06-05 16:18:01,678 INFO Querying MeteoServer from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-2025-06-05 16:18:02,080 INFO Fetching weather forecast data from https://data.meteoserver.nl/api/uurverwachting.php?lat=51.966472&long=5.94009&key=7daf22bed0
-2025-06-05 16:18:02,080 INFO Attempt nr 1 to fetch weather forecast data
-2025-06-05 16:18:02,476 INFO Querying Meteo server from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-2025-06-05 16:18:02,476 INFO Fetching sun forecast data from https://data.meteoserver.nl/api/solar.php?lat=51.966472&long=5.94009&key=7daf22bed0
-2025-06-05 16:18:02,476 INFO Attempt nr 1 to fetch sun forecast data
-2025-06-05 16:18:02,477 INFO Querying Nordpool API for NL from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-2025-06-05 16:18:02,479 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
-2025-06-05 16:18:02,887 INFO Querying Luchtmeetnet server from 2025-06-04 18:18:01.258342+02:00 to 2025-06-05 18:18:01.258342+02:00
-2025-06-05 16:18:02,888 INFO Fetching Luchtmeetnet station list
-2025-06-05 16:18:03,047 INFO EnergyZero day ahead price from: 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-Current: 87.91 EUR/MWh @ now_hour
-Next hour: 87.94 EUR/MWh @ next_hour
-2025-06-05 16:18:03,112 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-06-06&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
-2025-06-05 16:18:03,116 INFO EnergyZero day ahead price from: 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-Current: 70.21 EUR/MWh @ now_hour
-Next hour: 58.35 EUR/MWh @ next_hour
-2025-06-05 16:18:03,202 INFO Fetching OpenWeather forecast data from https://api.openweathermap.org/data/2.5/forecast?lat=51.966472&lon=5.94009&units=metric&appid=4852b00585c8d9000573557d530ac9e7
-2025-06-05 16:18:03,203 INFO OpenWeather forecast from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-Current: {'main_temp': 17.52, 'main_feels_like': 17.26, 'main_temp_min': 17.52, 'main_temp_max': 17.59, 'main_pressure': 1006, 'main_sea_level': 1006, 'main_grnd_level': 1003, 'main_humidity': 74, 'main_temp_kf': -0.07, 'weather_id': 500, 'weather_main': 'Rain', 'weather_description': 'light rain', 'weather_icon': '10d', 'clouds_all': 97, 'wind_speed': 4.41, 'wind_deg': 213, 'wind_gust': 9.41, 'visibility': 10000, 'rain_3h': 0.31}
-Next hour: {'main_temp': 16.84, 'main_feels_like': 16.72, 'main_temp_min': 16.52, 'main_temp_max': 16.84, 'main_pressure': 1005, 'main_sea_level': 1005, 'main_grnd_level': 1002, 'main_humidity': 82, 'main_temp_kf': 0.32, 'weather_id': 500, 'weather_main': 'Rain', 'weather_description': 'light rain', 'weather_icon': '10n', 'clouds_all': 100, 'wind_speed': 5.44, 'wind_deg': 191, 'wind_gust': 12.16, 'visibility': 10000, 'rain_3h': 0.63}
-2025-06-05 16:18:03,327 INFO EnergyZero day ahead price from: 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-Current: 0.13 EUR/MWh @ now_hour
-Next hour: 0.16 EUR/MWh @ next_hour
-2025-06-05 16:18:03,428 DEBUG Error while closing connector: ClientConnectionError('Connection lost: SSL shutdown timed out')
-2025-06-05 16:18:03,513 INFO MeteoServer forecast from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-Current: {'temp': 17, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 187, 'windrltr': 'Z', 'vis': 9153, 'neersl': 0, 'luchtd': 1006.3, 'luchtdmmhg': 754.8, 'luchtdinhg': 29.72, 'hw': 100, 'mw': 0, 'lw': 0, 'tw': 100, 'rv': 83, 'gr': 19, 'gr_w': 53, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 2, 'ico': 2, 'icoon': 'bewolkt'}
-Next hour: {'temp': 16, 'winds': 4, 'windb': 3, 'windknp': 8, 'windkmh': 14.4, 'windr': 187, 'windrltr': 'Z', 'vis': 10318, 'neersl': 0, 'luchtd': 1005.9, 'luchtdmmhg': 754.5, 'luchtdinhg': 29.7, 'hw': 100, 'mw': 100, 'lw': 0, 'tw': 100, 'rv': 85, 'gr': 21, 'gr_w': 58, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 2, 'ico': 2, 'icoon': 'bewolkt'}
-2025-06-05 16:18:03,613 DEBUG Error while closing connector: ClientConnectionError('Connection lost: SSL shutdown timed out')
-2025-06-05 16:18:04,598 INFO OpenWeather forecast from 2025-06-05 18:18:01.258342+02:00 to 2025-06-06 18:18:01.258342+02:00
-Current: {'elev': 5.55, 'az': 300.22, 'temp': 16, 'gr_w': 30, 'gr': 11, 'sd': 0, 'tc': 100, 'lc': 100, 'mc': 100, 'hc': 100, 'vis': 22518, 'prec': 0}
-Next hour: {'elev': -1.91, 'az': 311.89, 'temp': 15, 'gr_w': 16, 'gr': 6, 'sd': 0, 'tc': 100, 'lc': 100, 'mc': 100, 'hc': 100, 'vis': 20164, 'prec': 0}
-2025-06-05 16:18:04,699 DEBUG Error while closing connector: ClientConnectionError('Connection lost: SSL shutdown timed out')
-2025-06-05 16:18:06,055 INFO Fetching Luchtmeetnet station data, pls have patience
-2025-06-05 16:18:28,408 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202506041600&periodEnd=202506071600 HTTP/1.1" 200 13012
-2025-06-05 16:18:28,495 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202506041600', 'periodEnd': '202506071600'}
-2025-06-05 16:18:28,496 DEBUG Resetting dropped connection: web-api.tp.entsoe.eu
-2025-06-05 16:18:29,701 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202506041600&periodEnd=202506071600 HTTP/1.1" 200 933
-2025-06-05 16:18:29,707 DEBUG Encoding detection: utf_8 is most likely the one.
-2025-06-05 16:18:29,707 DEBUG NoMatchingDataError: for offset 100
-2025-06-05 16:18:29,710 INFO Entsoe day ahead price from: 2025-06-05 16:18:01.258342+00:00 to 2025-06-06 16:18:01.258342+00:00
-Current: 107.13 EUR/MWh @ now_hour
-Next hour: 126.2 EUR/MWh @ next_hour
-2025-06-05 16:18:55,292 INFO Finding station closest to 51.966472, 5.94009
-2025-06-05 16:18:55,292 INFO Fetching air quality indicator for station NL54004, Arnhem Velperbroek
-2025-06-05 16:18:56,570 INFO Fetching measurements for station NL54004, Arnhem Velperbroek
-2025-06-05 16:18:57,021 INFO Luchtmeetnet data from 2025-06-04 18:18:01.258342+02:00 to 2025-06-05 18:18:01.258342+02:00
-Current: {'AQI': 5, 'BCWB': 0.16, 'FN': 0.96, 'NO': 16.54, 'NO2': 26.02, 'PM25': 4.52, 'PM10': 9.24}
+2025-06-06 16:18:32,620 DEBUG Using selector: EpollSelector
+2025-06-06 16:18:32,621 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2025-06-06 16:18:33,541 INFO Using configuration from environment variables
+2025-06-06 16:18:33,541 INFO Querying Entsoe API for NL from 2025-06-06 16:18:33.541308+00:00 to 2025-06-07 16:18:33.541308+00:00
+2025-06-06 16:18:33,545 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202506051600', 'periodEnd': '202506081600'}
+2025-06-06 16:18:33,546 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-06-06 16:18:33,558 INFO Querying EnergyZero API from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+2025-06-06 16:18:33,559 INFO Querying Epex API from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+2025-06-06 16:18:33,560 INFO Querying OpenWeather from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+2025-06-06 16:18:33,970 INFO Querying MeteoServer from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+2025-06-06 16:18:33,972 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202506051600&periodEnd=202506081600 HTTP/1.1" 200 12869
+2025-06-06 16:18:34,016 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202506051600', 'periodEnd': '202506081600'}
+2025-06-06 16:18:34,196 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202506051600&periodEnd=202506081600 HTTP/1.1" 200 933
+2025-06-06 16:18:34,203 DEBUG Encoding detection: utf_8 is most likely the one.
+2025-06-06 16:18:34,203 DEBUG NoMatchingDataError: for offset 100
+2025-06-06 16:18:34,403 INFO Fetching weather forecast data from https://data.meteoserver.nl/api/uurverwachting.php?lat=51.966472&long=5.94009&key=7daf22bed0
+2025-06-06 16:18:34,403 INFO Attempt nr 1 to fetch weather forecast data
+2025-06-06 16:18:34,806 INFO Querying Meteo server from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+2025-06-06 16:18:34,806 INFO Fetching sun forecast data from https://data.meteoserver.nl/api/solar.php?lat=51.966472&long=5.94009&key=7daf22bed0
+2025-06-06 16:18:34,807 INFO Attempt nr 1 to fetch sun forecast data
+2025-06-06 16:18:34,807 INFO Querying Nordpool API for NL from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+2025-06-06 16:18:34,810 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-06-06 16:18:35,218 INFO Querying Luchtmeetnet server from 2025-06-05 18:18:33.541308+02:00 to 2025-06-06 18:18:33.541308+02:00
+2025-06-06 16:18:35,218 INFO Fetching Luchtmeetnet station list
+2025-06-06 16:18:35,219 INFO Entsoe day ahead price from: 2025-06-06 16:18:33.541308+00:00 to 2025-06-07 16:18:33.541308+00:00
+Current: 82.76 EUR/MWh @ now_hour
+Next hour: 111.05 EUR/MWh @ next_hour
+2025-06-06 16:18:35,221 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-06-07&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
+2025-06-06 16:18:35,226 INFO EnergyZero day ahead price from: 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+Current: 100.46 EUR/MWh @ now_hour
+Next hour: 94.6 EUR/MWh @ next_hour
+2025-06-06 16:18:35,343 INFO EnergyZero day ahead price from: 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+Current: 108.62 EUR/MWh @ now_hour
+Next hour: 102.99 EUR/MWh @ next_hour
+2025-06-06 16:18:35,555 INFO EnergyZero day ahead price from: 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+Current: 0.1 EUR/MWh @ now_hour
+Next hour: 0.13 EUR/MWh @ next_hour
+2025-06-06 16:18:35,657 DEBUG Error while closing connector: ClientConnectionError('Connection lost: SSL shutdown timed out')
+2025-06-06 16:18:35,732 INFO MeteoServer forecast from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+Current: {'temp': 16, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 262, 'windrltr': 'W', 'vis': 9679, 'neersl': 0.2, 'luchtd': 1009.3, 'luchtdmmhg': 757, 'luchtdinhg': 29.8, 'hw': 58, 'mw': 25, 'lw': 0, 'tw': 68, 'rv': 81, 'gr': 44, 'gr_w': 122, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 1, 'ico': 1, 'icoon': 'regen'}
+Next hour: {'temp': 16, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 228, 'windrltr': 'ZW', 'vis': 8221, 'neersl': 0, 'luchtd': 1009.3, 'luchtdmmhg': 757, 'luchtdinhg': 29.8, 'hw': 99, 'mw': 77, 'lw': 17, 'tw': 100, 'rv': 86, 'gr': 19, 'gr_w': 53, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 2, 'ico': 2, 'icoon': 'bewolkt'}
+2025-06-06 16:18:35,832 DEBUG Error while closing connector: ClientConnectionError('Connection lost: SSL shutdown timed out')
+2025-06-06 16:18:35,946 INFO Fetching OpenWeather forecast data from https://api.openweathermap.org/data/2.5/forecast?lat=51.966472&lon=5.94009&units=metric&appid=4852b00585c8d9000573557d530ac9e7
+2025-06-06 16:18:35,947 INFO OpenWeather forecast from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+Current: {'main_temp': 16.81, 'main_feels_like': 16.58, 'main_temp_min': 16.81, 'main_temp_max': 17.54, 'main_pressure': 1009, 'main_sea_level': 1009, 'main_grnd_level': 1006, 'main_humidity': 78, 'main_temp_kf': -0.73, 'weather_id': 500, 'weather_main': 'Rain', 'weather_description': 'light rain', 'weather_icon': '10d', 'clouds_all': 75, 'wind_speed': 3.99, 'wind_deg': 259, 'wind_gust': 9.53, 'visibility': 10000, 'rain_3h': 1}
+Next hour: {'main_temp': 14.49, 'main_feels_like': 14.21, 'main_temp_min': 13.51, 'main_temp_max': 14.49, 'main_pressure': 1010, 'main_sea_level': 1010, 'main_grnd_level': 1007, 'main_humidity': 85, 'main_temp_kf': 0.98, 'weather_id': 500, 'weather_main': 'Rain', 'weather_description': 'light rain', 'weather_icon': '10n', 'clouds_all': 85, 'wind_speed': 3.24, 'wind_deg': 239, 'wind_gust': 9.55, 'visibility': 10000, 'rain_3h': 0.19}
+2025-06-06 16:18:35,967 INFO OpenWeather forecast from 2025-06-06 18:18:33.541308+02:00 to 2025-06-07 18:18:33.541308+02:00
+Current: {'elev': 5.66, 'az': 300.24, 'temp': 16, 'gr_w': 96, 'gr': 35, 'sd': 0, 'tc': 88, 'lc': 5, 'mc': 88, 'hc': 62, 'vis': 25000, 'prec': 0}
+Next hour: {'elev': -1.8, 'az': 311.9, 'temp': 15, 'gr_w': 55, 'gr': 20, 'sd': 0, 'tc': 100, 'lc': 4, 'mc': 100, 'hc': 100, 'vis': 25000, 'prec': 0}
+2025-06-06 16:18:36,068 DEBUG Error while closing connector: ClientConnectionError('Connection lost: SSL shutdown timed out')
+2025-06-06 16:18:37,555 INFO Fetching Luchtmeetnet station data, pls have patience
+2025-06-06 16:19:13,790 INFO Finding station closest to 51.966472, 5.94009
+2025-06-06 16:19:13,791 INFO Fetching air quality indicator for station NL54004, Arnhem Velperbroek
+2025-06-06 16:19:14,734 INFO Fetching measurements for station NL54004, Arnhem Velperbroek
+2025-06-06 16:19:15,051 INFO Luchtmeetnet data from 2025-06-05 18:18:33.541308+02:00 to 2025-06-06 18:18:33.541308+02:00
+Current: {'AQI': 6, 'BCWB': 0.09, 'FN': 0.32, 'NO': 8.41, 'NO2': 21.39, 'PM25': 4.5, 'PM10': 10.74}
 
-2025-06-05 16:18:57,122 DEBUG Error while closing connector: ClientConnectionError('Connection lost: SSL shutdown timed out')
+2025-06-06 16:19:15,152 DEBUG Error while closing connector: ClientConnectionError('Connection lost: SSL shutdown timed out')
