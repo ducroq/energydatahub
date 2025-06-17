@@ -135,12 +135,13 @@ async def main() -> None:
         combined_data.add_dataset('elspot', elspot_data)
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_energy_price_forecast.json")
-            if encryption:
-                encrypted_data = handler.encrypt_and_sign(combined_data.to_dict())
-                with open(full_path, 'w') as f:
-                    f.write(encrypted_data)
-            else:
-                combined_data.write_to_json(full_path)
+            save_data_file(combined_data, full_path, encryption, handler)
+            # if encryption:
+            #     encrypted_data = handler.encrypt_and_sign(combined_data.to_dict())
+            #     with open(full_path, 'w') as f:
+            #         f.write(encrypted_data)
+            # else:
+            #     combined_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "energy_price_forecast.json"))
 
         combined_data = CombinedDataSet()
@@ -149,32 +150,35 @@ async def main() -> None:
         # TODO: REPLACE WITH save_data_file
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast.json")
-            if encryption:
-                encrypted_data = handler.encrypt_and_sign(combined_data.to_dict())
-                with open(full_path, 'w') as f:
-                    f.write(encrypted_data)
-            else:
-                combined_data.write_to_json(full_path)
+            save_data_file(combined_data, full_path, encryption, handler)
+            # if encryption:
+            #     encrypted_data = handler.encrypt_and_sign(combined_data.to_dict())
+            #     with open(full_path, 'w') as f:
+            #         f.write(encrypted_data)
+            # else:
+            #     combined_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "weather_forecast.json"))
 
         if meteo_sun_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json")
-            if encryption:
-                encrypted_data = handler.encrypt_and_sign(meteo_sun_data.to_dict())
-                with open(full_path, 'w') as f:
-                    f.write(encrypted_data)
-            else:
-                meteo_sun_data.write_to_json(full_path)
+            save_data_file(meteo_sun_data, full_path, encryption, handler)
+            # if encryption:
+            #     encrypted_data = handler.encrypt_and_sign(meteo_sun_data.to_dict())
+            #     with open(full_path, 'w') as f:
+            #         f.write(encrypted_data)
+            # else:
+            #     meteo_sun_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "sun_forecast.json"))
 
         if luchtmeetnet_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_air_history.json")
-            if encryption:
-                encrypted_data = handler.encrypt_and_sign(luchtmeetnet_data.to_dict())
-                with open(full_path, 'w') as f:
-                    f.write(encrypted_data)
-            else:
-                luchtmeetnet_data.write_to_json(full_path)
+            save_data_file(luchtmeetnet_data, full_path, encryption, handler)
+            # if encryption:
+            #     encrypted_data = handler.encrypt_and_sign(luchtmeetnet_data.to_dict())
+            #     with open(full_path, 'w') as f:
+            #         f.write(encrypted_data)
+            # else:
+            #     luchtmeetnet_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "air_history.json"))
 
     except Exception as e:

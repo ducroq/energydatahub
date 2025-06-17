@@ -216,12 +216,13 @@ def save_data_file(
         if encrypt:
             if handler is None:
                 raise ValueError("Encryption requested but no handler provided")
-            encrypted_data = handler.encrypt_and_sign(data)
+            encrypted_data = handler.encrypt_and_sign(data.to_dict())
             with open(file_path, 'w') as f:
                 f.write(encrypted_data)
         else:
-            with open(file_path, 'w') as f:
-                json.dump(data, f, indent=2)
+            data.write_to_json(file_path)
+            # with open(file_path, 'w') as f:
+            #     json.dump(data, f, indent=2)
     except Exception as e:
         logging.error(f"Error saving file {file_path}: {e}")
         raise
