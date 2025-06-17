@@ -187,9 +187,9 @@ if __name__ == "__main__":
     # Define time interval
     timezone = pytz.timezone('Europe/Amsterdam')
     end_date = datetime.now(timezone)
-    start_date = end_date - timedelta(days=10)
+    start_date = end_date - timedelta(days=100)
     
-    data_folder = r"..\..\05. Data\2409-2411"
+    data_folder = r"..\..\05. Data\encrypted_data_since_2409"
     df = load_price_forecast_range(start_date, end_date, data_folder, handler)
 
     plot = plot_prices(df, dark_mode=True)
