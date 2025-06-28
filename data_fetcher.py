@@ -135,7 +135,7 @@ async def main() -> None:
         combined_data.add_dataset('elspot', elspot_data)
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_energy_price_forecast.json")
-            save_data_file(combined_data, full_path, encryption, handler)
+            save_data_file(data=combined_data, file_path=full_path, handler=handler, encrypt=encryption)
             # if encryption:
             #     encrypted_data = handler.encrypt_and_sign(combined_data.to_dict())
             #     with open(full_path, 'w') as f:
@@ -147,10 +147,9 @@ async def main() -> None:
         combined_data = CombinedDataSet()
         combined_data.add_dataset('OpenWeather', open_weather_data)
         combined_data.add_dataset('MeteoServer', meteo_weather_data)
-        # TODO: REPLACE WITH save_data_file
         if combined_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast.json")
-            save_data_file(combined_data, full_path, encryption, handler)
+            save_data_file(data=combined_data, file_path=full_path, handler=handler, encrypt=encryption)
             # if encryption:
             #     encrypted_data = handler.encrypt_and_sign(combined_data.to_dict())
             #     with open(full_path, 'w') as f:
@@ -161,7 +160,7 @@ async def main() -> None:
 
         if meteo_sun_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json")
-            save_data_file(meteo_sun_data, full_path, encryption, handler)
+            save_data_file(data=meteo_sun_data, file_path=full_path, handler=handler, encrypt=encryption)
             # if encryption:
             #     encrypted_data = handler.encrypt_and_sign(meteo_sun_data.to_dict())
             #     with open(full_path, 'w') as f:
@@ -172,7 +171,7 @@ async def main() -> None:
 
         if luchtmeetnet_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_air_history.json")
-            save_data_file(luchtmeetnet_data, full_path, encryption, handler)
+            save_data_file(data=luchtmeetnet_data, file_path=full_path, handler=handler, encrypt=encryption)
             # if encryption:
             #     encrypted_data = handler.encrypt_and_sign(luchtmeetnet_data.to_dict())
             #     with open(full_path, 'w') as f:
