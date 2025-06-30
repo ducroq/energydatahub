@@ -1,0 +1,13 @@
+name: Daily Data Update
+on:
+  schedule:
+    - cron: '30 16 * * *'  # 16:30 UTC daily (30 min after data collection)
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  trigger-rebuild:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Trigger Netlify rebuild
+      run: |
+        curl -X POST -d {} ${{ secrets.NETLIFY_BUILD_HOOK }}
