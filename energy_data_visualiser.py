@@ -180,17 +180,17 @@ if __name__ == "__main__":
     hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
     handler = SecureDataHandler(encryption_key, hmac_key)
 
-    # file_name = r"data\energy_price_forecast.json"
-    # df = load_price_forecast(file_name, handler)
+    file_name = r"data\energy_price_forecast.json"
+    df = load_price_forecast(file_name, handler)
     # print(df)
 
-    # Define time interval
-    timezone = pytz.timezone('Europe/Amsterdam')
-    end_date = datetime.now(timezone)
-    start_date = end_date - timedelta(days=100)
+    # # Define time interval
+    # timezone = pytz.timezone('Europe/Amsterdam')
+    # end_date = datetime.now(timezone)
+    # start_date = end_date - timedelta(days=100)
     
-    data_folder = r"..\..\05. Data\encrypted_data_since_2409"
-    df = load_price_forecast_range(start_date, end_date, data_folder, handler)
+    # data_folder = r"..\..\05. Data\encrypted_data_since_2409"
+    # df = load_price_forecast_range(start_date, end_date, data_folder, handler)
 
     plot = plot_prices(df, dark_mode=True)
 
