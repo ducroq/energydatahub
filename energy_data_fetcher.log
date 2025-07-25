@@ -1,54 +1,54 @@
-2025-07-24 16:17:27,080 DEBUG Using selector: EpollSelector
-2025-07-24 16:17:27,080 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2025-07-24 16:17:28,213 INFO Using configuration from environment variables
-2025-07-24 16:17:28,214 INFO Querying Entsoe API for NL from 2025-07-24 16:17:28.214197+00:00 to 2025-07-25 16:17:28.214197+00:00
-2025-07-24 16:17:28,465 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202507231600', 'periodEnd': '202507261600'}
-2025-07-24 16:17:28,468 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-07-24 16:17:28,479 INFO Querying EnergyZero API from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-2025-07-24 16:17:28,480 INFO Querying Epex API from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-2025-07-24 16:17:28,481 INFO Querying OpenWeather from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-2025-07-24 16:17:28,975 INFO Querying MeteoServer from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-2025-07-24 16:17:29,128 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202507231600&periodEnd=202507261600 HTTP/1.1" 200 13014
-2025-07-24 16:17:29,219 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202507231600', 'periodEnd': '202507261600'}
-2025-07-24 16:17:29,459 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202507231600&periodEnd=202507261600 HTTP/1.1" 200 933
-2025-07-24 16:17:29,470 DEBUG Encoding detection: utf_8 is most likely the one.
-2025-07-24 16:17:29,471 DEBUG NoMatchingDataError: for offset 100
-2025-07-24 16:17:29,477 INFO Fetching weather forecast data from https://data.meteoserver.nl/api/uurverwachting.php?lat=51.966472&long=5.94009&key=7daf22bed0
-2025-07-24 16:17:29,478 INFO Attempt nr 1 to fetch weather forecast data
-2025-07-24 16:17:29,941 INFO Querying Meteo server from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-2025-07-24 16:17:29,942 INFO Fetching sun forecast data from https://data.meteoserver.nl/api/solar.php?lat=51.966472&long=5.94009&key=7daf22bed0
-2025-07-24 16:17:29,942 INFO Attempt nr 1 to fetch sun forecast data
-2025-07-24 16:17:29,942 INFO Querying Nordpool API for NL from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-2025-07-24 16:17:29,949 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
-2025-07-24 16:17:30,413 INFO Querying Luchtmeetnet server from 2025-07-23 18:17:28.214197+02:00 to 2025-07-24 18:17:28.214197+02:00
-2025-07-24 16:17:30,414 INFO Fetching Luchtmeetnet station list
-2025-07-24 16:17:30,415 INFO Entsoe day ahead price from: 2025-07-24 16:17:28.214197+00:00 to 2025-07-25 16:17:28.214197+00:00
-Current: 110.07 EUR/MWh @ now_hour
-Next hour: 147.56 EUR/MWh @ next_hour
-2025-07-24 16:17:30,507 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-07-25&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
-2025-07-24 16:17:30,511 INFO EnergyZero day ahead price from: 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-Current: 109.21 EUR/MWh @ now_hour
-Next hour: 102.9 EUR/MWh @ next_hour
-2025-07-24 16:17:30,552 INFO Fetching OpenWeather forecast data from https://api.openweathermap.org/data/2.5/forecast?lat=51.966472&lon=5.94009&units=metric&appid=4852b00585c8d9000573557d530ac9e7
-2025-07-24 16:17:30,553 INFO OpenWeather forecast from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-Current: {'main_temp': 23.21, 'main_feels_like': 23.28, 'main_temp_min': 21.94, 'main_temp_max': 23.21, 'main_pressure': 1014, 'main_sea_level': 1014, 'main_grnd_level': 1010, 'main_humidity': 65, 'main_temp_kf': 1.27, 'weather_id': 500, 'weather_main': 'Rain', 'weather_description': 'light rain', 'weather_icon': '10d', 'clouds_all': 81, 'wind_speed': 3.36, 'wind_deg': 342, 'wind_gust': 6.62, 'visibility': 10000, 'rain_3h': 0.2}
-Next hour: {'main_temp': 21.13, 'main_feels_like': 21.39, 'main_temp_min': 19.78, 'main_temp_max': 21.13, 'main_pressure': 1015, 'main_sea_level': 1015, 'main_grnd_level': 1012, 'main_humidity': 80, 'main_temp_kf': 1.35, 'weather_id': 803, 'weather_main': 'Clouds', 'weather_description': 'broken clouds', 'weather_icon': '04n', 'clouds_all': 70, 'wind_speed': 2.79, 'wind_deg': 336, 'wind_gust': 6.22, 'visibility': 10000}
-2025-07-24 16:17:30,587 INFO EnergyZero day ahead price from: 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-Current: 110.44 EUR/MWh @ now_hour
-Next hour: 114.98 EUR/MWh @ next_hour
-2025-07-24 16:17:30,905 INFO EnergyZero day ahead price from: 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-Current: 0.13 EUR/MWh @ now_hour
-Next hour: 0.18 EUR/MWh @ next_hour
-2025-07-24 16:17:31,063 INFO MeteoServer forecast from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-Current: {'temp': 24, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 323, 'windrltr': 'NW', 'vis': 23385, 'neersl': 0, 'luchtd': 1014, 'luchtdmmhg': 760.6, 'luchtdinhg': 29.94, 'hw': 0, 'mw': 0, 'lw': 1, 'tw': 1, 'rv': 61, 'gr': 74, 'gr_w': 205, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 5, 'ico': 7, 'icoon': 'zonnig'}
-Next hour: {'temp': 23, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 326, 'windrltr': 'NW', 'vis': 20425, 'neersl': 0, 'luchtd': 1014.2, 'luchtdmmhg': 760.7, 'luchtdinhg': 29.95, 'hw': 0, 'mw': 0, 'lw': 21, 'tw': 21, 'rv': 64, 'gr': 32, 'gr_w': 89, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 3, 'ico': 3, 'icoon': 'halfbewolkt'}
-2025-07-24 16:17:32,995 INFO OpenWeather forecast from 2025-07-24 18:17:28.214197+02:00 to 2025-07-25 18:17:28.214197+02:00
-Current: {'elev': 4.22, 'az': 296.99, 'temp': 21, 'gr_w': 91, 'gr': 33, 'sd': 0, 'tc': 100, 'lc': 0, 'mc': 1, 'hc': 100, 'vis': 25000, 'prec': 0}
-Next hour: {'elev': -3.54, 'az': 308.8, 'temp': 20, 'gr_w': 49, 'gr': 18, 'sd': 31, 'tc': 60, 'lc': 0, 'mc': 0, 'hc': 60, 'vis': 25000, 'prec': 0}
-2025-07-24 16:17:33,998 INFO Fetching Luchtmeetnet station data, pls have patience
-2025-07-24 16:18:34,600 INFO Finding station closest to 51.966472, 5.94009
-2025-07-24 16:18:34,601 INFO Fetching air quality indicator for station NL54004, Arnhem Velperbroek
-2025-07-24 16:18:36,165 INFO Fetching measurements for station NL54004, Arnhem Velperbroek
-2025-07-24 16:18:36,627 INFO Luchtmeetnet data from 2025-07-23 18:17:28.214197+02:00 to 2025-07-24 18:17:28.214197+02:00
-Current: {'AQI': 6, 'BCWB': 0.04, 'FN': 0.63, 'NO': 8.83, 'NO2': 15.08, 'PM25': 6.24, 'PM10': 9.2}
+2025-07-25 16:19:02,804 DEBUG Using selector: EpollSelector
+2025-07-25 16:19:02,805 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2025-07-25 16:19:03,790 INFO Using configuration from environment variables
+2025-07-25 16:19:03,791 INFO Querying Entsoe API for NL from 2025-07-25 16:19:03.790312+00:00 to 2025-07-26 16:19:03.790312+00:00
+2025-07-25 16:19:03,794 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202507241600', 'periodEnd': '202507271600'}
+2025-07-25 16:19:03,795 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-07-25 16:19:03,807 INFO Querying EnergyZero API from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+2025-07-25 16:19:03,808 INFO Querying Epex API from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+2025-07-25 16:19:03,808 INFO Querying OpenWeather from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+2025-07-25 16:19:04,284 INFO Querying MeteoServer from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+2025-07-25 16:19:04,385 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202507241600&periodEnd=202507271600 HTTP/1.1" 200 13028
+2025-07-25 16:19:04,487 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202507241600', 'periodEnd': '202507271600'}
+2025-07-25 16:19:04,714 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202507241600&periodEnd=202507271600 HTTP/1.1" 200 933
+2025-07-25 16:19:04,724 DEBUG Encoding detection: utf_8 is most likely the one.
+2025-07-25 16:19:04,730 DEBUG NoMatchingDataError: for offset 100
+2025-07-25 16:19:04,787 INFO Fetching weather forecast data from https://data.meteoserver.nl/api/uurverwachting.php?lat=51.966472&long=5.94009&key=7daf22bed0
+2025-07-25 16:19:04,787 INFO Attempt nr 1 to fetch weather forecast data
+2025-07-25 16:19:05,252 INFO Querying Meteo server from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+2025-07-25 16:19:05,253 INFO Fetching sun forecast data from https://data.meteoserver.nl/api/solar.php?lat=51.966472&long=5.94009&key=7daf22bed0
+2025-07-25 16:19:05,253 INFO Attempt nr 1 to fetch sun forecast data
+2025-07-25 16:19:05,253 INFO Querying Nordpool API for NL from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+2025-07-25 16:19:05,260 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-07-25 16:19:05,722 INFO Querying Luchtmeetnet server from 2025-07-24 18:19:03.790312+02:00 to 2025-07-25 18:19:03.790312+02:00
+2025-07-25 16:19:05,722 INFO Fetching Luchtmeetnet station list
+2025-07-25 16:19:05,724 INFO Entsoe day ahead price from: 2025-07-25 16:19:03.790312+00:00 to 2025-07-26 16:19:03.790312+00:00
+Current: 104.11 EUR/MWh @ now_hour
+Next hour: 117.44 EUR/MWh @ next_hour
+2025-07-25 16:19:05,747 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-07-26&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
+2025-07-25 16:19:05,751 INFO EnergyZero day ahead price from: 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+Current: 109.17 EUR/MWh @ now_hour
+Next hour: 99.27 EUR/MWh @ next_hour
+2025-07-25 16:19:05,883 INFO EnergyZero day ahead price from: 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+Current: 106.94 EUR/MWh @ now_hour
+Next hour: 109.92 EUR/MWh @ next_hour
+2025-07-25 16:19:05,898 INFO Fetching OpenWeather forecast data from https://api.openweathermap.org/data/2.5/forecast?lat=51.966472&lon=5.94009&units=metric&appid=4852b00585c8d9000573557d530ac9e7
+2025-07-25 16:19:05,899 INFO OpenWeather forecast from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+Current: {'main_temp': 21.46, 'main_feels_like': 21.59, 'main_temp_min': 21.46, 'main_temp_max': 22.55, 'main_pressure': 1017, 'main_sea_level': 1017, 'main_grnd_level': 1014, 'main_humidity': 74, 'main_temp_kf': -1.09, 'weather_id': 804, 'weather_main': 'Clouds', 'weather_description': 'overcast clouds', 'weather_icon': '04d', 'clouds_all': 91, 'wind_speed': 3.73, 'wind_deg': 338, 'wind_gust': 4.18, 'visibility': 10000}
+Next hour: {'main_temp': 19.33, 'main_feels_like': 19.46, 'main_temp_min': 18.54, 'main_temp_max': 19.33, 'main_pressure': 1018, 'main_sea_level': 1018, 'main_grnd_level': 1015, 'main_humidity': 82, 'main_temp_kf': 0.79, 'weather_id': 802, 'weather_main': 'Clouds', 'weather_description': 'scattered clouds', 'weather_icon': '03n', 'clouds_all': 36, 'wind_speed': 2.44, 'wind_deg': 342, 'wind_gust': 3.35, 'visibility': 10000}
+2025-07-25 16:19:06,158 INFO EnergyZero day ahead price from: 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+Current: 0.12 EUR/MWh @ now_hour
+Next hour: 0.15 EUR/MWh @ next_hour
+2025-07-25 16:19:06,367 INFO MeteoServer forecast from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+Current: {'temp': 22, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 341, 'windrltr': 'NW', 'vis': 22916, 'neersl': 0, 'luchtd': 1017.4, 'luchtdmmhg': 763.1, 'luchtdinhg': 30.04, 'hw': 0, 'mw': 0, 'lw': 5, 'tw': 5, 'rv': 67, 'gr': 58, 'gr_w': 161, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 5, 'ico': 7, 'icoon': 'zonnig'}
+Next hour: {'temp': 22, 'winds': 3, 'windb': 2, 'windknp': 6, 'windkmh': 10.8, 'windr': 346, 'windrltr': 'NW', 'vis': 21174, 'neersl': 0, 'luchtd': 1017.4, 'luchtdmmhg': 763.1, 'luchtdinhg': 30.04, 'hw': 0, 'mw': 0, 'lw': 0, 'tw': 0, 'rv': 66, 'gr': 33, 'gr_w': 91, 'cape': None, 'snd': 0, 'snv': 0, 'cond': 5, 'ico': 7, 'icoon': 'zonnig'}
+2025-07-25 16:19:07,204 INFO OpenWeather forecast from 2025-07-25 18:19:03.790312+02:00 to 2025-07-26 18:19:03.790312+02:00
+Current: {'elev': 4.04, 'az': 296.86, 'temp': 21, 'gr_w': 90, 'gr': 32, 'sd': 0, 'tc': 55, 'lc': 0, 'mc': 55, 'hc': 0, 'vis': 25000, 'prec': 0}
+Next hour: {'elev': -3.73, 'az': 308.69, 'temp': 19, 'gr_w': 48, 'gr': 17, 'sd': 30, 'tc': 67, 'lc': 0, 'mc': 67, 'hc': 0, 'vis': 25000, 'prec': 0}
+2025-07-25 16:19:09,788 INFO Fetching Luchtmeetnet station data, pls have patience
+2025-07-25 16:20:17,662 INFO Finding station closest to 51.966472, 5.94009
+2025-07-25 16:20:17,662 INFO Fetching air quality indicator for station NL54004, Arnhem Velperbroek
+2025-07-25 16:20:18,488 INFO Fetching measurements for station NL54004, Arnhem Velperbroek
+2025-07-25 16:20:19,125 INFO Luchtmeetnet data from 2025-07-24 18:19:03.790312+02:00 to 2025-07-25 18:19:03.790312+02:00
+Current: {'AQI': 5, 'NO': 16.79, 'NO2': 20.58}
 
