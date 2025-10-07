@@ -4,7 +4,6 @@ import base64
 from configparser import ConfigParser
 from utils.secure_data_handler import SecureDataHandler
 import json
-from datetime import datetime
 import logging
 
 def setup_logging():
@@ -56,44 +55,11 @@ def create_output_directory(input_dir: str) -> str:
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
 
-def process_files(input_dir: str, handler: SecureDataHandler):
-    """
-    Process all JSON files in the input directory.
-    
-    Args:
-        input_dir (str): Directory containing encrypted files
-        handler (SecureDataHandler): Initialized SecureDataHandler instance
-    """
-    output_dir = create_output_directory(input_dir)
-    
-    # Find all JSON files in input directory
-    json_files = glob.glob(os.path.join(input_dir, '*.json'))
-    
-    for file_path in json_files:
-        try:
-            filename = os.path.basename(file_path)
-            output_path = os.path.join(output_dir, filename)
-            
-            logging.info(f"Processing file: {filename}")
-            
-            # Read encrypted data
-            with open(file_path, 'r') as f:
-                encrypted_data = f.read()
-            
-            # Decrypt data
-            decrypted_data = handler.decrypt_and_verify(encrypted_data)
-            
-            # Write decrypted data
-            with open(output_path, 'w') as f:
-                json.dump(decrypted_data, f, indent=2, default=str)
-                
-            logging.info(f"Successfully decrypted: {filename}")
-            
-        except Exception as e:
-            logging.error(f"Error processing {filename}: {e}")
 
-def main(input_dir: str):
-    """Main function to orchestrate the decryption process."""
+if __name__ == "__main__":
+    input_folder = r"C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\05. Data\encrypted_data_since_2409_decrypted"
+    output_folder = r"C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\05. Data\temp"
+
     setup_logging()
     
     try:
@@ -104,18 +70,49 @@ def main(input_dir: str):
         # Initialize secure data handler
         handler = SecureDataHandler(encryption_key, hmac_key)
         
-        if not os.path.exists(input_dir):
-            raise FileNotFoundError(f"Directory not found: {input_dir}")
+        if not os.path.exists(input_folder):
+            raise FileNotFoundError(f"Directory not found: {input_folder}")
         
-        # Process all files
-        process_files(input_dir, handler)
+        # Process all JSON files in input directory
+        json_files = glob.glob(os.path.join(input_folder, '*.json'))
         
-        logging.info("Decryption process completed successfully")
-        
+        for file_path in json_files:
+            try:
+                filename = os.path.basename(file_path)
+                output_path = os.path.join(output_folder, filename)
+                
+                logging.info(f"Processing file: {filename}")
+
+                # Skip if already decrypted
+                if os.path.isfile(output_path):
+                    continue  
+
+                # Read data
+                with open(file_path, 'r') as f:
+                    data = f.read()
+                    
+                # Check if file is empty
+                if not data:
+                    raise ValueError(f"File {filename} is empty or unreadable")
+                
+                # Attempt to parse JSON directly 
+                try:
+                    decrypted_data = json.loads(data)
+                except json.JSONDecodeError:
+                    # Decrypt data
+                    decrypted_data = handler.decrypt_and_verify(data)
+                
+                # Write decrypted data
+                with open(output_path, 'w') as f:
+                    json.dump(decrypted_data, f, indent=2, default=str)
+                    
+                logging.info(f"Successfully decrypted: {filename}")
+                
+            except Exception as e:
+                logging.error(f"Error processing {filename}: {e}")
+            
+            logging.info("Decryption process completed successfully")
+            
     except Exception as e:
         logging.error(f"Fatal error: {e}")
         raise
-
-if __name__ == "__main__":
-    data_folder = r"..\..\05. Data\encrypted_data_since_2409"
-    main(data_folder)
