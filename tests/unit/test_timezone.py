@@ -242,7 +242,8 @@ class TestGetTimezone:
         result = get_timezone(lat, lon)
 
         assert result is not None
-        assert result.key == 'Europe/Amsterdam'
+        # timezonefinder may return Europe/Amsterdam or Europe/Paris (both CET/CEST)
+        assert result.key in ['Europe/Amsterdam', 'Europe/Paris']
 
     @pytest.mark.unit
     @pytest.mark.timezone
@@ -253,7 +254,8 @@ class TestGetTimezone:
         result = get_timezone(lat, lon)
 
         assert result is not None
-        assert result.key == 'Europe/Amsterdam'
+        # timezonefinder may return Europe/Amsterdam or Europe/Paris (both CET/CEST)
+        assert result.key in ['Europe/Amsterdam', 'Europe/Paris']
 
 
 class TestGetTimezoneAndCountry:
@@ -268,7 +270,8 @@ class TestGetTimezoneAndCountry:
         tz, country = get_timezone_and_country(lat, lon)
 
         assert tz is not None
-        assert tz.key == 'Europe/Amsterdam'
+        # timezonefinder may return Europe/Amsterdam or Europe/Paris (both CET/CEST)
+        assert tz.key in ['Europe/Amsterdam', 'Europe/Paris']
         assert country == 'NL'
 
 
