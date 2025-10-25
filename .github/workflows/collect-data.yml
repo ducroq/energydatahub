@@ -38,14 +38,25 @@ jobs:
 
       run: python data_fetcher.py
 
-    - name: Archive timestamped data to Google Drive
+    - name: Archive timestamped data to Google Drive (via rclone)
       if: success()
       env:
-        GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
-        GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_ROOT_FOLDER_ID }}
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
       run: |
-        echo "Archiving timestamped data files to Google Drive..."
-        python storage/gdrive.py upload data/2*_*.json --verbose || echo "Warning: Google Drive archival failed (non-blocking)"
+        echo "Setting up rclone..."
+        # Install rclone
+        curl https://rclone.org/install.sh | sudo bash
+
+        # Configure rclone from secret
+        if [ -n "$RCLONE_CONFIG" ]; then
+          mkdir -p ~/.config/rclone
+          echo "$RCLONE_CONFIG" > ~/.config/rclone/rclone.conf
+
+          echo "Archiving timestamped data files to Google Drive..."
+          rclone copy data/2*_*.json gdrive:/energyDataHub/ --verbose || echo "Warning: Google Drive archival failed (non-blocking)"
+        else
+          echo "Skipping Google Drive archival - RCLONE_CONFIG not configured"
+        fi
 
     - name: Rotate local data (keep last 7 days)
       if: success()
