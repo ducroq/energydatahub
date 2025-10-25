@@ -5,7 +5,7 @@ Part of the Energy Data Integration Project at HAN University of Applied Science
 
 File: data_fetcher.py
 Created: 2024-10-19
-Updated: 2024-12-19
+Updated: 2025-10-25
 
 Author: Jeroen Veen
         HAN University of Applied Sciences
@@ -27,6 +27,13 @@ Description:
     Handles data collection, validation, and storage for day-ahead energy prices,
     weather forecasts, solar data, and air quality measurements.
 
+    Uses the new BaseCollector architecture (Phase 4) with:
+    - Automatic retry with exponential backoff
+    - Structured logging with correlation IDs
+    - Timestamp normalization to Europe/Amsterdam
+    - Data validation and quality checks
+    - Performance metrics tracking
+
 Dependencies:
     - aiohttp: For async HTTP requests
     - pytz: Timezone handling
@@ -34,8 +41,7 @@ Dependencies:
     - cryptography: Data encryption/decryption
     Required local packages:
     - utils.*
-    - energy_data_fetchers.*
-    - weather_data_fetchers.*
+    - collectors.* (new architecture)
 
 Usage:
     Can be run directly:
@@ -62,13 +68,17 @@ from utils.helpers import ensure_output_directory, load_settings, load_secrets, 
 from utils.data_types import CombinedDataSet
 from utils.timezone_helpers import get_timezone_and_country
 from utils.secure_data_handler import SecureDataHandler
-from energy_data_fetchers.entsoe_client import get_Entsoe_data
-from energy_data_fetchers.energy_zero_price_fetcher import get_Energy_zero_data
-from energy_data_fetchers.epex_price_fetcher import get_Epex_data
-from energy_data_fetchers.nordpool_data_fetcher import get_Elspot_data
-from weather_data_fetchers.open_weather_client import get_OpenWeather_data
-from weather_data_fetchers.meteoserver_client import get_MeteoServer_weather_forecast_data, get_MeteoServer_sun_forecast
-from weather_data_fetchers.luchtmeetnet_data_fetcher import get_luchtmeetnet_data
+# New collector architecture imports
+from collectors import (
+    EntsoeCollector,
+    EnergyZeroCollector,
+    EpexCollector,
+    ElspotCollector,
+    OpenWeatherCollector,
+    MeteoServerWeatherCollector,
+    MeteoServerSunCollector,
+    LuchtmeetnetCollector
+)
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
@@ -114,15 +124,41 @@ async def main() -> None:
         tomorrow = tomorrow.astimezone(timezone)
         yesterday = yesterday.astimezone(timezone)
 
+        # Initialize collectors with new architecture
+        entsoe_collector = EntsoeCollector(api_key=entsoe_api_key)
+        energy_zero_collector = EnergyZeroCollector()
+        epex_collector = EpexCollector()
+        elspot_collector = ElspotCollector()
+        openweather_collector = OpenWeatherCollector(
+            api_key=openweather_api_key,
+            latitude=latitude,
+            longitude=longitude
+        )
+        meteoserver_weather_collector = MeteoServerWeatherCollector(
+            api_key=meteoserver_api_key,
+            latitude=latitude,
+            longitude=longitude
+        )
+        meteoserver_sun_collector = MeteoServerSunCollector(
+            api_key=meteoserver_api_key,
+            latitude=latitude,
+            longitude=longitude
+        )
+        luchtmeetnet_collector = LuchtmeetnetCollector(
+            latitude=latitude,
+            longitude=longitude
+        )
+
+        # Collect data from all sources
         tasks = [
-            get_Entsoe_data(entsoe_api_key, country_code, today, tomorrow),
-            get_Energy_zero_data(today, tomorrow),
-            get_Epex_data(today, tomorrow),
-            get_OpenWeather_data(openweather_api_key, latitude, longitude, today, tomorrow),
-            get_MeteoServer_weather_forecast_data(meteoserver_api_key, latitude, longitude, today, tomorrow),
-            get_MeteoServer_sun_forecast(meteoserver_api_key, latitude, longitude, today, tomorrow),
-            get_Elspot_data(country_code, today, tomorrow),
-            get_luchtmeetnet_data(latitude, longitude, yesterday, today)
+            entsoe_collector.collect(today, tomorrow, country_code=country_code),
+            energy_zero_collector.collect(today, tomorrow),
+            epex_collector.collect(today, tomorrow),
+            openweather_collector.collect(today, tomorrow),
+            meteoserver_weather_collector.collect(today, tomorrow),
+            meteoserver_sun_collector.collect(today, tomorrow),
+            elspot_collector.collect(today, tomorrow, country_code=country_code),
+            luchtmeetnet_collector.collect(yesterday, today)
         ]
 
         results = await asyncio.gather(*tasks)

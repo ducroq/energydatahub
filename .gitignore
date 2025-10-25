@@ -4,3 +4,10 @@
 secrets.ini
 # *.json
 # *.log
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+*.cover
+.hypothesis/

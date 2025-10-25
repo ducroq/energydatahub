@@ -28,21 +28,34 @@ jobs:
       run: mkdir -p data        
 
     - name: Collect data
-      env:        
+      env:
         ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
         HMAC_KEY: ${{ secrets.HMAC_KEY }}
         ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
         OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         METEO_API_KEY: ${{ secrets.METEO_API_KEY }}
-        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}       
-        
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
       run: python data_fetcher.py
 
-    # - name: Rotate data (keep last 30 days)
-    #   run: |
-    #     find data -name "*_energy_price_forecast.json" -type f -mtime +30 -delete
-    #     find data -name "*_weather_forecast.json" -type f -mtime +30 -delete
-    #     find data -name "*_sun_forecast.json" -type f -mtime +30 -delete      
+    - name: Archive timestamped data to Google Drive
+      if: success()
+      env:
+        GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+        GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_ROOT_FOLDER_ID }}
+      run: |
+        echo "Archiving timestamped data files to Google Drive..."
+        python storage/gdrive.py upload data/2*_*.json --verbose || echo "Warning: Google Drive archival failed (non-blocking)"
+
+    - name: Rotate local data (keep last 7 days)
+      if: success()
+      run: |
+        echo "Rotating old data files (keeping last 7 days)..."
+        find data -name "2*_*_energy_price_forecast.json" -type f -mtime +7 -delete || true
+        find data -name "2*_*_weather_forecast.json" -type f -mtime +7 -delete || true
+        find data -name "2*_*_sun_forecast.json" -type f -mtime +7 -delete || true
+        find data -name "2*_*_air_history.json" -type f -mtime +7 -delete || true
+        echo "Rotation complete"      
 
     - name: Prepare docs folder with only current data
       run: |

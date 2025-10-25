@@ -43,11 +43,14 @@ def convert_value(value):
 class EnhancedDataSet:
     def __init__(self, metadata: Dict[str, Any], data: Dict[str, Any]):
         self.metadata = metadata
-        data_type = metadata['data_type']
+        data_type = metadata.get('data_type', 'unknown')
         if data_type == 'energy_price':
              self.data = self.validate_energy_prices(data)
         elif data_type == 'weather' or data_type == 'sun' or data_type == 'air':
             self.data = self.validate_weather_data(data)
+        else:
+            # For unknown data types, use energy_price validation (simple key-value)
+            self.data = self.validate_energy_prices(data)
         
     def validate_weather_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         validated_data = {}
