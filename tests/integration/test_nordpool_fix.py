@@ -18,7 +18,7 @@ from unittest.mock import Mock, patch, MagicMock
 @pytest.mark.asyncio
 async def test_nordpool_fetcher_produces_correct_timestamps():
     """Test that nordpool fetcher produces correct Amsterdam timezone timestamps"""
-    from energy_data_fetchers.nordpool_data_fetcher import get_Elspot_data
+    from legacy.fetchers.energy_data_fetchers.nordpool_data_fetcher import get_Elspot_data
 
     # Mock the nordpool API response
     mock_prices = MagicMock()
@@ -46,7 +46,7 @@ async def test_nordpool_fetcher_produces_correct_timestamps():
     mock_prices.hourly.return_value = mock_response
 
     # Test during summer (CEST)
-    with patch('energy_data_fetchers.nordpool_data_fetcher.elspot.Prices', return_value=mock_prices):
+    with patch('legacy.fetchers.energy_data_fetchers.nordpool_data_fetcher.elspot.Prices', return_value=mock_prices):
         amsterdam_tz = pytz.timezone('Europe/Amsterdam')
         start_time = datetime(2025, 10, 24, 0, 0, 0, tzinfo=amsterdam_tz)
         end_time = datetime(2025, 10, 25, 0, 0, 0, tzinfo=amsterdam_tz)
@@ -76,7 +76,7 @@ async def test_nordpool_fetcher_produces_correct_timestamps():
 @pytest.mark.asyncio
 async def test_nordpool_fetcher_winter_timestamps():
     """Test nordpool fetcher with winter CET timestamps"""
-    from energy_data_fetchers.nordpool_data_fetcher import get_Elspot_data
+    from legacy.fetchers.energy_data_fetchers.nordpool_data_fetcher import get_Elspot_data
 
     # Mock the nordpool API response
     mock_prices = MagicMock()
@@ -100,7 +100,7 @@ async def test_nordpool_fetcher_winter_timestamps():
     mock_prices.hourly.return_value = mock_response
 
     # Test during winter (CET)
-    with patch('energy_data_fetchers.nordpool_data_fetcher.elspot.Prices', return_value=mock_prices):
+    with patch('legacy.fetchers.energy_data_fetchers.nordpool_data_fetcher.elspot.Prices', return_value=mock_prices):
         amsterdam_tz = pytz.timezone('Europe/Amsterdam')
         start_time = datetime(2025, 1, 15, 0, 0, 0, tzinfo=amsterdam_tz)
         end_time = datetime(2025, 1, 16, 0, 0, 0, tzinfo=amsterdam_tz)
