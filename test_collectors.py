@@ -80,7 +80,7 @@ async def test_entsoe_collector():
     try:
         # Load API key
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        secrets_file = os.path.join(script_dir, 'energy_data_fetchers', 'secrets.ini')
+        secrets_file = os.path.join(script_dir, 'secrets.ini')
 
         config = ConfigParser()
         config.read(secrets_file)
@@ -227,7 +227,7 @@ async def test_openweather_collector():
     try:
         # Load API key
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        secrets_file = os.path.join(script_dir, 'weather_data_fetchers', 'secrets.ini')
+        secrets_file = os.path.join(script_dir, 'secrets.ini')
 
         config = ConfigParser()
         config.read(secrets_file)
