@@ -18,13 +18,13 @@ from collectors.base import (
 from utils.data_types import EnhancedDataSet
 
 
-# Test collector implementation
-class TestCollector(BaseCollector):
-    """Simple test collector for unit tests."""
+# Mock collector implementation for testing
+class MockCollector(BaseCollector):
+    """Simple mock collector for unit tests."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name="TestCollector",
+            name="MockCollector",
             data_type="test_data",
             source="Test API",
             units="test_units",
@@ -54,7 +54,7 @@ class TestBaseCollector:
     @pytest.mark.asyncio
     async def test_successful_collection(self):
         """Test successful data collection."""
-        collector = TestCollector()
+        collector = MockCollector()
 
         amsterdam_tz = ZoneInfo('Europe/Amsterdam')
         start = datetime(2025, 10, 25, 12, 0, tzinfo=amsterdam_tz)
@@ -73,7 +73,7 @@ class TestBaseCollector:
     async def test_retry_on_failure(self):
         """Test retry mechanism on transient failures."""
 
-        class FailingCollector(TestCollector):
+        class FailingCollector(MockCollector):
             def __init__(self):
                 super().__init__(retry_config=RetryConfig(
                     max_attempts=3,
@@ -103,7 +103,7 @@ class TestBaseCollector:
     async def test_max_retries_exhausted(self):
         """Test that collection fails after max retries."""
 
-        class AlwaysFailingCollector(TestCollector):
+        class AlwaysFailingCollector(MockCollector):
             def __init__(self):
                 super().__init__(retry_config=RetryConfig(
                     max_attempts=2,
@@ -127,7 +127,7 @@ class TestBaseCollector:
     async def test_timestamp_normalization(self):
         """Test that timestamps are normalized to Amsterdam timezone."""
 
-        class UTCCollector(TestCollector):
+        class UTCCollector(MockCollector):
             def _parse_response(self, raw_data, start_time, end_time):
                 # Return UTC timestamps
                 utc_time = datetime(2025, 10, 25, 10, 0, tzinfo=ZoneInfo('UTC'))
@@ -153,7 +153,7 @@ class TestBaseCollector:
     @pytest.mark.asyncio
     async def test_metadata_generation(self):
         """Test that metadata is correctly generated."""
-        collector = TestCollector()
+        collector = MockCollector()
 
         start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
         end = start + timedelta(hours=24)
@@ -164,7 +164,7 @@ class TestBaseCollector:
         assert result.metadata['data_type'] == 'test_data'
         assert result.metadata['source'] == 'Test API'
         assert result.metadata['units'] == 'test_units'
-        assert result.metadata['collector'] == 'TestCollector'
+        assert result.metadata['collector'] == 'MockCollector'
         assert 'start_time' in result.metadata
         assert 'end_time' in result.metadata
 
@@ -172,7 +172,7 @@ class TestBaseCollector:
     @pytest.mark.asyncio
     async def test_metrics_collection(self):
         """Test that collection metrics are recorded."""
-        collector = TestCollector()
+        collector = MockCollector()
 
         start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
         end = start + timedelta(hours=24)
@@ -183,7 +183,7 @@ class TestBaseCollector:
         assert len(metrics) == 1
 
         metric = metrics[0]
-        assert metric.collector_name == 'TestCollector'
+        assert metric.collector_name == 'MockCollector'
         assert metric.status == CollectorStatus.SUCCESS
         assert metric.data_points_collected == 2
         assert metric.duration_seconds > 0
@@ -192,7 +192,7 @@ class TestBaseCollector:
     @pytest.mark.asyncio
     async def test_success_rate_calculation(self):
         """Test success rate calculation."""
-        collector = TestCollector()
+        collector = MockCollector()
 
         start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
         end = start + timedelta(hours=24)
@@ -208,7 +208,7 @@ class TestBaseCollector:
     async def test_validation_warnings(self):
         """Test that data validation produces warnings for edge cases."""
 
-        class SparseDataCollector(TestCollector):
+        class SparseDataCollector(MockCollector):
             def _parse_response(self, raw_data, start_time, end_time):
                 # Return only one data point (should trigger warning)
                 return {start_time.isoformat(): 100.0}
@@ -231,7 +231,7 @@ class TestBaseCollector:
     async def test_empty_data_handling(self):
         """Test handling of empty data responses."""
 
-        class EmptyDataCollector(TestCollector):
+        class EmptyDataCollector(MockCollector):
             def _parse_response(self, raw_data, start_time, end_time):
                 return {}  # No data
 
@@ -290,7 +290,7 @@ class TestCollectorIntegration:
     @pytest.mark.asyncio
     async def test_multiple_collections(self):
         """Test multiple successive collections."""
-        collector = TestCollector()
+        collector = MockCollector()
 
         amsterdam_tz = ZoneInfo('Europe/Amsterdam')
 
