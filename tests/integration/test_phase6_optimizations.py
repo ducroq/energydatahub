@@ -35,12 +35,11 @@ async def test_circuit_breaker_real_api():
 
     # Test with ENTSO-E (currently failing)
     from collectors import EntsoeCollector
-    from configparser import ConfigParser
+    from utils.helpers import load_secrets
     import os
 
-    # Load API key
-    config = ConfigParser()
-    config.read('secrets.ini')
+    # Load API key from environment or secrets.ini
+    config = load_secrets('.')
     api_key = config.get('api_keys', 'entsoe')
 
     # Create collector with aggressive circuit breaker
@@ -218,10 +217,10 @@ async def test_circuit_breaker_recovery():
     print("="*70)
 
     from collectors import EntsoeCollector
-    from configparser import ConfigParser
+    from utils.helpers import load_secrets
 
-    config = ConfigParser()
-    config.read('secrets.ini')
+    # Load API key from environment or secrets.ini
+    config = load_secrets('.')
     api_key = config.get('api_keys', 'entsoe')
 
     # Create collector with short timeout
