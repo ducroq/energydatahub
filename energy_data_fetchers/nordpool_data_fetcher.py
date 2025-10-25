@@ -49,7 +49,7 @@ from datetime import datetime, timedelta
 import logging
 from nordpool import elspot
 from functools import partial
-from utils.timezone_helpers import ensure_timezone
+from utils.timezone_helpers import ensure_timezone, localize_naive_datetime, normalize_timestamp_to_amsterdam
 from utils.data_types import EnhancedDataSet
 import platform
 
@@ -83,9 +83,22 @@ async def get_Elspot_data(country_code: str, start_time: datetime, end_time: dat
 
         data = {}
         for day_data in prices_data['areas'][country_code]['values']:
-            timestamp = day_data['start'].replace(tzinfo=timezone) # bug in api client?
+            # The Nord Pool API returns naive datetime objects (no timezone info)
+            # We need to properly localize them to Europe/Amsterdam timezone
+            # Using replace(tzinfo=...) is WRONG - it doesn't convert, just replaces
+            # This was causing malformed timezone offsets like +00:09
+            naive_timestamp = day_data['start']
+
+            # Properly localize the naive datetime to Amsterdam timezone
+            if naive_timestamp.tzinfo is None:
+                timestamp = localize_naive_datetime(naive_timestamp, timezone)
+            else:
+                # If API somehow returns timezone-aware datetime, normalize it
+                timestamp = normalize_timestamp_to_amsterdam(naive_timestamp)
+
             if start_time <= timestamp < end_time:
-                local_timestamp = timestamp.astimezone(timezone)
+                # Ensure final timestamp is in Amsterdam timezone with correct offset
+                local_timestamp = normalize_timestamp_to_amsterdam(timestamp)
                 data[local_timestamp.isoformat()] = day_data['value']
 
         dataset = EnhancedDataSet(
@@ -100,11 +113,15 @@ async def get_Elspot_data(country_code: str, start_time: datetime, end_time: dat
         )
 
         if dataset.data:
-            now_hour = list(dataset['data'].keys())[0]
-            next_hour = list(dataset['data'].keys())[1]
-            logging.info(f"EnergyZero day ahead price from: {start_time} to {end_time}\n"
-                        f"Current: {dataset['data'][now_hour]} EUR/MWh @ now_hour\n" 
-                        f"Next hour: {dataset['data'][next_hour]} EUR/MWh @ next_hour")
+            data_keys = list(dataset['data'].keys())
+            if len(data_keys) >= 2:
+                now_hour = data_keys[0]
+                next_hour = data_keys[1]
+                logging.info(f"Elspot day ahead price from: {start_time} to {end_time}\n"
+                            f"Current: {dataset['data'][now_hour]} EUR/MWh @ {now_hour}\n"
+                            f"Next hour: {dataset['data'][next_hour]} EUR/MWh @ {next_hour}")
+            else:
+                logging.info(f"Elspot data retrieved: {len(data_keys)} data points from {start_time} to {end_time}")
         else:
             logging.warning(f"No data retrieved for the specified time range: {start_time} to {end_time}")   
 

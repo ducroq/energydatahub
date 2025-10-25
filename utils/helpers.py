@@ -197,6 +197,45 @@ def detect_file_type(content: str) -> str:
     except json.JSONDecodeError:
         raise ValueError("File content is neither valid JSON nor base64 encoded")
     
+def validate_data_timestamps(data: Dict[str, Any]) -> tuple[bool, list]:
+    """
+    Validate all timestamps in a data structure for correct timezone formatting.
+
+    Args:
+        data (dict): The data dictionary to validate (CombinedDataSet.to_dict() format)
+
+    Returns:
+        tuple: (is_valid, list of malformed timestamps)
+
+    Examples:
+        >>> data = {'version': '2.0', 'elspot': {'data': {'2025-10-24T12:00:00+00:09': 50.0}}}
+        >>> is_valid, malformed = validate_data_timestamps(data)
+        >>> is_valid
+        False
+        >>> malformed
+        ['elspot: 2025-10-24T12:00:00+00:09']
+    """
+    from utils.timezone_helpers import validate_timestamp_format
+
+    malformed_timestamps = []
+
+    for source_name, source_data in data.items():
+        # Skip version and other metadata fields
+        if source_name == 'version' or not isinstance(source_data, dict):
+            continue
+
+        # Check if this source has a 'data' dict with timestamps
+        if 'data' not in source_data:
+            continue
+
+        # Validate each timestamp
+        for timestamp in source_data['data'].keys():
+            if not validate_timestamp_format(timestamp):
+                malformed_timestamps.append(f"{source_name}: {timestamp}")
+
+    is_valid = len(malformed_timestamps) == 0
+    return is_valid, malformed_timestamps
+
 def save_data_file(
     data: Dict[str, Any],
     file_path: str,
@@ -205,24 +244,42 @@ def save_data_file(
 ) -> None:
     """
     Save data to a file, optionally encrypting it.
-    
+
+    Validates timestamps before saving to prevent malformed timezone offsets.
+
     Args:
         data (dict): The data to save
         file_path (str): Path where to save the file
         handler (SecureDataHandler, optional): Handler for encrypting data
         encrypt (bool): Whether to encrypt the data
+
+    Raises:
+        ValueError: If data contains malformed timestamps
     """
     try:
+        # Validate timestamps before saving
+        data_dict = data.to_dict() if hasattr(data, 'to_dict') else data
+        is_valid, malformed = validate_data_timestamps(data_dict)
+
+        if not is_valid:
+            error_msg = f"Data contains malformed timestamps:\n" + "\n".join(malformed)
+            logging.error(error_msg)
+            raise ValueError(error_msg)
+
+        logging.info("Timestamp validation passed - all timestamps correctly formatted")
+
         if encrypt:
             if handler is None:
                 raise ValueError("Encryption requested but no handler provided")
-            encrypted_data = handler.encrypt_and_sign(data.to_dict())
+            encrypted_data = handler.encrypt_and_sign(data_dict)
             with open(file_path, 'w') as f:
                 f.write(encrypted_data)
         else:
-            data.write_to_json(file_path)
-            # with open(file_path, 'w') as f:
-            #     json.dump(data, f, indent=2)
+            if hasattr(data, 'write_to_json'):
+                data.write_to_json(file_path)
+            else:
+                with open(file_path, 'w') as f:
+                    json.dump(data_dict, f, indent=2)
     except Exception as e:
         logging.error(f"Error saving file {file_path}: {e}")
         raise
