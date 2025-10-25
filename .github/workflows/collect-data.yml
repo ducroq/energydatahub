@@ -38,39 +38,6 @@ jobs:
 
       run: python data_fetcher.py
 
-    - name: Sync data to Google Drive (via rclone)
-      if: success()
-      env:
-        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
-      run: |
-        echo "Setting up rclone..."
-        # Install rclone
-        curl https://rclone.org/install.sh | sudo bash
-
-        # Configure rclone from secret
-        if [ -n "$RCLONE_CONFIG" ]; then
-          mkdir -p ~/.config/rclone
-          echo "$RCLONE_CONFIG" > ~/.config/rclone/rclone.conf
-
-          echo "Copying current endpoint files to Google Drive..."
-          rclone copy data/air_history.json data/energy_price_forecast.json data/sun_forecast.json data/weather_forecast.json gdrive:/energyDataHub/current/ --verbose || echo "Warning: Current files sync failed (non-blocking)"
-
-          echo "Archiving timestamped data files to Google Drive..."
-          rclone copy data/2*_*.json gdrive:/energyDataHub/archive/ --verbose || echo "Warning: Archive sync failed (non-blocking)"
-        else
-          echo "Skipping Google Drive sync - RCLONE_CONFIG not configured"
-        fi
-
-    - name: Rotate local data (keep last 7 days)
-      if: success()
-      run: |
-        echo "Rotating old data files (keeping last 7 days)..."
-        find data -name "2*_*_energy_price_forecast.json" -type f -mtime +7 -delete || true
-        find data -name "2*_*_weather_forecast.json" -type f -mtime +7 -delete || true
-        find data -name "2*_*_sun_forecast.json" -type f -mtime +7 -delete || true
-        find data -name "2*_*_air_history.json" -type f -mtime +7 -delete || true
-        echo "Rotation complete"
-
     - name: Prepare docs folder with only current data
       run: |
         mkdir -p docs
