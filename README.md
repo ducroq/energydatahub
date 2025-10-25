@@ -8,8 +8,7 @@ A robust Python-based system for collecting, processing, and publishing energy p
 - **Robust Architecture**: BaseCollector pattern with retry logic and circuit breakers
 - **Data Validation**: Comprehensive timezone normalization and data type validation
 - **Secure Publishing**: AES-CBC encryption with HMAC-SHA256 for all published data
-- **Automated Workflows**: GitHub Actions for scheduled data collection (daily at 16:00 UTC)
-- **Cloud Archival**: Automatic backup to Google Drive with 7-day local rotation
+- **Automated Workflows**: GitHub Actions for scheduled data collection and publishing (daily at 16:00 UTC)
 - **High Test Coverage**: 49% code coverage with comprehensive unit and integration tests
 - **Production Ready**: Circuit breaker pattern prevents API overload, caching optimizes performance
 
@@ -36,9 +35,8 @@ A robust Python-based system for collecting, processing, and publishing energy p
 │  │  └── Encryption (AES-CBC + HMAC-SHA256)               │ │
 │  └────────────────────────────────────────────────────────┘ │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  Publishing & Archival                                │ │
-│  │  ├── GitHub Pages (Public Encrypted Data)             │ │
-│  │  └── Google Drive (Private Archival)                  │ │
+│  │  Publishing                                           │ │
+│  │  └── GitHub Pages (Public Encrypted Data)             │ │
 │  └────────────────────────────────────────────────────────┘ │
 └────────────────────┬───────────────────────────────────────┘
                      │
@@ -64,8 +62,8 @@ Encrypted data is automatically published to GitHub Pages daily:
 ### Data Update Schedule
 
 - **Collection Frequency**: Daily at 16:00 UTC (18:00 CEST / 17:00 CET)
-- **Data Retention**: Last 7 days stored locally, full history in Google Drive
 - **Encryption**: All data encrypted before publishing
+- **Publishing**: Current data endpoints updated on GitHub Pages
 
 ### Data Format
 
