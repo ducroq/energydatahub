@@ -34,6 +34,8 @@ jobs:
 
     - name: Run tests with coverage
       env:
+        ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+        HMAC_KEY: ${{ secrets.HMAC_KEY }}
         ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
         OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         METEO_API_KEY: ${{ secrets.METEO_API_KEY }}
