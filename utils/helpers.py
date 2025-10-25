@@ -24,123 +24,81 @@ def load_settings(script_dir: str, filename: str) -> ConfigParser:
 
 def load_secrets(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser:
     """
-    Load configuration from environment variables or secrets file.
-    
+    Load configuration from secrets file and environment variables.
+    Follows content-aggregator pattern: file first, then env vars override.
+    Never fails - returns empty config if no secrets available.
+
+    Priority:
+    1. Load from secrets.ini (local development)
+    2. Override with environment variables (CI/production)
+
     Args:
         script_dir (str): Directory containing the secrets file
         filename (str): Name of the secrets file (default: 'secrets.ini')
-        
+
     Returns:
-        ConfigParser: Configuration with either environment variables or file contents
-        
-    Raises:
-        RuntimeError: If neither environment variables nor secrets file are available
+        ConfigParser: Configuration with secrets from file and/or environment
     """
     config = ConfigParser()
-    
+
     # Initialize all required sections
     config.add_section('security_keys')
     config.add_section('api_keys')
     config.add_section('location')
-    
-    # Check for environment variables first
-    env_vars = {
-        # Security keys
-        'ENCRYPTION_KEY': os.getenv('ENCRYPTION_KEY'),
-        'HMAC_KEY': os.getenv('HMAC_KEY'),
-        # API keys
-        'ENTSOE_API_KEY': os.getenv('ENTSOE_API_KEY'),
-        'OPENWEATHER_API_KEY': os.getenv('OPENWEATHER_API_KEY'),
-        'METEO_API_KEY': os.getenv('METEO_API_KEY'),
-        'GOOGLE_API_KEY': os.getenv('GOOGLE_API_KEY')
-    }
-    
-    # If all required environment variables are present, use them
-    if all(env_vars.values()):
-        logging.info("Using configuration from environment variables")
-        
-        # Set security keys
-        config.set('security_keys', 'encryption', env_vars['ENCRYPTION_KEY'])
-        config.set('security_keys', 'hmac', env_vars['HMAC_KEY'])
-        
-        # Set API keys
-        config.set('api_keys', 'entsoe', env_vars['ENTSOE_API_KEY'])
-        config.set('api_keys', 'openweather', env_vars['OPENWEATHER_API_KEY'])
-        config.set('api_keys', 'meteo', env_vars['METEO_API_KEY'])
-        config.set('api_keys', 'google', env_vars['GOOGLE_API_KEY'])
-        
-        # Set location with defaults if not provided
-        config.set('location', 'latitude', os.getenv('LATITUDE', '51.9851'))  # Default to Arnhem
-        config.set('location', 'longitude', os.getenv('LONGITUDE', '5.8987'))
-        
-        return config
-    
-    # Fall back to secrets file if environment variables aren't available
+
+    # 1. Try to load from secrets.ini (local development)
     secrets_file = os.path.join(script_dir, filename)
     if os.path.exists(secrets_file):
-        logging.info(f"Using configuration from {filename}")
+        logging.info(f"Loading secrets from {filename}")
         config.read(secrets_file)
-        return config
-    
-    # If neither source is available, raise an error with clear message
-    raise RuntimeError(
-        "No configuration found. Either:\n"
-        "1. Set environment variables (ENCRYPTION_KEY, HMAC_KEY, ENTSOE_API_KEY, "
-        "OPENWEATHER_API_KEY, METEO_API_KEY, GOOGLE_API_KEY), or\n"
-        f"2. Create a {filename} file in {script_dir}"
-    )
+    else:
+        logging.info(f"No {filename} found, using environment variables only")
+
+    # 2. Override with environment variables (GitHub Actions, production)
+    # This allows CI to work without secrets.ini file
+    env_mappings = {
+        # Security keys
+        'ENCRYPTION_KEY': ('security_keys', 'encryption'),
+        'HMAC_KEY': ('security_keys', 'hmac'),
+        # API keys
+        'ENTSOE_API_KEY': ('api_keys', 'entsoe'),
+        'OPENWEATHER_API_KEY': ('api_keys', 'openweather'),
+        'METEO_API_KEY': ('api_keys', 'meteo'),
+        'GOOGLE_API_KEY': ('api_keys', 'google'),
+        # Location
+        'LATITUDE': ('location', 'latitude'),
+        'LONGITUDE': ('location', 'longitude'),
+    }
+
+    for env_var, (section, key) in env_mappings.items():
+        value = os.getenv(env_var)
+        if value:
+            config.set(section, key, value)
+            logging.debug(f"Overriding {section}.{key} from environment variable {env_var}")
+
+    # Set location defaults if not provided anywhere
+    if not config.has_option('location', 'latitude'):
+        config.set('location', 'latitude', '51.9851')  # Default to Arnhem
+    if not config.has_option('location', 'longitude'):
+        config.set('location', 'longitude', '5.8987')
+
+    return config
 
 def load_config(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser:
     """
-    Load configuration from environment variables or secrets file.
-    
+    Load configuration from secrets file and environment variables.
+    Alias for load_secrets() for backward compatibility.
+    Follows content-aggregator pattern: file first, then env vars override.
+
     Args:
         script_dir (str): Directory containing the secrets file
         filename (str): Name of the secrets file (default: 'secrets.ini')
-        
+
     Returns:
-        ConfigParser: Configuration with either environment variables or file contents
-        
-    Raises:
-        RuntimeError: If neither environment variables nor secrets file are available
+        ConfigParser: Configuration with secrets from file and/or environment
     """
-    config = ConfigParser()
-    
-    # Check for environment variables first
-    env_vars = {
-        'ENTSOE_API_KEY': os.getenv('ENTSOE_API_KEY'),
-        'OPENWEATHER_API_KEY': os.getenv('OPENWEATHER_API_KEY'),
-        'METEO_API_KEY': os.getenv('METEO_API_KEY')
-    }
-    
-    # If all required environment variables are present, use them
-    if all(env_vars.values()):
-        logging.info("Using configuration from environment variables")
-        config['api_keys'] = {
-            'entsoe': env_vars['ENTSOE_API_KEY'],
-            'openweather': env_vars['OPENWEATHER_API_KEY'],
-            'meteo': env_vars['METEO_API_KEY']
-        }
-        # Set default location if not provided in environment
-        config['location'] = {
-            'latitude': os.getenv('LATITUDE', '51.9851'),  # Default to Arnhem
-            'longitude': os.getenv('LONGITUDE', '5.8987')
-        }
-        return config
-    
-    # Fall back to secrets file if environment variables aren't available
-    secrets_file = os.path.join(script_dir, filename)
-    if os.path.exists(secrets_file):
-        logging.info(f"Using configuration from {filename}")
-        config.read(secrets_file)
-        return config
-    
-    # If neither source is available, raise an error with clear message
-    raise RuntimeError(
-        "No configuration found. Either:\n"
-        "1. Set environment variables (ENTSOE_API_KEY, OPENWEATHER_API_KEY, METEO_API_KEY), or\n"
-        f"2. Create a {filename} file in {script_dir}"
-    )
+    # Just delegate to load_secrets which now has the correct pattern
+    return load_secrets(script_dir, filename)
 
 def convert_value(value):
     if type(value) == int or type(value) == float:

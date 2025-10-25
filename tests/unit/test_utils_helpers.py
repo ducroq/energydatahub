@@ -105,7 +105,7 @@ class TestLoadSecrets:
             assert config.get('api_keys', 'openweather') == 'test_weather'
 
     def test_load_from_secrets_file(self, tmp_path):
-        """Test loading from secrets file."""
+        """Test loading from secrets file (without env var override)."""
         secrets_file = tmp_path / "secrets.ini"
         secrets_file.write_text(
             "[security_keys]\n"
@@ -115,16 +115,29 @@ class TestLoadSecrets:
             "entsoe = file_entsoe\n"
         )
 
-        config = load_secrets(str(tmp_path), 'secrets.ini')
+        # Clear environment variables so file values are used
+        env_vars_to_clear = {}  # Empty dict removes all keys when clear=True
 
-        assert config.get('security_keys', 'encryption') == 'file_enc_key'
-        assert config.get('api_keys', 'entsoe') == 'file_entsoe'
+        with patch.dict(os.environ, env_vars_to_clear, clear=True):
+            config = load_secrets(str(tmp_path), 'secrets.ini')
 
-    def test_missing_config_raises_error(self, tmp_path):
-        """Test error when no config available."""
-        with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(RuntimeError, match="No configuration found"):
-                load_secrets(str(tmp_path), 'nonexistent.ini')
+            assert config.get('security_keys', 'encryption') == 'file_enc_key'
+            assert config.get('api_keys', 'entsoe') == 'file_entsoe'
+
+    def test_missing_config_returns_empty(self, tmp_path):
+        """Test that missing config returns empty sections (graceful fallback)."""
+        # Clear all environment variables
+        env_vars_to_clear = {}  # Empty dict removes all keys when clear=True
+
+        with patch.dict(os.environ, env_vars_to_clear, clear=True):
+            config = load_secrets(str(tmp_path), 'nonexistent.ini')
+
+            # Should have sections but no values
+            assert config.has_section('security_keys')
+            assert config.has_section('api_keys')
+            assert config.has_section('location')
+            # Location should have defaults
+            assert config.get('location', 'latitude') == '51.9851'
 
 
 class TestLoadConfig:
@@ -145,7 +158,7 @@ class TestLoadConfig:
             assert config['api_keys']['openweather'] == 'test_weather'
 
     def test_load_from_config_file(self, tmp_path):
-        """Test loading from config file."""
+        """Test loading from config file (without env var override)."""
         config_file = tmp_path / "secrets.ini"
         config_file.write_text(
             "[api_keys]\n"
@@ -154,9 +167,13 @@ class TestLoadConfig:
             "meteo = file_meteo\n"
         )
 
-        config = load_config(str(tmp_path), 'secrets.ini')
+        # Clear environment variables so file values are used
+        env_vars_to_clear = {}  # Empty dict removes all keys when clear=True
 
-        assert config.get('api_keys', 'entsoe') == 'file_entsoe'
+        with patch.dict(os.environ, env_vars_to_clear, clear=True):
+            config = load_config(str(tmp_path), 'secrets.ini')
+
+            assert config.get('api_keys', 'entsoe') == 'file_entsoe'
 
 
 class TestConvertValue:
