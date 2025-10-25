@@ -67,6 +67,32 @@ class RetryConfig:
 
 
 @dataclass
+class CircuitBreakerConfig:
+    """Configuration for circuit breaker pattern."""
+    failure_threshold: int = 5  # Number of consecutive failures before opening
+    success_threshold: int = 2  # Number of consecutive successes to close circuit
+    timeout: float = 60.0  # Seconds to wait before attempting again (half-open state)
+    enabled: bool = True  # Enable/disable circuit breaker
+
+
+class CircuitState(Enum):
+    """Circuit breaker states."""
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failures detected, blocking requests
+    HALF_OPEN = "half_open"  # Testing if service recovered
+
+
+@dataclass
+class CircuitBreakerState:
+    """Runtime state of circuit breaker."""
+    state: CircuitState = CircuitState.CLOSED
+    failure_count: int = 0
+    success_count: int = 0
+    last_failure_time: Optional[datetime] = None
+    last_state_change: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
 class CollectionMetrics:
     """Metrics from a data collection attempt."""
     collection_id: str
@@ -87,6 +113,7 @@ class BaseCollector(ABC):
 
     Provides common functionality:
     - Retry logic with exponential backoff
+    - Circuit breaker pattern (prevents cascading failures)
     - Structured logging
     - Error handling
     - Data validation
@@ -100,6 +127,7 @@ class BaseCollector(ABC):
         source: str,
         units: str,
         retry_config: Optional[RetryConfig] = None,
+        circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
         logger: Optional[logging.Logger] = None
     ):
         """
@@ -111,6 +139,7 @@ class BaseCollector(ABC):
             source: Data source name (e.g., "Nord Pool API")
             units: Data units (e.g., "EUR/MWh")
             retry_config: Retry configuration
+            circuit_breaker_config: Circuit breaker configuration
             logger: Logger instance (creates new if None)
         """
         self.name = name
@@ -118,10 +147,14 @@ class BaseCollector(ABC):
         self.source = source
         self.units = units
         self.retry_config = retry_config or RetryConfig()
+        self.circuit_breaker_config = circuit_breaker_config or CircuitBreakerConfig()
         self.logger = logger or logging.getLogger(f"collectors.{name}")
 
         # Metrics tracking
         self._metrics_history: List[CollectionMetrics] = []
+
+        # Circuit breaker state
+        self._circuit_breaker = CircuitBreakerState()
 
     @abstractmethod
     async def _fetch_raw_data(
@@ -330,6 +363,104 @@ class BaseCollector(ABC):
         )
         raise last_exception
 
+    def _check_circuit_breaker(self) -> bool:
+        """
+        Check if circuit breaker allows requests.
+
+        Returns:
+            True if request should proceed, False if blocked
+        """
+        if not self.circuit_breaker_config.enabled:
+            return True
+
+        now = datetime.now()
+        state = self._circuit_breaker.state
+
+        if state == CircuitState.CLOSED:
+            # Normal operation
+            return True
+
+        elif state == CircuitState.OPEN:
+            # Check if timeout has elapsed to move to HALF_OPEN
+            if self._circuit_breaker.last_failure_time:
+                time_since_failure = (now - self._circuit_breaker.last_failure_time).total_seconds()
+
+                if time_since_failure >= self.circuit_breaker_config.timeout:
+                    # Transition to HALF_OPEN to test recovery
+                    self._circuit_breaker.state = CircuitState.HALF_OPEN
+                    self._circuit_breaker.last_state_change = now
+                    self.logger.info(
+                        f"Circuit breaker entering HALF_OPEN state (testing recovery)"
+                    )
+                    return True
+
+            # Circuit still open, block request
+            self.logger.warning(
+                f"Circuit breaker OPEN - blocking request "
+                f"(failed {self._circuit_breaker.failure_count} times)"
+            )
+            return False
+
+        elif state == CircuitState.HALF_OPEN:
+            # Allow limited requests to test recovery
+            return True
+
+        return False
+
+    def _record_success(self):
+        """Record successful collection for circuit breaker."""
+        if not self.circuit_breaker_config.enabled:
+            return
+
+        state = self._circuit_breaker.state
+
+        if state == CircuitState.CLOSED:
+            # Reset failure count on success
+            self._circuit_breaker.failure_count = 0
+
+        elif state == CircuitState.HALF_OPEN:
+            # Increment success count
+            self._circuit_breaker.success_count += 1
+
+            if self._circuit_breaker.success_count >= self.circuit_breaker_config.success_threshold:
+                # Recovered - close circuit
+                self._circuit_breaker.state = CircuitState.CLOSED
+                self._circuit_breaker.failure_count = 0
+                self._circuit_breaker.success_count = 0
+                self._circuit_breaker.last_state_change = datetime.now()
+                self.logger.info("Circuit breaker CLOSED - service recovered")
+
+    def _record_failure(self):
+        """Record failed collection for circuit breaker."""
+        if not self.circuit_breaker_config.enabled:
+            return
+
+        state = self._circuit_breaker.state
+
+        if state == CircuitState.CLOSED:
+            # Increment failure count
+            self._circuit_breaker.failure_count += 1
+
+            if self._circuit_breaker.failure_count >= self.circuit_breaker_config.failure_threshold:
+                # Open circuit
+                self._circuit_breaker.state = CircuitState.OPEN
+                self._circuit_breaker.last_failure_time = datetime.now()
+                self._circuit_breaker.last_state_change = datetime.now()
+                self.logger.warning(
+                    f"Circuit breaker OPEN - {self._circuit_breaker.failure_count} consecutive failures"
+                )
+
+        elif state == CircuitState.HALF_OPEN:
+            # Failure during recovery - reopen circuit
+            self._circuit_breaker.state = CircuitState.OPEN
+            self._circuit_breaker.failure_count += 1
+            self._circuit_breaker.success_count = 0
+            self._circuit_breaker.last_failure_time = datetime.now()
+            self._circuit_breaker.last_state_change = datetime.now()
+            self.logger.warning("Circuit breaker reopened - recovery failed")
+
+        self._circuit_breaker.last_failure_time = datetime.now()
+
     async def collect(
         self,
         start_time: datetime,
@@ -340,11 +471,12 @@ class BaseCollector(ABC):
         Main collection workflow with retry, validation, and error handling.
 
         This is the primary method to call. It orchestrates:
-        1. Data fetching (with retry)
-        2. Response parsing
-        3. Timestamp normalization
-        4. Data validation
-        5. Metrics collection
+        1. Circuit breaker check
+        2. Data fetching (with retry)
+        3. Response parsing
+        4. Timestamp normalization
+        5. Data validation
+        6. Metrics collection
 
         Args:
             start_time: Start of time range
@@ -356,6 +488,13 @@ class BaseCollector(ABC):
         """
         collection_id = str(uuid.uuid4())[:8]
         start_timestamp = time.time()
+
+        # Check circuit breaker
+        if not self._check_circuit_breaker():
+            self.logger.warning(
+                f"[{collection_id}] Collection skipped - circuit breaker OPEN"
+            )
+            return None
 
         self.logger.info(
             f"[{collection_id}] Starting collection: {start_time} to {end_time}"
@@ -418,6 +557,9 @@ class BaseCollector(ABC):
                 f"(status: {metrics.status.value})"
             )
 
+            # Record success for circuit breaker
+            self._record_success()
+
             self._metrics_history.append(metrics)
             return dataset
 
@@ -431,6 +573,9 @@ class BaseCollector(ABC):
                 f"[{collection_id}] Collection failed after "
                 f"{metrics.duration_seconds:.2f}s: {e}"
             )
+
+            # Record failure for circuit breaker
+            self._record_failure()
 
             self._metrics_history.append(metrics)
             return None

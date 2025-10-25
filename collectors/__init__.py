@@ -11,7 +11,13 @@ All collectors inherit from BaseCollector and provide:
 - Performance metrics tracking
 """
 
-from collectors.base import BaseCollector, RetryConfig
+from collectors.base import (
+    BaseCollector,
+    RetryConfig,
+    CircuitBreakerConfig,
+    CircuitState,
+    CollectorStatus
+)
 from collectors.elspot import ElspotCollector
 from collectors.entsoe import EntsoeCollector
 from collectors.energyzero import EnergyZeroCollector
@@ -24,6 +30,9 @@ __all__ = [
     # Base classes
     'BaseCollector',
     'RetryConfig',
+    'CircuitBreakerConfig',
+    'CircuitState',
+    'CollectorStatus',
 
     # Energy price collectors
     'ElspotCollector',           # Nord Pool Elspot
