@@ -1,104 +1,114 @@
-2025-10-25 19:57:02,946 DEBUG Using selector: EpollSelector
-2025-10-25 19:57:02,946 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2025-10-25 19:57:04,135 INFO No secrets.ini found, using environment variables only
-2025-10-25 19:57:04,136 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
-2025-10-25 19:57:04,136 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
-2025-10-25 19:57:04,136 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
-2025-10-25 19:57:04,136 DEBUG Overriding api_keys.openweather from environment variable OPENWEATHER_API_KEY
-2025-10-25 19:57:04,136 DEBUG Overriding api_keys.meteo from environment variable METEO_API_KEY
-2025-10-25 19:57:04,136 DEBUG Overriding api_keys.google from environment variable GOOGLE_API_KEY
-2025-10-25 19:57:04,136 INFO [c08258d4] Starting collection: 2025-10-25 21:57:04.136517+02:00 to 2025-10-26 20:57:04.136517+01:00
-2025-10-25 19:57:04,136 DEBUG [c08258d4] Fetching raw data...
-2025-10-25 19:57:04,137 DEBUG Attempt 1/3
-2025-10-25 19:57:04,137 DEBUG Fetching ENTSO-E data for NL
-2025-10-25 19:57:04,137 DEBUG Querying ENTSO-E API: 2025-10-25 19:57:04.136517+00:00 to 2025-10-26 19:57:04.136517+00:00 (UTC)
-2025-10-25 19:57:04,147 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202510242000', 'periodEnd': '202510272000'}
-2025-10-25 19:57:04,149 INFO [85af38a6] Starting collection: 2025-10-25 21:57:04.136517+02:00 to 2025-10-26 20:57:04.136517+01:00
-2025-10-25 19:57:04,149 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-10-25 19:57:04,149 DEBUG [85af38a6] Fetching raw data...
-2025-10-25 19:57:04,150 DEBUG Attempt 1/3
-2025-10-25 19:57:04,150 DEBUG Fetching EnergyZero data
-2025-10-25 19:57:04,150 WARNING Attempt 1 failed: TypeError: EnergyZero.__init__() got an unexpected keyword argument 'vat'
-2025-10-25 19:57:04,150 INFO Retrying in 0.76 seconds...
-2025-10-25 19:57:04,150 INFO [fcea7281] Starting collection: 2025-10-25 21:57:04.136517+02:00 to 2025-10-26 20:57:04.136517+01:00
-2025-10-25 19:57:04,150 DEBUG [fcea7281] Fetching raw data...
-2025-10-25 19:57:04,150 DEBUG Attempt 1/3
-2025-10-25 19:57:04,150 DEBUG Fetching EPEX data from Awattar API
-2025-10-25 19:57:04,151 INFO [e7570bc8] Starting collection: 2025-10-25 21:57:04.136517+02:00 to 2025-10-26 20:57:04.136517+01:00
-2025-10-25 19:57:04,151 DEBUG Attempt 1/3
-2025-10-25 19:57:04,152 DEBUG Fetching OpenWeather data for lat=51.966472, lon=5.94009
-2025-10-25 19:57:04,152 INFO [eedf51dc] Starting collection: 2025-10-25 21:57:04.136517+02:00 to 2025-10-26 20:57:04.136517+01:00
-2025-10-25 19:57:04,152 DEBUG [eedf51dc] Fetching raw data...
-2025-10-25 19:57:04,153 DEBUG Attempt 1/10
-2025-10-25 19:57:04,153 DEBUG Fetching MeteoServer weather for lat=51.966472, lon=5.94009
-2025-10-25 19:57:04,153 INFO [cab2b126] Starting collection: 2025-10-25 21:57:04.136517+02:00 to 2025-10-26 20:57:04.136517+01:00
-2025-10-25 19:57:04,153 DEBUG [cab2b126] Fetching raw data...
-2025-10-25 19:57:04,153 DEBUG Attempt 1/10
-2025-10-25 19:57:04,154 DEBUG Fetching MeteoServer sun forecast for lat=51.966472, lon=5.94009
-2025-10-25 19:57:04,154 INFO [e960d2d1] Starting collection: 2025-10-25 21:57:04.136517+02:00 to 2025-10-26 20:57:04.136517+01:00
-2025-10-25 19:57:04,154 DEBUG [e960d2d1] Fetching raw data...
-2025-10-25 19:57:04,154 DEBUG Attempt 1/3
-2025-10-25 19:57:04,154 DEBUG Fetching Elspot data for NL
-2025-10-25 19:57:04,155 INFO [f19a8e94] Starting collection: 2025-10-24 21:57:04.136517+02:00 to 2025-10-25 21:57:04.136517+02:00
-2025-10-25 19:57:04,156 DEBUG [f19a8e94] Fetching raw data...
-2025-10-25 19:57:04,156 DEBUG Attempt 1/3
-2025-10-25 19:57:04,156 DEBUG Fetching Luchtmeetnet data for lat=51.966472, lon=5.94009
-2025-10-25 19:57:04,156 INFO Station cache miss or expired, fetching fresh data
-2025-10-25 19:57:04,156 DEBUG Fetching station list
-2025-10-25 19:57:04,156 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
-2025-10-25 19:57:04,313 DEBUG Parsed 8 data points from OpenWeather response
-2025-10-25 19:57:04,314 INFO [e7570bc8] Collection complete: 8 data points in 0.16s (status: success)
-2025-10-25 19:57:04,481 DEBUG [fcea7281] Parsing response...
-2025-10-25 19:57:04,481 DEBUG Parsed 23 data points from Awattar response
-2025-10-25 19:57:04,481 DEBUG [fcea7281] Normalizing timestamps...
-2025-10-25 19:57:04,481 DEBUG [fcea7281] Validating data...
-2025-10-25 19:57:04,482 INFO [fcea7281] Collection complete: 23 data points in 0.33s (status: success)
-2025-10-25 19:57:04,500 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-10-26&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
-2025-10-25 19:57:04,507 DEBUG [e960d2d1] Parsing response...
-2025-10-25 19:57:04,508 DEBUG Parsed 22 data points from Elspot response
-2025-10-25 19:57:04,508 DEBUG [e960d2d1] Normalizing timestamps...
-2025-10-25 19:57:04,508 DEBUG [e960d2d1] Validating data...
-2025-10-25 19:57:04,508 INFO [e960d2d1] Collection complete: 22 data points in 0.35s (status: success)
-2025-10-25 19:57:04,684 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202510242000&periodEnd=202510272000 HTTP/1.1" 200 None
-2025-10-25 19:57:04,859 DEBUG [eedf51dc] Parsing response...
-2025-10-25 19:57:04,859 DEBUG Parsed 24 data points from MeteoServer weather response
-2025-10-25 19:57:04,859 DEBUG [eedf51dc] Normalizing timestamps...
-2025-10-25 19:57:04,859 DEBUG [eedf51dc] Validating data...
-2025-10-25 19:57:04,861 INFO [eedf51dc] Collection complete: 24 data points in 0.71s (status: success)
-2025-10-25 19:57:04,906 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202510242000', 'periodEnd': '202510272000'}
-2025-10-25 19:57:04,907 DEBUG Attempt 2/3
-2025-10-25 19:57:04,908 DEBUG Fetching EnergyZero data
-2025-10-25 19:57:04,908 WARNING Attempt 2 failed: TypeError: EnergyZero.__init__() got an unexpected keyword argument 'vat'
-2025-10-25 19:57:04,908 INFO Retrying in 1.46 seconds...
-2025-10-25 19:57:05,058 DEBUG [cab2b126] Parsing response...
-2025-10-25 19:57:05,059 DEBUG Parsed 24 data points from MeteoServer sun response
-2025-10-25 19:57:05,059 DEBUG [cab2b126] Normalizing timestamps...
-2025-10-25 19:57:05,059 DEBUG [cab2b126] Validating data...
-2025-10-25 19:57:05,060 INFO [cab2b126] Collection complete: 24 data points in 0.91s (status: success)
-2025-10-25 19:57:05,112 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202510242000&periodEnd=202510272000 HTTP/1.1" 200 933
-2025-10-25 19:57:05,118 DEBUG Encoding detection: utf_8 is most likely the one.
-2025-10-25 19:57:05,118 DEBUG NoMatchingDataError: for offset 100
-2025-10-25 19:57:05,120 DEBUG [c08258d4] Parsing response...
-2025-10-25 19:57:05,121 DEBUG Parsed 96 data points from ENTSO-E response
-2025-10-25 19:57:05,121 DEBUG [c08258d4] Normalizing timestamps...
-2025-10-25 19:57:05,122 DEBUG [c08258d4] Validating data...
-2025-10-25 19:57:05,122 INFO [c08258d4] Collection complete: 96 data points in 0.99s (status: success)
-2025-10-25 19:57:06,373 DEBUG Attempt 3/3
-2025-10-25 19:57:06,373 DEBUG Fetching EnergyZero data
-2025-10-25 19:57:06,373 WARNING Attempt 3 failed: TypeError: EnergyZero.__init__() got an unexpected keyword argument 'vat'
-2025-10-25 19:57:06,374 ERROR All 3 attempts failed. Last error: TypeError: EnergyZero.__init__() got an unexpected keyword argument 'vat'
-2025-10-25 19:57:06,374 ERROR [85af38a6] Collection failed after 2.23s: EnergyZero.__init__() got an unexpected keyword argument 'vat'
-2025-10-25 19:57:06,438 DEBUG Found 101 stations, fetching details...
-2025-10-25 19:57:40,290 INFO Cached 101 stations
-2025-10-25 19:57:40,290 INFO Using station NL54004 (Arnhem Velperbroek)
-2025-10-25 19:57:40,290 DEBUG Fetching AQI for station NL54004
-2025-10-25 19:57:41,199 DEBUG Fetching measurements for station NL54004
-2025-10-25 19:57:41,631 DEBUG [f19a8e94] Parsing response...
-2025-10-25 19:57:41,634 DEBUG Parsed 23 data points from Luchtmeetnet response
-2025-10-25 19:57:41,634 DEBUG [f19a8e94] Normalizing timestamps...
-2025-10-25 19:57:41,634 DEBUG [f19a8e94] Validating data...
-2025-10-25 19:57:41,634 INFO [f19a8e94] Collection complete: 23 data points in 37.48s (status: success)
-2025-10-25 19:57:41,635 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-10-25 19:57:41,642 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-10-25 19:57:41,643 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-10-25 19:57:41,644 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-10-26 06:11:41,547 DEBUG Using selector: EpollSelector
+2025-10-26 06:11:41,548 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2025-10-26 06:11:42,747 INFO No secrets.ini found, using environment variables only
+2025-10-26 06:11:42,748 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
+2025-10-26 06:11:42,748 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
+2025-10-26 06:11:42,748 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
+2025-10-26 06:11:42,748 DEBUG Overriding api_keys.openweather from environment variable OPENWEATHER_API_KEY
+2025-10-26 06:11:42,748 DEBUG Overriding api_keys.meteo from environment variable METEO_API_KEY
+2025-10-26 06:11:42,748 DEBUG Overriding api_keys.google from environment variable GOOGLE_API_KEY
+2025-10-26 06:11:42,748 INFO [3b93f65d] Starting collection: 2025-10-26 07:11:42.748556+01:00 to 2025-10-27 07:11:42.748556+01:00
+2025-10-26 06:11:42,749 DEBUG [3b93f65d] Fetching raw data...
+2025-10-26 06:11:42,749 DEBUG Attempt 1/3
+2025-10-26 06:11:42,749 DEBUG Fetching ENTSO-E data for NL
+2025-10-26 06:11:42,749 DEBUG Querying ENTSO-E API: 2025-10-26 06:11:42.748556+00:00 to 2025-10-27 06:11:42.748556+00:00 (UTC)
+2025-10-26 06:11:42,795 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202510250600', 'periodEnd': '202510280600'}
+2025-10-26 06:11:42,796 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-10-26 06:11:42,797 INFO [81eb6b10] Starting collection: 2025-10-26 07:11:42.748556+01:00 to 2025-10-27 07:11:42.748556+01:00
+2025-10-26 06:11:42,797 DEBUG [81eb6b10] Fetching raw data...
+2025-10-26 06:11:42,797 DEBUG Attempt 1/3
+2025-10-26 06:11:42,797 DEBUG Fetching EnergyZero data
+2025-10-26 06:11:42,797 WARNING Attempt 1 failed: AttributeError: 'EnergyZero' object has no attribute 'energy_prices'
+2025-10-26 06:11:42,797 INFO Retrying in 0.77 seconds...
+2025-10-26 06:11:42,797 INFO [ccaf942b] Starting collection: 2025-10-26 07:11:42.748556+01:00 to 2025-10-27 07:11:42.748556+01:00
+2025-10-26 06:11:42,797 DEBUG [ccaf942b] Fetching raw data...
+2025-10-26 06:11:42,797 DEBUG Attempt 1/3
+2025-10-26 06:11:42,797 DEBUG Fetching EPEX data from Awattar API
+2025-10-26 06:11:42,798 INFO [d9c61e74] Starting collection: 2025-10-26 07:11:42.748556+01:00 to 2025-10-27 07:11:42.748556+01:00
+2025-10-26 06:11:42,798 DEBUG Attempt 1/3
+2025-10-26 06:11:42,798 DEBUG Fetching OpenWeather data for lat=51.966472, lon=5.94009
+2025-10-26 06:11:42,800 INFO [4cf342cd] Starting collection: 2025-10-26 07:11:42.748556+01:00 to 2025-10-27 07:11:42.748556+01:00
+2025-10-26 06:11:42,800 DEBUG [4cf342cd] Fetching raw data...
+2025-10-26 06:11:42,800 DEBUG Attempt 1/10
+2025-10-26 06:11:42,800 DEBUG Fetching MeteoServer weather for lat=51.966472, lon=5.94009
+2025-10-26 06:11:42,801 INFO [22448286] Starting collection: 2025-10-26 07:11:42.748556+01:00 to 2025-10-27 07:11:42.748556+01:00
+2025-10-26 06:11:42,801 DEBUG [22448286] Fetching raw data...
+2025-10-26 06:11:42,801 DEBUG Attempt 1/10
+2025-10-26 06:11:42,801 DEBUG Fetching MeteoServer sun forecast for lat=51.966472, lon=5.94009
+2025-10-26 06:11:42,802 INFO [f1ce0ae2] Starting collection: 2025-10-26 07:11:42.748556+01:00 to 2025-10-27 07:11:42.748556+01:00
+2025-10-26 06:11:42,802 DEBUG [f1ce0ae2] Fetching raw data...
+2025-10-26 06:11:42,802 DEBUG Attempt 1/3
+2025-10-26 06:11:42,802 DEBUG Fetching Elspot data for NL
+2025-10-26 06:11:42,803 INFO [d5c74354] Starting collection: 2025-10-25 08:11:42.748556+02:00 to 2025-10-26 07:11:42.748556+01:00
+2025-10-26 06:11:42,804 DEBUG [d5c74354] Fetching raw data...
+2025-10-26 06:11:42,804 DEBUG Attempt 1/3
+2025-10-26 06:11:42,804 DEBUG Fetching Luchtmeetnet data for lat=51.966472, lon=5.94009
+2025-10-26 06:11:42,804 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-10-26 06:11:42,804 INFO Station cache miss or expired, fetching fresh data
+2025-10-26 06:11:42,804 DEBUG Fetching station list
+2025-10-26 06:11:42,916 DEBUG Parsed 8 data points from OpenWeather response
+2025-10-26 06:11:42,917 INFO [d9c61e74] Collection complete: 8 data points in 0.12s (status: success)
+2025-10-26 06:11:43,104 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-10-27&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
+2025-10-26 06:11:43,106 WARNING Attempt 1 failed: ValueError: No data returned from Nord Pool API
+2025-10-26 06:11:43,106 INFO Retrying in 0.85 seconds...
+2025-10-26 06:11:43,206 DEBUG [ccaf942b] Parsing response...
+2025-10-26 06:11:43,206 DEBUG Parsed 16 data points from Awattar response
+2025-10-26 06:11:43,206 DEBUG [ccaf942b] Normalizing timestamps...
+2025-10-26 06:11:43,206 DEBUG [ccaf942b] Validating data...
+2025-10-26 06:11:43,206 INFO [ccaf942b] Collection complete: 16 data points in 0.41s (status: success)
+2025-10-26 06:11:43,474 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202510250600&periodEnd=202510280600 HTTP/1.1" 200 None
+2025-10-26 06:11:43,552 DEBUG [4cf342cd] Parsing response...
+2025-10-26 06:11:43,553 DEBUG Parsed 24 data points from MeteoServer weather response
+2025-10-26 06:11:43,553 DEBUG [4cf342cd] Normalizing timestamps...
+2025-10-26 06:11:43,553 DEBUG [4cf342cd] Validating data...
+2025-10-26 06:11:43,554 INFO [4cf342cd] Collection complete: 24 data points in 0.75s (status: success)
+2025-10-26 06:11:43,573 DEBUG Attempt 2/3
+2025-10-26 06:11:43,573 DEBUG Fetching EnergyZero data
+2025-10-26 06:11:43,573 WARNING Attempt 2 failed: AttributeError: 'EnergyZero' object has no attribute 'energy_prices'
+2025-10-26 06:11:43,574 INFO Retrying in 1.85 seconds...
+2025-10-26 06:11:43,665 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202510250600', 'periodEnd': '202510280600'}
+2025-10-26 06:11:43,932 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202510250600&periodEnd=202510280600 HTTP/1.1" 200 933
+2025-10-26 06:11:43,938 DEBUG Encoding detection: utf_8 is most likely the one.
+2025-10-26 06:11:43,938 DEBUG NoMatchingDataError: for offset 100
+2025-10-26 06:11:43,940 DEBUG [3b93f65d] Parsing response...
+2025-10-26 06:11:43,941 DEBUG Parsed 67 data points from ENTSO-E response
+2025-10-26 06:11:43,941 DEBUG [3b93f65d] Normalizing timestamps...
+2025-10-26 06:11:43,941 DEBUG [3b93f65d] Validating data...
+2025-10-26 06:11:43,942 INFO [3b93f65d] Collection complete: 67 data points in 1.19s (status: success)
+2025-10-26 06:11:43,957 DEBUG Attempt 2/3
+2025-10-26 06:11:43,957 DEBUG Fetching Elspot data for NL
+2025-10-26 06:11:43,958 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-10-26 06:11:44,035 DEBUG [22448286] Parsing response...
+2025-10-26 06:11:44,036 DEBUG Parsed 24 data points from MeteoServer sun response
+2025-10-26 06:11:44,036 DEBUG [22448286] Normalizing timestamps...
+2025-10-26 06:11:44,036 DEBUG [22448286] Validating data...
+2025-10-26 06:11:44,036 INFO [22448286] Collection complete: 24 data points in 1.24s (status: success)
+2025-10-26 06:11:44,179 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-10-27&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
+2025-10-26 06:11:44,181 WARNING Attempt 2 failed: ValueError: No data returned from Nord Pool API
+2025-10-26 06:11:44,181 INFO Retrying in 1.58 seconds...
+2025-10-26 06:11:45,423 DEBUG Attempt 3/3
+2025-10-26 06:11:45,423 DEBUG Fetching EnergyZero data
+2025-10-26 06:11:45,423 WARNING Attempt 3 failed: AttributeError: 'EnergyZero' object has no attribute 'energy_prices'
+2025-10-26 06:11:45,423 ERROR All 3 attempts failed. Last error: AttributeError: 'EnergyZero' object has no attribute 'energy_prices'
+2025-10-26 06:11:45,423 ERROR [81eb6b10] Collection failed after 2.63s: 'EnergyZero' object has no attribute 'energy_prices'
+2025-10-26 06:11:45,762 DEBUG Attempt 3/3
+2025-10-26 06:11:45,763 DEBUG Fetching Elspot data for NL
+2025-10-26 06:11:45,763 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-10-26 06:11:45,942 DEBUG Found 101 stations, fetching details...
+2025-10-26 06:11:45,984 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-10-27&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
+2025-10-26 06:11:45,986 WARNING Attempt 3 failed: ValueError: No data returned from Nord Pool API
+2025-10-26 06:11:45,986 ERROR All 3 attempts failed. Last error: ValueError: No data returned from Nord Pool API
+2025-10-26 06:11:45,986 ERROR [f1ce0ae2] Collection failed after 3.18s: No data returned from Nord Pool API
+2025-10-26 06:12:47,518 INFO Cached 101 stations
+2025-10-26 06:12:47,519 INFO Using station NL54004 (Arnhem Velperbroek)
+2025-10-26 06:12:47,519 DEBUG Fetching AQI for station NL54004
+2025-10-26 06:12:49,036 DEBUG Fetching measurements for station NL54004
+2025-10-26 06:12:50,772 DEBUG [d5c74354] Parsing response...
+2025-10-26 06:12:50,775 DEBUG Parsed 23 data points from Luchtmeetnet response
+2025-10-26 06:12:50,776 DEBUG [d5c74354] Normalizing timestamps...
+2025-10-26 06:12:50,776 DEBUG [d5c74354] Validating data...
+2025-10-26 06:12:50,776 INFO [d5c74354] Collection complete: 23 data points in 67.97s (status: success)
+2025-10-26 06:12:50,776 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-10-26 06:12:50,783 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-10-26 06:12:50,784 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-10-26 06:12:50,785 INFO Timestamp validation passed - all timestamps correctly formatted
