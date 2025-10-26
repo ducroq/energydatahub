@@ -68,6 +68,11 @@ jobs:
         github_token: ${{ secrets.PAT }}
         publish_dir: ./docs
 
+    - name: Trigger dashboard rebuild
+      run: |
+        curl -X POST -d {} ${{ secrets.NETLIFY_BUILD_HOOK }}
+      continue-on-error: true
+
     # - name: Verify deployment
     #   run: |
     #     echo "Current directory:"
