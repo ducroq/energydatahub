@@ -32,7 +32,7 @@ import pandas as pd
 from entsoe import EntsoePandasClient
 from functools import partial
 
-from collectors.base import BaseCollector, RetryConfig
+from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 
@@ -43,20 +43,22 @@ class EntsoeCollector(BaseCollector):
     Fetches prices from European electricity markets.
     """
 
-    def __init__(self, api_key: str, retry_config: RetryConfig = None):
+    def __init__(self, api_key: str, retry_config: RetryConfig = None, circuit_breaker_config: CircuitBreakerConfig = None):
         """
         Initialize ENTSO-E collector.
 
         Args:
             api_key: ENTSO-E API key
             retry_config: Optional retry configuration
+            circuit_breaker_config: Optional circuit breaker configuration
         """
         super().__init__(
             name="EntsoeCollector",
             data_type="energy_price",
             source="ENTSO-E Transparency Platform API v1.3",
             units="EUR/MWh",
-            retry_config=retry_config
+            retry_config=retry_config,
+            circuit_breaker_config=circuit_breaker_config
         )
         self.api_key = api_key
 

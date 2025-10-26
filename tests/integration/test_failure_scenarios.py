@@ -212,7 +212,7 @@ async def test_circuit_recovery():
 
     # Start failing, then start succeeding
     collector = FailingCollector(
-        fail_count=3,  # Fail first 3, then succeed
+        fail_count=2,  # Fail first 2, then succeed
         retry_config=RetryConfig(max_attempts=1, initial_delay=0.1),
         circuit_breaker_config=CircuitBreakerConfig(
             failure_threshold=2,
@@ -232,19 +232,24 @@ async def test_circuit_recovery():
         await collector.collect(start, end)
 
     print(f"  Circuit state: {collector._circuit_breaker.state.value}")
+    print(f"  Attempts so far: {collector.attempts}")
     assert collector._circuit_breaker.state == CircuitState.OPEN
 
     # Wait for timeout
     print(f"\nWaiting {collector.circuit_breaker_config.timeout}s for timeout...")
     await asyncio.sleep(collector.circuit_breaker_config.timeout + 0.2)
 
-    # Should enter HALF_OPEN
+    # Should enter HALF_OPEN and succeed
     print("Testing recovery...")
-    result = await collector.collect(start, end)  # Attempt 4 (succeeds)
+    result = await collector.collect(start, end)  # Attempt 3 (succeeds, enters HALF_OPEN)
     print(f"  After 1st success: {collector._circuit_breaker.state.value}")
+    print(f"  Success count: {collector._circuit_breaker.success_count}")
+    assert result is not None, "First recovery attempt should succeed"
+    assert collector._circuit_breaker.state == CircuitState.HALF_OPEN
 
-    result = await collector.collect(start, end)  # Attempt 5 (succeeds)
+    result = await collector.collect(start, end)  # Attempt 4 (succeeds, closes circuit)
     print(f"  After 2nd success: {collector._circuit_breaker.state.value}")
+    assert result is not None, "Second recovery attempt should succeed"
 
     assert collector._circuit_breaker.state == CircuitState.CLOSED
     print("\n[PASS] Circuit recovered after timeout and success threshold")

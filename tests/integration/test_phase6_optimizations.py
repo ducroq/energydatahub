@@ -61,9 +61,13 @@ async def test_circuit_breaker_real_api():
     print(f"Circuit breaker: threshold={collector.circuit_breaker_config.failure_threshold}")
 
     # Attempt multiple collections
+    blocked_count = 0
     for i in range(6):
-        print(f"\n[Attempt {i+1}] State: {collector._circuit_breaker.state.value}")
+        print(f"\n[Attempt {i+1}] State before: {collector._circuit_breaker.state.value}")
         print(f"  Failure count: {collector._circuit_breaker.failure_count}")
+
+        # Check if circuit is open BEFORE the attempt
+        circuit_was_open = collector._circuit_breaker.state == CircuitState.OPEN
 
         start_time = time.time()
         result = await collector.collect(start, end, country_code='NL')
@@ -72,9 +76,11 @@ async def test_circuit_breaker_real_api():
         if result:
             print(f"  SUCCESS: {len(result.data)} data points in {duration:.2f}s")
         else:
-            if collector._circuit_breaker.state == CircuitState.OPEN:
-                print(f"  BLOCKED by circuit breaker (instant)")
-                assert duration < 0.1, "Blocked request should be instant"
+            # If circuit was open before attempt, this should have been blocked instantly
+            if circuit_was_open:
+                print(f"  BLOCKED by circuit breaker in {duration:.4f}s")
+                assert duration < 0.1, f"Blocked request should be instant, got {duration:.4f}s"
+                blocked_count += 1
             else:
                 print(f"  FAILED in {duration:.2f}s")
 
@@ -84,10 +90,12 @@ async def test_circuit_breaker_real_api():
 
     print(f"\nFinal circuit state: {collector._circuit_breaker.state.value}")
     print(f"Total failures: {collector._circuit_breaker.failure_count}")
+    print(f"Total blocked requests: {blocked_count}")
 
     # Circuit should be OPEN after 3 failures
-    assert collector._circuit_breaker.state == CircuitState.OPEN
-    print("\n[PASS] Circuit breaker opened after threshold failures")
+    assert collector._circuit_breaker.state == CircuitState.OPEN, "Circuit should be open after failures"
+    assert blocked_count > 0, "Some requests should have been blocked by circuit breaker"
+    print("\n[PASS] Circuit breaker opened after threshold failures and blocked subsequent requests")
 
 
 async def test_luchtmeetnet_cache_performance():
