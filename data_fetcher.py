@@ -116,13 +116,17 @@ async def main() -> None:
         hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
         handler = SecureDataHandler(encryption_key, hmac_key)
 
-        current_time = datetime.now()
-        tomorrow = (current_time + timedelta(days=1))
-        yesterday = current_time - timedelta(days=1)
+        # Calculate day boundaries for proper day-ahead forecasting
+        current_time = datetime.now(timezone)
 
-        today = current_time.astimezone(timezone)
-        tomorrow = tomorrow.astimezone(timezone)
-        yesterday = yesterday.astimezone(timezone)
+        # Start from beginning of current day
+        today = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # End at end of tomorrow (23:59:59)
+        tomorrow = today + timedelta(days=2) - timedelta(seconds=1)
+
+        # Yesterday for historical data (previous 24 hours)
+        yesterday = today - timedelta(days=1)
 
         # Initialize collectors with new architecture
         entsoe_collector = EntsoeCollector(api_key=entsoe_api_key)
