@@ -83,9 +83,9 @@ class EnergyZeroCollector(BaseCollector):
         self.logger.debug(f"Fetching EnergyZero data")
 
         # EnergyZero API v3.0.0 removed class-level VAT parameter
-        # VAT must be specified at function level
+        # VAT must be specified at function level using legacy method
         async with EnergyZero() as client:
-            data = await client.energy_prices(
+            data = await client.get_electricity_prices_legacy(
                 start_date=start_time.date(),
                 end_date=end_time.date(),
                 interval=4,  # 4 = hourly interval
