@@ -22,18 +22,19 @@ from collectors import (
     EnergyZeroCollector,
     EpexCollector,
     CircuitBreakerConfig,
-    CircuitState
+    CircuitState,
+    RetryConfig
 )
 from collectors.luchtmeetnet import LuchtmeetnetCollector
 
 
 async def test_circuit_breaker_real_api():
-    """Test circuit breaker with real API that might fail."""
+    """Test circuit breaker behavior with real API (success or failure)."""
     print("\n" + "="*70)
     print("TEST: Circuit Breaker with Real APIs")
     print("="*70)
 
-    # Test with ENTSO-E (currently failing)
+    # Test with ENTSO-E API - may succeed or fail depending on environment
     from collectors import EntsoeCollector
     from utils.helpers import load_secrets
     import os
@@ -57,11 +58,14 @@ async def test_circuit_breaker_real_api():
     start = datetime.now(tz)
     end = start + timedelta(hours=24)
 
-    print(f"\nCollecting from ENTSO-E (expect failures)...")
+    print(f"\nCollecting from ENTSO-E...")
     print(f"Circuit breaker: threshold={collector.circuit_breaker_config.failure_threshold}")
 
     # Attempt multiple collections
     blocked_count = 0
+    success_count = 0
+    failure_count = 0
+
     for i in range(6):
         print(f"\n[Attempt {i+1}] State before: {collector._circuit_breaker.state.value}")
         print(f"  Failure count: {collector._circuit_breaker.failure_count}")
@@ -74,6 +78,7 @@ async def test_circuit_breaker_real_api():
         duration = time.time() - start_time
 
         if result:
+            success_count += 1
             print(f"  SUCCESS: {len(result.data)} data points in {duration:.2f}s")
         else:
             # If circuit was open before attempt, this should have been blocked instantly
@@ -82,6 +87,7 @@ async def test_circuit_breaker_real_api():
                 assert duration < 0.1, f"Blocked request should be instant, got {duration:.4f}s"
                 blocked_count += 1
             else:
+                failure_count += 1
                 print(f"  FAILED in {duration:.2f}s")
 
         # Small delay between attempts
@@ -89,13 +95,22 @@ async def test_circuit_breaker_real_api():
             await asyncio.sleep(0.5)
 
     print(f"\nFinal circuit state: {collector._circuit_breaker.state.value}")
-    print(f"Total failures: {collector._circuit_breaker.failure_count}")
-    print(f"Total blocked requests: {blocked_count}")
+    print(f"Results: {success_count} successes, {failure_count} failures, {blocked_count} blocked")
 
-    # Circuit should be OPEN after 3 failures
-    assert collector._circuit_breaker.state == CircuitState.OPEN, "Circuit should be open after failures"
-    assert blocked_count > 0, "Some requests should have been blocked by circuit breaker"
-    print("\n[PASS] Circuit breaker opened after threshold failures and blocked subsequent requests")
+    # Test passes if either:
+    # 1. API succeeds (circuit stays closed, no blocked requests)
+    # 2. API fails enough to open circuit (circuit opens, requests get blocked)
+    if success_count > 0:
+        # API is working - circuit should remain closed
+        assert collector._circuit_breaker.state == CircuitState.CLOSED, \
+            "Circuit should stay closed when API succeeds"
+        print("\n[PASS] API working - circuit remained closed")
+    else:
+        # API is failing - circuit should open after threshold
+        assert collector._circuit_breaker.state == CircuitState.OPEN, \
+            "Circuit should open after threshold failures"
+        assert blocked_count > 0, "Some requests should have been blocked after circuit opened"
+        print("\n[PASS] API failing - circuit opened and blocked subsequent requests")
 
 
 async def test_luchtmeetnet_cache_performance():
@@ -219,23 +234,22 @@ async def test_multiple_collection_cycles():
 
 
 async def test_circuit_breaker_recovery():
-    """Test circuit breaker recovery after timeout."""
+    """Test circuit breaker recovery after timeout using mock collector."""
     print("\n" + "="*70)
     print("TEST: Circuit Breaker Recovery")
     print("="*70)
 
-    from collectors import EntsoeCollector
-    from utils.helpers import load_secrets
+    # Use FailingCollector to reliably test circuit breaker behavior
+    # (real APIs may succeed or fail depending on environment)
+    from tests.integration.test_failure_scenarios import FailingCollector
 
-    # Load API key from environment or secrets.ini
-    config = load_secrets('.')
-    api_key = config.get('api_keys', 'entsoe')
-
-    # Create collector with short timeout
-    collector = EntsoeCollector(
-        api_key=api_key,
+    # Start with 2 failures, then succeed
+    collector = FailingCollector(
+        fail_count=2,
+        retry_config=RetryConfig(max_attempts=1, initial_delay=0.1),
         circuit_breaker_config=CircuitBreakerConfig(
             failure_threshold=2,
+            success_threshold=1,
             timeout=2.0,  # 2 second timeout
             enabled=True
         )
@@ -245,10 +259,11 @@ async def test_circuit_breaker_recovery():
     start = datetime.now(tz)
     end = start + timedelta(hours=24)
 
-    # Open the circuit
-    print("\nOpening circuit...")
+    # Open the circuit with 2 failures
+    print("\nOpening circuit with 2 failures...")
     for i in range(2):
-        await collector.collect(start, end, country_code='NL')
+        result = await collector.collect(start, end)
+        assert result is None, f"Attempt {i+1} should fail"
 
     assert collector._circuit_breaker.state == CircuitState.OPEN
     print(f"  Circuit OPEN (failures: {collector._circuit_breaker.failure_count})")
@@ -256,21 +271,25 @@ async def test_circuit_breaker_recovery():
     # Try immediately (should block)
     print("\nTrying immediately (should block)...")
     t0 = time.time()
-    result = await collector.collect(start, end, country_code='NL')
+    result = await collector.collect(start, end)
     duration = time.time() - t0
-    assert result is None
-    assert duration < 0.1
+    assert result is None, "Request should be blocked"
+    assert duration < 0.1, f"Blocked request should be instant, got {duration:.4f}s"
     print(f"  BLOCKED in {duration:.4f}s (instant)")
 
     # Wait for timeout
     print(f"\nWaiting {collector.circuit_breaker_config.timeout}s for timeout...")
     await asyncio.sleep(collector.circuit_breaker_config.timeout + 0.5)
 
-    # Check state changed to HALF_OPEN
-    allowed = collector._check_circuit_breaker()
-    print(f"  Circuit state: {collector._circuit_breaker.state.value}")
-    assert collector._circuit_breaker.state == CircuitState.HALF_OPEN
-    print("\n[PASS] Circuit transitioned to HALF_OPEN after timeout")
+    # Next request should succeed and move to HALF_OPEN then CLOSED
+    print("\nAttempting recovery (should succeed)...")
+    result = await collector.collect(start, end)
+    assert result is not None, "Recovery attempt should succeed"
+    print(f"  SUCCESS - Circuit state: {collector._circuit_breaker.state.value}")
+    assert collector._circuit_breaker.state == CircuitState.CLOSED, \
+        "Circuit should close after successful recovery"
+
+    print("\n[PASS] Circuit recovered: OPEN -> HALF_OPEN -> CLOSED")
 
 
 async def main():
