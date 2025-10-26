@@ -92,10 +92,10 @@ class EnergyZeroCollector(BaseCollector):
                 vat=self.vat_option
             )
 
-        if not data or not hasattr(data, 'timestamp_prices'):
+        if not data or not hasattr(data, 'prices'):
             raise ValueError("No data returned from EnergyZero API")
 
-        if not data.timestamp_prices:
+        if not data.prices:
             raise ValueError("Empty prices dict from EnergyZero API")
 
         return data
@@ -110,7 +110,7 @@ class EnergyZeroCollector(BaseCollector):
         Parse EnergyZero API response to standardized format.
 
         Args:
-            raw_data: Raw API response object (Electricity model) with .timestamp_prices attribute
+            raw_data: Raw API response object (Electricity model) with .prices attribute
             start_time: Start of time range (for filtering)
             end_time: End of time range (for filtering)
 
@@ -119,7 +119,7 @@ class EnergyZeroCollector(BaseCollector):
         """
         data = {}
 
-        for timestamp, price in raw_data.timestamp_prices.items():
+        for timestamp, price in raw_data.prices.items():
             # Filter to requested time range
             if start_time <= timestamp < end_time:
                 # Normalize to Amsterdam timezone
