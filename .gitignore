@@ -5,6 +5,13 @@ secrets.ini
 # *.json
 # *.log
 
+# Claude Code configuration
+.claude/
+
+# Log files
+*.log
+data/*.log
+
 # Test coverage
 .coverage
 htmlcov/
