@@ -590,7 +590,7 @@ class BaseCollector(ABC):
         Returns:
             List of CollectionMetrics, most recent first
         """
-        return self._metrics_history[-limit:]
+        return list(reversed(self._metrics_history[-limit:]))
 
     def get_success_rate(self) -> float:
         """

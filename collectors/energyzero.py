@@ -44,20 +44,22 @@ class EnergyZeroCollector(BaseCollector):
     Compatible with energyzero 3.0.0+ API.
     """
 
-    def __init__(self, vat_option: VatOption = VatOption.INCLUDE, retry_config: RetryConfig = None):
+    def __init__(self, vat_option: VatOption = VatOption.INCLUDE, retry_config: RetryConfig = None, circuit_breaker_config=None):
         """
         Initialize EnergyZero collector.
 
         Args:
             vat_option: VAT option (INCLUDE or EXCLUDE) - passed to function level
             retry_config: Optional retry configuration
+            circuit_breaker_config: Optional circuit breaker configuration
         """
         super().__init__(
             name="EnergyZeroCollector",
             data_type="energy_price",
             source="EnergyZero API v3.0",
             units="EUR/kWh (incl. VAT)" if vat_option == VatOption.INCLUDE else "EUR/kWh (excl. VAT)",
-            retry_config=retry_config
+            retry_config=retry_config,
+            circuit_breaker_config=circuit_breaker_config
         )
         self.vat_option = vat_option
 

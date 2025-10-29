@@ -35,23 +35,22 @@ class TestEnergyZeroCollector:
         """Test parsing EnergyZero API response."""
         collector = EnergyZeroCollector()
 
-        # Mock API response
+        # Mock API response - Electricity class expects dict of prices and average
         from energyzero import Electricity
-        mock_prices = [
-            Electricity(
-                timestamp=datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam')),
-                price=0.25
-            ),
-            Electricity(
-                timestamp=datetime(2025, 10, 25, 13, 0, tzinfo=ZoneInfo('Europe/Amsterdam')),
-                price=0.30
-            )
-        ]
+        tz = ZoneInfo('Europe/Amsterdam')
+        mock_prices_dict = {
+            datetime(2025, 10, 25, 12, 0, tzinfo=tz): 0.25,
+            datetime(2025, 10, 25, 13, 0, tzinfo=tz): 0.30
+        }
+        mock_electricity = Electricity(
+            prices=mock_prices_dict,
+            average_price=0.275
+        )
 
-        start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
-        end = datetime(2025, 10, 25, 14, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        start = datetime(2025, 10, 25, 12, 0, tzinfo=tz)
+        end = datetime(2025, 10, 25, 14, 0, tzinfo=tz)
 
-        parsed = collector._parse_response(mock_prices, start, end)
+        parsed = collector._parse_response(mock_electricity, start, end)
 
         assert len(parsed) == 2
         assert all(isinstance(v, float) for v in parsed.values())
@@ -149,11 +148,16 @@ class TestOpenWeatherCollector:
             longitude=4.89
         )
 
-        # Mock API response
+        # Create test date and convert to Unix timestamp
+        start = datetime(2025, 10, 25, 0, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        end = datetime(2025, 10, 26, 0, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        test_dt = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+
+        # Mock API response with correct timestamp for 2025
         mock_data = {
             'list': [
                 {
-                    'dt': 1729850400,  # Unix timestamp
+                    'dt': int(test_dt.timestamp()),  # Unix timestamp for Oct 25, 2025 12:00
                     'main': {
                         'temp': 15.5,
                         'pressure': 1013,
@@ -166,16 +170,14 @@ class TestOpenWeatherCollector:
             ]
         }
 
-        start = datetime(2025, 10, 25, 0, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
-        end = datetime(2025, 10, 26, 0, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
-
         parsed = collector._parse_response(mock_data, start, end)
 
         assert len(parsed) >= 1
-        # Check that weather data has multiple fields
+        # Check that weather data has multiple fields (keys are prefixed like 'main_temp')
         for timestamp, data in parsed.items():
             assert isinstance(data, dict)
-            assert 'temp' in data or 'temperature' in str(data).lower()
+            # Check for temperature field (can be 'temp', 'main_temp', or contain 'temp' in keys)
+            assert any('temp' in key.lower() for key in data.keys())
 
     def test_metadata(self):
         """Test metadata generation."""
@@ -254,18 +256,30 @@ class TestCollectorMetrics:
         """Test that metrics are recorded on successful collection."""
         collector = EpexCollector()
 
-        # Mock successful collection
+        # Mock successful collection with multiple data points to avoid 'partial' status
         with patch.object(collector, '_fetch_raw_data', new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = {
-                'data': [{
-                    'start_timestamp': 1729850400000,
-                    'end_timestamp': 1729854000000,
-                    'marketprice': 120.5
-                }]
+                'data': [
+                    {
+                        'start_timestamp': 1729850400000,
+                        'end_timestamp': 1729854000000,
+                        'marketprice': 120.5
+                    },
+                    {
+                        'start_timestamp': 1729854000000,
+                        'end_timestamp': 1729857600000,
+                        'marketprice': 125.0
+                    },
+                    {
+                        'start_timestamp': 1729857600000,
+                        'end_timestamp': 1729861200000,
+                        'marketprice': 118.5
+                    }
+                ]
             }
 
             start = datetime.now(ZoneInfo('Europe/Amsterdam'))
-            end = start + timedelta(hours=1)
+            end = start + timedelta(hours=3)
 
             await collector.collect(start, end)
 
