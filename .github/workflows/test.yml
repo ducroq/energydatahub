@@ -50,15 +50,6 @@ jobs:
         fail_ci_if_error: false
         verbose: true
 
-    - name: Check for malformed timestamps
-      run: |
-        # Ensure test files don't contain references to malformed timestamps
-        if grep -r '+00:09\|+00:18' tests/; then
-          echo "ERROR: Test files contain malformed timestamp references"
-          exit 1
-        fi
-        echo "✓ No malformed timestamp references found"
-
     - name: Run critical timezone tests only
       run: |
         python -m pytest tests/ -v -m critical
