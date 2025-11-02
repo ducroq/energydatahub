@@ -141,7 +141,7 @@ All dependencies are specified in `requirements.txt`:
 - `entsoe-py`: ENTSO-E API client
 - `easyenergy`, `energyzero`: Dutch energy price APIs
 - `nordpool`: Nordic energy market
-- `pyluchtmeetnet`: Dutch air quality
+- `aiohttp`: Async HTTP client (used for Luchtmeetnet API)
 - `requests`: HTTP requests
 - `cryptography`: AES encryption
 - `timezonefinder`, `reverse_geocoder`: Location utilities
