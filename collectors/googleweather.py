@@ -466,6 +466,54 @@ class GoogleWeatherCollector(BaseCollector):
             # Use base class normalization
             return super()._normalize_timestamps(data)
 
+    def _validate_data(
+        self,
+        data: Dict,
+        start_time: datetime,
+        end_time: datetime
+    ) -> tuple[bool, List[str]]:
+        """
+        Override base class to handle multi-location nested structure.
+
+        Args:
+            data: Either {location: {timestamp: data}} or {timestamp: data}
+            start_time: Expected start time
+            end_time: Expected end time
+
+        Returns:
+            (is_valid, list of warnings)
+        """
+        from typing import List
+        from utils.timezone_helpers import validate_timestamp_format
+
+        # Check if multi-location
+        if self.multi_location and data:
+            # Validate each location's data separately
+            warnings = []
+            all_valid = True
+
+            for location_name, location_data in data.items():
+                # Check if location data is empty
+                if not location_data:
+                    warnings.append(f"{location_name}: No data points collected")
+                    all_valid = False
+                    continue
+
+                # Check for malformed timestamps within this location
+                malformed = [ts for ts in location_data.keys() if not validate_timestamp_format(ts)]
+                if malformed:
+                    warnings.append(f"{location_name}: Found {len(malformed)} malformed timestamps")
+                    all_valid = False
+
+                # Check data point count
+                if len(location_data) < 2:
+                    warnings.append(f"{location_name}: Only {len(location_data)} data points (expected more)")
+
+            return all_valid, warnings
+        else:
+            # Single location - use base class validation
+            return super()._validate_data(data, start_time, end_time)
+
     def _extract_weather_fields(self, forecast: Dict) -> Dict[str, Any]:
         """
         Extract standardized weather fields from Google Weather forecast object.
