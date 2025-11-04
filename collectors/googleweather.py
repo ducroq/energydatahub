@@ -385,8 +385,11 @@ class GoogleWeatherCollector(BaseCollector):
         skipped_filter = 0
 
         for forecast in hourly_forecasts:
-            # Extract timestamp
-            time_str = forecast.get('time')
+            # Extract timestamp from interval (contains startTime and endTime)
+            # or fall back to displayDateTime
+            interval = forecast.get('interval', {})
+            time_str = interval.get('startTime') if interval else forecast.get('displayDateTime')
+
             if not time_str:
                 skipped_no_time += 1
                 continue
