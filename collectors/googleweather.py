@@ -553,66 +553,62 @@ class GoogleWeatherCollector(BaseCollector):
         """
         weather = {}
 
+        def extract_value(field_data):
+            """Extract value from field - handles both dict with 'value' key and direct values"""
+            if isinstance(field_data, dict) and 'value' in field_data:
+                return field_data['value']
+            return field_data
+
         # Temperature fields (Google provides in Celsius for metric)
         if 'temperature' in forecast:
-            weather['temperature'] = forecast['temperature'].get('value')
+            weather['temperature'] = extract_value(forecast['temperature'])
 
-        if 'temperatureApparent' in forecast:
-            weather['feels_like'] = forecast['temperatureApparent'].get('value')
+        if 'feelsLikeTemperature' in forecast:
+            weather['feels_like'] = extract_value(forecast['feelsLikeTemperature'])
 
         if 'dewPoint' in forecast:
-            weather['dew_point'] = forecast['dewPoint'].get('value')
+            weather['dew_point'] = extract_value(forecast['dewPoint'])
 
         # Atmospheric conditions
         if 'relativeHumidity' in forecast:
-            weather['humidity'] = forecast['relativeHumidity'].get('value')
+            weather['humidity'] = extract_value(forecast['relativeHumidity'])
 
-        if 'pressure' in forecast:
-            weather['pressure'] = forecast['pressure'].get('value')
+        if 'airPressure' in forecast:
+            weather['pressure'] = extract_value(forecast['airPressure'])
 
         if 'visibility' in forecast:
-            weather['visibility'] = forecast['visibility'].get('value')
+            weather['visibility'] = extract_value(forecast['visibility'])
 
         if 'cloudCover' in forecast:
-            weather['cloud_cover'] = forecast['cloudCover'].get('value')
+            weather['cloud_cover'] = extract_value(forecast['cloudCover'])
 
         # Wind fields
-        if 'windSpeed' in forecast:
-            weather['wind_speed'] = forecast['windSpeed'].get('value')
-
-        if 'windGust' in forecast:
-            weather['wind_gust'] = forecast['windGust'].get('value')
-
-        if 'windDirection' in forecast:
-            weather['wind_direction'] = forecast['windDirection'].get('degrees')
-            weather['wind_direction_cardinal'] = forecast['windDirection'].get('cardinal')
+        if 'wind' in forecast:
+            wind_data = forecast['wind']
+            if isinstance(wind_data, dict):
+                weather['wind_speed'] = extract_value(wind_data.get('speed'))
+                weather['wind_direction'] = extract_value(wind_data.get('direction'))
 
         # Precipitation
-        if 'precipitationProbability' in forecast:
-            weather['precipitation_probability'] = forecast['precipitationProbability'].get('value')
-
-        if 'rainAccumulation' in forecast:
-            weather['rain_accumulation'] = forecast['rainAccumulation'].get('value')
-
-        if 'snowAccumulation' in forecast:
-            weather['snow_accumulation'] = forecast['snowAccumulation'].get('value')
-
-        if 'iceAccumulation' in forecast:
-            weather['ice_accumulation'] = forecast['iceAccumulation'].get('value')
+        if 'precipitation' in forecast:
+            precip_data = forecast['precipitation']
+            if isinstance(precip_data, dict):
+                weather['precipitation_probability'] = extract_value(precip_data.get('probability'))
+                weather['precipitation_amount'] = extract_value(precip_data.get('amount'))
 
         # Additional useful fields
         if 'uvIndex' in forecast:
-            weather['uv_index'] = forecast['uvIndex'].get('value')
+            weather['uv_index'] = extract_value(forecast['uvIndex'])
 
         if 'thunderstormProbability' in forecast:
-            weather['thunderstorm_probability'] = forecast['thunderstormProbability'].get('value')
+            weather['thunderstorm_probability'] = extract_value(forecast['thunderstormProbability'])
 
         # Weather condition description
-        if 'condition' in forecast:
-            weather['condition'] = forecast['condition']
+        if 'weatherCondition' in forecast:
+            weather['condition'] = forecast['weatherCondition']
 
         # Daytime indicator (useful for solar calculations)
-        if 'daytime' in forecast:
-            weather['is_daytime'] = forecast['daytime']
+        if 'isDaytime' in forecast:
+            weather['is_daytime'] = forecast['isDaytime']
 
         return weather
