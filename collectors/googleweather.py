@@ -439,6 +439,33 @@ class GoogleWeatherCollector(BaseCollector):
 
         return data
 
+    def _normalize_timestamps(
+        self,
+        data: Dict[str, Dict[str, Any]]
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Override base class to handle multi-location nested structure.
+
+        For multi-location mode, timestamps are already normalized during parsing.
+        Base class expects flat dict, but we have nested: location -> timestamps -> data
+
+        Args:
+            data: Dict mapping locations to timestamp dicts (or flat timestamp dict for single location)
+
+        Returns:
+            Same structure (timestamps already normalized in _parse_response)
+        """
+        # Check if this is multi-location data (nested structure)
+        if self.multi_location and data:
+            # For multi-location: {location: {timestamp: data}}
+            # Timestamps were already normalized in _parse_single_location
+            # Just return as-is, don't try to normalize location names as timestamps
+            return data
+        else:
+            # For single location: {timestamp: data}
+            # Use base class normalization
+            return super()._normalize_timestamps(data)
+
     def _extract_weather_fields(self, forecast: Dict) -> Dict[str, Any]:
         """
         Extract standardized weather fields from Google Weather forecast object.
