@@ -166,7 +166,7 @@ class GoogleWeatherCollector(BaseCollector):
         location_name: Optional[str] = None
     ) -> Dict:
         """
-        Fetch weather data for a single location.
+        Fetch weather data for a single location with pagination support.
 
         Args:
             lat: Latitude
@@ -176,7 +176,7 @@ class GoogleWeatherCollector(BaseCollector):
             location_name: Optional name for logging
 
         Returns:
-            Raw API response dictionary
+            Raw API response dictionary with all paginated results combined
         """
         loc_str = location_name or f"lat={lat}, lon={lon}"
         self.logger.debug(f"Fetching Google Weather data for {loc_str}")
@@ -185,29 +185,59 @@ class GoogleWeatherCollector(BaseCollector):
             'key': self.api_key,
             'location.latitude': lat,
             'location.longitude': lon,
-            'hours': self.hours
+            'hours': self.hours,
+            'pageSize': 24  # API default, max 24 hours per page
         }
 
+        all_forecasts = []
+        timezone_data = None
+        page_count = 0
+
         async with aiohttp.ClientSession() as session:
-            async with session.get(self.base_url, params=params) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    raise ValueError(
-                        f"Google Weather API returned status {response.status} "
-                        f"for {loc_str}: {error_text}"
-                    )
+            while True:
+                page_count += 1
+                self.logger.debug(f"Fetching page {page_count} for {loc_str}")
 
-                data = await response.json()
+                async with session.get(self.base_url, params=params) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        raise ValueError(
+                            f"Google Weather API returned status {response.status} "
+                            f"for {loc_str}: {error_text}"
+                        )
 
-        if not data:
-            raise ValueError(f"No data returned from Google Weather API for {loc_str}")
+                    data = await response.json()
+
+                # Store timezone from first page
+                if timezone_data is None and 'timeZone' in data:
+                    timezone_data = data['timeZone']
+
+                # Collect forecast hours from this page
+                page_forecasts = data.get('forecastHours', [])
+                all_forecasts.extend(page_forecasts)
+
+                self.logger.debug(
+                    f"Page {page_count}: Got {len(page_forecasts)} hours for {loc_str}"
+                )
+
+                # Check if there's a next page
+                next_page_token = data.get('nextPageToken')
+                if not next_page_token:
+                    break
+
+                # Add page token for next iteration
+                params['pageToken'] = next_page_token
 
         self.logger.debug(
-            f"Successfully fetched {len(data.get('hourlyForecasts', []))} "
-            f"hours for {loc_str}"
+            f"Successfully fetched {len(all_forecasts)} hours "
+            f"across {page_count} pages for {loc_str}"
         )
 
-        return data
+        # Return combined response in same format as single page
+        return {
+            'forecastHours': all_forecasts,
+            'timeZone': timezone_data
+        }
 
     async def _fetch_multi_location(
         self,
@@ -338,7 +368,8 @@ class GoogleWeatherCollector(BaseCollector):
         """
         data = {}
 
-        hourly_forecasts = raw_data.get('hourlyForecasts', [])
+        # API returns 'forecastHours' (not 'hourlyForecasts')
+        hourly_forecasts = raw_data.get('forecastHours', [])
 
         for forecast in hourly_forecasts:
             # Extract timestamp
