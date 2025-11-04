@@ -239,13 +239,108 @@ class GoogleWeatherCollector(BaseCollector):
             'timeZone': timezone_data
         }
 
+    async def _fetch_single_location_with_retry(
+        self,
+        location: Dict,
+        start_time: datetime,
+        end_time: datetime,
+        max_retries: int = 3
+    ) -> Dict:
+        """
+        Fetch weather data for a single location with retry logic.
+
+        Args:
+            location: Location dict with 'name', 'lat', 'lon'
+            start_time: Start of time range
+            end_time: End of time range
+            max_retries: Maximum number of retry attempts
+
+        Returns:
+            Dict with location data or error information
+        """
+        location_name = location['name']
+        last_exception = None
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                self.logger.debug(
+                    f"Attempt {attempt}/{max_retries} for {location_name}"
+                )
+
+                # Fetch data for this location
+                result = await self._fetch_single_location(
+                    lat=location['lat'],
+                    lon=location['lon'],
+                    start_time=start_time,
+                    end_time=end_time,
+                    location_name=location_name
+                )
+
+                # Success - return immediately
+                self.logger.debug(f"Successfully fetched {location_name} on attempt {attempt}")
+                return {
+                    'name': location_name,
+                    'lat': location['lat'],
+                    'lon': location['lon'],
+                    'data': result
+                }
+
+            except Exception as e:
+                last_exception = e
+                error_msg = str(e)
+
+                # Check if this is a retryable error
+                is_retryable = (
+                    'status 500' in error_msg or  # Internal server error
+                    'status 503' in error_msg or  # Service unavailable
+                    'status 429' in error_msg or  # Rate limit
+                    'timeout' in error_msg.lower() or
+                    'connection' in error_msg.lower()
+                )
+
+                if not is_retryable:
+                    # Non-retryable error (e.g., 400, 401, 403) - fail immediately
+                    self.logger.error(
+                        f"{location_name}: Non-retryable error on attempt {attempt}: {error_msg}"
+                    )
+                    break
+
+                self.logger.warning(
+                    f"{location_name}: Attempt {attempt}/{max_retries} failed: {error_msg}"
+                )
+
+                # Don't sleep after last attempt
+                if attempt < max_retries:
+                    # Exponential backoff: 2^(attempt-1) seconds with jitter
+                    import random
+                    base_delay = 2 ** (attempt - 1)
+                    jitter = random.uniform(0.5, 1.5)
+                    delay = min(base_delay * jitter, 30)  # Max 30 seconds
+
+                    self.logger.info(
+                        f"{location_name}: Retrying in {delay:.1f} seconds..."
+                    )
+                    await asyncio.sleep(delay)
+
+        # All retries exhausted - return error
+        self.logger.error(
+            f"{location_name}: All {max_retries} attempts failed. Last error: {last_exception}"
+        )
+        return {
+            'name': location_name,
+            'lat': location['lat'],
+            'lon': location['lon'],
+            'error': str(last_exception),
+            'data': None
+        }
+
     async def _fetch_multi_location(
         self,
         start_time: datetime,
         end_time: datetime
     ) -> Dict:
         """
-        Fetch weather data for multiple locations in parallel.
+        Fetch weather data for multiple locations in parallel with per-location retry.
 
         Args:
             start_time: Start of time range
@@ -261,45 +356,21 @@ class GoogleWeatherCollector(BaseCollector):
         """
         self.logger.info(f"Fetching weather for {len(self.locations)} locations in parallel")
 
-        # Create tasks for parallel fetching
+        # Create tasks for parallel fetching with retry
         tasks = []
         for location in self.locations:
-            task = self._fetch_single_location(
-                lat=location['lat'],
-                lon=location['lon'],
+            task = self._fetch_single_location_with_retry(
+                location=location,
                 start_time=start_time,
                 end_time=end_time,
-                location_name=location['name']
+                max_retries=3
             )
             tasks.append(task)
 
-        # Fetch all in parallel
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Fetch all in parallel (errors are handled internally now)
+        locations_data = await asyncio.gather(*tasks)
 
-        # Build response with error handling
-        locations_data = []
-        for location, result in zip(self.locations, results):
-            if isinstance(result, Exception):
-                self.logger.error(
-                    f"Failed to fetch {location['name']}: {str(result)}"
-                )
-                # Include location with error marker
-                locations_data.append({
-                    'name': location['name'],
-                    'lat': location['lat'],
-                    'lon': location['lon'],
-                    'error': str(result),
-                    'data': None
-                })
-            else:
-                locations_data.append({
-                    'name': location['name'],
-                    'lat': location['lat'],
-                    'lon': location['lon'],
-                    'data': result
-                })
-
-        return {'locations': locations_data}
+        return {'locations': list(locations_data)}
 
     def _parse_response(
         self,
