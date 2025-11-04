@@ -374,11 +374,21 @@ class GoogleWeatherCollector(BaseCollector):
         self.logger.debug(f"Parsing {len(hourly_forecasts)} forecast hours")
         if not hourly_forecasts:
             self.logger.warning(f"Raw data keys: {list(raw_data.keys())}")
+        elif hourly_forecasts:
+            # Show structure of first forecast
+            first_keys = list(hourly_forecasts[0].keys()) if isinstance(hourly_forecasts[0], dict) else []
+            self.logger.debug(f"First forecast keys: {first_keys}")
+
+        parsed_count = 0
+        skipped_no_time = 0
+        skipped_parse_error = 0
+        skipped_filter = 0
 
         for forecast in hourly_forecasts:
             # Extract timestamp
             time_str = forecast.get('time')
             if not time_str:
+                skipped_no_time += 1
                 continue
 
             # Parse ISO 8601 timestamp
@@ -388,6 +398,7 @@ class GoogleWeatherCollector(BaseCollector):
                 timestamp_normalized = normalize_timestamp_to_amsterdam(timestamp)
             except Exception as e:
                 self.logger.warning(f"Failed to parse timestamp {time_str}: {e}")
+                skipped_parse_error += 1
                 continue
 
             # Filter by time range (Google Weather only returns future forecasts,
@@ -395,6 +406,7 @@ class GoogleWeatherCollector(BaseCollector):
             # Allow timestamps slightly before start (API rounds to hour boundaries)
             if timestamp_normalized < (start_time - timedelta(hours=1)) or timestamp_normalized > (end_time + timedelta(days=1)):
                 self.logger.debug(f"Filtering out timestamp {timestamp_normalized.isoformat()} (outside range)")
+                skipped_filter += 1
                 continue
 
             # Extract weather fields
@@ -402,7 +414,9 @@ class GoogleWeatherCollector(BaseCollector):
 
             # Store with ISO timestamp key
             data[timestamp_normalized.isoformat()] = weather_data
+            parsed_count += 1
 
+        self.logger.debug(f"Parsed {parsed_count} forecasts, skipped: no_time={skipped_no_time}, parse_error={skipped_parse_error}, filtered={skipped_filter}")
         return data
 
     def _parse_multi_location(
