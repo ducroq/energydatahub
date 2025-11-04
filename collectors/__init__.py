@@ -23,6 +23,7 @@ from collectors.entsoe import EntsoeCollector
 from collectors.energyzero import EnergyZeroCollector
 from collectors.epex import EpexCollector
 from collectors.openweather import OpenWeatherCollector
+from collectors.googleweather import GoogleWeatherCollector
 from collectors.meteoserver import MeteoServerWeatherCollector, MeteoServerSunCollector
 from collectors.luchtmeetnet import LuchtmeetnetCollector
 
@@ -42,6 +43,7 @@ __all__ = [
 
     # Weather collectors
     'OpenWeatherCollector',      # OpenWeather API
+    'GoogleWeatherCollector',    # Google Weather API (multi-location)
     'MeteoServerWeatherCollector',  # MeteoServer weather (HARMONIE)
     'MeteoServerSunCollector',   # MeteoServer solar radiation
 

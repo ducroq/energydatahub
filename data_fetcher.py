@@ -75,6 +75,7 @@ from collectors import (
     EpexCollector,
     ElspotCollector,
     OpenWeatherCollector,
+    GoogleWeatherCollector,
     MeteoServerWeatherCollector,
     MeteoServerSunCollector,
     LuchtmeetnetCollector
@@ -108,13 +109,32 @@ async def main() -> None:
         timezone, country_code = get_timezone_and_country(latitude, longitude)
         encryption = bool(config.getint('data', 'encryption'))
 
-        config = load_secrets(script_dir, SECRETS_FILE_NAME)        
+        config = load_secrets(script_dir, SECRETS_FILE_NAME)
         entsoe_api_key = config.get('api_keys', 'entsoe')
         openweather_api_key = config.get('api_keys', 'openweather')
         meteoserver_api_key = config.get('api_keys', 'meteo')
+        google_weather_api_key = config.get('api_keys', 'google_weather')
         encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))
         hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
         handler = SecureDataHandler(encryption_key, hmac_key)
+
+        # Strategic locations for pan-European weather (Model A - price prediction)
+        # See WEATHER_LOCATION_STRATEGY.md for detailed rationale
+        strategic_locations = [
+            # Germany - Most important (50%+ of EU renewable capacity)
+            {"name": "Hamburg_DE", "lat": 53.5511, "lon": 9.9937},      # North German wind belt
+            {"name": "Munich_DE", "lat": 48.1351, "lon": 11.5820},      # South German solar belt
+
+            # Netherlands - Our market
+            {"name": "Arnhem_NL", "lat": 51.9851, "lon": 5.8987},       # Local + central NL
+            {"name": "IJmuiden_NL", "lat": 52.4608, "lon": 4.6262},     # Offshore wind proxy
+
+            # Belgium - Coupled market
+            {"name": "Brussels_BE", "lat": 50.8503, "lon": 4.3517},     # Market coupling
+
+            # Denmark - Wind powerhouse
+            {"name": "Esbjerg_DK", "lat": 55.4760, "lon": 8.4516},      # North Sea wind
+        ]
 
         # Calculate day boundaries for proper day-ahead forecasting
         current_time = datetime.now(timezone)
@@ -122,8 +142,11 @@ async def main() -> None:
         # Start from beginning of current day
         today = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # End at end of tomorrow (23:59:59)
+        # End at end of tomorrow (23:59:59) - for standard forecasts
         tomorrow = today + timedelta(days=2) - timedelta(seconds=1)
+
+        # Extended horizon for Google Weather (10 days) - for Model A price prediction
+        ten_days_ahead = today + timedelta(days=10)
 
         # Yesterday for historical data (previous 24 hours)
         yesterday = today - timedelta(days=1)
@@ -137,6 +160,11 @@ async def main() -> None:
             api_key=openweather_api_key,
             latitude=latitude,
             longitude=longitude
+        )
+        googleweather_collector = GoogleWeatherCollector(
+            api_key=google_weather_api_key,
+            locations=strategic_locations,
+            hours=240  # 10 days hourly forecast
         )
         meteoserver_weather_collector = MeteoServerWeatherCollector(
             api_key=meteoserver_api_key,
@@ -159,6 +187,7 @@ async def main() -> None:
             energy_zero_collector.collect(today, tomorrow),
             epex_collector.collect(today, tomorrow),
             openweather_collector.collect(today, tomorrow),
+            googleweather_collector.collect(today, ten_days_ahead),  # 10-day forecast for Model A
             meteoserver_weather_collector.collect(today, tomorrow),
             meteoserver_sun_collector.collect(today, tomorrow),
             elspot_collector.collect(today, tomorrow, country_code=country_code),
@@ -166,7 +195,7 @@ async def main() -> None:
         ]
 
         results = await asyncio.gather(*tasks)
-        entsoe_data, energy_zero_data, epex_data, open_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data = results
+        entsoe_data, energy_zero_data, epex_data, open_weather_data, google_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data = results
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -197,6 +226,13 @@ async def main() -> None:
             # else:
             #     combined_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "weather_forecast.json"))
+
+        # Save Google Weather multi-location data separately for Model A (price prediction)
+        if google_weather_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast_multi_location.json")
+            save_data_file(data=google_weather_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "weather_forecast_multi_location.json"))
+            logging.info(f"Saved multi-location weather forecast for {len(strategic_locations)} locations")
 
         if meteo_sun_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json")

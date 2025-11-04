@@ -29,8 +29,9 @@ def load_secrets(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser
     Never fails - returns empty config if no secrets available.
 
     Priority:
-    1. Load from secrets.ini (local development)
-    2. Override with environment variables (CI/production)
+    1. Load from secrets.ini (shared team secrets)
+    2. Override with secrets.local.ini (personal secrets, gitignored)
+    3. Override with environment variables (CI/production)
 
     Args:
         script_dir (str): Directory containing the secrets file
@@ -46,7 +47,7 @@ def load_secrets(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser
     config.add_section('api_keys')
     config.add_section('location')
 
-    # 1. Try to load from secrets.ini (local development)
+    # 1. Try to load from secrets.ini (shared team secrets)
     secrets_file = os.path.join(script_dir, filename)
     if os.path.exists(secrets_file):
         logging.info(f"Loading secrets from {filename}")
@@ -54,7 +55,13 @@ def load_secrets(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser
     else:
         logging.info(f"No {filename} found, using environment variables only")
 
-    # 2. Override with environment variables (GitHub Actions, production)
+    # 2. Try to load from secrets.local.ini (personal secrets, NOT in git)
+    local_secrets_file = os.path.join(script_dir, 'secrets.local.ini')
+    if os.path.exists(local_secrets_file):
+        logging.info(f"Loading personal secrets from secrets.local.ini")
+        config.read(local_secrets_file)  # Overwrites shared secrets if key exists
+
+    # 3. Override with environment variables (GitHub Actions, production)
     # This allows CI to work without secrets.ini file
     env_mappings = {
         # Security keys
@@ -65,6 +72,7 @@ def load_secrets(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser
         'OPENWEATHER_API_KEY': ('api_keys', 'openweather'),
         'METEO_API_KEY': ('api_keys', 'meteo'),
         'GOOGLE_API_KEY': ('api_keys', 'google'),
+        'GOOGLE_WEATHER_API_KEY': ('api_keys', 'google_weather'),
         # Location
         'LATITUDE': ('location', 'latitude'),
         'LONGITUDE': ('location', 'longitude'),
