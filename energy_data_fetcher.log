@@ -1,240 +1,240 @@
-2025-11-04 18:44:32,046 DEBUG Using selector: EpollSelector
-2025-11-04 18:44:32,047 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2025-11-04 18:44:33,273 INFO No secrets.ini found, using environment variables only
-2025-11-04 18:44:33,273 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
-2025-11-04 18:44:33,273 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
-2025-11-04 18:44:33,273 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
-2025-11-04 18:44:33,273 DEBUG Overriding api_keys.openweather from environment variable OPENWEATHER_API_KEY
-2025-11-04 18:44:33,273 DEBUG Overriding api_keys.meteo from environment variable METEO_API_KEY
-2025-11-04 18:44:33,273 DEBUG Overriding api_keys.google from environment variable GOOGLE_API_KEY
-2025-11-04 18:44:33,273 DEBUG Overriding api_keys.google_weather from environment variable GOOGLE_WEATHER_API_KEY
-2025-11-04 18:44:33,274 INFO Initialized for 6 locations
-2025-11-04 18:44:33,274 INFO [8a66f514] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
-2025-11-04 18:44:33,274 DEBUG [8a66f514] Fetching raw data...
-2025-11-04 18:44:33,274 DEBUG Attempt 1/3
-2025-11-04 18:44:33,274 DEBUG Fetching ENTSO-E data for NL
-2025-11-04 18:44:33,274 DEBUG Querying ENTSO-E API: 2025-11-03 23:00:00+00:00 to 2025-11-05 22:59:59+00:00 (UTC)
-2025-11-04 18:44:33,288 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511022300', 'periodEnd': '202511062300'}
-2025-11-04 18:44:33,289 INFO [2ab3d87b] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
-2025-11-04 18:44:33,290 DEBUG [2ab3d87b] Fetching raw data...
-2025-11-04 18:44:33,291 DEBUG Attempt 1/3
-2025-11-04 18:44:33,291 DEBUG Fetching EnergyZero data
-2025-11-04 18:44:33,290 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-11-04 18:44:33,292 INFO [1745e7f8] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
-2025-11-04 18:44:33,292 DEBUG [1745e7f8] Fetching raw data...
-2025-11-04 18:44:33,293 DEBUG Attempt 1/3
-2025-11-04 18:44:33,293 DEBUG Fetching EPEX data from Awattar API
-2025-11-04 18:44:33,294 INFO [c45d59ff] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
-2025-11-04 18:44:33,294 DEBUG Attempt 1/3
-2025-11-04 18:44:33,294 DEBUG Fetching OpenWeather data for lat=51.966472, lon=5.94009
-2025-11-04 18:44:33,295 INFO [f1eea4fe] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-14 00:00:00+01:00
-2025-11-04 18:44:33,295 DEBUG [f1eea4fe] Fetching raw data...
-2025-11-04 18:44:33,295 DEBUG Attempt 1/3
-2025-11-04 18:44:33,295 INFO Fetching weather for 6 locations in parallel
-2025-11-04 18:44:33,295 INFO [fea082ac] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
-2025-11-04 18:44:33,295 DEBUG [fea082ac] Fetching raw data...
-2025-11-04 18:44:33,295 DEBUG Attempt 1/10
-2025-11-04 18:44:33,295 DEBUG Fetching MeteoServer weather for lat=51.966472, lon=5.94009
-2025-11-04 18:44:33,296 INFO [c59f880d] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
-2025-11-04 18:44:33,296 DEBUG [c59f880d] Fetching raw data...
-2025-11-04 18:44:33,296 DEBUG Attempt 1/10
-2025-11-04 18:44:33,296 DEBUG Fetching MeteoServer sun forecast for lat=51.966472, lon=5.94009
-2025-11-04 18:44:33,297 INFO [70d7e2fa] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
-2025-11-04 18:44:33,297 DEBUG [70d7e2fa] Fetching raw data...
-2025-11-04 18:44:33,297 DEBUG Attempt 1/3
-2025-11-04 18:44:33,297 DEBUG Fetching Elspot data for NL
-2025-11-04 18:44:33,297 INFO [70b40244] Starting collection: 2025-11-03 00:00:00+01:00 to 2025-11-04 00:00:00+01:00
-2025-11-04 18:44:33,297 DEBUG [70b40244] Fetching raw data...
-2025-11-04 18:44:33,298 DEBUG Attempt 1/3
-2025-11-04 18:44:33,298 DEBUG Fetching Luchtmeetnet data for lat=51.966472, lon=5.94009
-2025-11-04 18:44:33,298 INFO Station cache miss or expired, fetching fresh data
-2025-11-04 18:44:33,298 DEBUG Fetching station list
-2025-11-04 18:44:33,298 DEBUG Fetching Google Weather data for Hamburg_DE
-2025-11-04 18:44:33,298 DEBUG Fetching page 1 for Hamburg_DE
-2025-11-04 18:44:33,299 DEBUG Fetching Google Weather data for Munich_DE
-2025-11-04 18:44:33,299 DEBUG Fetching page 1 for Munich_DE
-2025-11-04 18:44:33,299 DEBUG Fetching Google Weather data for Arnhem_NL
-2025-11-04 18:44:33,299 DEBUG Fetching page 1 for Arnhem_NL
-2025-11-04 18:44:33,299 DEBUG Fetching Google Weather data for IJmuiden_NL
-2025-11-04 18:44:33,299 DEBUG Fetching page 1 for IJmuiden_NL
-2025-11-04 18:44:33,300 DEBUG Fetching Google Weather data for Brussels_BE
-2025-11-04 18:44:33,300 DEBUG Fetching page 1 for Brussels_BE
-2025-11-04 18:44:33,300 DEBUG Fetching Google Weather data for Esbjerg_DK
-2025-11-04 18:44:33,300 DEBUG Fetching page 1 for Esbjerg_DK
-2025-11-04 18:44:33,307 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
-2025-11-04 18:44:33,463 DEBUG Parsed 9 data points from OpenWeather response
-2025-11-04 18:44:33,464 INFO [c45d59ff] Collection complete: 9 data points in 0.17s (status: success)
-2025-11-04 18:44:33,528 DEBUG [1745e7f8] Parsing response...
-2025-11-04 18:44:33,528 DEBUG Parsed 47 data points from Awattar response
-2025-11-04 18:44:33,529 DEBUG [1745e7f8] Normalizing timestamps...
-2025-11-04 18:44:33,529 DEBUG [1745e7f8] Validating data...
-2025-11-04 18:44:33,529 INFO [1745e7f8] Collection complete: 47 data points in 0.24s (status: success)
-2025-11-04 18:44:33,634 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-11-05&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
-2025-11-04 18:44:33,639 DEBUG [70d7e2fa] Parsing response...
-2025-11-04 18:44:33,639 DEBUG Parsed 24 data points from Elspot response
-2025-11-04 18:44:33,639 DEBUG [70d7e2fa] Normalizing timestamps...
-2025-11-04 18:44:33,639 DEBUG [70d7e2fa] Validating data...
-2025-11-04 18:44:33,640 INFO [70d7e2fa] Collection complete: 24 data points in 0.34s (status: success)
-2025-11-04 18:44:33,902 DEBUG Page 1: Got 24 hours for Munich_DE
-2025-11-04 18:44:33,902 DEBUG Fetching page 2 for Munich_DE
-2025-11-04 18:44:33,905 DEBUG Page 1: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:33,905 DEBUG Fetching page 2 for Hamburg_DE
-2025-11-04 18:44:33,909 DEBUG Page 1: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:33,910 DEBUG Fetching page 2 for Esbjerg_DK
-2025-11-04 18:44:33,915 DEBUG Page 1: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:33,915 DEBUG Fetching page 2 for Arnhem_NL
-2025-11-04 18:44:33,927 DEBUG Page 1: Got 24 hours for Brussels_BE
-2025-11-04 18:44:33,927 DEBUG Fetching page 2 for Brussels_BE
-2025-11-04 18:44:33,939 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511022300&periodEnd=202511062300 HTTP/1.1" 200 None
-2025-11-04 18:44:33,988 DEBUG Page 2: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:33,988 DEBUG Fetching page 3 for Esbjerg_DK
-2025-11-04 18:44:33,991 DEBUG Page 2: Got 24 hours for Munich_DE
-2025-11-04 18:44:33,991 DEBUG Fetching page 3 for Munich_DE
-2025-11-04 18:44:34,002 DEBUG Page 2: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,002 DEBUG Fetching page 3 for Arnhem_NL
-2025-11-04 18:44:34,010 DEBUG Page 1: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,010 DEBUG Fetching page 2 for IJmuiden_NL
-2025-11-04 18:44:34,019 DEBUG Page 2: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,019 DEBUG Fetching page 3 for Brussels_BE
-2025-11-04 18:44:34,026 DEBUG Page 2: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,026 DEBUG Fetching page 3 for Hamburg_DE
-2025-11-04 18:44:34,029 DEBUG [2ab3d87b] Parsing response...
-2025-11-04 18:44:34,029 DEBUG Parsed 47 data points from EnergyZero response
-2025-11-04 18:44:34,029 DEBUG [2ab3d87b] Normalizing timestamps...
-2025-11-04 18:44:34,029 DEBUG [2ab3d87b] Validating data...
-2025-11-04 18:44:34,030 INFO [2ab3d87b] Collection complete: 47 data points in 0.74s (status: success)
-2025-11-04 18:44:34,067 DEBUG Page 3: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:34,068 DEBUG Fetching page 4 for Esbjerg_DK
-2025-11-04 18:44:34,078 DEBUG Page 3: Got 24 hours for Munich_DE
-2025-11-04 18:44:34,078 DEBUG Fetching page 4 for Munich_DE
-2025-11-04 18:44:34,102 DEBUG Page 3: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,102 DEBUG Fetching page 4 for Arnhem_NL
-2025-11-04 18:44:34,103 DEBUG Page 2: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,103 DEBUG Fetching page 3 for IJmuiden_NL
-2025-11-04 18:44:34,108 DEBUG Page 3: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,108 DEBUG Fetching page 4 for Brussels_BE
-2025-11-04 18:44:34,118 DEBUG Page 3: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,118 DEBUG Fetching page 4 for Hamburg_DE
-2025-11-04 18:44:34,144 DEBUG Page 4: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:34,144 DEBUG Fetching page 5 for Esbjerg_DK
-2025-11-04 18:44:34,167 DEBUG Page 4: Got 24 hours for Munich_DE
-2025-11-04 18:44:34,167 DEBUG Fetching page 5 for Munich_DE
-2025-11-04 18:44:34,171 DEBUG [fea082ac] Parsing response...
-2025-11-04 18:44:34,172 DEBUG Parsed 28 data points from MeteoServer weather response
-2025-11-04 18:44:34,172 DEBUG [fea082ac] Normalizing timestamps...
-2025-11-04 18:44:34,172 DEBUG [fea082ac] Validating data...
-2025-11-04 18:44:34,173 INFO [fea082ac] Collection complete: 28 data points in 0.88s (status: success)
-2025-11-04 18:44:34,188 DEBUG Page 4: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,188 DEBUG Fetching page 5 for Arnhem_NL
-2025-11-04 18:44:34,193 DEBUG Page 3: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,193 DEBUG Fetching page 4 for IJmuiden_NL
-2025-11-04 18:44:34,244 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511022300', 'periodEnd': '202511062300'}
-2025-11-04 18:44:34,245 DEBUG Page 4: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,245 DEBUG Fetching page 5 for Brussels_BE
-2025-11-04 18:44:34,249 DEBUG Page 4: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,249 DEBUG Fetching page 5 for Hamburg_DE
-2025-11-04 18:44:34,250 DEBUG Page 5: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:34,250 DEBUG Fetching page 6 for Esbjerg_DK
-2025-11-04 18:44:34,254 DEBUG Page 5: Got 24 hours for Munich_DE
-2025-11-04 18:44:34,254 DEBUG Fetching page 6 for Munich_DE
-2025-11-04 18:44:34,270 DEBUG Page 5: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,270 DEBUG Fetching page 6 for Arnhem_NL
-2025-11-04 18:44:34,290 DEBUG Page 4: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,290 DEBUG Fetching page 5 for IJmuiden_NL
-2025-11-04 18:44:34,328 DEBUG Page 6: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:34,328 DEBUG Fetching page 7 for Esbjerg_DK
-2025-11-04 18:44:34,336 DEBUG Page 5: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,336 DEBUG Fetching page 6 for Brussels_BE
-2025-11-04 18:44:34,340 DEBUG Page 6: Got 24 hours for Munich_DE
-2025-11-04 18:44:34,340 DEBUG Fetching page 7 for Munich_DE
-2025-11-04 18:44:34,341 DEBUG Page 5: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,341 DEBUG Fetching page 6 for Hamburg_DE
-2025-11-04 18:44:34,352 DEBUG Page 6: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,353 DEBUG Fetching page 7 for Arnhem_NL
-2025-11-04 18:44:34,384 DEBUG Page 5: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,384 DEBUG Fetching page 6 for IJmuiden_NL
-2025-11-04 18:44:34,407 DEBUG Page 7: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:34,408 DEBUG Fetching page 8 for Esbjerg_DK
-2025-11-04 18:44:34,419 DEBUG Page 7: Got 24 hours for Munich_DE
-2025-11-04 18:44:34,419 DEBUG Fetching page 8 for Munich_DE
-2025-11-04 18:44:34,428 DEBUG Page 6: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,428 DEBUG Fetching page 7 for Hamburg_DE
-2025-11-04 18:44:34,436 DEBUG Page 6: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,436 DEBUG Fetching page 7 for Brussels_BE
-2025-11-04 18:44:34,437 DEBUG Page 7: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,437 DEBUG Fetching page 8 for Arnhem_NL
-2025-11-04 18:44:34,473 DEBUG Page 6: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,473 DEBUG Fetching page 7 for IJmuiden_NL
-2025-11-04 18:44:34,483 DEBUG Page 8: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:34,484 DEBUG Fetching page 9 for Esbjerg_DK
-2025-11-04 18:44:34,488 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511022300&periodEnd=202511062300 HTTP/1.1" 200 933
-2025-11-04 18:44:34,494 DEBUG Encoding detection: utf_8 is most likely the one.
-2025-11-04 18:44:34,494 DEBUG NoMatchingDataError: for offset 100
-2025-11-04 18:44:34,497 DEBUG [8a66f514] Parsing response...
-2025-11-04 18:44:34,498 DEBUG Parsed 192 data points from ENTSO-E response
-2025-11-04 18:44:34,498 DEBUG [8a66f514] Normalizing timestamps...
-2025-11-04 18:44:34,499 DEBUG [8a66f514] Validating data...
-2025-11-04 18:44:34,500 INFO [8a66f514] Collection complete: 192 data points in 1.23s (status: success)
-2025-11-04 18:44:34,506 DEBUG Page 8: Got 24 hours for Munich_DE
-2025-11-04 18:44:34,507 DEBUG Fetching page 9 for Munich_DE
-2025-11-04 18:44:34,512 DEBUG Page 7: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,512 DEBUG Fetching page 8 for Hamburg_DE
-2025-11-04 18:44:34,518 DEBUG Page 7: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,518 DEBUG Fetching page 8 for Brussels_BE
-2025-11-04 18:44:34,520 DEBUG Page 8: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,521 DEBUG Fetching page 9 for Arnhem_NL
-2025-11-04 18:44:34,562 DEBUG Page 9: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:34,562 DEBUG Fetching page 10 for Esbjerg_DK
-2025-11-04 18:44:34,569 DEBUG Page 7: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,569 DEBUG Fetching page 8 for IJmuiden_NL
-2025-11-04 18:44:34,587 DEBUG Page 9: Got 24 hours for Munich_DE
-2025-11-04 18:44:34,588 DEBUG Fetching page 10 for Munich_DE
-2025-11-04 18:44:34,595 DEBUG Page 8: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,595 DEBUG Fetching page 9 for Hamburg_DE
-2025-11-04 18:44:34,601 DEBUG Page 9: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,601 DEBUG Fetching page 10 for Arnhem_NL
-2025-11-04 18:44:34,607 DEBUG Page 8: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,607 DEBUG Fetching page 9 for Brussels_BE
-2025-11-04 18:44:34,642 DEBUG Page 10: Got 24 hours for Esbjerg_DK
-2025-11-04 18:44:34,642 DEBUG Successfully fetched 240 hours across 10 pages for Esbjerg_DK
-2025-11-04 18:44:34,665 DEBUG Page 8: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,665 DEBUG Fetching page 9 for IJmuiden_NL
-2025-11-04 18:44:34,666 DEBUG Page 10: Got 24 hours for Munich_DE
-2025-11-04 18:44:34,666 DEBUG Successfully fetched 240 hours across 10 pages for Munich_DE
-2025-11-04 18:44:34,677 DEBUG Page 9: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,677 DEBUG Fetching page 10 for Hamburg_DE
-2025-11-04 18:44:34,689 DEBUG Page 10: Got 24 hours for Arnhem_NL
-2025-11-04 18:44:34,690 DEBUG Successfully fetched 240 hours across 10 pages for Arnhem_NL
-2025-11-04 18:44:34,703 DEBUG Page 9: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,703 DEBUG Fetching page 10 for Brussels_BE
-2025-11-04 18:44:34,713 DEBUG [c59f880d] Parsing response...
-2025-11-04 18:44:34,714 DEBUG Parsed 28 data points from MeteoServer sun response
-2025-11-04 18:44:34,714 DEBUG [c59f880d] Normalizing timestamps...
-2025-11-04 18:44:34,714 DEBUG [c59f880d] Validating data...
-2025-11-04 18:44:34,715 INFO [c59f880d] Collection complete: 28 data points in 1.42s (status: success)
-2025-11-04 18:44:34,758 DEBUG Page 9: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,758 DEBUG Fetching page 10 for IJmuiden_NL
-2025-11-04 18:44:34,768 DEBUG Page 10: Got 24 hours for Hamburg_DE
-2025-11-04 18:44:34,769 DEBUG Successfully fetched 240 hours across 10 pages for Hamburg_DE
-2025-11-04 18:44:34,794 DEBUG Page 10: Got 24 hours for Brussels_BE
-2025-11-04 18:44:34,794 DEBUG Successfully fetched 240 hours across 10 pages for Brussels_BE
-2025-11-04 18:44:34,840 DEBUG Page 10: Got 24 hours for IJmuiden_NL
-2025-11-04 18:44:34,841 DEBUG Successfully fetched 240 hours across 10 pages for IJmuiden_NL
-2025-11-04 18:44:34,841 DEBUG [f1eea4fe] Parsing response...
-2025-11-04 18:44:34,841 DEBUG Parsing 240 forecast hours
-2025-11-04 18:44:34,841 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-11-04 18:44:34,841 ERROR [f1eea4fe] Collection failed after 1.55s: 'int' object has no attribute 'get'
-2025-11-04 18:44:36,433 DEBUG Found 101 stations, fetching details...
-2025-11-04 18:45:21,158 INFO Cached 101 stations
-2025-11-04 18:45:21,158 INFO Using station NL54004 (Arnhem Velperbroek)
-2025-11-04 18:45:21,158 DEBUG Fetching AQI for station NL54004
-2025-11-04 18:45:22,402 DEBUG Fetching measurements for station NL54004
-2025-11-04 18:45:22,860 DEBUG [70b40244] Parsing response...
-2025-11-04 18:45:22,862 DEBUG Parsed 24 data points from Luchtmeetnet response
-2025-11-04 18:45:22,862 DEBUG [70b40244] Normalizing timestamps...
-2025-11-04 18:45:22,863 DEBUG [70b40244] Validating data...
-2025-11-04 18:45:22,863 INFO [70b40244] Collection complete: 24 data points in 49.57s (status: success)
-2025-11-04 18:45:22,864 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-04 18:45:22,871 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-04 18:45:22,872 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-04 18:45:22,873 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-04 18:59:59,183 DEBUG Using selector: EpollSelector
+2025-11-04 18:59:59,184 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2025-11-04 19:00:00,425 INFO No secrets.ini found, using environment variables only
+2025-11-04 19:00:00,425 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
+2025-11-04 19:00:00,425 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
+2025-11-04 19:00:00,425 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
+2025-11-04 19:00:00,425 DEBUG Overriding api_keys.openweather from environment variable OPENWEATHER_API_KEY
+2025-11-04 19:00:00,425 DEBUG Overriding api_keys.meteo from environment variable METEO_API_KEY
+2025-11-04 19:00:00,425 DEBUG Overriding api_keys.google from environment variable GOOGLE_API_KEY
+2025-11-04 19:00:00,425 DEBUG Overriding api_keys.google_weather from environment variable GOOGLE_WEATHER_API_KEY
+2025-11-04 19:00:00,426 INFO Initialized for 6 locations
+2025-11-04 19:00:00,426 INFO [b7b35f0c] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
+2025-11-04 19:00:00,426 DEBUG [b7b35f0c] Fetching raw data...
+2025-11-04 19:00:00,426 DEBUG Attempt 1/3
+2025-11-04 19:00:00,426 DEBUG Fetching ENTSO-E data for NL
+2025-11-04 19:00:00,426 DEBUG Querying ENTSO-E API: 2025-11-03 23:00:00+00:00 to 2025-11-05 22:59:59+00:00 (UTC)
+2025-11-04 19:00:00,444 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511022300', 'periodEnd': '202511062300'}
+2025-11-04 19:00:00,444 INFO [5b7e94ef] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
+2025-11-04 19:00:00,446 DEBUG [5b7e94ef] Fetching raw data...
+2025-11-04 19:00:00,446 DEBUG Attempt 1/3
+2025-11-04 19:00:00,446 DEBUG Fetching EnergyZero data
+2025-11-04 19:00:00,446 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-11-04 19:00:00,447 INFO [a0de78e9] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
+2025-11-04 19:00:00,448 DEBUG [a0de78e9] Fetching raw data...
+2025-11-04 19:00:00,448 DEBUG Attempt 1/3
+2025-11-04 19:00:00,448 DEBUG Fetching EPEX data from Awattar API
+2025-11-04 19:00:00,449 INFO [8f688026] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
+2025-11-04 19:00:00,449 DEBUG Attempt 1/3
+2025-11-04 19:00:00,449 DEBUG Fetching OpenWeather data for lat=51.966472, lon=5.94009
+2025-11-04 19:00:00,450 INFO [b4af5d5c] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-14 00:00:00+01:00
+2025-11-04 19:00:00,450 DEBUG [b4af5d5c] Fetching raw data...
+2025-11-04 19:00:00,450 DEBUG Attempt 1/3
+2025-11-04 19:00:00,450 INFO Fetching weather for 6 locations in parallel
+2025-11-04 19:00:00,450 INFO [29b814db] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
+2025-11-04 19:00:00,450 DEBUG [29b814db] Fetching raw data...
+2025-11-04 19:00:00,451 DEBUG Attempt 1/10
+2025-11-04 19:00:00,451 DEBUG Fetching MeteoServer weather for lat=51.966472, lon=5.94009
+2025-11-04 19:00:00,451 INFO [e59c0946] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
+2025-11-04 19:00:00,451 DEBUG [e59c0946] Fetching raw data...
+2025-11-04 19:00:00,451 DEBUG Attempt 1/10
+2025-11-04 19:00:00,451 DEBUG Fetching MeteoServer sun forecast for lat=51.966472, lon=5.94009
+2025-11-04 19:00:00,452 INFO [702669f7] Starting collection: 2025-11-04 00:00:00+01:00 to 2025-11-05 23:59:59+01:00
+2025-11-04 19:00:00,452 DEBUG [702669f7] Fetching raw data...
+2025-11-04 19:00:00,452 DEBUG Attempt 1/3
+2025-11-04 19:00:00,452 DEBUG Fetching Elspot data for NL
+2025-11-04 19:00:00,452 INFO [409bf00e] Starting collection: 2025-11-03 00:00:00+01:00 to 2025-11-04 00:00:00+01:00
+2025-11-04 19:00:00,452 DEBUG [409bf00e] Fetching raw data...
+2025-11-04 19:00:00,452 DEBUG Attempt 1/3
+2025-11-04 19:00:00,452 DEBUG Fetching Luchtmeetnet data for lat=51.966472, lon=5.94009
+2025-11-04 19:00:00,453 INFO Station cache miss or expired, fetching fresh data
+2025-11-04 19:00:00,453 DEBUG Fetching station list
+2025-11-04 19:00:00,453 DEBUG Fetching Google Weather data for Hamburg_DE
+2025-11-04 19:00:00,454 DEBUG Fetching page 1 for Hamburg_DE
+2025-11-04 19:00:00,454 DEBUG Fetching Google Weather data for Munich_DE
+2025-11-04 19:00:00,454 DEBUG Fetching page 1 for Munich_DE
+2025-11-04 19:00:00,454 DEBUG Fetching Google Weather data for Arnhem_NL
+2025-11-04 19:00:00,454 DEBUG Fetching page 1 for Arnhem_NL
+2025-11-04 19:00:00,454 DEBUG Fetching Google Weather data for IJmuiden_NL
+2025-11-04 19:00:00,454 DEBUG Fetching page 1 for IJmuiden_NL
+2025-11-04 19:00:00,454 DEBUG Fetching Google Weather data for Brussels_BE
+2025-11-04 19:00:00,455 DEBUG Fetching page 1 for Brussels_BE
+2025-11-04 19:00:00,455 DEBUG Fetching Google Weather data for Esbjerg_DK
+2025-11-04 19:00:00,455 DEBUG Fetching page 1 for Esbjerg_DK
+2025-11-04 19:00:00,573 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-11-04 19:00:00,716 DEBUG [a0de78e9] Parsing response...
+2025-11-04 19:00:00,717 DEBUG Parsed 47 data points from Awattar response
+2025-11-04 19:00:00,717 DEBUG [a0de78e9] Normalizing timestamps...
+2025-11-04 19:00:00,718 DEBUG [a0de78e9] Validating data...
+2025-11-04 19:00:00,718 INFO [a0de78e9] Collection complete: 47 data points in 0.27s (status: success)
+2025-11-04 19:00:00,720 DEBUG Parsed 9 data points from OpenWeather response
+2025-11-04 19:00:00,720 INFO [8f688026] Collection complete: 9 data points in 0.27s (status: success)
+2025-11-04 19:00:00,892 DEBUG Page 1: Got 24 hours for Brussels_BE
+2025-11-04 19:00:00,892 DEBUG Fetching page 2 for Brussels_BE
+2025-11-04 19:00:00,921 DEBUG Page 1: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:00,921 DEBUG Fetching page 2 for Esbjerg_DK
+2025-11-04 19:00:00,949 DEBUG Page 2: Got 24 hours for Brussels_BE
+2025-11-04 19:00:00,949 DEBUG Fetching page 3 for Brussels_BE
+2025-11-04 19:00:00,967 DEBUG Page 1: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:00,967 DEBUG Fetching page 2 for Hamburg_DE
+2025-11-04 19:00:01,034 DEBUG Page 3: Got 24 hours for Brussels_BE
+2025-11-04 19:00:01,034 DEBUG Fetching page 4 for Brussels_BE
+2025-11-04 19:00:01,037 DEBUG Page 2: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,037 DEBUG Fetching page 3 for Hamburg_DE
+2025-11-04 19:00:01,048 DEBUG Page 2: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,048 DEBUG Fetching page 3 for Esbjerg_DK
+2025-11-04 19:00:01,049 DEBUG Page 1: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,049 DEBUG Fetching page 2 for Arnhem_NL
+2025-11-04 19:00:01,094 DEBUG Page 3: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,094 DEBUG Fetching page 4 for Hamburg_DE
+2025-11-04 19:00:01,106 DEBUG Page 4: Got 24 hours for Brussels_BE
+2025-11-04 19:00:01,106 DEBUG Fetching page 5 for Brussels_BE
+2025-11-04 19:00:01,143 DEBUG Page 4: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,143 DEBUG Fetching page 5 for Hamburg_DE
+2025-11-04 19:00:01,166 DEBUG Page 5: Got 24 hours for Brussels_BE
+2025-11-04 19:00:01,166 DEBUG Fetching page 6 for Brussels_BE
+2025-11-04 19:00:01,179 DEBUG Page 3: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,179 DEBUG Fetching page 4 for Esbjerg_DK
+2025-11-04 19:00:01,190 DEBUG Page 2: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,190 DEBUG Fetching page 3 for Arnhem_NL
+2025-11-04 19:00:01,198 DEBUG Page 5: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,198 DEBUG Fetching page 6 for Hamburg_DE
+2025-11-04 19:00:01,246 DEBUG Page 6: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,246 DEBUG Fetching page 7 for Hamburg_DE
+2025-11-04 19:00:01,270 DEBUG Page 6: Got 24 hours for Brussels_BE
+2025-11-04 19:00:01,270 DEBUG Fetching page 7 for Brussels_BE
+2025-11-04 19:00:01,272 DEBUG [29b814db] Parsing response...
+2025-11-04 19:00:01,272 DEBUG Parsed 27 data points from MeteoServer weather response
+2025-11-04 19:00:01,272 DEBUG [29b814db] Normalizing timestamps...
+2025-11-04 19:00:01,272 DEBUG [29b814db] Validating data...
+2025-11-04 19:00:01,274 INFO [29b814db] Collection complete: 27 data points in 0.82s (status: success)
+2025-11-04 19:00:01,299 DEBUG Page 7: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,299 DEBUG Fetching page 8 for Hamburg_DE
+2025-11-04 19:00:01,327 DEBUG Page 7: Got 24 hours for Brussels_BE
+2025-11-04 19:00:01,327 DEBUG Fetching page 8 for Brussels_BE
+2025-11-04 19:00:01,329 DEBUG Page 3: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,329 DEBUG Fetching page 4 for Arnhem_NL
+2025-11-04 19:00:01,359 DEBUG Page 8: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,359 DEBUG Fetching page 9 for Hamburg_DE
+2025-11-04 19:00:01,380 DEBUG Page 4: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,380 DEBUG Fetching page 5 for Arnhem_NL
+2025-11-04 19:00:01,382 DEBUG Page 4: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,382 DEBUG Fetching page 5 for Esbjerg_DK
+2025-11-04 19:00:01,384 DEBUG Page 8: Got 24 hours for Brussels_BE
+2025-11-04 19:00:01,384 DEBUG Fetching page 9 for Brussels_BE
+2025-11-04 19:00:01,416 DEBUG Page 9: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,416 DEBUG Fetching page 10 for Hamburg_DE
+2025-11-04 19:00:01,424 DEBUG Page 5: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,424 DEBUG Fetching page 6 for Arnhem_NL
+2025-11-04 19:00:01,431 DEBUG Page 5: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,431 DEBUG Fetching page 6 for Esbjerg_DK
+2025-11-04 19:00:01,448 DEBUG Page 9: Got 24 hours for Brussels_BE
+2025-11-04 19:00:01,448 DEBUG Fetching page 10 for Brussels_BE
+2025-11-04 19:00:01,469 DEBUG Page 6: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,469 DEBUG Fetching page 7 for Arnhem_NL
+2025-11-04 19:00:01,471 DEBUG Page 10: Got 24 hours for Hamburg_DE
+2025-11-04 19:00:01,471 DEBUG Successfully fetched 240 hours across 10 pages for Hamburg_DE
+2025-11-04 19:00:01,475 DEBUG Page 6: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,475 DEBUG Fetching page 7 for Esbjerg_DK
+2025-11-04 19:00:01,512 DEBUG Page 7: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,512 DEBUG Fetching page 8 for Arnhem_NL
+2025-11-04 19:00:01,516 DEBUG Page 10: Got 24 hours for Brussels_BE
+2025-11-04 19:00:01,516 DEBUG Successfully fetched 240 hours across 10 pages for Brussels_BE
+2025-11-04 19:00:01,517 DEBUG Page 7: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,517 DEBUG Fetching page 8 for Esbjerg_DK
+2025-11-04 19:00:01,563 DEBUG Page 8: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,563 DEBUG Fetching page 9 for Esbjerg_DK
+2025-11-04 19:00:01,572 DEBUG Page 8: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,572 DEBUG Fetching page 9 for Arnhem_NL
+2025-11-04 19:00:01,610 DEBUG Page 9: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,610 DEBUG Fetching page 10 for Esbjerg_DK
+2025-11-04 19:00:01,623 DEBUG Page 9: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,623 DEBUG Fetching page 10 for Arnhem_NL
+2025-11-04 19:00:01,662 DEBUG Page 10: Got 24 hours for Esbjerg_DK
+2025-11-04 19:00:01,662 DEBUG Successfully fetched 240 hours across 10 pages for Esbjerg_DK
+2025-11-04 19:00:01,668 DEBUG Page 10: Got 24 hours for Arnhem_NL
+2025-11-04 19:00:01,668 DEBUG Successfully fetched 240 hours across 10 pages for Arnhem_NL
+2025-11-04 19:00:01,668 ERROR Failed to fetch Munich_DE: Google Weather API returned status 500 for Munich_DE: {
+  "error": {
+    "code": 500,
+    "message": "Unknown error. Try again later, or contact support for immediate assistance.",
+    "status": "UNKNOWN"
+  }
+}
+
+2025-11-04 19:00:01,669 ERROR Failed to fetch IJmuiden_NL: Google Weather API returned status 500 for IJmuiden_NL: {
+  "error": {
+    "code": 500,
+    "message": "Unknown error. Try again later, or contact support for immediate assistance.",
+    "status": "UNKNOWN"
+  }
+}
+
+2025-11-04 19:00:01,669 DEBUG [b4af5d5c] Parsing response...
+2025-11-04 19:00:01,669 DEBUG Parsing 240 forecast hours
+2025-11-04 19:00:01,669 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-04 19:00:01,672 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-04 19:00:01,672 WARNING Skipping Munich_DE due to fetch error
+2025-11-04 19:00:01,672 DEBUG Parsing 240 forecast hours
+2025-11-04 19:00:01,673 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-04 19:00:01,676 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-04 19:00:01,676 WARNING Skipping IJmuiden_NL due to fetch error
+2025-11-04 19:00:01,676 DEBUG Parsing 240 forecast hours
+2025-11-04 19:00:01,676 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-04 19:00:01,679 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-04 19:00:01,679 DEBUG Parsing 240 forecast hours
+2025-11-04 19:00:01,679 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-04 19:00:01,682 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-04 19:00:01,682 DEBUG [b4af5d5c] Normalizing timestamps...
+2025-11-04 19:00:01,682 DEBUG [b4af5d5c] Validating data...
+2025-11-04 19:00:01,684 WARNING [b4af5d5c] Munich_DE: No data points collected
+2025-11-04 19:00:01,684 WARNING [b4af5d5c] IJmuiden_NL: No data points collected
+2025-11-04 19:00:01,686 INFO [b4af5d5c] Collection complete: 6 data points in 1.24s (status: partial)
+2025-11-04 19:00:02,629 WARNING Attempt 1 failed: ReadTimeout: HTTPSConnectionPool(host='dataportal-api.nordpoolgroup.com', port=443): Read timed out. (read timeout=2)
+2025-11-04 19:00:02,629 INFO Retrying in 0.85 seconds...
+2025-11-04 19:00:02,800 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511022300&periodEnd=202511062300 HTTP/1.1" 200 None
+2025-11-04 19:00:02,830 DEBUG Found 101 stations, fetching details...
+2025-11-04 19:00:02,998 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511022300', 'periodEnd': '202511062300'}
+2025-11-04 19:00:02,999 DEBUG Resetting dropped connection: web-api.tp.entsoe.eu
+2025-11-04 19:00:03,480 DEBUG Attempt 2/3
+2025-11-04 19:00:03,480 DEBUG Fetching Elspot data for NL
+2025-11-04 19:00:03,481 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-11-04 19:00:03,857 DEBUG [e59c0946] Parsing response...
+2025-11-04 19:00:03,857 DEBUG Parsed 27 data points from MeteoServer sun response
+2025-11-04 19:00:03,857 DEBUG [e59c0946] Normalizing timestamps...
+2025-11-04 19:00:03,858 DEBUG [e59c0946] Validating data...
+2025-11-04 19:00:03,858 INFO [e59c0946] Collection complete: 27 data points in 3.41s (status: success)
+2025-11-04 19:00:03,874 DEBUG [5b7e94ef] Parsing response...
+2025-11-04 19:00:03,875 DEBUG Parsed 47 data points from EnergyZero response
+2025-11-04 19:00:03,875 DEBUG [5b7e94ef] Normalizing timestamps...
+2025-11-04 19:00:03,875 DEBUG [5b7e94ef] Validating data...
+2025-11-04 19:00:03,876 INFO [5b7e94ef] Collection complete: 47 data points in 3.43s (status: success)
+2025-11-04 19:00:04,461 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511022300&periodEnd=202511062300 HTTP/1.1" 200 933
+2025-11-04 19:00:04,467 DEBUG Encoding detection: utf_8 is most likely the one.
+2025-11-04 19:00:04,467 DEBUG NoMatchingDataError: for offset 100
+2025-11-04 19:00:04,470 DEBUG [b7b35f0c] Parsing response...
+2025-11-04 19:00:04,472 DEBUG Parsed 192 data points from ENTSO-E response
+2025-11-04 19:00:04,472 DEBUG [b7b35f0c] Normalizing timestamps...
+2025-11-04 19:00:04,472 DEBUG [b7b35f0c] Validating data...
+2025-11-04 19:00:04,473 INFO [b7b35f0c] Collection complete: 192 data points in 4.05s (status: success)
+2025-11-04 19:00:05,318 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-11-05&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
+2025-11-04 19:00:05,323 DEBUG [702669f7] Parsing response...
+2025-11-04 19:00:05,323 DEBUG Parsed 24 data points from Elspot response
+2025-11-04 19:00:05,323 DEBUG [702669f7] Normalizing timestamps...
+2025-11-04 19:00:05,324 DEBUG [702669f7] Validating data...
+2025-11-04 19:00:05,324 INFO [702669f7] Collection complete: 24 data points in 4.87s (status: success)
+2025-11-04 19:00:47,956 INFO Cached 101 stations
+2025-11-04 19:00:47,956 INFO Using station NL54004 (Arnhem Velperbroek)
+2025-11-04 19:00:47,957 DEBUG Fetching AQI for station NL54004
+2025-11-04 19:00:49,030 DEBUG Fetching measurements for station NL54004
+2025-11-04 19:00:50,600 DEBUG [409bf00e] Parsing response...
+2025-11-04 19:00:50,604 DEBUG Parsed 24 data points from Luchtmeetnet response
+2025-11-04 19:00:50,604 DEBUG [409bf00e] Normalizing timestamps...
+2025-11-04 19:00:50,604 DEBUG [409bf00e] Validating data...
+2025-11-04 19:00:50,604 INFO [409bf00e] Collection complete: 24 data points in 50.15s (status: success)
+2025-11-04 19:00:50,605 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-04 19:00:50,614 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-04 19:00:50,614 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-04 19:00:50,629 INFO Saved multi-location weather forecast for 6 locations
+2025-11-04 19:00:50,629 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-04 19:00:50,629 INFO Timestamp validation passed - all timestamps correctly formatted
