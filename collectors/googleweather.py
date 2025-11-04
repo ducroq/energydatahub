@@ -387,8 +387,11 @@ class GoogleWeatherCollector(BaseCollector):
         for forecast in hourly_forecasts:
             # Extract timestamp from interval (contains startTime and endTime)
             # or fall back to displayDateTime
-            interval = forecast.get('interval', {})
-            time_str = interval.get('startTime') if interval else forecast.get('displayDateTime')
+            interval = forecast.get('interval')
+            if isinstance(interval, dict) and 'startTime' in interval:
+                time_str = interval['startTime']
+            else:
+                time_str = forecast.get('displayDateTime')
 
             if not time_str:
                 skipped_no_time += 1
