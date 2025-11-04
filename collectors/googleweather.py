@@ -54,7 +54,7 @@ Cost:
 """
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 import aiohttp
 
@@ -386,8 +386,11 @@ class GoogleWeatherCollector(BaseCollector):
                 self.logger.warning(f"Failed to parse timestamp {time_str}: {e}")
                 continue
 
-            # Filter by time range
-            if timestamp_normalized < start_time or timestamp_normalized > end_time:
+            # Filter by time range (Google Weather only returns future forecasts,
+            # so we use a lenient filter - keep anything within reasonable bounds)
+            # Allow timestamps slightly before start (API rounds to hour boundaries)
+            if timestamp_normalized < (start_time - timedelta(hours=1)) or timestamp_normalized > (end_time + timedelta(days=1)):
+                self.logger.debug(f"Filtering out timestamp {timestamp_normalized.isoformat()} (outside range)")
                 continue
 
             # Extract weather fields
