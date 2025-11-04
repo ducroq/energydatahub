@@ -371,6 +371,10 @@ class GoogleWeatherCollector(BaseCollector):
         # API returns 'forecastHours' (not 'hourlyForecasts')
         hourly_forecasts = raw_data.get('forecastHours', [])
 
+        self.logger.debug(f"Parsing {len(hourly_forecasts)} forecast hours")
+        if not hourly_forecasts:
+            self.logger.warning(f"Raw data keys: {list(raw_data.keys())}")
+
         for forecast in hourly_forecasts:
             # Extract timestamp
             time_str = forecast.get('time')
