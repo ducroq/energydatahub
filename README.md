@@ -236,7 +236,7 @@ export METEO_API_KEY="your_api_key"
 ### Energy Data Dashboard
 Visual interface for the collected data:
 - **Repository**: https://github.com/ducroq/energyDataDashboard
-- **Live Demo**: https://your-dashboard-url.netlify.app
+- **Live Demo**: https://energy.jeroenveen.nl
 - **Technology**: Hugo + Plotly.js + Netlify
 - **Features**:
   - Interactive price charts
