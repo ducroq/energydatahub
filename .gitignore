@@ -8,6 +8,7 @@ secrets.local.ini
 
 # Claude Code configuration
 .claude/
+CLAUDE.md
 
 # Log files
 *.log
