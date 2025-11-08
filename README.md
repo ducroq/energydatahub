@@ -1,10 +1,10 @@
 # Energy Data Hub
 
-A robust Python-based system for collecting, processing, and publishing energy price and weather forecast data for energy optimization applications. The system fetches data from multiple sources including ENTSO-E, Energy Zero, EPEX SPOT, Nord Pool Elspot, OpenWeather, and MeteoServer, providing comprehensive data for energy management decisions.
+A robust Python-based system for collecting, processing, and publishing energy price and weather forecast data for energy optimization applications. The system fetches data from multiple sources including ENTSO-E, Energy Zero, EPEX SPOT, Nord Pool Elspot, OpenWeather, MeteoServer, Google Weather API, and Luchtmeetnet, providing comprehensive data for energy management decisions.
 
 ## 🌟 Features
 
-- **Multi-Source Data Collection**: Automated collection from 7+ energy and weather APIs
+- **Multi-Source Data Collection**: Automated collection from 8 energy and weather APIs
 - **Robust Architecture**: BaseCollector pattern with retry logic and circuit breakers
 - **Data Validation**: Comprehensive timezone normalization and data type validation
 - **Secure Publishing**: AES-CBC encryption with HMAC-SHA256 for all published data
@@ -25,6 +25,7 @@ A robust Python-based system for collecting, processing, and publishing energy p
 │  │  ├── EntsoeCollector        (ENTSO-E)                 │ │
 │  │  ├── OpenWeatherCollector   (Weather Data)            │ │
 │  │  ├── MeteoServerCollector   (NL Weather)              │ │
+│  │  ├── GoogleWeatherCollector (Multi-Location Weather)  │ │
 │  │  └── LuchtmeetnetCollector  (Air Quality)             │ │
 │  └───────────────────────────────────────────────────────┘ │
 │  ┌───────────────────────────────────────────────────────┐ │
@@ -56,6 +57,10 @@ Encrypted data is automatically published to GitHub Pages daily:
 
 - **Energy Price Forecast**: https://ducroq.github.io/energydatahub/energy_price_forecast.json
 - **Weather Forecast**: https://ducroq.github.io/energydatahub/weather_forecast.json
+- **Weather Forecast (Multi-Location)**: https://ducroq.github.io/energydatahub/weather_forecast_multi_location.json
+  - Comprehensive weather data for 100+ locations across the Netherlands
+  - Powered by Google Weather API
+  - Includes temperature, precipitation, wind, and hourly forecasts
 - **Sun Forecast**: https://ducroq.github.io/energydatahub/sun_forecast.json
 - **Air Quality Data**: https://ducroq.github.io/energydatahub/air_history.json
 
