@@ -82,7 +82,6 @@ jobs:
         # Check that required files exist
         test -f pytest.ini || (echo "ERROR: pytest.ini missing" && exit 1)
         test -f requirements.txt || (echo "ERROR: requirements.txt missing" && exit 1)
-        test -f CLAUDE.md || (echo "ERROR: CLAUDE.md missing" && exit 1)
         test -d tests/unit || (echo "ERROR: tests/unit directory missing" && exit 1)
         test -d tests/integration || (echo "ERROR: tests/integration directory missing" && exit 1)
         echo "✓ Project structure validated"
