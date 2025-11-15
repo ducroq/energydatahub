@@ -26,6 +26,7 @@ from collectors.openweather import OpenWeatherCollector
 from collectors.googleweather import GoogleWeatherCollector
 from collectors.meteoserver import MeteoServerWeatherCollector, MeteoServerSunCollector
 from collectors.luchtmeetnet import LuchtmeetnetCollector
+from collectors.tennet import TennetCollector
 
 __all__ = [
     # Base classes
@@ -49,4 +50,7 @@ __all__ = [
 
     # Air quality collectors
     'LuchtmeetnetCollector',     # Dutch air quality monitoring
+
+    # Grid data collectors
+    'TennetCollector',           # TenneT TSO grid imbalance
 ]

@@ -78,7 +78,8 @@ from collectors import (
     GoogleWeatherCollector,
     MeteoServerWeatherCollector,
     MeteoServerSunCollector,
-    LuchtmeetnetCollector
+    LuchtmeetnetCollector,
+    TennetCollector
 )
 
 # Constants
@@ -180,6 +181,7 @@ async def main() -> None:
             latitude=latitude,
             longitude=longitude
         )
+        tennet_collector = TennetCollector()
 
         # Collect data from all sources
         tasks = [
@@ -191,11 +193,12 @@ async def main() -> None:
             meteoserver_weather_collector.collect(today, tomorrow),
             meteoserver_sun_collector.collect(today, tomorrow),
             elspot_collector.collect(today, tomorrow, country_code=country_code),
-            luchtmeetnet_collector.collect(yesterday, today)
+            luchtmeetnet_collector.collect(yesterday, today),
+            tennet_collector.collect(today, tomorrow)
         ]
 
         results = await asyncio.gather(*tasks)
-        entsoe_data, energy_zero_data, epex_data, open_weather_data, google_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data = results
+        entsoe_data, energy_zero_data, epex_data, open_weather_data, google_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data, tennet_data = results
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -255,6 +258,12 @@ async def main() -> None:
             # else:
             #     luchtmeetnet_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "air_history.json"))
+
+        if tennet_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_grid_imbalance.json")
+            save_data_file(data=tennet_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "grid_imbalance.json"))
+            logging.info(f"Saved TenneT grid imbalance data with {tennet_data.metadata.get('data_points', 0)} data points")
 
     except Exception as e:
         logging.error(e)
