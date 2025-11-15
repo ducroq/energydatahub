@@ -38,11 +38,15 @@ Add **TenneT system imbalance data collection** to energyDataHub as the 9th data
 
 ### API/Data Endpoint
 - **Source:** TenneT TSO (Dutch transmission system operator)
-- **URL:** https://www.tennet.org/english/operational_management/export_data.aspx
-- **Format:** CSV export
-- **Authentication:** None required (public data)
-- **Update Frequency:** Real-time (4-second resolution), but we'll aggregate hourly
-- **Historical Data:** Available for several years back
+- **API Portal:** https://developer.tennet.eu/
+- **Registration:** https://www.tennet.eu/registration-api-token
+- **Library:** tenneteu-py (official Python client)
+- **Format:** DataFrame (pandas)
+- **Authentication:** API key required
+- **Update Frequency:** PTU (15 minutes) resolution
+- **Historical Data:** Available via settlement_prices and balance_delta endpoints
+
+**IMPORTANT:** The old TenneT.org website was decommissioned on December 1, 2024. Use the new tennet.eu API instead.
 
 ### Data Fields
 ```csv

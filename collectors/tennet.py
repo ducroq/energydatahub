@@ -1,28 +1,32 @@
 """
 TenneT System Imbalance Collector
 ----------------------------------
-Collects Dutch grid system imbalance data from TenneT TSO.
+Collects Dutch grid system imbalance data from TenneT TSO using the official
+tenneteu-py library and the new tennet.eu API.
 
 Data includes:
 - System imbalance volume (MW)
 - Imbalance settlement price (EUR/MWh)
-- Direction (short/long)
+- Balance delta information
 
 File: collectors/tennet.py
 Created: 2025-11-15
+Updated: 2025-11-15 (migrated to tennet.eu API)
 Author: Energy Data Hub Project
+
+API Documentation: https://developer.tennet.eu/
+API Registration: https://www.tennet.eu/registration-api-token
 """
 
 import asyncio
-import csv
 import logging
 import time
 import uuid
 from datetime import datetime
-from io import StringIO
 from typing import Any, Dict, List, Optional
 
-import aiohttp
+import pandas as pd
+from tenneteu import TenneTeuClient
 
 from collectors.base import (
     BaseCollector,
@@ -38,12 +42,18 @@ logger = logging.getLogger(__name__)
 
 
 class TennetCollector(BaseCollector):
-    """Collector for TenneT system imbalance data."""
+    """
+    Collector for TenneT system imbalance data using the official tennet.eu API.
 
-    BASE_URL = "https://www.tennet.org/english/operational_management/export_data.aspx"
+    Uses the tenneteu-py library to access TenneT's settlement prices and
+    balance delta data.
+
+    Note: Requires API key from https://www.tennet.eu/registration-api-token
+    """
 
     def __init__(
         self,
+        api_key: str,
         retry_config: Optional[RetryConfig] = None,
         circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
     ):
@@ -51,23 +61,26 @@ class TennetCollector(BaseCollector):
         Initialize TenneT collector.
 
         Args:
+            api_key: TenneT API key (register at tennet.eu)
             retry_config: Optional retry configuration
             circuit_breaker_config: Optional circuit breaker configuration
         """
         super().__init__(
             name="TennetCollector",
             data_type="grid_imbalance",
-            source="TenneT TSO",
+            source="TenneT TSO (tennet.eu API)",
             units="MW",
             retry_config=retry_config,
             circuit_breaker_config=circuit_breaker_config,
         )
+        self.api_key = api_key
+        self.client = TenneTeuClient(api_key=api_key)
 
     async def _fetch_raw_data(
         self, start_time: datetime, end_time: datetime, **kwargs
-    ) -> dict:
+    ) -> Dict[str, pd.DataFrame]:
         """
-        Fetch raw CSV data from TenneT API.
+        Fetch raw data from TenneT API using tenneteu-py library.
 
         Args:
             start_time: Start of data range (Amsterdam timezone)
@@ -75,39 +88,57 @@ class TennetCollector(BaseCollector):
             **kwargs: Additional parameters
 
         Returns:
-            Dict with raw CSV data
+            Dict with DataFrames for settlement prices and balance delta
 
         Raises:
-            aiohttp.ClientError: If API request fails
+            Exception: If API request fails
         """
-        params = {
-            "DataType": "SystemImbalance",
-            "StartDate": start_time.strftime("%Y-%m-%d"),
-            "EndDate": end_time.strftime("%Y-%m-%d"),
-            "Output": "csv",
-        }
-
         self.logger.debug(
             f"Fetching TenneT data from {start_time.date()} to {end_time.date()}"
         )
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self.BASE_URL, params=params) as response:
-                response.raise_for_status()
-                csv_data = await response.text()
+        # Run the synchronous API calls in an executor to avoid blocking
+        loop = asyncio.get_event_loop()
 
-                self.logger.info(f"Fetched TenneT data: {len(csv_data)} bytes")
+        try:
+            # Fetch settlement prices (imbalance prices)
+            settlement_prices_df = await loop.run_in_executor(
+                None,
+                self.client.query_settlement_prices,
+                start_time,
+                end_time
+            )
 
-                return {"csv_content": csv_data}
+            # Fetch balance delta data
+            balance_delta_df = await loop.run_in_executor(
+                None,
+                self.client.query_balance_delta,
+                start_time,
+                end_time
+            )
+
+            self.logger.info(
+                f"Fetched TenneT data: {len(settlement_prices_df)} settlement price records, "
+                f"{len(balance_delta_df)} balance delta records"
+            )
+
+            return {
+                'settlement_prices': settlement_prices_df,
+                'balance_delta': balance_delta_df
+            }
+
+        except Exception as e:
+            self.logger.error(f"Failed to fetch TenneT data: {e}")
+            raise
 
     def _parse_response(
-        self, raw_data: dict, start_time: datetime, end_time: datetime
+        self, raw_data: Dict[str, pd.DataFrame], start_time: datetime, end_time: datetime
     ) -> Dict[str, Dict[str, Any]]:
         """
-        Parse TenneT CSV response into normalized dict.
+        Parse TenneT API response DataFrames into normalized dict.
 
         Args:
-            raw_data: Dict containing 'csv_content' field
+            raw_data: Dict containing 'settlement_prices' and 'balance_delta' DataFrames
             start_time: Start of data range
             end_time: End of data range
 
@@ -115,43 +146,128 @@ class TennetCollector(BaseCollector):
             Dict with timestamps as keys, imbalance data as values
             {
                 '2025-11-15T00:00:00+01:00': {
-                    'imbalance_mw': -45.2,
-                    'price_eur_mwh': 48.50,
+                    'imbalance_price': 48.50,
+                    'balance_delta': -45.2,
                     'direction': 'long'
                 },
                 ...
             }
 
         Raises:
-            ValueError: If CSV parsing fails
+            ValueError: If data parsing fails
         """
-        csv_content = raw_data["csv_content"]
-        reader = csv.DictReader(StringIO(csv_content))
+        settlement_prices_df = raw_data.get('settlement_prices')
+        balance_delta_df = raw_data.get('balance_delta')
+
+        if settlement_prices_df is None or settlement_prices_df.empty:
+            raise ValueError("No settlement prices data received from TenneT API")
 
         parsed_data = {}
 
-        for row in reader:
+        # Parse settlement prices (imbalance prices per balancing time unit)
+        # The DataFrame typically has columns like: datetime, price, type
+        for idx, row in settlement_prices_df.iterrows():
             try:
-                timestamp = row["DateTime"]  # Already in Amsterdam timezone
+                # Get timestamp - the exact column name may vary
+                # Common column names: 'datetime', 'date', 'timestamp', 'from'
+                timestamp = None
+                for col in ['datetime', 'date', 'timestamp', 'from', 'dateFrom']:
+                    if col in row.index:
+                        timestamp = row[col]
+                        break
 
-                # Parse values
-                imbalance = float(row["SystemImbalance_MW"])
-                price = float(row["ImbalancePrice_EUR_MWh"])
-                direction = "long" if imbalance < 0 else "short"
+                if timestamp is None:
+                    self.logger.warning(f"No timestamp column found in row: {row.index.tolist()}")
+                    continue
 
-                parsed_data[timestamp] = {
-                    "imbalance_mw": imbalance,
-                    "price_eur_mwh": price,
-                    "direction": direction,
-                }
-            except (KeyError, ValueError) as e:
-                self.logger.warning(f"Failed to parse row: {row}. Error: {e}")
+                # Convert to ISO format string
+                if isinstance(timestamp, pd.Timestamp):
+                    timestamp_str = timestamp.isoformat()
+                elif isinstance(timestamp, datetime):
+                    timestamp_str = timestamp.isoformat()
+                else:
+                    timestamp_str = str(timestamp)
+
+                # Get imbalance price - common column names: 'price', 'value', 'settlementPrice'
+                imbalance_price = None
+                for col in ['price', 'value', 'settlementPrice', 'imbalancePrice']:
+                    if col in row.index:
+                        imbalance_price = float(row[col])
+                        break
+
+                if imbalance_price is None:
+                    self.logger.warning(f"No price column found in row: {row.index.tolist()}")
+                    continue
+
+                # Initialize data entry
+                if timestamp_str not in parsed_data:
+                    parsed_data[timestamp_str] = {
+                        'imbalance_price': imbalance_price,
+                        'balance_delta': 0.0,
+                        'direction': 'unknown'
+                    }
+                else:
+                    parsed_data[timestamp_str]['imbalance_price'] = imbalance_price
+
+            except (KeyError, ValueError, TypeError) as e:
+                self.logger.warning(f"Failed to parse settlement price row: {e}")
                 continue
+
+        # Parse balance delta if available
+        if balance_delta_df is not None and not balance_delta_df.empty:
+            for idx, row in balance_delta_df.iterrows():
+                try:
+                    # Get timestamp
+                    timestamp = None
+                    for col in ['datetime', 'date', 'timestamp', 'from', 'dateFrom']:
+                        if col in row.index:
+                            timestamp = row[col]
+                            break
+
+                    if timestamp is None:
+                        continue
+
+                    # Convert to ISO format string
+                    if isinstance(timestamp, pd.Timestamp):
+                        timestamp_str = timestamp.isoformat()
+                    elif isinstance(timestamp, datetime):
+                        timestamp_str = timestamp.isoformat()
+                    else:
+                        timestamp_str = str(timestamp)
+
+                    # Get balance delta value - common names: 'value', 'delta', 'igcc'
+                    balance_delta = None
+                    for col in ['value', 'delta', 'igcc', 'balanceDelta']:
+                        if col in row.index:
+                            balance_delta = float(row[col])
+                            break
+
+                    if balance_delta is None:
+                        continue
+
+                    # Calculate direction from balance delta
+                    # Negative = oversupply (long), Positive = undersupply (short)
+                    direction = 'long' if balance_delta < 0 else 'short'
+
+                    # Update or create data entry
+                    if timestamp_str in parsed_data:
+                        parsed_data[timestamp_str]['balance_delta'] = balance_delta
+                        parsed_data[timestamp_str]['direction'] = direction
+                    else:
+                        parsed_data[timestamp_str] = {
+                            'imbalance_price': 0.0,
+                            'balance_delta': balance_delta,
+                            'direction': direction
+                        }
+
+                except (KeyError, ValueError, TypeError) as e:
+                    self.logger.warning(f"Failed to parse balance delta row: {e}")
+                    continue
 
         self.logger.info(f"Parsed {len(parsed_data)} TenneT data points")
 
         if not parsed_data:
-            raise ValueError("No valid data points parsed from TenneT CSV")
+            raise ValueError("No valid data points parsed from TenneT API")
 
         return parsed_data
 
@@ -200,7 +316,7 @@ class TennetCollector(BaseCollector):
         Create EnhancedDataSet from parsed TenneT data.
 
         Converts complex per-timestamp data into separate time series
-        for imbalance, price, and direction.
+        for imbalance price, balance delta, and direction.
 
         Args:
             parsed_data: Dict of timestamp -> imbalance data
@@ -212,26 +328,27 @@ class TennetCollector(BaseCollector):
         """
         metadata = {
             "data_type": "grid_imbalance",
-            "source": "TenneT TSO",
-            "units": "MW",
+            "source": "TenneT TSO (tennet.eu API)",
+            "units": "EUR/MWh (price), MW (balance)",
             "country": "NL",
             "start_time": start_time.isoformat(),
             "end_time": end_time.isoformat(),
             "data_points": len(parsed_data),
             "collection_timestamp": datetime.now().isoformat(),
+            "api_version": "tennet.eu v1",
         }
 
         # Convert to simplified format for chart display
-        # Separate imbalance volume from price
-        imbalance_data = {ts: data["imbalance_mw"] for ts, data in parsed_data.items()}
-        price_data = {ts: data["price_eur_mwh"] for ts, data in parsed_data.items()}
+        # Separate imbalance price from balance delta
+        imbalance_price_data = {ts: data["imbalance_price"] for ts, data in parsed_data.items()}
+        balance_delta_data = {ts: data["balance_delta"] for ts, data in parsed_data.items()}
         direction_data = {ts: data["direction"] for ts, data in parsed_data.items()}
 
         dataset = EnhancedDataSet(
             metadata=metadata,
             data={
-                "imbalance": imbalance_data,
-                "imbalance_price": price_data,
+                "imbalance_price": imbalance_price_data,
+                "balance_delta": balance_delta_data,
                 "direction": direction_data,
             },
         )
@@ -354,8 +471,9 @@ class TennetCollector(BaseCollector):
             {
                 "country_code": "NL",
                 "market": "transmission",
-                "resolution": "hourly",
-                "data_fields": ["imbalance_mw", "price_eur_mwh", "direction"],
+                "resolution": "PTU (15 minutes)",
+                "data_fields": ["imbalance_price", "balance_delta", "direction"],
+                "api_version": "tennet.eu v1",
             }
         )
 
@@ -368,10 +486,19 @@ async def main():
     from datetime import timedelta
     from zoneinfo import ZoneInfo
     import platform
+    import os
 
     # Set Windows event loop policy if needed
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    # Get API key from environment or config
+    api_key = os.getenv("TENNET_API_KEY", "your_api_key_here")
+
+    if api_key == "your_api_key_here":
+        print("Please set TENNET_API_KEY environment variable")
+        print("Register at: https://www.tennet.eu/registration-api-token")
+        return
 
     # Setup time range
     amsterdam_tz = ZoneInfo("Europe/Amsterdam")
@@ -380,6 +507,7 @@ async def main():
 
     # Create collector and fetch data
     collector = TennetCollector(
+        api_key=api_key,
         retry_config=RetryConfig(max_attempts=3),
         circuit_breaker_config=CircuitBreakerConfig(failure_threshold=3),
     )
@@ -387,11 +515,11 @@ async def main():
 
     if dataset:
         print(f"Collected {dataset.metadata['data_points']} data points")
-        print(f"\nFirst 5 imbalance values:")
-        for timestamp, value in list(dataset.data["imbalance"].items())[:5]:
-            price = dataset.data["imbalance_price"][timestamp]
+        print(f"\nFirst 5 values:")
+        for timestamp, price in list(dataset.data["imbalance_price"].items())[:5]:
+            balance = dataset.data["balance_delta"][timestamp]
             direction = dataset.data["direction"][timestamp]
-            print(f"  {timestamp}: {value} MW ({direction}) @ {price} EUR/MWh")
+            print(f"  {timestamp}: €{price}/MWh, {balance} MW ({direction})")
 
         # Check metrics
         metrics = collector.get_metrics(limit=1)

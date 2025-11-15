@@ -115,6 +115,7 @@ async def main() -> None:
         openweather_api_key = config.get('api_keys', 'openweather')
         meteoserver_api_key = config.get('api_keys', 'meteo')
         google_weather_api_key = config.get('api_keys', 'google_weather')
+        tennet_api_key = config.get('api_keys', 'tennet')
         encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))
         hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
         handler = SecureDataHandler(encryption_key, hmac_key)
@@ -181,7 +182,7 @@ async def main() -> None:
             latitude=latitude,
             longitude=longitude
         )
-        tennet_collector = TennetCollector()
+        tennet_collector = TennetCollector(api_key=tennet_api_key)
 
         # Collect data from all sources
         tasks = [
