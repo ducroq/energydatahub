@@ -1,11 +1,11 @@
-2025-11-15 19:25:36,651 DEBUG Using selector: EpollSelector
-2025-11-15 19:25:36,651 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2025-11-15 19:25:37,949 INFO No secrets.ini found, using environment variables only
-2025-11-15 19:25:37,949 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
-2025-11-15 19:25:37,949 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
-2025-11-15 19:25:37,949 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
-2025-11-15 19:25:37,949 DEBUG Overriding api_keys.openweather from environment variable OPENWEATHER_API_KEY
-2025-11-15 19:25:37,949 DEBUG Overriding api_keys.meteo from environment variable METEO_API_KEY
-2025-11-15 19:25:37,949 DEBUG Overriding api_keys.google from environment variable GOOGLE_API_KEY
-2025-11-15 19:25:37,949 DEBUG Overriding api_keys.google_weather from environment variable GOOGLE_WEATHER_API_KEY
-2025-11-15 19:25:37,950 ERROR No option 'tennet' in section: 'api_keys'
+2025-11-16 16:15:24,660 DEBUG Using selector: EpollSelector
+2025-11-16 16:15:24,660 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2025-11-16 16:15:25,867 INFO No secrets.ini found, using environment variables only
+2025-11-16 16:15:25,867 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
+2025-11-16 16:15:25,867 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
+2025-11-16 16:15:25,867 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
+2025-11-16 16:15:25,867 DEBUG Overriding api_keys.openweather from environment variable OPENWEATHER_API_KEY
+2025-11-16 16:15:25,867 DEBUG Overriding api_keys.meteo from environment variable METEO_API_KEY
+2025-11-16 16:15:25,867 DEBUG Overriding api_keys.google from environment variable GOOGLE_API_KEY
+2025-11-16 16:15:25,867 DEBUG Overriding api_keys.google_weather from environment variable GOOGLE_WEATHER_API_KEY
+2025-11-16 16:15:25,867 ERROR No option 'tennet' in section: 'api_keys'
