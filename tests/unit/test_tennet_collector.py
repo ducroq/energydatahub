@@ -20,31 +20,58 @@ from utils.data_types import EnhancedDataSet
 
 # Sample DataFrames for testing (mimicking tenneteu-py responses)
 def create_sample_settlement_prices_df():
-    """Create sample settlement prices DataFrame."""
+    """Create sample settlement prices DataFrame with correct structure."""
+    # The actual API returns timestamps in the index, not as a column
+    timestamps = pd.to_datetime([
+        '2025-11-15T00:00:00+01:00',
+        '2025-11-15T00:15:00+01:00',
+        '2025-11-15T00:30:00+01:00',
+        '2025-11-15T00:45:00+01:00',
+    ])
     data = {
-        'datetime': pd.to_datetime([
-            '2025-11-15T00:00:00+01:00',
-            '2025-11-15T00:15:00+01:00',
-            '2025-11-15T00:30:00+01:00',
-            '2025-11-15T00:45:00+01:00',
-        ]),
-        'price': [48.50, 52.30, 45.00, 85.00]
+        'Isp': [1, 2, 3, 4],
+        'Currency Unit Name': ['EUR', 'EUR', 'EUR', 'EUR'],
+        'Price Measurement Unit Name': ['EUR/MWh', 'EUR/MWh', 'EUR/MWh', 'EUR/MWh'],
+        'Incident Reserve Up': [None, None, None, None],
+        'Incident Reserve Down': [None, None, None, None],
+        'Price Dispatch Up': [50.0, 55.0, 48.0, 90.0],
+        'Price Dispatch Down': [47.0, 49.6, 42.0, 80.0],
+        'Price Shortage': [48.50, 52.30, 45.00, 85.00],
+        'Price Surplus': [48.50, 52.30, 45.00, 85.00],
+        'Regulation State': [1, 1, 1, 1],
+        'Regulating Condition': ['UP', 'UP', 'UP', 'UP']
     }
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data, index=timestamps)
+    df.index.name = 'timestamp'
+    return df
 
 
 def create_sample_balance_delta_df():
-    """Create sample balance delta DataFrame."""
+    """Create sample balance delta DataFrame with correct structure."""
+    # The actual API returns timestamps in the index, not as a column
+    timestamps = pd.to_datetime([
+        '2025-11-15T00:00:00+01:00',
+        '2025-11-15T00:15:00+01:00',
+        '2025-11-15T00:30:00+01:00',
+        '2025-11-15T00:45:00+01:00',
+    ])
     data = {
-        'datetime': pd.to_datetime([
-            '2025-11-15T00:00:00+01:00',
-            '2025-11-15T00:15:00+01:00',
-            '2025-11-15T00:30:00+01:00',
-            '2025-11-15T00:45:00+01:00',
-        ]),
-        'igcc': [-45.2, 12.8, -8.5, 150.0]
+        'Isp': [1, 2, 3, 4],
+        'Power In Activated Afrr': [0.0, 0.0, 0.0, 0.0],
+        'Power Out Activated Afrr': [0.0, 0.0, 0.0, 0.0],
+        'Power In Igcc': [0.0, 50.0, 10.0, 200.0],
+        'Power Out Igcc': [45.2, 37.2, 18.5, 50.0],
+        'Power In Mfrrda': [0.0, 0.0, 0.0, 0.0],
+        'Power Out Mfrrda': [0.0, 0.0, 0.0, 0.0],
+        'Highest Upward Regulation Price': [100.0, 100.0, 100.0, 100.0],
+        'Lowest Downward Regulation Price': [10.0, 10.0, 10.0, 10.0],
+        'Mid Price': [55.0, 55.0, 55.0, 55.0],
+        'Picasso Contribution Power In': [0.0, 0.0, 0.0, 0.0],
+        'Picasso Contribution Power Out': [0.0, 0.0, 0.0, 0.0]
     }
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data, index=timestamps)
+    df.index.name = 'timestamp'
+    return df
 
 
 class TestTennetCollector:
@@ -79,9 +106,11 @@ class TestTennetCollector:
 
         assert len(parsed) == 4
         assert '2025-11-15T00:00:00+01:00' in parsed
+        # Price Shortage and Price Surplus are averaged
         assert parsed['2025-11-15T00:00:00+01:00']['imbalance_price'] == 48.50
+        # Balance delta = Power In Igcc - Power Out Igcc = 0.0 - 45.2 = -45.2
         assert parsed['2025-11-15T00:00:00+01:00']['balance_delta'] == -45.2
-        assert parsed['2025-11-15T00:00:00+01:00']['direction'] == 'long'
+        assert parsed['2025-11-15T00:00:00+01:00']['direction'] == 'long'  # negative = long
 
     @pytest.mark.unit
     def test_parse_direction_calculation(self):
@@ -100,11 +129,11 @@ class TestTennetCollector:
         parsed = collector._parse_response(raw_data, start, end)
 
         # Negative balance delta should be 'long' (oversupply)
-        assert parsed['2025-11-15T00:00:00+01:00']['balance_delta'] == -45.2
+        assert parsed['2025-11-15T00:00:00+01:00']['balance_delta'] == pytest.approx(-45.2)
         assert parsed['2025-11-15T00:00:00+01:00']['direction'] == 'long'
 
         # Positive balance delta should be 'short' (undersupply)
-        assert parsed['2025-11-15T00:15:00+01:00']['balance_delta'] == 12.8
+        assert parsed['2025-11-15T00:15:00+01:00']['balance_delta'] == pytest.approx(12.8)
         assert parsed['2025-11-15T00:15:00+01:00']['direction'] == 'short'
 
     @pytest.mark.unit

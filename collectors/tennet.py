@@ -165,22 +165,10 @@ class TennetCollector(BaseCollector):
         parsed_data = {}
 
         # Parse settlement prices (imbalance prices per balancing time unit)
-        # The DataFrame typically has columns like: datetime, price, type
-        for idx, row in settlement_prices_df.iterrows():
+        # The timestamp is in the DataFrame index, not in a column
+        for timestamp, row in settlement_prices_df.iterrows():
             try:
-                # Get timestamp - the exact column name may vary
-                # Common column names: 'datetime', 'date', 'timestamp', 'from'
-                timestamp = None
-                for col in ['datetime', 'date', 'timestamp', 'from', 'dateFrom']:
-                    if col in row.index:
-                        timestamp = row[col]
-                        break
-
-                if timestamp is None:
-                    self.logger.warning(f"No timestamp column found in row: {row.index.tolist()}")
-                    continue
-
-                # Convert to ISO format string
+                # Timestamp is the index
                 if isinstance(timestamp, pd.Timestamp):
                     timestamp_str = timestamp.isoformat()
                 elif isinstance(timestamp, datetime):
@@ -188,15 +176,33 @@ class TennetCollector(BaseCollector):
                 else:
                     timestamp_str = str(timestamp)
 
-                # Get imbalance price - common column names: 'price', 'value', 'settlementPrice'
+                # Get imbalance price from shortage/surplus prices
+                # Use Mid Price if available, otherwise average of shortage and surplus
                 imbalance_price = None
-                for col in ['price', 'value', 'settlementPrice', 'imbalancePrice']:
-                    if col in row.index:
-                        imbalance_price = float(row[col])
-                        break
+
+                # Try 'Mid Price' first
+                if 'Mid Price' in row.index and pd.notna(row['Mid Price']):
+                    imbalance_price = float(row['Mid Price'])
+                # Otherwise try Price Shortage/Surplus
+                elif 'Price Shortage' in row.index and 'Price Surplus' in row.index:
+                    shortage = row['Price Shortage']
+                    surplus = row['Price Surplus']
+                    if pd.notna(shortage) and pd.notna(surplus):
+                        imbalance_price = (float(shortage) + float(surplus)) / 2
+                    elif pd.notna(shortage):
+                        imbalance_price = float(shortage)
+                    elif pd.notna(surplus):
+                        imbalance_price = float(surplus)
+
+                # Try dispatch prices as fallback
+                if imbalance_price is None:
+                    if 'Price Dispatch Up' in row.index and pd.notna(row['Price Dispatch Up']):
+                        imbalance_price = float(row['Price Dispatch Up'])
+                    elif 'Price Dispatch Down' in row.index and pd.notna(row['Price Dispatch Down']):
+                        imbalance_price = float(row['Price Dispatch Down'])
 
                 if imbalance_price is None:
-                    self.logger.warning(f"No price column found in row: {row.index.tolist()}")
+                    self.logger.debug(f"No price data available for {timestamp_str}")
                     continue
 
                 # Initialize data entry
@@ -215,19 +221,9 @@ class TennetCollector(BaseCollector):
 
         # Parse balance delta if available
         if balance_delta_df is not None and not balance_delta_df.empty:
-            for idx, row in balance_delta_df.iterrows():
+            for timestamp, row in balance_delta_df.iterrows():
                 try:
-                    # Get timestamp
-                    timestamp = None
-                    for col in ['datetime', 'date', 'timestamp', 'from', 'dateFrom']:
-                        if col in row.index:
-                            timestamp = row[col]
-                            break
-
-                    if timestamp is None:
-                        continue
-
-                    # Convert to ISO format string
+                    # Timestamp is the index
                     if isinstance(timestamp, pd.Timestamp):
                         timestamp_str = timestamp.isoformat()
                     elif isinstance(timestamp, datetime):
@@ -235,19 +231,32 @@ class TennetCollector(BaseCollector):
                     else:
                         timestamp_str = str(timestamp)
 
-                    # Get balance delta value - common names: 'value', 'delta', 'igcc'
+                    # Calculate net balance delta from IGCC (International Grid Control Cooperation)
+                    # Power In IGCC = import (positive), Power Out IGCC = export (negative)
                     balance_delta = None
-                    for col in ['value', 'delta', 'igcc', 'balanceDelta']:
-                        if col in row.index:
-                            balance_delta = float(row[col])
-                            break
+
+                    if 'Power In Igcc' in row.index and 'Power Out Igcc' in row.index:
+                        power_in = row['Power In Igcc']
+                        power_out = row['Power Out Igcc']
+                        if pd.notna(power_in) and pd.notna(power_out):
+                            # Net balance: positive = importing/short, negative = exporting/long
+                            balance_delta = float(power_in) - float(power_out)
+
+                    # Also consider activated aFRR (automatic Frequency Restoration Reserve)
+                    if 'Power In Activated Afrr' in row.index and 'Power Out Activated Afrr' in row.index:
+                        afrr_in = row['Power In Activated Afrr']
+                        afrr_out = row['Power Out Activated Afrr']
+                        if pd.notna(afrr_in) and pd.notna(afrr_out):
+                            if balance_delta is None:
+                                balance_delta = 0.0
+                            balance_delta += float(afrr_in) - float(afrr_out)
 
                     if balance_delta is None:
                         continue
 
                     # Calculate direction from balance delta
-                    # Negative = oversupply (long), Positive = undersupply (short)
-                    direction = 'long' if balance_delta < 0 else 'short'
+                    # Negative = net export/oversupply (long), Positive = net import/undersupply (short)
+                    direction = 'long' if balance_delta < 0 else 'short' if balance_delta > 0 else 'balanced'
 
                     # Update or create data entry
                     if timestamp_str in parsed_data:
