@@ -1,10 +1,10 @@
 # Energy Data Hub
 
-A robust Python-based system for collecting, processing, and publishing energy price and weather forecast data for energy optimization applications. The system fetches data from multiple sources including ENTSO-E, Energy Zero, EPEX SPOT, Nord Pool Elspot, OpenWeather, MeteoServer, Google Weather API, and Luchtmeetnet, providing comprehensive data for energy management decisions.
+A robust Python-based system for collecting, processing, and publishing energy price, weather forecast, and grid imbalance data for energy optimization applications. The system fetches data from multiple sources including ENTSO-E, Energy Zero, EPEX SPOT, Nord Pool Elspot, OpenWeather, MeteoServer, Google Weather API, Luchtmeetnet, and TenneT TSO, providing comprehensive data for energy management decisions.
 
 ## 🌟 Features
 
-- **Multi-Source Data Collection**: Automated collection from 8 energy and weather APIs
+- **Multi-Source Data Collection**: Automated collection from 9 energy, weather, and grid APIs
 - **Robust Architecture**: BaseCollector pattern with retry logic and circuit breakers
 - **Data Validation**: Comprehensive timezone normalization and data type validation
 - **Secure Publishing**: AES-CBC encryption with HMAC-SHA256 for all published data
@@ -26,7 +26,8 @@ A robust Python-based system for collecting, processing, and publishing energy p
 │  │  ├── OpenWeatherCollector   (Weather Data)            │ │
 │  │  ├── MeteoServerCollector   (NL Weather)              │ │
 │  │  ├── GoogleWeatherCollector (Multi-Location Weather)  │ │
-│  │  └── LuchtmeetnetCollector  (Air Quality)             │ │
+│  │  ├── LuchtmeetnetCollector  (Air Quality)             │ │
+│  │  └── TennetCollector        (Grid Imbalance)          │ │
 │  └───────────────────────────────────────────────────────┘ │
 │  ┌───────────────────────────────────────────────────────┐ │
 │  │  Data Processing Pipeline                             │ │
@@ -63,6 +64,10 @@ Encrypted data is automatically published to GitHub Pages daily:
   - Includes temperature, precipitation, wind, and hourly forecasts
 - **Sun Forecast**: https://ducroq.github.io/energydatahub/sun_forecast.json
 - **Air Quality Data**: https://ducroq.github.io/energydatahub/air_history.json
+- **Grid Imbalance Data**: https://ducroq.github.io/energydatahub/grid_imbalance.json
+  - Real-time Dutch grid system imbalance from TenneT TSO
+  - 15-minute resolution (PTU - Programme Time Unit)
+  - Includes imbalance price, balance delta, and grid direction
 
 ### Data Update Schedule
 
