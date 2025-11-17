@@ -43,26 +43,45 @@ async def test_tennet_collector_manual():
     end = datetime(2025, 11, 15, 23, 59, tzinfo=amsterdam_tz)
 
     # Create sample settlement prices DataFrame (imbalance prices)
+    # Mimics real tenneteu-py API response structure with timestamps in index
+    timestamps = pd.to_datetime([
+        '2025-11-15T00:00:00+01:00',
+        '2025-11-15T01:00:00+01:00',
+        '2025-11-15T02:00:00+01:00',
+        '2025-11-15T03:00:00+01:00'
+    ])
     settlement_prices_df = pd.DataFrame({
-        'datetime': pd.to_datetime([
-            '2025-11-15T00:00:00+01:00',
-            '2025-11-15T01:00:00+01:00',
-            '2025-11-15T02:00:00+01:00',
-            '2025-11-15T03:00:00+01:00'
-        ]),
-        'price': [48.50, 52.30, 45.00, 85.00]
-    })
+        'Isp': [1, 2, 3, 4],
+        'Currency Unit Name': ['EUR', 'EUR', 'EUR', 'EUR'],
+        'Price Measurement Unit Name': ['EUR/MWh', 'EUR/MWh', 'EUR/MWh', 'EUR/MWh'],
+        'Incident Reserve Up': [None, None, None, None],
+        'Incident Reserve Down': [None, None, None, None],
+        'Price Dispatch Up': [50.0, 55.0, 48.0, 90.0],
+        'Price Dispatch Down': [47.0, 49.6, 42.0, 80.0],
+        'Price Shortage': [48.50, 52.30, 45.00, 85.00],
+        'Price Surplus': [48.50, 52.30, 45.00, 85.00],
+        'Regulation State': [1, 1, 1, 1],
+        'Regulating Condition': ['UP', 'UP', 'UP', 'UP']
+    }, index=timestamps)
+    settlement_prices_df.index.name = 'timestamp'
 
     # Create sample balance delta DataFrame (system imbalance)
+    # Mimics real tenneteu-py API response structure with timestamps in index
     balance_delta_df = pd.DataFrame({
-        'datetime': pd.to_datetime([
-            '2025-11-15T00:00:00+01:00',
-            '2025-11-15T01:00:00+01:00',
-            '2025-11-15T02:00:00+01:00',
-            '2025-11-15T03:00:00+01:00'
-        ]),
-        'value': [-45.2, 12.8, -8.5, 150.0]
-    })
+        'Isp': [1, 2, 3, 4],
+        'Power In Activated Afrr': [0.0, 0.0, 0.0, 0.0],
+        'Power Out Activated Afrr': [0.0, 0.0, 0.0, 0.0],
+        'Power In Igcc': [0.0, 50.0, 10.0, 200.0],
+        'Power Out Igcc': [45.2, 37.2, 18.5, 50.0],
+        'Power In Mfrrda': [0.0, 0.0, 0.0, 0.0],
+        'Power Out Mfrrda': [0.0, 0.0, 0.0, 0.0],
+        'Highest Upward Regulation Price': [100.0, 100.0, 100.0, 100.0],
+        'Lowest Downward Regulation Price': [10.0, 10.0, 10.0, 10.0],
+        'Mid Price': [55.0, 55.0, 55.0, 55.0],
+        'Picasso Contribution Power In': [0.0, 0.0, 0.0, 0.0],
+        'Picasso Contribution Power Out': [0.0, 0.0, 0.0, 0.0]
+    }, index=timestamps)
+    balance_delta_df.index.name = 'timestamp'
 
     raw_data = {
         'settlement_prices': settlement_prices_df,
