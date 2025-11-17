@@ -36,6 +36,7 @@ jobs:
         METEO_API_KEY: ${{ secrets.METEO_API_KEY }}
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
+        TENNET_API_KEY: ${{ secrets.TENNET_API_KEY }}
 
       run: python data_fetcher.py
 
