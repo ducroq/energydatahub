@@ -43,8 +43,19 @@ jobs:
     - name: Prepare docs folder with only current data
       run: |
         mkdir -p docs
-        cp data/air_history.json data/energy_price_forecast.json data/sun_forecast.json data/weather_forecast.json data/weather_forecast_multi_location.json data/grid_imbalance.json docs/  # Copy only the current forecast files
-        cp data/*.log docs/  # Copy log files for debugging
+        # Copy files that exist, skip missing ones
+        for file in air_history.json energy_price_forecast.json sun_forecast.json weather_forecast.json weather_forecast_multi_location.json grid_imbalance.json; do
+          if [ -f "data/$file" ]; then
+            cp "data/$file" docs/
+            echo "Copied $file"
+          else
+            echo "Skipping missing file: $file"
+          fi
+        done
+        # Copy log files if they exist
+        if ls data/*.log 1> /dev/null 2>&1; then
+          cp data/*.log docs/
+        fi
 
     # - name: List contents of data and docs directories
     #   run: |

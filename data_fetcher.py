@@ -195,7 +195,7 @@ async def main() -> None:
             meteoserver_sun_collector.collect(today, tomorrow),
             elspot_collector.collect(today, tomorrow, country_code=country_code),
             luchtmeetnet_collector.collect(yesterday, today),
-            tennet_collector.collect(today, tomorrow)
+            tennet_collector.collect(yesterday, today)  # TenneT data has a delay, use historical data
         ]
 
         results = await asyncio.gather(*tasks)
