@@ -3,9 +3,16 @@ Debug TenneT API response to understand data structure
 """
 import asyncio
 import platform
+import os
+import sys
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from tenneteu import TenneTeuClient
+
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from utils.helpers import load_secrets
 
 
 async def debug_tennet_api():
@@ -13,7 +20,10 @@ async def debug_tennet_api():
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-    api_key = "5bb3b457-567e-4972-aaac-bf5641b47c7c"
+    # Load API key from secrets.ini
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    config = load_secrets(project_root, 'secrets.ini')
+    api_key = config.get('api_keys', 'tennet')
 
     # Setup time range - TenneT data may have a delay, try yesterday
     amsterdam_tz = ZoneInfo("Europe/Amsterdam")

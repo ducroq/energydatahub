@@ -3,11 +3,17 @@ Test TenneT collector with API key
 """
 import asyncio
 import platform
+import os
+import sys
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from collectors.tennet import TennetCollector
 from collectors.base import RetryConfig, CircuitBreakerConfig
+from utils.helpers import load_secrets
 
 
 async def test_tennet_collector():
@@ -16,8 +22,10 @@ async def test_tennet_collector():
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-    # API key
-    api_key = "5bb3b457-567e-4972-aaac-bf5641b47c7c"
+    # Load API key from secrets.ini
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    config = load_secrets(project_root, 'secrets.ini')
+    api_key = config.get('api_keys', 'tennet')
 
     # Setup time range - TenneT data has a delay, use yesterday's data
     amsterdam_tz = ZoneInfo("Europe/Amsterdam")
