@@ -15,6 +15,8 @@ import os
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import pytest
+
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
@@ -28,8 +30,14 @@ from collectors import (
 from collectors.luchtmeetnet import LuchtmeetnetCollector
 
 
+@pytest.mark.manual
 async def test_circuit_breaker_real_api():
-    """Test circuit breaker behavior with real API (success or failure)."""
+    """Test circuit breaker behavior with real API (success or failure).
+
+    Note: This test is marked as manual because it calls the real ENTSO-E API
+    which may rate-limit requests (429 errors), causing unpredictable test failures.
+    Run manually with: pytest -m manual tests/integration/test_phase6_optimizations.py
+    """
     print("\n" + "="*70)
     print("TEST: Circuit Breaker with Real APIs")
     print("="*70)
