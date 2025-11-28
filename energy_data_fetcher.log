@@ -1,380 +1,380 @@
-2025-11-27 16:18:29,961 DEBUG Using selector: EpollSelector
-2025-11-27 16:18:29,962 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2025-11-27 16:18:31,162 INFO No secrets.ini found, using environment variables only
-2025-11-27 16:18:31,162 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
-2025-11-27 16:18:31,162 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
-2025-11-27 16:18:31,162 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
-2025-11-27 16:18:31,162 DEBUG Overriding api_keys.openweather from environment variable OPENWEATHER_API_KEY
-2025-11-27 16:18:31,162 DEBUG Overriding api_keys.meteo from environment variable METEO_API_KEY
-2025-11-27 16:18:31,162 DEBUG Overriding api_keys.google from environment variable GOOGLE_API_KEY
-2025-11-27 16:18:31,162 DEBUG Overriding api_keys.google_weather from environment variable GOOGLE_WEATHER_API_KEY
-2025-11-27 16:18:31,162 DEBUG Overriding api_keys.tennet from environment variable TENNET_API_KEY
-2025-11-27 16:18:31,163 INFO Initialized for 6 locations
-2025-11-27 16:18:31,163 INFO [a12ab624] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 23:59:59+01:00
-2025-11-27 16:18:31,163 DEBUG [a12ab624] Fetching raw data...
-2025-11-27 16:18:31,163 DEBUG Attempt 1/3
-2025-11-27 16:18:31,163 DEBUG Fetching ENTSO-E data for NL
-2025-11-27 16:18:31,163 DEBUG Querying ENTSO-E API: 2025-11-26 23:00:00+00:00 to 2025-11-28 22:59:59+00:00 (UTC)
-2025-11-27 16:18:31,175 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:31,175 INFO [6e339ac1] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 23:59:59+01:00
-2025-11-27 16:18:31,176 DEBUG [6e339ac1] Fetching raw data...
-2025-11-27 16:18:31,176 DEBUG Attempt 1/3
-2025-11-27 16:18:31,176 DEBUG Fetching EnergyZero data
-2025-11-27 16:18:31,177 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-11-27 16:18:31,178 INFO [3fa28c16] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 23:59:59+01:00
-2025-11-27 16:18:31,178 DEBUG [3fa28c16] Fetching raw data...
-2025-11-27 16:18:31,178 DEBUG Attempt 1/3
-2025-11-27 16:18:31,178 DEBUG Fetching EPEX data from Awattar API
-2025-11-27 16:18:31,178 INFO [3a239246] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 23:59:59+01:00
-2025-11-27 16:18:31,179 DEBUG Attempt 1/3
-2025-11-27 16:18:31,179 DEBUG Fetching OpenWeather data for lat=51.966472, lon=5.94009
-2025-11-27 16:18:31,179 INFO [c6ed6229] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-12-07 00:00:00+01:00
-2025-11-27 16:18:31,179 DEBUG [c6ed6229] Fetching raw data...
-2025-11-27 16:18:31,179 DEBUG Attempt 1/3
-2025-11-27 16:18:31,179 INFO Fetching weather for 6 locations in parallel
-2025-11-27 16:18:31,180 INFO [f635cc70] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 23:59:59+01:00
-2025-11-27 16:18:31,180 DEBUG [f635cc70] Fetching raw data...
-2025-11-27 16:18:31,180 DEBUG Attempt 1/10
-2025-11-27 16:18:31,180 DEBUG Fetching MeteoServer weather for lat=51.966472, lon=5.94009
-2025-11-27 16:18:31,180 INFO [5b1ade7a] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 23:59:59+01:00
-2025-11-27 16:18:31,180 DEBUG [5b1ade7a] Fetching raw data...
-2025-11-27 16:18:31,180 DEBUG Attempt 1/10
-2025-11-27 16:18:31,180 DEBUG Fetching MeteoServer sun forecast for lat=51.966472, lon=5.94009
-2025-11-27 16:18:31,181 INFO [e955bd34] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 23:59:59+01:00
-2025-11-27 16:18:31,181 DEBUG [e955bd34] Fetching raw data...
-2025-11-27 16:18:31,181 DEBUG Attempt 1/3
-2025-11-27 16:18:31,181 DEBUG Fetching Elspot data for NL
-2025-11-27 16:18:31,182 INFO [da332d59] Starting collection: 2025-11-26 00:00:00+01:00 to 2025-11-27 00:00:00+01:00
-2025-11-27 16:18:31,182 DEBUG [da332d59] Fetching raw data...
-2025-11-27 16:18:31,182 DEBUG Attempt 1/3
-2025-11-27 16:18:31,182 DEBUG Fetching Luchtmeetnet data for lat=51.966472, lon=5.94009
-2025-11-27 16:18:31,182 INFO Station cache miss or expired, fetching fresh data
-2025-11-27 16:18:31,183 DEBUG Fetching station list
-2025-11-27 16:18:31,183 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
-2025-11-27 16:18:31,183 INFO [09d6b19f] Starting collection: 2025-11-26 00:00:00+01:00 to 2025-11-27 00:00:00+01:00
-2025-11-27 16:18:31,183 DEBUG [09d6b19f] Fetching raw data...
-2025-11-27 16:18:31,183 DEBUG Attempt 1/3
-2025-11-27 16:18:31,184 DEBUG Fetching TenneT data from 2025-11-26 to 2025-11-27
-2025-11-27 16:18:31,184 DEBUG Attempt 1/3 for Hamburg_DE
-2025-11-27 16:18:31,184 DEBUG Fetching Google Weather data for Hamburg_DE
-2025-11-27 16:18:31,184 DEBUG Fetching page 1 for Hamburg_DE
-2025-11-27 16:18:31,184 DEBUG Attempt 1/3 for Munich_DE
-2025-11-27 16:18:31,184 DEBUG Fetching Google Weather data for Munich_DE
-2025-11-27 16:18:31,184 DEBUG Fetching page 1 for Munich_DE
-2025-11-27 16:18:31,184 DEBUG Attempt 1/3 for Arnhem_NL
-2025-11-27 16:18:31,185 DEBUG Fetching Google Weather data for Arnhem_NL
-2025-11-27 16:18:31,185 DEBUG Fetching page 1 for Arnhem_NL
-2025-11-27 16:18:31,185 DEBUG Attempt 1/3 for IJmuiden_NL
-2025-11-27 16:18:31,185 DEBUG Fetching Google Weather data for IJmuiden_NL
-2025-11-27 16:18:31,185 DEBUG Fetching page 1 for IJmuiden_NL
-2025-11-27 16:18:31,185 DEBUG Attempt 1/3 for Brussels_BE
-2025-11-27 16:18:31,185 DEBUG Fetching Google Weather data for Brussels_BE
-2025-11-27 16:18:31,185 DEBUG Fetching page 1 for Brussels_BE
-2025-11-27 16:18:31,186 DEBUG Attempt 1/3 for Esbjerg_DK
-2025-11-27 16:18:31,186 DEBUG Fetching Google Weather data for Esbjerg_DK
-2025-11-27 16:18:31,186 DEBUG Fetching page 1 for Esbjerg_DK
-2025-11-27 16:18:31,328 DEBUG Starting new HTTPS connection (1): api.tennet.eu:443
-2025-11-27 16:18:31,456 DEBUG [3fa28c16] Parsing response...
-2025-11-27 16:18:31,457 DEBUG Parsed 47 data points from Awattar response
-2025-11-27 16:18:31,457 DEBUG [3fa28c16] Normalizing timestamps...
-2025-11-27 16:18:31,457 DEBUG [3fa28c16] Validating data...
-2025-11-27 16:18:31,457 INFO [3fa28c16] Collection complete: 47 data points in 0.28s (status: success)
-2025-11-27 16:18:31,474 DEBUG Parsed 10 data points from OpenWeather response
-2025-11-27 16:18:31,474 INFO [3a239246] Collection complete: 10 data points in 0.30s (status: success)
-2025-11-27 16:18:31,500 DEBUG Page 1: Got 24 hours for Brussels_BE
-2025-11-27 16:18:31,500 DEBUG Fetching page 2 for Brussels_BE
-2025-11-27 16:18:31,502 DEBUG Page 1: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,502 DEBUG Fetching page 2 for Arnhem_NL
-2025-11-27 16:18:31,505 DEBUG Page 1: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,505 DEBUG Fetching page 2 for Esbjerg_DK
-2025-11-27 16:18:31,506 DEBUG Page 1: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,506 DEBUG Fetching page 2 for Munich_DE
-2025-11-27 16:18:31,508 DEBUG Page 1: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,508 DEBUG Fetching page 2 for Hamburg_DE
-2025-11-27 16:18:31,516 DEBUG Page 1: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:31,516 DEBUG Fetching page 2 for IJmuiden_NL
-2025-11-27 16:18:31,551 DEBUG Page 2: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,551 DEBUG Fetching page 3 for Arnhem_NL
-2025-11-27 16:18:31,556 DEBUG Page 2: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,556 DEBUG Fetching page 3 for Esbjerg_DK
-2025-11-27 16:18:31,562 DEBUG Page 2: Got 24 hours for Brussels_BE
-2025-11-27 16:18:31,562 DEBUG Fetching page 3 for Brussels_BE
-2025-11-27 16:18:31,565 DEBUG Page 2: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,566 DEBUG Fetching page 3 for Hamburg_DE
-2025-11-27 16:18:31,570 DEBUG Page 2: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,570 DEBUG Fetching page 3 for Munich_DE
-2025-11-27 16:18:31,581 DEBUG Page 2: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:31,581 DEBUG Fetching page 3 for IJmuiden_NL
-2025-11-27 16:18:31,599 DEBUG Page 3: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,599 DEBUG Fetching page 4 for Arnhem_NL
-2025-11-27 16:18:31,610 DEBUG Page 3: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,610 DEBUG Fetching page 4 for Esbjerg_DK
-2025-11-27 16:18:31,616 DEBUG Page 3: Got 24 hours for Brussels_BE
-2025-11-27 16:18:31,616 DEBUG Fetching page 4 for Brussels_BE
-2025-11-27 16:18:31,619 DEBUG Page 3: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,619 DEBUG Fetching page 4 for Hamburg_DE
-2025-11-27 16:18:31,622 DEBUG Page 3: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,622 DEBUG Fetching page 4 for Munich_DE
-2025-11-27 16:18:31,650 DEBUG Page 3: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:31,650 DEBUG Fetching page 4 for IJmuiden_NL
-2025-11-27 16:18:31,650 DEBUG Page 4: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,650 DEBUG Fetching page 5 for Arnhem_NL
-2025-11-27 16:18:31,659 DEBUG Page 4: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,659 DEBUG Fetching page 5 for Esbjerg_DK
-2025-11-27 16:18:31,671 DEBUG Page 4: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,671 DEBUG Fetching page 5 for Munich_DE
-2025-11-27 16:18:31,676 DEBUG Page 4: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,676 DEBUG Fetching page 5 for Hamburg_DE
-2025-11-27 16:18:31,676 DEBUG Page 4: Got 24 hours for Brussels_BE
-2025-11-27 16:18:31,677 DEBUG Fetching page 5 for Brussels_BE
-2025-11-27 16:18:31,697 DEBUG Page 5: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,697 DEBUG Fetching page 6 for Arnhem_NL
-2025-11-27 16:18:31,711 DEBUG Page 5: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,711 DEBUG Fetching page 6 for Esbjerg_DK
-2025-11-27 16:18:31,714 DEBUG Page 4: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:31,714 DEBUG Fetching page 5 for IJmuiden_NL
-2025-11-27 16:18:31,720 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-11-28&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
-2025-11-27 16:18:31,726 DEBUG Page 5: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,726 DEBUG Fetching page 6 for Munich_DE
-2025-11-27 16:18:31,726 DEBUG [e955bd34] Parsing response...
-2025-11-27 16:18:31,726 DEBUG Parsed 24 data points from Elspot response
-2025-11-27 16:18:31,726 DEBUG [e955bd34] Normalizing timestamps...
-2025-11-27 16:18:31,727 DEBUG [e955bd34] Validating data...
-2025-11-27 16:18:31,727 INFO [e955bd34] Collection complete: 24 data points in 0.55s (status: success)
-2025-11-27 16:18:31,728 DEBUG Page 5: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,728 DEBUG Fetching page 6 for Hamburg_DE
-2025-11-27 16:18:31,735 DEBUG Page 5: Got 24 hours for Brussels_BE
-2025-11-27 16:18:31,735 DEBUG Fetching page 6 for Brussels_BE
-2025-11-27 16:18:31,741 DEBUG Page 6: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,741 DEBUG Fetching page 7 for Arnhem_NL
-2025-11-27 16:18:31,759 DEBUG Page 6: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,759 DEBUG Fetching page 7 for Esbjerg_DK
-2025-11-27 16:18:31,764 DEBUG [6e339ac1] Parsing response...
-2025-11-27 16:18:31,764 DEBUG Parsed 47 data points from EnergyZero response
-2025-11-27 16:18:31,764 DEBUG [6e339ac1] Normalizing timestamps...
-2025-11-27 16:18:31,765 DEBUG [6e339ac1] Validating data...
-2025-11-27 16:18:31,765 INFO [6e339ac1] Collection complete: 47 data points in 0.59s (status: success)
-2025-11-27 16:18:31,778 DEBUG Page 5: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:31,778 DEBUG Fetching page 6 for IJmuiden_NL
-2025-11-27 16:18:31,781 DEBUG Page 6: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,782 DEBUG Fetching page 7 for Munich_DE
-2025-11-27 16:18:31,782 DEBUG Page 6: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,782 DEBUG Fetching page 7 for Hamburg_DE
-2025-11-27 16:18:31,788 DEBUG Page 6: Got 24 hours for Brussels_BE
-2025-11-27 16:18:31,788 DEBUG Fetching page 7 for Brussels_BE
-2025-11-27 16:18:31,791 DEBUG Page 7: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,791 DEBUG Fetching page 8 for Arnhem_NL
-2025-11-27 16:18:31,793 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:31,844 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:31,846 DEBUG Page 7: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,847 DEBUG Fetching page 8 for Esbjerg_DK
-2025-11-27 16:18:31,848 DEBUG Page 7: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,848 DEBUG Fetching page 8 for Munich_DE
-2025-11-27 16:18:31,849 DEBUG Page 6: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:31,849 DEBUG Fetching page 7 for IJmuiden_NL
-2025-11-27 16:18:31,850 DEBUG Page 7: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,850 DEBUG Fetching page 8 for Hamburg_DE
-2025-11-27 16:18:31,850 DEBUG Page 8: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,851 DEBUG Fetching page 9 for Arnhem_NL
-2025-11-27 16:18:31,877 DEBUG https://api.tennet.eu:443 "GET /publications/v1/settlement-prices?date_from=26-11-2025+00%3A00%3A00&date_to=27-11-2025+00%3A00%3A00 HTTP/1.1" 200 None
-2025-11-27 16:18:31,886 DEBUG [f635cc70] Parsing response...
-2025-11-27 16:18:31,887 DEBUG Parsed 30 data points from MeteoServer weather response
-2025-11-27 16:18:31,887 DEBUG [f635cc70] Normalizing timestamps...
-2025-11-27 16:18:31,887 DEBUG [f635cc70] Validating data...
-2025-11-27 16:18:31,888 INFO [f635cc70] Collection complete: 30 data points in 0.71s (status: success)
-2025-11-27 16:18:31,890 DEBUG Page 7: Got 24 hours for Brussels_BE
-2025-11-27 16:18:31,890 DEBUG Fetching page 8 for Brussels_BE
-2025-11-27 16:18:31,892 DEBUG Page 8: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,892 DEBUG Fetching page 9 for Esbjerg_DK
-2025-11-27 16:18:31,902 DEBUG Page 7: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:31,902 DEBUG Fetching page 8 for IJmuiden_NL
-2025-11-27 16:18:31,903 DEBUG Page 8: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,903 DEBUG Fetching page 9 for Munich_DE
-2025-11-27 16:18:31,904 DEBUG Page 9: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,904 DEBUG Fetching page 10 for Arnhem_NL
-2025-11-27 16:18:31,918 DEBUG Page 8: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,918 DEBUG Fetching page 9 for Hamburg_DE
-2025-11-27 16:18:31,938 DEBUG Page 9: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,938 DEBUG Fetching page 10 for Esbjerg_DK
-2025-11-27 16:18:31,955 DEBUG Page 10: Got 24 hours for Arnhem_NL
-2025-11-27 16:18:31,955 DEBUG Successfully fetched 240 hours across 10 pages for Arnhem_NL
-2025-11-27 16:18:31,955 DEBUG Successfully fetched Arnhem_NL on attempt 1
-2025-11-27 16:18:31,965 DEBUG Page 8: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:31,965 DEBUG Fetching page 9 for IJmuiden_NL
-2025-11-27 16:18:31,970 DEBUG Page 9: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:31,970 DEBUG Fetching page 10 for Hamburg_DE
-2025-11-27 16:18:31,984 DEBUG Page 10: Got 24 hours for Esbjerg_DK
-2025-11-27 16:18:31,985 DEBUG Page 9: Got 24 hours for Munich_DE
-2025-11-27 16:18:31,985 DEBUG Fetching page 10 for Munich_DE
-2025-11-27 16:18:31,985 DEBUG Successfully fetched 240 hours across 10 pages for Esbjerg_DK
-2025-11-27 16:18:31,986 DEBUG Successfully fetched Esbjerg_DK on attempt 1
-2025-11-27 16:18:31,989 DEBUG Page 8: Got 24 hours for Brussels_BE
-2025-11-27 16:18:31,989 DEBUG Fetching page 9 for Brussels_BE
-2025-11-27 16:18:32,021 DEBUG Page 10: Got 24 hours for Hamburg_DE
-2025-11-27 16:18:32,022 DEBUG Successfully fetched 240 hours across 10 pages for Hamburg_DE
-2025-11-27 16:18:32,022 DEBUG Successfully fetched Hamburg_DE on attempt 1
-2025-11-27 16:18:32,027 DEBUG Page 9: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:32,027 DEBUG Fetching page 10 for IJmuiden_NL
-2025-11-27 16:18:32,049 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:32,099 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:32,101 DEBUG Page 9: Got 24 hours for Brussels_BE
-2025-11-27 16:18:32,101 DEBUG Fetching page 10 for Brussels_BE
-2025-11-27 16:18:32,102 DEBUG Page 10: Got 24 hours for Munich_DE
-2025-11-27 16:18:32,103 DEBUG Page 10: Got 24 hours for IJmuiden_NL
-2025-11-27 16:18:32,103 DEBUG Successfully fetched 240 hours across 10 pages for Munich_DE
-2025-11-27 16:18:32,103 DEBUG Successfully fetched Munich_DE on attempt 1
-2025-11-27 16:18:32,104 DEBUG [5b1ade7a] Parsing response...
-2025-11-27 16:18:32,104 DEBUG Parsed 30 data points from MeteoServer sun response
-2025-11-27 16:18:32,104 DEBUG [5b1ade7a] Normalizing timestamps...
-2025-11-27 16:18:32,104 DEBUG [5b1ade7a] Validating data...
-2025-11-27 16:18:32,105 INFO [5b1ade7a] Collection complete: 30 data points in 0.92s (status: success)
-2025-11-27 16:18:32,105 DEBUG Successfully fetched 240 hours across 10 pages for IJmuiden_NL
-2025-11-27 16:18:32,105 DEBUG Successfully fetched IJmuiden_NL on attempt 1
-2025-11-27 16:18:32,156 DEBUG https://api.tennet.eu:443 "GET /publications/v1/balance-delta?date_from=26-11-2025+00%3A00%3A00&date_to=27-11-2025+00%3A00%3A00 HTTP/1.1" 200 None
-2025-11-27 16:18:32,166 DEBUG Page 10: Got 24 hours for Brussels_BE
-2025-11-27 16:18:32,166 DEBUG Successfully fetched 240 hours across 10 pages for Brussels_BE
-2025-11-27 16:18:32,166 DEBUG Successfully fetched Brussels_BE on attempt 1
-2025-11-27 16:18:32,166 DEBUG [c6ed6229] Parsing response...
-2025-11-27 16:18:32,166 DEBUG Parsing 240 forecast hours
-2025-11-27 16:18:32,166 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-11-27 16:18:32,169 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-11-27 16:18:32,169 DEBUG Parsing 240 forecast hours
-2025-11-27 16:18:32,169 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-11-27 16:18:32,172 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-11-27 16:18:32,173 DEBUG Parsing 240 forecast hours
-2025-11-27 16:18:32,173 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-11-27 16:18:32,175 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-11-27 16:18:32,175 DEBUG Parsing 240 forecast hours
-2025-11-27 16:18:32,176 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-11-27 16:18:32,178 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-11-27 16:18:32,178 DEBUG Parsing 240 forecast hours
-2025-11-27 16:18:32,178 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-11-27 16:18:32,181 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-11-27 16:18:32,181 DEBUG Parsing 240 forecast hours
-2025-11-27 16:18:32,182 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-11-27 16:18:32,184 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-11-27 16:18:32,184 DEBUG [c6ed6229] Normalizing timestamps...
-2025-11-27 16:18:32,184 DEBUG [c6ed6229] Validating data...
-2025-11-27 16:18:32,189 INFO [c6ed6229] Collection complete: 6 data points in 1.01s (status: success)
-2025-11-27 16:18:32,299 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:32,394 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:32,404 INFO Fetched TenneT data: 96 settlement price records, 1440 balance delta records
-2025-11-27 16:18:32,404 DEBUG [09d6b19f] Parsing response...
-2025-11-27 16:18:32,479 INFO Parsed 1440 TenneT data points
-2025-11-27 16:18:32,479 DEBUG [09d6b19f] Normalizing timestamps...
-2025-11-27 16:18:32,483 DEBUG [09d6b19f] Creating dataset...
-2025-11-27 16:18:32,484 INFO [09d6b19f] Collection complete: 1440 data points in 1.30s (status: success)
-2025-11-27 16:18:32,571 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:32,619 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:32,800 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:32,846 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:33,021 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:33,069 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:33,258 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:33,305 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:33,502 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:33,549 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:33,754 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:33,801 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 900, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:33,994 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=900&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:34,040 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1000, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:34,119 DEBUG Found 101 stations, fetching details...
-2025-11-27 16:18:34,233 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1000&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:34,281 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:34,465 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:34,519 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:34,704 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:34,751 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:34,932 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:34,979 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:35,171 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:35,301 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:35,476 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:35,525 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:35,695 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:35,743 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:35,920 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:35,968 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:36,146 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:36,193 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1900, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:36,361 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1900&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:36,408 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2000, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:36,588 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2000&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:36,634 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:36,809 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:36,855 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:37,028 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:37,075 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:37,254 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:37,300 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:37,474 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:37,519 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:37,696 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:37,743 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:37,918 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:37,965 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:38,144 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:38,297 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:38,466 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:38,511 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2900, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:38,681 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2900&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:38,728 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3000, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:38,910 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3000&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:38,956 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:39,149 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:39,195 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:39,367 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:39,415 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:39,592 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:39,640 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:39,813 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:39,860 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:40,038 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:40,084 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:40,258 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:40,304 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:40,498 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:40,544 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:40,741 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:40,786 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3900, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:40,959 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3900&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:41,004 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4000, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:41,185 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4000&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:41,319 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:41,489 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:41,536 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:41,704 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:41,750 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:41,923 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:41,969 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:42,155 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:42,201 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:42,367 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:42,412 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:42,586 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:42,631 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:42,809 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:42,856 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511252300', 'periodEnd': '202511292300'}
-2025-11-27 16:18:43,035 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511252300&periodEnd=202511292300 HTTP/1.1" 200 None
-2025-11-27 16:18:43,135 DEBUG [a12ab624] Parsing response...
-2025-11-27 16:18:43,137 DEBUG Parsed 192 data points from ENTSO-E response
-2025-11-27 16:18:43,137 DEBUG [a12ab624] Normalizing timestamps...
-2025-11-27 16:18:43,137 DEBUG [a12ab624] Validating data...
-2025-11-27 16:18:43,138 INFO [a12ab624] Collection complete: 192 data points in 11.97s (status: success)
-2025-11-27 16:19:08,483 INFO Cached 101 stations
-2025-11-27 16:19:08,483 INFO Using station NL54004 (Arnhem Velperbroek)
-2025-11-27 16:19:08,483 DEBUG Fetching AQI for station NL54004
-2025-11-27 16:19:09,432 DEBUG Fetching measurements for station NL54004
-2025-11-27 16:19:09,740 DEBUG [da332d59] Parsing response...
-2025-11-27 16:19:09,743 DEBUG Parsed 24 data points from Luchtmeetnet response
-2025-11-27 16:19:09,743 DEBUG [da332d59] Normalizing timestamps...
-2025-11-27 16:19:09,743 DEBUG [da332d59] Validating data...
-2025-11-27 16:19:09,744 INFO [da332d59] Collection complete: 24 data points in 38.56s (status: success)
-2025-11-27 16:19:09,744 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-27 16:19:09,752 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-27 16:19:09,753 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-27 16:19:09,775 INFO Saved multi-location weather forecast for 6 locations
-2025-11-27 16:19:09,775 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-27 16:19:09,776 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-27 16:19:09,777 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-11-27 16:19:09,779 INFO Saved TenneT grid imbalance data with 1440 data points
+2025-11-28 16:18:05,168 DEBUG Using selector: EpollSelector
+2025-11-28 16:18:05,168 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2025-11-28 16:18:06,387 INFO No secrets.ini found, using environment variables only
+2025-11-28 16:18:06,387 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
+2025-11-28 16:18:06,387 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
+2025-11-28 16:18:06,387 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
+2025-11-28 16:18:06,387 DEBUG Overriding api_keys.openweather from environment variable OPENWEATHER_API_KEY
+2025-11-28 16:18:06,387 DEBUG Overriding api_keys.meteo from environment variable METEO_API_KEY
+2025-11-28 16:18:06,387 DEBUG Overriding api_keys.google from environment variable GOOGLE_API_KEY
+2025-11-28 16:18:06,387 DEBUG Overriding api_keys.google_weather from environment variable GOOGLE_WEATHER_API_KEY
+2025-11-28 16:18:06,387 DEBUG Overriding api_keys.tennet from environment variable TENNET_API_KEY
+2025-11-28 16:18:06,388 INFO Initialized for 6 locations
+2025-11-28 16:18:06,388 INFO [9b2c7efd] Starting collection: 2025-11-28 00:00:00+01:00 to 2025-11-29 23:59:59+01:00
+2025-11-28 16:18:06,388 DEBUG [9b2c7efd] Fetching raw data...
+2025-11-28 16:18:06,388 DEBUG Attempt 1/3
+2025-11-28 16:18:06,388 DEBUG Fetching ENTSO-E data for NL
+2025-11-28 16:18:06,388 DEBUG Querying ENTSO-E API: 2025-11-27 23:00:00+00:00 to 2025-11-29 22:59:59+00:00 (UTC)
+2025-11-28 16:18:06,402 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:06,402 INFO [dd1e3014] Starting collection: 2025-11-28 00:00:00+01:00 to 2025-11-29 23:59:59+01:00
+2025-11-28 16:18:06,403 DEBUG [dd1e3014] Fetching raw data...
+2025-11-28 16:18:06,403 DEBUG Attempt 1/3
+2025-11-28 16:18:06,403 DEBUG Fetching EnergyZero data
+2025-11-28 16:18:06,404 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-11-28 16:18:06,405 INFO [f70993ec] Starting collection: 2025-11-28 00:00:00+01:00 to 2025-11-29 23:59:59+01:00
+2025-11-28 16:18:06,405 DEBUG [f70993ec] Fetching raw data...
+2025-11-28 16:18:06,405 DEBUG Attempt 1/3
+2025-11-28 16:18:06,405 DEBUG Fetching EPEX data from Awattar API
+2025-11-28 16:18:06,405 INFO [fe896499] Starting collection: 2025-11-28 00:00:00+01:00 to 2025-11-29 23:59:59+01:00
+2025-11-28 16:18:06,406 DEBUG Attempt 1/3
+2025-11-28 16:18:06,406 DEBUG Fetching OpenWeather data for lat=51.966472, lon=5.94009
+2025-11-28 16:18:06,406 INFO [e0868b5d] Starting collection: 2025-11-28 00:00:00+01:00 to 2025-12-08 00:00:00+01:00
+2025-11-28 16:18:06,406 DEBUG [e0868b5d] Fetching raw data...
+2025-11-28 16:18:06,406 DEBUG Attempt 1/3
+2025-11-28 16:18:06,406 INFO Fetching weather for 6 locations in parallel
+2025-11-28 16:18:06,406 INFO [cc123168] Starting collection: 2025-11-28 00:00:00+01:00 to 2025-11-29 23:59:59+01:00
+2025-11-28 16:18:06,407 DEBUG [cc123168] Fetching raw data...
+2025-11-28 16:18:06,407 DEBUG Attempt 1/10
+2025-11-28 16:18:06,407 DEBUG Fetching MeteoServer weather for lat=51.966472, lon=5.94009
+2025-11-28 16:18:06,407 INFO [ca87d517] Starting collection: 2025-11-28 00:00:00+01:00 to 2025-11-29 23:59:59+01:00
+2025-11-28 16:18:06,407 DEBUG [ca87d517] Fetching raw data...
+2025-11-28 16:18:06,407 DEBUG Attempt 1/10
+2025-11-28 16:18:06,407 DEBUG Fetching MeteoServer sun forecast for lat=51.966472, lon=5.94009
+2025-11-28 16:18:06,408 INFO [1e2b9a7d] Starting collection: 2025-11-28 00:00:00+01:00 to 2025-11-29 23:59:59+01:00
+2025-11-28 16:18:06,408 DEBUG [1e2b9a7d] Fetching raw data...
+2025-11-28 16:18:06,408 DEBUG Attempt 1/3
+2025-11-28 16:18:06,408 DEBUG Fetching Elspot data for NL
+2025-11-28 16:18:06,409 INFO [637b58cc] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 00:00:00+01:00
+2025-11-28 16:18:06,409 DEBUG [637b58cc] Fetching raw data...
+2025-11-28 16:18:06,409 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-11-28 16:18:06,409 DEBUG Attempt 1/3
+2025-11-28 16:18:06,409 DEBUG Fetching Luchtmeetnet data for lat=51.966472, lon=5.94009
+2025-11-28 16:18:06,410 INFO Station cache miss or expired, fetching fresh data
+2025-11-28 16:18:06,410 DEBUG Fetching station list
+2025-11-28 16:18:06,410 INFO [6bf6d1c6] Starting collection: 2025-11-27 00:00:00+01:00 to 2025-11-28 00:00:00+01:00
+2025-11-28 16:18:06,410 DEBUG [6bf6d1c6] Fetching raw data...
+2025-11-28 16:18:06,410 DEBUG Attempt 1/3
+2025-11-28 16:18:06,410 DEBUG Fetching TenneT data from 2025-11-27 to 2025-11-28
+2025-11-28 16:18:06,410 DEBUG Attempt 1/3 for Hamburg_DE
+2025-11-28 16:18:06,410 DEBUG Fetching Google Weather data for Hamburg_DE
+2025-11-28 16:18:06,411 DEBUG Fetching page 1 for Hamburg_DE
+2025-11-28 16:18:06,411 DEBUG Attempt 1/3 for Munich_DE
+2025-11-28 16:18:06,411 DEBUG Fetching Google Weather data for Munich_DE
+2025-11-28 16:18:06,411 DEBUG Fetching page 1 for Munich_DE
+2025-11-28 16:18:06,411 DEBUG Attempt 1/3 for Arnhem_NL
+2025-11-28 16:18:06,411 DEBUG Fetching Google Weather data for Arnhem_NL
+2025-11-28 16:18:06,411 DEBUG Fetching page 1 for Arnhem_NL
+2025-11-28 16:18:06,412 DEBUG Attempt 1/3 for IJmuiden_NL
+2025-11-28 16:18:06,412 DEBUG Fetching Google Weather data for IJmuiden_NL
+2025-11-28 16:18:06,412 DEBUG Fetching page 1 for IJmuiden_NL
+2025-11-28 16:18:06,412 DEBUG Attempt 1/3 for Brussels_BE
+2025-11-28 16:18:06,412 DEBUG Fetching Google Weather data for Brussels_BE
+2025-11-28 16:18:06,412 DEBUG Fetching page 1 for Brussels_BE
+2025-11-28 16:18:06,412 DEBUG Attempt 1/3 for Esbjerg_DK
+2025-11-28 16:18:06,412 DEBUG Fetching Google Weather data for Esbjerg_DK
+2025-11-28 16:18:06,412 DEBUG Fetching page 1 for Esbjerg_DK
+2025-11-28 16:18:06,426 DEBUG Starting new HTTPS connection (1): api.tennet.eu:443
+2025-11-28 16:18:06,594 DEBUG Parsed 10 data points from OpenWeather response
+2025-11-28 16:18:06,595 INFO [fe896499] Collection complete: 10 data points in 0.19s (status: success)
+2025-11-28 16:18:06,771 DEBUG [f70993ec] Parsing response...
+2025-11-28 16:18:06,771 DEBUG Parsed 47 data points from Awattar response
+2025-11-28 16:18:06,771 DEBUG [f70993ec] Normalizing timestamps...
+2025-11-28 16:18:06,771 DEBUG [f70993ec] Validating data...
+2025-11-28 16:18:06,771 INFO [f70993ec] Collection complete: 47 data points in 0.37s (status: success)
+2025-11-28 16:18:06,927 DEBUG Page 1: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:06,927 DEBUG Fetching page 2 for Arnhem_NL
+2025-11-28 16:18:06,939 DEBUG Page 1: Got 24 hours for Munich_DE
+2025-11-28 16:18:06,939 DEBUG Fetching page 2 for Munich_DE
+2025-11-28 16:18:06,942 DEBUG Page 1: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:06,942 DEBUG Fetching page 2 for Esbjerg_DK
+2025-11-28 16:18:06,945 DEBUG Page 1: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:06,945 DEBUG Fetching page 2 for Hamburg_DE
+2025-11-28 16:18:06,948 DEBUG Page 1: Got 24 hours for Brussels_BE
+2025-11-28 16:18:06,948 DEBUG Fetching page 2 for Brussels_BE
+2025-11-28 16:18:06,952 DEBUG Page 1: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:06,952 DEBUG Fetching page 2 for IJmuiden_NL
+2025-11-28 16:18:07,007 DEBUG Page 2: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,007 DEBUG Fetching page 3 for Arnhem_NL
+2025-11-28 16:18:07,030 DEBUG Page 2: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,030 DEBUG Fetching page 3 for Esbjerg_DK
+2025-11-28 16:18:07,033 DEBUG Page 2: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,033 DEBUG Fetching page 3 for Hamburg_DE
+2025-11-28 16:18:07,034 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-11-29&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
+2025-11-28 16:18:07,035 DEBUG Page 2: Got 24 hours for Munich_DE
+2025-11-28 16:18:07,035 DEBUG Fetching page 3 for Munich_DE
+2025-11-28 16:18:07,039 DEBUG [1e2b9a7d] Parsing response...
+2025-11-28 16:18:07,039 DEBUG Parsed 24 data points from Elspot response
+2025-11-28 16:18:07,039 DEBUG [1e2b9a7d] Normalizing timestamps...
+2025-11-28 16:18:07,039 DEBUG [1e2b9a7d] Validating data...
+2025-11-28 16:18:07,040 INFO [1e2b9a7d] Collection complete: 24 data points in 0.63s (status: success)
+2025-11-28 16:18:07,048 DEBUG Page 2: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,048 DEBUG Fetching page 3 for IJmuiden_NL
+2025-11-28 16:18:07,062 DEBUG Page 2: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,062 DEBUG Fetching page 3 for Brussels_BE
+2025-11-28 16:18:07,091 DEBUG Page 3: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,091 DEBUG Fetching page 4 for Arnhem_NL
+2025-11-28 16:18:07,107 DEBUG Page 3: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,107 DEBUG Fetching page 4 for Esbjerg_DK
+2025-11-28 16:18:07,115 DEBUG Page 3: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,115 DEBUG Fetching page 4 for Hamburg_DE
+2025-11-28 16:18:07,119 DEBUG Page 3: Got 24 hours for Munich_DE
+2025-11-28 16:18:07,119 DEBUG Fetching page 4 for Munich_DE
+2025-11-28 16:18:07,135 DEBUG Page 3: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,135 DEBUG Fetching page 4 for IJmuiden_NL
+2025-11-28 16:18:07,140 DEBUG [dd1e3014] Parsing response...
+2025-11-28 16:18:07,140 DEBUG Parsed 47 data points from EnergyZero response
+2025-11-28 16:18:07,140 DEBUG [dd1e3014] Normalizing timestamps...
+2025-11-28 16:18:07,140 DEBUG [dd1e3014] Validating data...
+2025-11-28 16:18:07,141 INFO [dd1e3014] Collection complete: 47 data points in 0.74s (status: success)
+2025-11-28 16:18:07,161 DEBUG Page 3: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,161 DEBUG Fetching page 4 for Brussels_BE
+2025-11-28 16:18:07,164 DEBUG https://api.tennet.eu:443 "GET /publications/v1/settlement-prices?date_from=27-11-2025+00%3A00%3A00&date_to=28-11-2025+00%3A00%3A00 HTTP/1.1" 200 None
+2025-11-28 16:18:07,171 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:07,182 DEBUG Page 4: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,188 DEBUG Fetching page 5 for Arnhem_NL
+2025-11-28 16:18:07,220 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:07,222 DEBUG Page 4: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,222 DEBUG Fetching page 5 for Esbjerg_DK
+2025-11-28 16:18:07,223 DEBUG Page 4: Got 24 hours for Munich_DE
+2025-11-28 16:18:07,223 DEBUG Fetching page 5 for Munich_DE
+2025-11-28 16:18:07,224 DEBUG Page 4: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,224 DEBUG Fetching page 5 for Hamburg_DE
+2025-11-28 16:18:07,225 DEBUG Page 4: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,225 DEBUG Fetching page 5 for IJmuiden_NL
+2025-11-28 16:18:07,254 DEBUG Page 4: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,254 DEBUG Fetching page 5 for Brussels_BE
+2025-11-28 16:18:07,271 DEBUG Page 5: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,271 DEBUG Fetching page 6 for Arnhem_NL
+2025-11-28 16:18:07,286 DEBUG [cc123168] Parsing response...
+2025-11-28 16:18:07,287 DEBUG Parsed 30 data points from MeteoServer weather response
+2025-11-28 16:18:07,287 DEBUG [cc123168] Normalizing timestamps...
+2025-11-28 16:18:07,287 DEBUG [cc123168] Validating data...
+2025-11-28 16:18:07,288 INFO [cc123168] Collection complete: 30 data points in 0.88s (status: success)
+2025-11-28 16:18:07,302 DEBUG Page 5: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,302 DEBUG Fetching page 6 for Esbjerg_DK
+2025-11-28 16:18:07,305 DEBUG Page 5: Got 24 hours for Munich_DE
+2025-11-28 16:18:07,305 DEBUG Fetching page 6 for Munich_DE
+2025-11-28 16:18:07,307 DEBUG Page 5: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,307 DEBUG Fetching page 6 for Hamburg_DE
+2025-11-28 16:18:07,318 DEBUG Page 5: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,318 DEBUG Fetching page 6 for IJmuiden_NL
+2025-11-28 16:18:07,347 DEBUG Page 5: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,347 DEBUG Fetching page 6 for Brussels_BE
+2025-11-28 16:18:07,355 DEBUG Page 6: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,355 DEBUG Fetching page 7 for Arnhem_NL
+2025-11-28 16:18:07,381 DEBUG Page 6: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,381 DEBUG Fetching page 7 for Esbjerg_DK
+2025-11-28 16:18:07,388 DEBUG Page 6: Got 24 hours for Munich_DE
+2025-11-28 16:18:07,388 DEBUG Fetching page 7 for Munich_DE
+2025-11-28 16:18:07,391 DEBUG Page 6: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,391 DEBUG Fetching page 7 for Hamburg_DE
+2025-11-28 16:18:07,403 DEBUG Page 6: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,403 DEBUG Fetching page 7 for IJmuiden_NL
+2025-11-28 16:18:07,437 DEBUG Page 7: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,437 DEBUG Fetching page 8 for Arnhem_NL
+2025-11-28 16:18:07,439 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:07,452 DEBUG https://api.tennet.eu:443 "GET /publications/v1/balance-delta?date_from=27-11-2025+00%3A00%3A00&date_to=28-11-2025+00%3A00%3A00 HTTP/1.1" 200 None
+2025-11-28 16:18:07,486 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:07,488 DEBUG Page 6: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,488 DEBUG Fetching page 7 for Brussels_BE
+2025-11-28 16:18:07,489 DEBUG Page 7: Got 24 hours for Munich_DE
+2025-11-28 16:18:07,489 DEBUG Fetching page 8 for Munich_DE
+2025-11-28 16:18:07,490 DEBUG Page 7: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,490 DEBUG Fetching page 8 for Hamburg_DE
+2025-11-28 16:18:07,491 DEBUG [ca87d517] Parsing response...
+2025-11-28 16:18:07,491 DEBUG Parsed 30 data points from MeteoServer sun response
+2025-11-28 16:18:07,491 DEBUG [ca87d517] Normalizing timestamps...
+2025-11-28 16:18:07,491 DEBUG [ca87d517] Validating data...
+2025-11-28 16:18:07,492 INFO [ca87d517] Collection complete: 30 data points in 1.08s (status: success)
+2025-11-28 16:18:07,504 DEBUG Page 7: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,504 DEBUG Fetching page 8 for Esbjerg_DK
+2025-11-28 16:18:07,514 DEBUG Page 7: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,514 DEBUG Fetching page 8 for IJmuiden_NL
+2025-11-28 16:18:07,517 DEBUG Page 8: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,517 DEBUG Fetching page 9 for Arnhem_NL
+2025-11-28 16:18:07,576 DEBUG Page 7: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,576 DEBUG Fetching page 8 for Brussels_BE
+2025-11-28 16:18:07,577 DEBUG Page 8: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,577 DEBUG Fetching page 9 for Hamburg_DE
+2025-11-28 16:18:07,581 DEBUG Page 8: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,582 DEBUG Fetching page 9 for Esbjerg_DK
+2025-11-28 16:18:07,603 DEBUG Page 9: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,603 DEBUG Fetching page 10 for Arnhem_NL
+2025-11-28 16:18:07,604 DEBUG Page 8: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,604 DEBUG Fetching page 9 for IJmuiden_NL
+2025-11-28 16:18:07,618 DEBUG Page 8: Got 24 hours for Munich_DE
+2025-11-28 16:18:07,618 DEBUG Fetching page 9 for Munich_DE
+2025-11-28 16:18:07,662 DEBUG Page 9: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,662 DEBUG Fetching page 10 for Esbjerg_DK
+2025-11-28 16:18:07,666 DEBUG Page 8: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,666 DEBUG Fetching page 9 for Brussels_BE
+2025-11-28 16:18:07,696 DEBUG Page 9: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,696 DEBUG Fetching page 10 for IJmuiden_NL
+2025-11-28 16:18:07,703 DEBUG Page 9: Got 24 hours for Munich_DE
+2025-11-28 16:18:07,703 DEBUG Fetching page 10 for Munich_DE
+2025-11-28 16:18:07,720 DEBUG Page 9: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,720 DEBUG Fetching page 10 for Hamburg_DE
+2025-11-28 16:18:07,723 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:07,729 INFO Fetched TenneT data: 96 settlement price records, 1440 balance delta records
+2025-11-28 16:18:07,729 DEBUG [6bf6d1c6] Parsing response...
+2025-11-28 16:18:07,831 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:07,879 INFO Parsed 1440 TenneT data points
+2025-11-28 16:18:07,879 DEBUG [6bf6d1c6] Normalizing timestamps...
+2025-11-28 16:18:07,883 DEBUG [6bf6d1c6] Creating dataset...
+2025-11-28 16:18:07,884 INFO [6bf6d1c6] Collection complete: 1440 data points in 1.47s (status: success)
+2025-11-28 16:18:07,885 DEBUG Page 10: Got 24 hours for Arnhem_NL
+2025-11-28 16:18:07,886 DEBUG Page 10: Got 24 hours for Esbjerg_DK
+2025-11-28 16:18:07,887 DEBUG Page 9: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,887 DEBUG Fetching page 10 for Brussels_BE
+2025-11-28 16:18:07,887 DEBUG Page 10: Got 24 hours for Hamburg_DE
+2025-11-28 16:18:07,888 DEBUG Page 10: Got 24 hours for IJmuiden_NL
+2025-11-28 16:18:07,889 DEBUG Successfully fetched 240 hours across 10 pages for Arnhem_NL
+2025-11-28 16:18:07,889 DEBUG Successfully fetched Arnhem_NL on attempt 1
+2025-11-28 16:18:07,889 DEBUG Successfully fetched 240 hours across 10 pages for Esbjerg_DK
+2025-11-28 16:18:07,889 DEBUG Successfully fetched Esbjerg_DK on attempt 1
+2025-11-28 16:18:07,889 DEBUG Successfully fetched 240 hours across 10 pages for Hamburg_DE
+2025-11-28 16:18:07,889 DEBUG Successfully fetched Hamburg_DE on attempt 1
+2025-11-28 16:18:07,889 DEBUG Successfully fetched 240 hours across 10 pages for IJmuiden_NL
+2025-11-28 16:18:07,889 DEBUG Successfully fetched IJmuiden_NL on attempt 1
+2025-11-28 16:18:07,973 DEBUG Page 10: Got 24 hours for Brussels_BE
+2025-11-28 16:18:07,973 DEBUG Successfully fetched 240 hours across 10 pages for Brussels_BE
+2025-11-28 16:18:07,973 DEBUG Successfully fetched Brussels_BE on attempt 1
+2025-11-28 16:18:08,067 DEBUG Page 10: Got 24 hours for Munich_DE
+2025-11-28 16:18:08,068 DEBUG Successfully fetched 240 hours across 10 pages for Munich_DE
+2025-11-28 16:18:08,068 DEBUG Successfully fetched Munich_DE on attempt 1
+2025-11-28 16:18:08,068 DEBUG [e0868b5d] Parsing response...
+2025-11-28 16:18:08,068 DEBUG Parsing 240 forecast hours
+2025-11-28 16:18:08,068 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-28 16:18:08,071 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-28 16:18:08,071 DEBUG Parsing 240 forecast hours
+2025-11-28 16:18:08,071 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-28 16:18:08,074 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-28 16:18:08,074 DEBUG Parsing 240 forecast hours
+2025-11-28 16:18:08,074 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:08,074 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-28 16:18:08,078 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-28 16:18:08,078 DEBUG Parsing 240 forecast hours
+2025-11-28 16:18:08,078 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-28 16:18:08,081 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-28 16:18:08,086 DEBUG Parsing 240 forecast hours
+2025-11-28 16:18:08,086 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-28 16:18:08,089 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-28 16:18:08,089 DEBUG Parsing 240 forecast hours
+2025-11-28 16:18:08,089 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-11-28 16:18:08,092 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-11-28 16:18:08,092 DEBUG [e0868b5d] Normalizing timestamps...
+2025-11-28 16:18:08,097 DEBUG [e0868b5d] Validating data...
+2025-11-28 16:18:08,102 INFO [e0868b5d] Collection complete: 6 data points in 1.70s (status: success)
+2025-11-28 16:18:08,141 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:08,351 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:08,396 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:08,626 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:08,671 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:08,909 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:08,953 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:09,176 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:09,221 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:09,440 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:09,484 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 900, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:09,691 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=900&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:09,736 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1000, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:09,941 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1000&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:09,986 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:10,151 DEBUG Found 101 stations, fetching details...
+2025-11-28 16:18:10,198 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:10,243 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:10,444 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:10,488 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:10,714 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:10,758 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:10,966 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:11,076 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:11,284 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:11,328 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:11,605 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:11,649 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:11,865 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:11,909 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:12,115 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:12,160 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 1900, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:12,367 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=1900&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:12,412 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2000, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:12,626 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2000&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:12,670 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:12,884 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:12,928 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:13,129 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:13,173 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:13,395 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:13,438 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:13,651 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:13,696 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:13,890 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:13,935 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:14,134 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:14,178 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:14,377 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:14,479 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:14,687 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:14,731 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 2900, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:14,935 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=2900&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:14,980 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3000, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:15,229 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3000&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:15,272 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:15,484 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:15,529 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:15,740 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:15,784 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:15,994 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:16,039 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:16,247 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:16,291 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:16,511 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:16,555 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:16,773 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:16,817 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:17,015 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:17,059 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:17,263 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:17,306 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 3900, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:17,520 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=3900&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:17,565 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4000, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:17,781 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4000&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:17,885 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:18,093 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:18,138 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4200, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:18,338 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4200&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:18,382 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4300, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:18,594 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4300&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:18,638 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4400, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:18,849 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4400&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:18,893 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4500, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:19,101 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4500&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:19,146 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4600, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:19,351 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4600&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:19,397 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4700, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:19,601 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4700&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:19,646 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 4800, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202511262300', 'periodEnd': '202511302300'}
+2025-11-28 16:18:19,847 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=4800&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202511262300&periodEnd=202511302300 HTTP/1.1" 200 None
+2025-11-28 16:18:19,952 DEBUG [9b2c7efd] Parsing response...
+2025-11-28 16:18:19,953 DEBUG Parsed 192 data points from ENTSO-E response
+2025-11-28 16:18:19,953 DEBUG [9b2c7efd] Normalizing timestamps...
+2025-11-28 16:18:19,954 DEBUG [9b2c7efd] Validating data...
+2025-11-28 16:18:19,955 INFO [9b2c7efd] Collection complete: 192 data points in 13.57s (status: success)
+2025-11-28 16:19:14,668 INFO Cached 101 stations
+2025-11-28 16:19:14,669 INFO Using station NL54004 (Arnhem Velperbroek)
+2025-11-28 16:19:14,669 DEBUG Fetching AQI for station NL54004
+2025-11-28 16:19:15,500 DEBUG Fetching measurements for station NL54004
+2025-11-28 16:19:16,105 DEBUG [637b58cc] Parsing response...
+2025-11-28 16:19:16,108 DEBUG Parsed 24 data points from Luchtmeetnet response
+2025-11-28 16:19:16,108 DEBUG [637b58cc] Normalizing timestamps...
+2025-11-28 16:19:16,108 DEBUG [637b58cc] Validating data...
+2025-11-28 16:19:16,108 INFO [637b58cc] Collection complete: 24 data points in 69.70s (status: success)
+2025-11-28 16:19:16,109 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-28 16:19:16,116 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-28 16:19:16,117 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-28 16:19:16,137 INFO Saved multi-location weather forecast for 6 locations
+2025-11-28 16:19:16,137 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-28 16:19:16,138 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-28 16:19:16,138 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-11-28 16:19:16,140 INFO Saved TenneT grid imbalance data with 1440 data points
