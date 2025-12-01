@@ -49,21 +49,32 @@ Backfill 1+ year of historical data for energy price prediction model training.
 
 ## Future Enhancements
 
-### Multi-Location Solar Radiation Forecasts
+### Multi-Location Solar Radiation Forecasts (SUPPLY)
 **Status**: TODO
 
-Current `sun_forecast.json` only covers single location (Arnhem). For better price prediction, add multi-location solar irradiance similar to wind coverage:
+For price prediction, solar irradiance affects **supply** (solar production).
+NED.nl already provides national aggregate solar production.
 
-**Options:**
-1. **Open-Meteo Solar** (FREE) - `shortwave_radiation`, `direct_radiation` for multiple NL locations
+**Options for more granular data:**
+1. **Open-Meteo Solar** (FREE) - `shortwave_radiation`, `direct_radiation` for multiple locations
 2. **ENTSO-E Solar** - National solar generation forecasts by country
-3. **NED.nl Solar** - Already collecting via NedCollector (national aggregate)
 
 **Suggested locations for solar coverage:**
 - Zuid-Holland (high solar density)
 - Noord-Brabant (high solar density)
 - Flevoland (large solar farms)
 - Groningen (northern coverage)
+
+### Multi-Location Temperature/Weather Forecasts (DEMAND)
+**Status**: TODO
+
+Temperature affects electricity **demand** (heating in winter, cooling in summer).
+Current multi-location weather data focuses on wind for supply prediction.
+
+**Add for demand prediction:**
+1. **Temperature forecasts** at population centers (Amsterdam, Rotterdam, etc.)
+2. **Heating/cooling degree days** calculation
+3. Consider: working days vs weekends, holidays
 
 ---
 *Created: 2025-12-01*

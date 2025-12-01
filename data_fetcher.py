@@ -23,9 +23,9 @@ Project Contributors:
     Initial development and integration with energy conversion systems
 
 Description:
-    Main orchestrator for fetching energy and weather data from various external APIs.
-    Handles data collection, validation, and storage for day-ahead energy prices,
-    weather forecasts, solar data, and air quality measurements.
+    Main orchestrator for fetching energy data for electricity price prediction.
+    Collects national/regional data including day-ahead prices, wind/solar generation,
+    grid balance, and multi-location weather data affecting supply and demand.
 
     Uses the new BaseCollector architecture (Phase 4) with:
     - Automatic retry with exponential backoff
@@ -75,11 +75,7 @@ from collectors import (
     EnergyZeroCollector,
     EpexCollector,
     ElspotCollector,
-    OpenWeatherCollector,
     GoogleWeatherCollector,
-    MeteoServerWeatherCollector,
-    MeteoServerSunCollector,
-    LuchtmeetnetCollector,
     TennetCollector,
     NedCollector
 )
@@ -163,8 +159,6 @@ async def main() -> None:
 
         config = load_secrets(script_dir, SECRETS_FILE_NAME)
         entsoe_api_key = config.get('api_keys', 'entsoe')
-        openweather_api_key = config.get('api_keys', 'openweather')
-        meteoserver_api_key = config.get('api_keys', 'meteo')
         google_weather_api_key = config.get('api_keys', 'google_weather')
         tennet_api_key = config.get('api_keys', 'tennet')
         # NED.nl API key (optional - only available after registration approval)
@@ -241,29 +235,10 @@ async def main() -> None:
         energy_zero_collector = EnergyZeroCollector()
         epex_collector = EpexCollector()
         elspot_collector = ElspotCollector()
-        openweather_collector = OpenWeatherCollector(
-            api_key=openweather_api_key,
-            latitude=latitude,
-            longitude=longitude
-        )
         googleweather_collector = GoogleWeatherCollector(
             api_key=google_weather_api_key,
             locations=all_weather_locations,  # Includes offshore wind locations
             hours=240  # 10 days hourly forecast
-        )
-        meteoserver_weather_collector = MeteoServerWeatherCollector(
-            api_key=meteoserver_api_key,
-            latitude=latitude,
-            longitude=longitude
-        )
-        meteoserver_sun_collector = MeteoServerSunCollector(
-            api_key=meteoserver_api_key,
-            latitude=latitude,
-            longitude=longitude
-        )
-        luchtmeetnet_collector = LuchtmeetnetCollector(
-            latitude=latitude,
-            longitude=longitude
         )
         tennet_collector = TennetCollector(api_key=tennet_api_key)
 
@@ -284,17 +259,13 @@ async def main() -> None:
                 include_actual=True
             )
 
-        # Collect data from all sources
+        # Collect data from all sources (national/regional for price prediction)
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
             energy_zero_collector.collect(today, tomorrow),
             epex_collector.collect(today, tomorrow),
-            openweather_collector.collect(today, tomorrow),
-            googleweather_collector.collect(today, ten_days_ahead),  # 10-day forecast for Model A
-            meteoserver_weather_collector.collect(today, tomorrow),
-            meteoserver_sun_collector.collect(today, tomorrow),
+            googleweather_collector.collect(today, ten_days_ahead),  # 10-day forecast for price prediction
             elspot_collector.collect(today, tomorrow, country_code=country_code),
-            luchtmeetnet_collector.collect(yesterday, today),
             tennet_collector.collect(yesterday, today),  # TenneT data has a delay, use historical data
             entsoe_wind_collector.collect(today, tomorrow)  # Wind generation forecasts
         ]
@@ -306,8 +277,8 @@ async def main() -> None:
         results = await asyncio.gather(*tasks)
 
         # Unpack results - NED.nl is optional at the end
-        entsoe_data, energy_zero_data, epex_data, open_weather_data, google_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data, tennet_data, entsoe_wind_data = results[:11]
-        ned_data = results[11] if len(results) > 11 else None
+        entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data, tennet_data, entsoe_wind_data = results[:7]
+        ned_data = results[7] if len(results) > 7 else None
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -325,48 +296,12 @@ async def main() -> None:
             #     combined_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "energy_price_forecast.json"))
 
-        combined_data = CombinedDataSet()
-        combined_data.add_dataset('OpenWeather', open_weather_data)
-        combined_data.add_dataset('MeteoServer', meteo_weather_data)
-        if combined_data:
-            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast.json")
-            save_data_file(data=combined_data, file_path=full_path, handler=handler, encrypt=encryption)
-            # if encryption:
-            #     encrypted_data = handler.encrypt_and_sign(combined_data.to_dict())
-            #     with open(full_path, 'w') as f:
-            #         f.write(encrypted_data)
-            # else:
-            #     combined_data.write_to_json(full_path)
-            shutil.copy(full_path, os.path.join(output_path, "weather_forecast.json"))
-
-        # Save Google Weather multi-location data separately for Model A (price prediction)
+        # Save Google Weather multi-location data for price prediction (supply/demand factors)
         if google_weather_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast_multi_location.json")
             save_data_file(data=google_weather_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "weather_forecast_multi_location.json"))
             logging.info(f"Saved multi-location weather forecast for {len(all_weather_locations)} locations (including {len(offshore_wind_locations)} offshore wind sites)")
-
-        if meteo_sun_data:
-            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json")
-            save_data_file(data=meteo_sun_data, file_path=full_path, handler=handler, encrypt=encryption)
-            # if encryption:
-            #     encrypted_data = handler.encrypt_and_sign(meteo_sun_data.to_dict())
-            #     with open(full_path, 'w') as f:
-            #         f.write(encrypted_data)
-            # else:
-            #     meteo_sun_data.write_to_json(full_path)
-            shutil.copy(full_path, os.path.join(output_path, "sun_forecast.json"))
-
-        if luchtmeetnet_data:
-            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_air_history.json")
-            save_data_file(data=luchtmeetnet_data, file_path=full_path, handler=handler, encrypt=encryption)
-            # if encryption:
-            #     encrypted_data = handler.encrypt_and_sign(luchtmeetnet_data.to_dict())
-            #     with open(full_path, 'w') as f:
-            #         f.write(encrypted_data)
-            # else:
-            #     luchtmeetnet_data.write_to_json(full_path)
-            shutil.copy(full_path, os.path.join(output_path, "air_history.json"))
 
         if tennet_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_grid_imbalance.json")

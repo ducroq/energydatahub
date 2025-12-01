@@ -32,9 +32,6 @@ jobs:
         ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
         HMAC_KEY: ${{ secrets.HMAC_KEY }}
         ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
-        OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-        METEO_API_KEY: ${{ secrets.METEO_API_KEY }}
-        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
         TENNET_API_KEY: ${{ secrets.TENNET_API_KEY }}
         NED_API_KEY: ${{ secrets.NED_API_KEY }}
@@ -45,7 +42,7 @@ jobs:
       run: |
         mkdir -p docs
         # Copy files that exist, skip missing ones
-        for file in air_history.json energy_price_forecast.json sun_forecast.json weather_forecast.json weather_forecast_multi_location.json grid_imbalance.json wind_forecast.json ned_production.json; do
+        for file in energy_price_forecast.json weather_forecast_multi_location.json grid_imbalance.json wind_forecast.json ned_production.json; do
           if [ -f "data/$file" ]; then
             cp "data/$file" docs/
             echo "Copied $file"
