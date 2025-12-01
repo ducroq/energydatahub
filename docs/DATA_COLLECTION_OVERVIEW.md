@@ -83,13 +83,50 @@ This document provides a comprehensive overview of all data collected by the Ene
 
 ---
 
-### 5. Grid Balance
+### 5. Grid Balance & Cross-border Flows
 
 | Source | File | Variables | Coverage |
 |--------|------|-----------|----------|
 | TenneT | `grid_imbalance.json` | Imbalance prices, volumes | Netherlands |
+| ENTSO-E | `cross_border_flows.json` | Physical flows (MW), net position | 10 NL borders |
 
-**Historical Records**: ~24 days
+**Cross-border Flow Pairs**:
+- 🇳🇱↔🇩🇪 Netherlands ↔ Germany-Luxembourg
+- 🇳🇱↔🇧🇪 Netherlands ↔ Belgium
+- 🇳🇱↔🇳🇴 Netherlands ↔ Norway (NorNed cable)
+- 🇳🇱↔🇬🇧 Netherlands ↔ Great Britain (BritNed cable)
+- 🇳🇱↔🇩🇰 Netherlands ↔ Denmark (COBRAcable)
+
+**Historical Records**: ~24 days (imbalance), ~1 day (flows - new)
+
+---
+
+### 6. Load Forecasts (Demand)
+
+| Source | File | Variables | Coverage |
+|--------|------|-----------|----------|
+| ENTSO-E | `load_forecast.json` | Day-ahead load forecast (MW), actual load | NL, DE_LU |
+
+**Computed Variables**:
+- **Forecast Error** = forecast - actual → Model accuracy indicator
+
+**Historical Records**: ~1 day (new)
+
+---
+
+### 7. Generation by Type (Nuclear)
+
+| Source | File | Variables | Coverage |
+|--------|------|-----------|----------|
+| ENTSO-E | `generation_forecast.json` | Nuclear generation (MW), availability % | France |
+
+**Key Metrics**:
+- **Nuclear Actual/Forecast**: MW output from French nuclear fleet
+- **Nuclear Availability**: % of 61 GW installed capacity online
+
+French nuclear (~61 GW installed) is the largest single source in Europe. Outages cause price spikes across the continent.
+
+**Historical Records**: ~1 day (new)
 
 ---
 
@@ -101,14 +138,14 @@ This document provides a comprehensive overview of all data collected by the Ene
 |-----------|---------------|-------------------|--------|
 | **Gas Prices** | Natural gas often sets marginal electricity price | TTF (ICE), PEGAS | ❌ Not collected |
 | **CO2/Carbon Prices** | EU ETS affects fossil generation costs | EEX, ICE | ❌ Not collected |
-| **Cross-border Flows** | Import/export affects supply | ENTSO-E | ❌ Not collected |
-| **Load Forecast** | Actual demand predictions | ENTSO-E, TenneT | ❌ Not collected |
+| **Cross-border Flows** | Import/export affects supply | ENTSO-E | ✅ Collecting |
+| **Load Forecast** | Actual demand predictions | ENTSO-E, TenneT | ✅ Collecting |
 
 ### 🟡 Important Gaps (Medium Impact)
 
 | Data Type | Why Important | Potential Sources | Status |
 |-----------|---------------|-------------------|--------|
-| **Nuclear Availability** | French/Belgian nuclear affects regional prices | ENTSO-E, EDF | ❌ Not collected |
+| **Nuclear Availability** | French/Belgian nuclear affects regional prices | ENTSO-E, EDF | ✅ Collecting |
 | **Hydro Reservoir Levels** | Nordic hydro affects price dynamics | Nord Pool, ENTSO-E | ❌ Not collected |
 | **Coal Prices** | Backup fuel for price setting | ICE, API2 | ❌ Not collected |
 | **Interconnector Capacity** | Transmission constraints | JAO, ENTSO-E | ❌ Not collected |
@@ -173,11 +210,12 @@ Why: French nuclear outages cause price spikes across Europe
 - Good offshore wind coverage (major capacity areas)
 - Free solar/demand weather via Open-Meteo
 - Automated daily collection with CI/CD
+- Cross-border flows for all 5 NL interconnectors
+- Load forecasts for NL and Germany
+- French nuclear availability tracking
 
 ### ⚠️ Weaknesses
 - No fuel prices (gas, coal, carbon)
-- No cross-border flow data
-- No load/demand forecasts
 - Short historical record for new data types
 - Google Weather limited to 24h history (no backfill)
 
@@ -215,15 +253,15 @@ Why: French nuclear outages cause price spikes across Europe
 ## Recommended Next Steps
 
 ### Phase 1: Quick Wins (Free Data)
-1. [ ] Add ENTSO-E cross-border flows (already have API key)
-2. [ ] Add ENTSO-E load forecast (already have API key)
-3. [ ] Add calendar features (holidays, day-of-week)
-4. [ ] Backfill historical data using Open-Meteo + ENTSO-E
+1. [x] Add ENTSO-E cross-border flows (already have API key) ✅ **DONE**
+2. [x] Add ENTSO-E load forecast (already have API key) ✅ **DONE**
+3. [x] Add French nuclear availability from ENTSO-E ✅ **DONE**
+4. [ ] Add calendar features (holidays, day-of-week)
+5. [ ] Backfill historical data using Open-Meteo + ENTSO-E
 
 ### Phase 2: Enhanced Coverage (May Require Paid APIs)
 1. [ ] Add gas prices (TTF) - check free alternatives first
 2. [ ] Add carbon prices (EU ETS) - Ember Climate has free delayed data
-3. [ ] Add French nuclear availability from ENTSO-E
 
 ### Phase 3: Advanced Features
 1. [ ] Interconnector capacity and congestion
@@ -238,6 +276,9 @@ Why: French nuclear outages cause price spikes across Europe
 data/
 ├── energy_price_forecast.json          # Combined price data (ENTSO-E, EnergyZero, EPEX, Elspot)
 ├── grid_imbalance.json                 # TenneT imbalance data
+├── cross_border_flows.json             # ENTSO-E physical flows (10 NL borders)
+├── load_forecast.json                  # ENTSO-E load forecasts (NL, DE_LU)
+├── generation_forecast.json            # ENTSO-E generation by type (FR nuclear)
 ├── weather_forecast_multi_location.json # Google Weather (15 locations)
 ├── wind_forecast.json                  # ENTSO-E wind + offshore weather
 ├── ned_production.json                 # NED.nl solar/wind production
@@ -260,4 +301,4 @@ data/
 ---
 
 *Document created: 2025-12-01*
-*Last updated: 2025-12-01*
+*Last updated: 2025-12-01 (Added cross-border flows, load forecasts, nuclear generation)*
