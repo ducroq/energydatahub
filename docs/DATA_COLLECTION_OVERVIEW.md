@@ -130,6 +130,25 @@ French nuclear (~61 GW installed) is the largest single source in Europe. Outage
 
 ---
 
+### 8. Calendar Features
+
+| Source | File | Variables | Coverage |
+|--------|------|-----------|----------|
+| Python holidays | `calendar_features.json` | Holiday flags, day type, season | NL, DE, BE, FR |
+
+**Calendar Variables**:
+- **is_weekend**: Weekend indicator
+- **is_working_day**: Not weekend and not NL holiday
+- **is_holiday_nl/de/be/fr**: Holiday flags per country
+- **holiday_impact**: Weighted holiday impact (0.0-1.0)
+- **is_bridge_day**: Day between holiday and weekend
+- **season**: winter/spring/summer/fall
+- **day_of_week**: 0=Monday to 6=Sunday
+
+**Historical Records**: ~1 day (new)
+
+---
+
 ## Gap Analysis: What's Missing?
 
 ### 🔴 Critical Gaps (High Impact on Price)
@@ -155,8 +174,8 @@ French nuclear (~61 GW installed) is the largest single source in Europe. Outage
 | Data Type | Why Important | Potential Sources | Status |
 |-----------|---------------|-------------------|--------|
 | **Industrial Production** | Economic activity affects demand | CBS, Eurostat | ❌ Not collected |
-| **Holiday Calendar** | Demand patterns change | Public APIs | ⚠️ Can be derived |
-| **Day Type Features** | Weekend vs weekday patterns | - | ⚠️ Can be derived |
+| **Holiday Calendar** | Demand patterns change | Python holidays lib | ✅ Collecting |
+| **Day Type Features** | Weekend vs weekday patterns | Computed | ✅ Collecting |
 
 ---
 
@@ -256,7 +275,7 @@ Why: French nuclear outages cause price spikes across Europe
 1. [x] Add ENTSO-E cross-border flows (already have API key) ✅ **DONE**
 2. [x] Add ENTSO-E load forecast (already have API key) ✅ **DONE**
 3. [x] Add French nuclear availability from ENTSO-E ✅ **DONE**
-4. [ ] Add calendar features (holidays, day-of-week)
+4. [x] Add calendar features (holidays, day-of-week) ✅ **DONE**
 5. [ ] Backfill historical data using Open-Meteo + ENTSO-E
 
 ### Phase 2: Enhanced Coverage (May Require Paid APIs)
@@ -284,6 +303,7 @@ data/
 ├── ned_production.json                 # NED.nl solar/wind production
 ├── solar_forecast.json                 # Open-Meteo solar irradiance (7 locations)
 ├── demand_weather_forecast.json        # Open-Meteo demand weather (11 locations)
+├── calendar_features.json              # Calendar features (holidays, day type, season)
 └── YYMMDD_HHMMSS_*.json               # Timestamped historical copies
 ```
 
@@ -301,4 +321,4 @@ data/
 ---
 
 *Document created: 2025-12-01*
-*Last updated: 2025-12-01 (Added cross-border flows, load forecasts, nuclear generation)*
+*Last updated: 2025-12-01 (Added cross-border flows, load forecasts, nuclear generation, calendar features)*
