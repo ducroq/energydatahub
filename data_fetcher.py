@@ -65,9 +65,10 @@ import base64
 import platform
 
 from utils.helpers import ensure_output_directory, load_settings, load_secrets, save_data_file
-from utils.data_types import CombinedDataSet
+from utils.data_types import CombinedDataSet, EnhancedDataSet
 from utils.timezone_helpers import get_timezone_and_country
 from utils.secure_data_handler import SecureDataHandler
+from utils.calendar_features import get_calendar_features_for_range, get_upcoming_holidays
 # New collector architecture imports
 from collectors import (
     EntsoeCollector,
@@ -474,6 +475,29 @@ async def main() -> None:
             save_data_file(data=generation_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "generation_forecast.json"))
             logging.info(f"Saved generation data for {len(generation_data.data)} countries (nuclear availability)")
+
+        # Generate calendar features for the forecast period
+        # Calendar features affect electricity demand (holidays, weekends, season)
+        calendar_data = get_calendar_features_for_range(today, ten_days_ahead, hourly=True)
+        upcoming_holidays = get_upcoming_holidays(days_ahead=30)
+
+        calendar_dataset = EnhancedDataSet(
+            metadata={
+                'data_type': 'calendar_features',
+                'source': 'Python holidays library',
+                'description': 'Calendar features affecting electricity demand patterns',
+                'countries': ['NL', 'DE', 'BE', 'FR'],
+                'upcoming_holidays': upcoming_holidays,
+                'start_time': today.isoformat(),
+                'end_time': ten_days_ahead.isoformat(),
+            },
+            data=calendar_data
+        )
+
+        full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_calendar_features.json")
+        save_data_file(data=calendar_dataset, file_path=full_path, handler=handler, encrypt=encryption)
+        shutil.copy(full_path, os.path.join(output_path, "calendar_features.json"))
+        logging.info(f"Saved calendar features for {len(calendar_data)} hours, {len(upcoming_holidays)} upcoming holidays")
 
     except Exception as e:
         logging.error(e)
