@@ -168,6 +168,9 @@ def validate_data_timestamps(data: Dict[str, Any]) -> tuple[bool, list]:
     """
     Validate all timestamps in a data structure for correct timezone formatting.
 
+    Handles both flat structures (timestamp -> value) and nested structures
+    (country/location -> timestamp -> value) used by multi-region collectors.
+
     Args:
         data (dict): The data dictionary to validate (CombinedDataSet.to_dict() format)
 
@@ -186,6 +189,26 @@ def validate_data_timestamps(data: Dict[str, Any]) -> tuple[bool, list]:
 
     malformed_timestamps = []
 
+    def is_timestamp_like(key: str) -> bool:
+        """Check if a key looks like a timestamp (contains date-like pattern)."""
+        # Timestamps have format like '2025-12-01T00:00:00+01:00'
+        return len(key) > 10 and 'T' in key and ('-' in key or '+' in key)
+
+    def validate_timestamps_recursive(data_dict: dict, source_name: str, prefix: str = ""):
+        """Recursively validate timestamps in nested structures."""
+        for key, value in data_dict.items():
+            full_key = f"{prefix}{key}" if prefix else key
+
+            if is_timestamp_like(key):
+                # This looks like a timestamp - validate it
+                if not validate_timestamp_format(key):
+                    malformed_timestamps.append(f"{source_name}: {full_key}")
+            elif isinstance(value, dict):
+                # This is a nested structure (e.g., country code -> timestamps)
+                # Check if the nested dict contains timestamp-like keys
+                if value and any(is_timestamp_like(k) for k in value.keys()):
+                    validate_timestamps_recursive(value, source_name, f"{full_key}/")
+
     for source_name, source_data in data.items():
         # Skip version and other metadata fields
         if source_name == 'version' or not isinstance(source_data, dict):
@@ -195,10 +218,8 @@ def validate_data_timestamps(data: Dict[str, Any]) -> tuple[bool, list]:
         if 'data' not in source_data:
             continue
 
-        # Validate each timestamp
-        for timestamp in source_data['data'].keys():
-            if not validate_timestamp_format(timestamp):
-                malformed_timestamps.append(f"{source_name}: {timestamp}")
+        # Validate timestamps (handles both flat and nested structures)
+        validate_timestamps_recursive(source_data['data'], source_name)
 
     is_valid = len(malformed_timestamps) == 0
     return is_valid, malformed_timestamps
