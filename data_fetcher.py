@@ -77,7 +77,8 @@ from collectors import (
     ElspotCollector,
     GoogleWeatherCollector,
     TennetCollector,
-    NedCollector
+    NedCollector,
+    OpenMeteoSolarCollector
 )
 
 # Constants
@@ -215,6 +216,23 @@ async def main() -> None:
         # Combine strategic + offshore for comprehensive wind coverage
         all_weather_locations = strategic_locations + offshore_wind_locations
 
+        # Solar production locations for supply prediction
+        # High solar density areas in NL and neighboring countries
+        solar_locations = [
+            # Netherlands - high solar density provinces
+            {"name": "Rotterdam_NL", "lat": 51.9225, "lon": 4.4792},      # Zuid-Holland (highest density)
+            {"name": "Eindhoven_NL", "lat": 51.4416, "lon": 5.4697},      # Noord-Brabant (high density)
+            {"name": "Lelystad_NL", "lat": 52.5185, "lon": 5.4714},       # Flevoland (large solar farms)
+            {"name": "Groningen_NL", "lat": 53.2194, "lon": 6.5665},      # Northern NL coverage
+
+            # Germany - major solar capacity
+            {"name": "Munich_DE", "lat": 48.1351, "lon": 11.5820},        # Bavaria (highest solar)
+            {"name": "Stuttgart_DE", "lat": 48.7758, "lon": 9.1829},      # Baden-Württemberg
+
+            # Belgium
+            {"name": "Antwerp_BE", "lat": 51.2194, "lon": 4.4025},        # Flanders solar
+        ]
+
         # Calculate day boundaries for proper day-ahead forecasting
         current_time = datetime.now(timezone)
 
@@ -259,6 +277,13 @@ async def main() -> None:
                 include_actual=True
             )
 
+        # Open-Meteo Solar collector for multi-location solar irradiance (FREE - no API key)
+        # Solar irradiance affects electricity SUPPLY through solar panel production
+        openmeteo_solar_collector = OpenMeteoSolarCollector(
+            locations=solar_locations,
+            forecast_days=7  # 7-day solar forecast
+        )
+
         # Collect data from all sources (national/regional for price prediction)
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
@@ -267,7 +292,8 @@ async def main() -> None:
             googleweather_collector.collect(today, ten_days_ahead),  # 10-day forecast for price prediction
             elspot_collector.collect(today, tomorrow, country_code=country_code),
             tennet_collector.collect(yesterday, today),  # TenneT data has a delay, use historical data
-            entsoe_wind_collector.collect(today, tomorrow)  # Wind generation forecasts
+            entsoe_wind_collector.collect(today, tomorrow),  # Wind generation forecasts
+            openmeteo_solar_collector.collect(today, ten_days_ahead)  # Solar irradiance for supply
         ]
 
         # Add NED.nl collection if API key is configured
@@ -277,8 +303,8 @@ async def main() -> None:
         results = await asyncio.gather(*tasks)
 
         # Unpack results - NED.nl is optional at the end
-        entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data, tennet_data, entsoe_wind_data = results[:7]
-        ned_data = results[7] if len(results) > 7 else None
+        entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data, tennet_data, entsoe_wind_data, solar_data = results[:8]
+        ned_data = results[8] if len(results) > 8 else None
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -351,6 +377,13 @@ async def main() -> None:
             shutil.copy(full_path, os.path.join(output_path, "ned_production.json"))
             energy_types = ned_data.metadata.get('energy_types', [])
             logging.info(f"Saved NED.nl production data for {len(energy_types)} energy types: {energy_types}")
+
+        # Save solar irradiance forecast for supply prediction
+        if solar_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_solar_forecast.json")
+            save_data_file(data=solar_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "solar_forecast.json"))
+            logging.info(f"Saved solar irradiance forecast for {len(solar_locations)} locations")
 
     except Exception as e:
         logging.error(e)

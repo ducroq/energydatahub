@@ -29,6 +29,7 @@ from collectors.meteoserver import MeteoServerWeatherCollector, MeteoServerSunCo
 from collectors.luchtmeetnet import LuchtmeetnetCollector
 from collectors.tennet import TennetCollector
 from collectors.ned import NedCollector
+from collectors.openmeteo_solar import OpenMeteoSolarCollector
 
 __all__ = [
     # Base classes
@@ -59,4 +60,7 @@ __all__ = [
 
     # Dutch energy production
     'NedCollector',              # NED.nl (Nationaal Energie Dashboard)
+
+    # Solar irradiance
+    'OpenMeteoSolarCollector',   # Open-Meteo solar radiation (free)
 ]
