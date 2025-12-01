@@ -46,5 +46,26 @@ Backfill 1+ year of historical data for energy price prediction model training.
 - Consider chunking requests by month to avoid timeouts
 
 ---
+
+## Future Enhancements
+
+### Multi-Location Solar Radiation Forecasts
+**Status**: TODO
+
+Current `sun_forecast.json` only covers single location (Arnhem). For better price prediction, add multi-location solar irradiance similar to wind coverage:
+
+**Options:**
+1. **Open-Meteo Solar** (FREE) - `shortwave_radiation`, `direct_radiation` for multiple NL locations
+2. **ENTSO-E Solar** - National solar generation forecasts by country
+3. **NED.nl Solar** - Already collecting via NedCollector (national aggregate)
+
+**Suggested locations for solar coverage:**
+- Zuid-Holland (high solar density)
+- Noord-Brabant (high solar density)
+- Flevoland (large solar farms)
+- Groningen (northern coverage)
+
+---
 *Created: 2025-12-01*
+*Updated: 2025-12-01*
 *Status: TODO - implement when ready for ML training*
