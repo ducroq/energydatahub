@@ -72,6 +72,9 @@ from utils.secure_data_handler import SecureDataHandler
 from collectors import (
     EntsoeCollector,
     EntsoeWindCollector,
+    EntsoeFlowsCollector,
+    EntsoeLoadCollector,
+    EntsoeGenerationCollector,
     EnergyZeroCollector,
     EpexCollector,
     ElspotCollector,
@@ -313,6 +316,28 @@ async def main() -> None:
             forecast_days=7  # 7-day weather forecast
         )
 
+        # ENTSO-E Cross-border flows collector (FREE - uses existing API key)
+        # Import/export flows directly impact local electricity prices
+        entsoe_flows_collector = EntsoeFlowsCollector(api_key=entsoe_api_key)
+
+        # ENTSO-E Load forecast collector (FREE - uses existing API key)
+        # Load (demand) is a key driver of electricity prices
+        entsoe_load_collector = EntsoeLoadCollector(
+            api_key=entsoe_api_key,
+            country_codes=['NL', 'DE_LU'],  # NL and Germany
+            include_actual=True
+        )
+
+        # ENTSO-E Generation collector for French nuclear (FREE - uses existing API key)
+        # French nuclear availability significantly impacts European electricity prices
+        entsoe_generation_collector = EntsoeGenerationCollector(
+            api_key=entsoe_api_key,
+            country_codes=['FR'],  # France - largest nuclear fleet in Europe
+            generation_types=['nuclear'],
+            include_forecast=True,
+            include_actual=True
+        )
+
         # Collect data from all sources (national/regional for price prediction)
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
@@ -323,7 +348,10 @@ async def main() -> None:
             tennet_collector.collect(yesterday, today),  # TenneT data has a delay, use historical data
             entsoe_wind_collector.collect(today, tomorrow),  # Wind generation forecasts
             openmeteo_solar_collector.collect(today, ten_days_ahead),  # Solar irradiance for supply
-            openmeteo_weather_collector.collect(today, ten_days_ahead)  # Demand weather (temperature)
+            openmeteo_weather_collector.collect(today, ten_days_ahead),  # Demand weather (temperature)
+            entsoe_flows_collector.collect(yesterday, today),  # Cross-border flows (historical)
+            entsoe_load_collector.collect(today, tomorrow),  # Load forecasts
+            entsoe_generation_collector.collect(today, tomorrow)  # French nuclear generation
         ]
 
         # Add NED.nl collection if API key is configured
@@ -333,8 +361,10 @@ async def main() -> None:
         results = await asyncio.gather(*tasks)
 
         # Unpack results - NED.nl is optional at the end
-        entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data, tennet_data, entsoe_wind_data, solar_data, demand_weather_data = results[:9]
-        ned_data = results[9] if len(results) > 9 else None
+        (entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data,
+         tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
+         flows_data, load_data, generation_data) = results[:12]
+        ned_data = results[12] if len(results) > 12 else None
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -422,6 +452,28 @@ async def main() -> None:
             shutil.copy(full_path, os.path.join(output_path, "demand_weather_forecast.json"))
             total_pop = sum(loc.get('population', 0) for loc in population_centers)
             logging.info(f"Saved demand weather forecast for {len(population_centers)} population centers ({total_pop:,} total population)")
+
+        # Save cross-border flows data (import/export between NL and neighbors)
+        if flows_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_cross_border_flows.json")
+            save_data_file(data=flows_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "cross_border_flows.json"))
+            summary = flows_data.data.get('summary', {})
+            logging.info(f"Saved cross-border flows for {len(summary.get('borders', []))} borders, avg net: {summary.get('avg_net_position', 0)} MW")
+
+        # Save load forecast data (electricity demand predictions)
+        if load_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_load_forecast.json")
+            save_data_file(data=load_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "load_forecast.json"))
+            logging.info(f"Saved load forecast for {len(load_data.data)} countries")
+
+        # Save generation data (French nuclear availability)
+        if generation_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_generation_forecast.json")
+            save_data_file(data=generation_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "generation_forecast.json"))
+            logging.info(f"Saved generation data for {len(generation_data.data)} countries (nuclear availability)")
 
     except Exception as e:
         logging.error(e)
