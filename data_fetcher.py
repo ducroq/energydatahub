@@ -78,7 +78,8 @@ from collectors import (
     GoogleWeatherCollector,
     TennetCollector,
     NedCollector,
-    OpenMeteoSolarCollector
+    OpenMeteoSolarCollector,
+    OpenMeteoWeatherCollector
 )
 
 # Constants
@@ -233,6 +234,27 @@ async def main() -> None:
             {"name": "Antwerp_BE", "lat": 51.2194, "lon": 4.4025},        # Flanders solar
         ]
 
+        # Population centers for demand prediction (temperature affects heating/cooling demand)
+        # Major cities weighted by population for aggregated demand estimation
+        population_centers = [
+            # Netherlands - major population centers (17.5M total)
+            {"name": "Amsterdam_NL", "lat": 52.3676, "lon": 4.9041, "population": 872680},
+            {"name": "Rotterdam_NL", "lat": 51.9225, "lon": 4.4792, "population": 651446},
+            {"name": "The_Hague_NL", "lat": 52.0705, "lon": 4.3007, "population": 545838},
+            {"name": "Utrecht_NL", "lat": 52.0907, "lon": 5.1214, "population": 361924},
+            {"name": "Eindhoven_NL", "lat": 51.4416, "lon": 5.4697, "population": 238478},
+            {"name": "Groningen_NL", "lat": 53.2194, "lon": 6.5665, "population": 233273},
+
+            # Germany - key population centers in coupled market regions
+            {"name": "Dusseldorf_DE", "lat": 51.2277, "lon": 6.7735, "population": 620523},   # Near NL border
+            {"name": "Cologne_DE", "lat": 50.9375, "lon": 6.9603, "population": 1083498},    # Rhineland
+            {"name": "Hamburg_DE", "lat": 53.5511, "lon": 9.9937, "population": 1906411},    # North Germany
+
+            # Belgium - coupled market
+            {"name": "Brussels_BE", "lat": 50.8503, "lon": 4.3517, "population": 1222637},
+            {"name": "Antwerp_BE", "lat": 51.2194, "lon": 4.4025, "population": 530630},
+        ]
+
         # Calculate day boundaries for proper day-ahead forecasting
         current_time = datetime.now(timezone)
 
@@ -284,6 +306,13 @@ async def main() -> None:
             forecast_days=7  # 7-day solar forecast
         )
 
+        # Open-Meteo Weather collector for demand prediction (FREE - no API key)
+        # Temperature at population centers affects electricity DEMAND (heating/cooling)
+        openmeteo_weather_collector = OpenMeteoWeatherCollector(
+            locations=population_centers,
+            forecast_days=7  # 7-day weather forecast
+        )
+
         # Collect data from all sources (national/regional for price prediction)
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
@@ -293,7 +322,8 @@ async def main() -> None:
             elspot_collector.collect(today, tomorrow, country_code=country_code),
             tennet_collector.collect(yesterday, today),  # TenneT data has a delay, use historical data
             entsoe_wind_collector.collect(today, tomorrow),  # Wind generation forecasts
-            openmeteo_solar_collector.collect(today, ten_days_ahead)  # Solar irradiance for supply
+            openmeteo_solar_collector.collect(today, ten_days_ahead),  # Solar irradiance for supply
+            openmeteo_weather_collector.collect(today, ten_days_ahead)  # Demand weather (temperature)
         ]
 
         # Add NED.nl collection if API key is configured
@@ -303,8 +333,8 @@ async def main() -> None:
         results = await asyncio.gather(*tasks)
 
         # Unpack results - NED.nl is optional at the end
-        entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data, tennet_data, entsoe_wind_data, solar_data = results[:8]
-        ned_data = results[8] if len(results) > 8 else None
+        entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data, tennet_data, entsoe_wind_data, solar_data, demand_weather_data = results[:9]
+        ned_data = results[9] if len(results) > 9 else None
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -384,6 +414,14 @@ async def main() -> None:
             save_data_file(data=solar_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "solar_forecast.json"))
             logging.info(f"Saved solar irradiance forecast for {len(solar_locations)} locations")
+
+        # Save demand weather forecast for demand prediction (heating/cooling)
+        if demand_weather_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_demand_weather_forecast.json")
+            save_data_file(data=demand_weather_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "demand_weather_forecast.json"))
+            total_pop = sum(loc.get('population', 0) for loc in population_centers)
+            logging.info(f"Saved demand weather forecast for {len(population_centers)} population centers ({total_pop:,} total population)")
 
     except Exception as e:
         logging.error(e)

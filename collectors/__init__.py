@@ -30,6 +30,7 @@ from collectors.luchtmeetnet import LuchtmeetnetCollector
 from collectors.tennet import TennetCollector
 from collectors.ned import NedCollector
 from collectors.openmeteo_solar import OpenMeteoSolarCollector
+from collectors.openmeteo_weather import OpenMeteoWeatherCollector
 
 __all__ = [
     # Base classes
@@ -63,4 +64,7 @@ __all__ = [
 
     # Solar irradiance
     'OpenMeteoSolarCollector',   # Open-Meteo solar radiation (free)
+
+    # Demand-side weather
+    'OpenMeteoWeatherCollector', # Open-Meteo weather for demand prediction (free)
 ]

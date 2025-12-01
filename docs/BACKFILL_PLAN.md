@@ -50,33 +50,28 @@ Backfill 1+ year of historical data for energy price prediction model training.
 ## Future Enhancements
 
 ### Multi-Location Solar Radiation Forecasts (SUPPLY)
-**Status**: TODO
+**Status**: DONE ✓
 
-For price prediction, solar irradiance affects **supply** (solar production).
-NED.nl already provides national aggregate solar production.
-
-**Options for more granular data:**
-1. **Open-Meteo Solar** (FREE) - `shortwave_radiation`, `direct_radiation` for multiple locations
-2. **ENTSO-E Solar** - National solar generation forecasts by country
-
-**Suggested locations for solar coverage:**
-- Zuid-Holland (high solar density)
-- Noord-Brabant (high solar density)
-- Flevoland (large solar farms)
-- Groningen (northern coverage)
+Implemented via `OpenMeteoSolarCollector` (FREE API):
+- Variables: GHI, DNI, DHI, direct radiation, cloud cover
+- Locations: Rotterdam, Eindhoven, Lelystad, Groningen (NL), Munich, Stuttgart (DE), Antwerp (BE)
+- Output: `solar_forecast.json` (7-day forecast)
 
 ### Multi-Location Temperature/Weather Forecasts (DEMAND)
-**Status**: TODO
+**Status**: DONE ✓
 
-Temperature affects electricity **demand** (heating in winter, cooling in summer).
-Current multi-location weather data focuses on wind for supply prediction.
+Implemented via `OpenMeteoWeatherCollector` (FREE API):
+- Variables: temperature, apparent_temperature, humidity, precipitation, wind_speed, cloud_cover
+- Computed fields: Heating Degree Days (HDD), Cooling Degree Days (CDD)
+- Locations: Amsterdam, Rotterdam, The Hague, Utrecht, Eindhoven, Groningen (NL), Dusseldorf, Cologne, Hamburg (DE), Brussels, Antwerp (BE)
+- Population coverage: ~8.3M people across major cities
+- Output: `demand_weather_forecast.json` (7-day forecast)
 
-**Add for demand prediction:**
-1. **Temperature forecasts** at population centers (Amsterdam, Rotterdam, etc.)
-2. **Heating/cooling degree days** calculation
-3. Consider: working days vs weekends, holidays
+**Degree Day Calculation:**
+- HDD = max(0, 18°C - temperature) → Higher when colder (heating demand)
+- CDD = max(0, temperature - 24°C) → Higher when hotter (cooling demand)
 
 ---
 *Created: 2025-12-01*
 *Updated: 2025-12-01*
-*Status: TODO - implement when ready for ML training*
+*Status: Solar and Demand weather DONE - Historical backfill TODO when ready for ML training*

@@ -42,7 +42,7 @@ jobs:
       run: |
         mkdir -p docs
         # Copy files that exist, skip missing ones
-        for file in energy_price_forecast.json weather_forecast_multi_location.json grid_imbalance.json wind_forecast.json ned_production.json solar_forecast.json; do
+        for file in energy_price_forecast.json weather_forecast_multi_location.json grid_imbalance.json wind_forecast.json ned_production.json solar_forecast.json demand_weather_forecast.json; do
           if [ -f "data/$file" ]; then
             cp "data/$file" docs/
             echo "Copied $file"
