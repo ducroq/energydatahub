@@ -71,6 +71,7 @@ from utils.secure_data_handler import SecureDataHandler
 # New collector architecture imports
 from collectors import (
     EntsoeCollector,
+    EntsoeWindCollector,
     EnergyZeroCollector,
     EpexCollector,
     ElspotCollector,
@@ -97,6 +98,55 @@ logging.basicConfig(
         logging.StreamHandler(), 
         logging.FileHandler(os.path.join(output_path, LOGGING_FILE_NAME))]
     )
+
+def _extract_wind_from_weather(google_weather_data, offshore_locations):
+    """
+    Extract wind-specific data from Google Weather multi-location forecasts.
+
+    Filters to offshore wind locations and extracts only wind-relevant fields
+    (wind_speed, wind_direction) for use in price prediction models.
+
+    Args:
+        google_weather_data: EnhancedDataSet from GoogleWeatherCollector
+        offshore_locations: List of offshore location dicts with 'name' key
+
+    Returns:
+        Dict mapping location names to timestamp -> wind data
+    """
+    if not google_weather_data or not google_weather_data.data:
+        return None
+
+    offshore_names = {loc['name'] for loc in offshore_locations}
+    wind_data = {}
+
+    for location_name, location_data in google_weather_data.data.items():
+        # Only include offshore wind locations
+        if location_name not in offshore_names:
+            continue
+
+        if not isinstance(location_data, dict):
+            continue
+
+        location_wind = {}
+        for timestamp, weather_values in location_data.items():
+            if not isinstance(weather_values, dict):
+                continue
+
+            # Extract wind fields
+            wind_entry = {}
+            if 'wind_speed' in weather_values:
+                wind_entry['wind_speed'] = weather_values['wind_speed']
+            if 'wind_direction' in weather_values:
+                wind_entry['wind_direction'] = weather_values['wind_direction']
+
+            if wind_entry:
+                location_wind[timestamp] = wind_entry
+
+        if location_wind:
+            wind_data[location_name] = location_wind
+
+    return wind_data if wind_data else None
+
 
 async def main() -> None:
     """Main function to orchestrate the data fetching and writing process."""
@@ -138,6 +188,32 @@ async def main() -> None:
             {"name": "Esbjerg_DK", "lat": 55.4760, "lon": 8.4516},      # North Sea wind
         ]
 
+        # Offshore wind farm locations for enhanced wind forecasting
+        # These locations represent major North Sea offshore wind areas
+        offshore_wind_locations = [
+            # Dutch offshore wind farms
+            {"name": "Borssele_NL", "lat": 51.7000, "lon": 3.0000},     # Borssele wind farm area (1.5 GW)
+            {"name": "HollandseKust_NL", "lat": 52.5000, "lon": 4.2000},# Hollandse Kust (3.5 GW planned)
+            {"name": "Gemini_NL", "lat": 54.0361, "lon": 5.9625},       # Gemini wind farm (600 MW)
+            {"name": "IJmuidenVer_NL", "lat": 52.8500, "lon": 3.5000},  # IJmuiden Ver (4 GW planned)
+
+            # German Bight (major capacity)
+            {"name": "HelgolandCluster_DE", "lat": 54.2000, "lon": 7.5000},  # German offshore cluster
+            {"name": "BorkumRiffgrund_DE", "lat": 53.9667, "lon": 6.5500},   # Borkum Riffgrund area
+
+            # UK Dogger Bank (world's largest offshore wind farm)
+            {"name": "DoggerBank_UK", "lat": 54.7500, "lon": 2.5000},   # Dogger Bank (3.6 GW)
+
+            # Danish North Sea
+            {"name": "HornsRev_DK", "lat": 55.4833, "lon": 7.8500},     # Horns Rev wind farms
+
+            # Belgian offshore
+            {"name": "NorthSeaBE_BE", "lat": 51.5833, "lon": 2.8000},   # Belgian offshore cluster
+        ]
+
+        # Combine strategic + offshore for comprehensive wind coverage
+        all_weather_locations = strategic_locations + offshore_wind_locations
+
         # Calculate day boundaries for proper day-ahead forecasting
         current_time = datetime.now(timezone)
 
@@ -165,7 +241,7 @@ async def main() -> None:
         )
         googleweather_collector = GoogleWeatherCollector(
             api_key=google_weather_api_key,
-            locations=strategic_locations,
+            locations=all_weather_locations,  # Includes offshore wind locations
             hours=240  # 10 days hourly forecast
         )
         meteoserver_weather_collector = MeteoServerWeatherCollector(
@@ -184,6 +260,12 @@ async def main() -> None:
         )
         tennet_collector = TennetCollector(api_key=tennet_api_key)
 
+        # ENTSO-E Wind Generation Forecast collector (for price prediction)
+        entsoe_wind_collector = EntsoeWindCollector(
+            api_key=entsoe_api_key,
+            country_codes=['NL', 'DE_LU', 'BE', 'DK_1']  # Key wind markets affecting NL prices
+        )
+
         # Collect data from all sources
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
@@ -195,11 +277,12 @@ async def main() -> None:
             meteoserver_sun_collector.collect(today, tomorrow),
             elspot_collector.collect(today, tomorrow, country_code=country_code),
             luchtmeetnet_collector.collect(yesterday, today),
-            tennet_collector.collect(yesterday, today)  # TenneT data has a delay, use historical data
+            tennet_collector.collect(yesterday, today),  # TenneT data has a delay, use historical data
+            entsoe_wind_collector.collect(today, tomorrow)  # Wind generation forecasts
         ]
 
         results = await asyncio.gather(*tasks)
-        entsoe_data, energy_zero_data, epex_data, open_weather_data, google_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data, tennet_data = results
+        entsoe_data, energy_zero_data, epex_data, open_weather_data, google_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data, tennet_data, entsoe_wind_data = results
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -236,7 +319,7 @@ async def main() -> None:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast_multi_location.json")
             save_data_file(data=google_weather_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "weather_forecast_multi_location.json"))
-            logging.info(f"Saved multi-location weather forecast for {len(strategic_locations)} locations")
+            logging.info(f"Saved multi-location weather forecast for {len(all_weather_locations)} locations (including {len(offshore_wind_locations)} offshore wind sites)")
 
         if meteo_sun_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_sun_forecast.json")
@@ -265,6 +348,41 @@ async def main() -> None:
             save_data_file(data=tennet_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "grid_imbalance.json"))
             logging.info(f"Saved TenneT grid imbalance data with {tennet_data.metadata.get('data_points', 0)} data points")
+
+        # Wind forecast output - combines ENTSO-E generation forecasts with weather-based wind data
+        # This dedicated wind file is optimized for price prediction models
+        wind_combined_data = CombinedDataSet()
+
+        # Add ENTSO-E wind generation forecasts (MW by country)
+        if entsoe_wind_data:
+            wind_combined_data.add_dataset('entsoe_wind_generation', entsoe_wind_data)
+            logging.info(f"Added ENTSO-E wind generation forecasts for {len(entsoe_wind_data.data)} countries")
+
+        # Extract wind-specific data from Google Weather multi-location forecasts
+        if google_weather_data:
+            # Create a wind-focused extract from weather data
+            wind_weather_data = _extract_wind_from_weather(google_weather_data, offshore_wind_locations)
+            if wind_weather_data:
+                from utils.data_types import EnhancedDataSet
+                wind_weather_dataset = EnhancedDataSet(
+                    metadata={
+                        'data_type': 'weather_wind',
+                        'source': 'Google Weather API (wind extract)',
+                        'units': 'm/s (wind_speed), degrees (wind_direction)',
+                        'description': 'Wind speed and direction at offshore wind farm locations',
+                        'locations': [loc['name'] for loc in offshore_wind_locations]
+                    },
+                    data=wind_weather_data
+                )
+                wind_combined_data.add_dataset('weather_wind', wind_weather_dataset)
+                logging.info(f"Added weather-based wind data for {len(offshore_wind_locations)} offshore locations")
+
+        # Save combined wind forecast
+        if wind_combined_data.datasets:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_wind_forecast.json")
+            save_data_file(data=wind_combined_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "wind_forecast.json"))
+            logging.info(f"Saved combined wind forecast with {len(wind_combined_data.datasets)} data sources")
 
     except Exception as e:
         logging.error(e)

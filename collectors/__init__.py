@@ -20,6 +20,7 @@ from collectors.base import (
 )
 from collectors.elspot import ElspotCollector
 from collectors.entsoe import EntsoeCollector
+from collectors.entsoe_wind import EntsoeWindCollector
 from collectors.energyzero import EnergyZeroCollector
 from collectors.epex import EpexCollector
 from collectors.openweather import OpenWeatherCollector
@@ -39,6 +40,7 @@ __all__ = [
     # Energy price collectors
     'ElspotCollector',           # Nord Pool Elspot
     'EntsoeCollector',           # ENTSO-E Transparency Platform
+    'EntsoeWindCollector',       # ENTSO-E Wind Generation Forecasts
     'EnergyZeroCollector',       # EnergyZero (NL)
     'EpexCollector',             # EPEX SPOT (via Awattar)
 
