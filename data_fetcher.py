@@ -80,7 +80,8 @@ from collectors import (
     MeteoServerWeatherCollector,
     MeteoServerSunCollector,
     LuchtmeetnetCollector,
-    TennetCollector
+    TennetCollector,
+    NedCollector
 )
 
 # Constants
@@ -166,6 +167,12 @@ async def main() -> None:
         meteoserver_api_key = config.get('api_keys', 'meteo')
         google_weather_api_key = config.get('api_keys', 'google_weather')
         tennet_api_key = config.get('api_keys', 'tennet')
+        # NED.nl API key (optional - only available after registration approval)
+        try:
+            ned_api_key = config.get('api_keys', 'ned')
+        except Exception:
+            ned_api_key = None
+            logging.info("NED.nl API key not configured - skipping NED.nl collection")
         encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))
         hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
         handler = SecureDataHandler(encryption_key, hmac_key)
@@ -266,6 +273,17 @@ async def main() -> None:
             country_codes=['NL', 'DE_LU', 'BE', 'DK_1']  # Key wind markets affecting NL prices
         )
 
+        # NED.nl collector for Dutch energy production (solar, wind onshore/offshore)
+        # Only initialize if API key is available (requires registration approval)
+        ned_collector = None
+        if ned_api_key:
+            ned_collector = NedCollector(
+                api_key=ned_api_key,
+                energy_types=['solar', 'wind_onshore', 'wind_offshore'],
+                include_forecast=True,
+                include_actual=True
+            )
+
         # Collect data from all sources
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
@@ -281,8 +299,15 @@ async def main() -> None:
             entsoe_wind_collector.collect(today, tomorrow)  # Wind generation forecasts
         ]
 
+        # Add NED.nl collection if API key is configured
+        if ned_collector:
+            tasks.append(ned_collector.collect(today, tomorrow))
+
         results = await asyncio.gather(*tasks)
-        entsoe_data, energy_zero_data, epex_data, open_weather_data, google_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data, tennet_data, entsoe_wind_data = results
+
+        # Unpack results - NED.nl is optional at the end
+        entsoe_data, energy_zero_data, epex_data, open_weather_data, google_weather_data, meteo_weather_data, meteo_sun_data, elspot_data, luchtmeetnet_data, tennet_data, entsoe_wind_data = results[:11]
+        ned_data = results[11] if len(results) > 11 else None
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -383,6 +408,14 @@ async def main() -> None:
             save_data_file(data=wind_combined_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "wind_forecast.json"))
             logging.info(f"Saved combined wind forecast with {len(wind_combined_data.datasets)} data sources")
+
+        # Save NED.nl energy production data (solar, wind onshore/offshore - NL actual + forecast)
+        if ned_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_ned_production.json")
+            save_data_file(data=ned_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "ned_production.json"))
+            energy_types = ned_data.metadata.get('energy_types', [])
+            logging.info(f"Saved NED.nl production data for {len(energy_types)} energy types: {energy_types}")
 
     except Exception as e:
         logging.error(e)

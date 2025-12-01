@@ -28,6 +28,7 @@ from collectors.googleweather import GoogleWeatherCollector
 from collectors.meteoserver import MeteoServerWeatherCollector, MeteoServerSunCollector
 from collectors.luchtmeetnet import LuchtmeetnetCollector
 from collectors.tennet import TennetCollector
+from collectors.ned import NedCollector
 
 __all__ = [
     # Base classes
@@ -55,4 +56,7 @@ __all__ = [
 
     # Grid data collectors
     'TennetCollector',           # TenneT TSO grid imbalance
+
+    # Dutch energy production
+    'NedCollector',              # NED.nl (Nationaal Energie Dashboard)
 ]
