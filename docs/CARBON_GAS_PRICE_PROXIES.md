@@ -16,14 +16,14 @@ This document explains the proxy approach, available tickers, and implementation
 - **Free alternatives** like EEA or World Bank provide emissions data, not market prices
 
 ### The Solution
-ETFs and ETCs (Exchange Traded Commodities) are publicly traded securities that track commodity prices. Their prices are available via free APIs like Yahoo Finance (yfinance), making them excellent proxies for the underlying commodity prices.
+ETFs and ETCs (Exchange Traded Commodities) are publicly traded securities that track commodity prices. Their prices are available via free APIs like **Alpha Vantage** (primary) or Yahoo Finance (fallback), making them excellent proxies for the underlying commodity prices.
 
 ### Benefits
-1. **Free daily data** via yfinance or similar APIs
+1. **Free daily data** via Alpha Vantage (25 requests/day) or yfinance
 2. **Liquid markets** with accurate price discovery
 3. **Historical data** available for backtesting
 4. **Correlation** with underlying commodity is typically >95%
-5. **No registration required** for basic historical data
+5. **Simple registration** - free API key from Alpha Vantage
 
 ---
 
@@ -57,23 +57,27 @@ rolling monthly to maintain exposure to the carbon price curve.
 
 | Ticker | Name | What It Tracks | Best For |
 |--------|------|----------------|----------|
-| **TTF=F** | Dutch TTF Gas Futures (Generic) | Front-month TTF futures | **Primary gas proxy** |
-| **TGF25** | TTF Gas January 2025 | Specific contract month | Specific delivery month |
+| **UNG** | United States Natural Gas Fund | US Henry Hub gas | **Primary proxy** (Alpha Vantage) |
+| **BOIL** | ProShares Ultra Bloomberg Natural Gas | 2x leveraged US gas | Fallback proxy |
+| **TTF=F** | Dutch TTF Gas Futures (Generic) | Front-month TTF futures | Direct TTF (yfinance only) |
 | **NG=F** | US Natural Gas Futures | Henry Hub benchmark | US gas comparison |
 
-#### TTF=F - Recommended Gas Proxy
+#### UNG - Recommended Gas Proxy (Alpha Vantage)
 
-**Why TTF=F is ideal:**
-- **European benchmark**: TTF is THE reference price for European gas
-- **Dutch market**: Title Transfer Facility operated by GTS (Gasunie)
-- **Price setter**: TTF price often determines EU electricity prices during gas-fired generation
-- **Continuous contract**: Generic ticker rolls to front-month automatically
+**Why UNG is our primary choice:**
+- **API availability**: Available on Alpha Vantage (TTF=F is not)
+- **High correlation**: US and EU gas prices are increasingly correlated due to LNG trade
+- **Liquid ETF**: High daily volume ensures reliable data
+- **Free access**: Available through free Alpha Vantage API
+
+**Note**: TTF is the European benchmark, but TTF=F is only available via yfinance (which is unreliable). UNG tracks US gas prices which correlate with EU prices due to global LNG market integration.
 
 ```
-The TTF price is critical for electricity price prediction because:
-1. Gas plants often set the marginal electricity price
+Why gas prices (even US) matter for EU electricity prediction:
+1. Gas plants often set the marginal electricity price in Europe
 2. When renewable generation is low, gas becomes the price-setter
-3. TTF price volatility directly impacts day-ahead electricity prices
+3. Global gas market integration means US/EU prices move together
+4. UNG daily changes are a good proxy for TTF directional moves
 ```
 
 ---
@@ -179,20 +183,25 @@ When gas plants are marginal (setting the price):
 ┌─────────────────────────────────────────────────────────────┐
 │                    MarketProxyCollector                      │
 ├─────────────────────────────────────────────────────────────┤
-│  Primary Source: yfinance                                    │
-│  - KEUA (EU Carbon)                                         │
-│  - TTF=F (EU Gas)                                           │
+│  Primary Source: Alpha Vantage API (25 requests/day free)   │
+│  - KEUA (EU Carbon ETF)                                     │
+│  - UNG (US Natural Gas ETF - correlates with EU)            │
 ├─────────────────────────────────────────────────────────────┤
-│  Fallback Sources (if yfinance fails):                      │
-│  - Investing.com scraping                                   │
-│  - Barchart historical                                      │
-│  - Cache previous day's data                                │
+│  Fallback Source (if Alpha Vantage fails): yfinance         │
+│  - Same tickers, but API is often blocked                   │
+├─────────────────────────────────────────────────────────────┤
+│  Last Resort: Cache                                         │
+│  - Use previous day's data (up to 48 hours old)             │
 ├─────────────────────────────────────────────────────────────┤
 │  Output: market_proxies.json                                │
-│  - carbon_price_eur (KEUA-derived)                          │
-│  - gas_price_eur_mwh (TTF=F)                                │
+│  - carbon (KEUA price + lag features)                       │
+│  - gas (UNG price + lag features)                           │
 │  - metadata with source, timestamp, ticker info             │
 └─────────────────────────────────────────────────────────────┘
+
+API Key Setup:
+1. Get free key from https://www.alphavantage.co/support/#api-key
+2. Set ALPHA_VANTAGE_API_KEY in secrets.ini or environment
 ```
 
 ### Python Implementation
@@ -201,138 +210,45 @@ When gas plants are marginal (setting the price):
 """
 Market Proxy Collector for Carbon and Gas Prices
 ------------------------------------------------
-Uses ETF/futures tickers as free proxies for commodity prices.
+Uses Alpha Vantage as primary source (reliable) with yfinance fallback.
+See collectors/market_proxies.py for full implementation.
 """
 
-import yfinance as yf
-from datetime import datetime, timedelta
-from typing import Dict, Optional, Any
-import logging
+import asyncio
+import aiohttp
+import os
 
-class MarketProxyCollector:
-    """
-    Collector for carbon and gas market prices via ETF/futures proxies.
+# Alpha Vantage configuration
+ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
+API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
 
-    Primary tickers:
-    - KEUA: EU Carbon (EUA) proxy
-    - TTF=F: Dutch TTF Natural Gas proxy
-    """
-
-    TICKERS = {
-        'carbon': {
-            'primary': 'KEUA',
-            'fallback': ['KRBN', 'FCO2.L'],
-            'description': 'EU Carbon Allowance (EUA) proxy',
-            'units': 'USD/share (correlates to EUR/tonne EUA)'
-        },
-        'gas': {
-            'primary': 'TTF=F',
-            'fallback': ['NG=F'],
-            'description': 'Dutch TTF Natural Gas proxy',
-            'units': 'EUR/MWh'
-        }
+async def fetch_quote(session, symbol):
+    """Fetch current quote from Alpha Vantage."""
+    params = {
+        'function': 'GLOBAL_QUOTE',
+        'symbol': symbol,
+        'apikey': API_KEY
     }
-
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-
-    def _fetch_ticker(self, ticker: str, period: str = '5d') -> Optional[Dict[str, Any]]:
-        """Fetch data for a single ticker."""
-        try:
-            t = yf.Ticker(ticker)
-            hist = t.history(period=period)
-
-            if hist.empty:
-                self.logger.warning(f"{ticker}: No data returned")
-                return None
-
-            latest = hist.iloc[-1]
-            return {
-                'ticker': ticker,
-                'price': float(latest['Close']),
-                'date': hist.index[-1].isoformat(),
-                'open': float(latest['Open']),
-                'high': float(latest['High']),
-                'low': float(latest['Low']),
-                'volume': int(latest['Volume']) if 'Volume' in latest else 0,
-                'change_pct': float((latest['Close'] - hist.iloc[-2]['Close']) / hist.iloc[-2]['Close'] * 100) if len(hist) > 1 else 0
-            }
-        except Exception as e:
-            self.logger.error(f"{ticker}: Error fetching - {e}")
-            return None
-
-    def collect(self) -> Dict[str, Any]:
-        """
-        Collect carbon and gas proxy prices.
-
-        Returns:
-            Dict with structure:
-            {
-                'carbon': {
-                    'ticker': 'KEUA',
-                    'price': 28.50,
-                    'date': '2025-12-01',
-                    ...
-                },
-                'gas': {
-                    'ticker': 'TTF=F',
-                    'price': 45.20,
-                    ...
-                },
-                'metadata': {...}
-            }
-        """
-        results = {
-            'metadata': {
-                'collected_at': datetime.utcnow().isoformat(),
-                'source': 'yfinance (Yahoo Finance)',
-                'description': 'Market proxy prices for carbon and gas'
-            }
+    async with session.get(ALPHA_VANTAGE_URL, params=params) as r:
+        data = await r.json()
+        quote = data.get('Global Quote', {})
+        return {
+            'ticker': symbol,
+            'price': float(quote.get('05. price', 0)),
+            'change_pct': float(quote.get('10. change percent', '0%').rstrip('%'))
         }
 
-        for commodity, config in self.TICKERS.items():
-            # Try primary ticker first
-            data = self._fetch_ticker(config['primary'])
+async def collect_market_proxies():
+    """Collect carbon and gas proxy prices."""
+    async with aiohttp.ClientSession() as session:
+        carbon = await fetch_quote(session, 'KEUA')  # EU Carbon ETF
+        gas = await fetch_quote(session, 'UNG')       # US Gas ETF
+        return {'carbon': carbon, 'gas': gas}
 
-            # Try fallbacks if primary fails
-            if data is None:
-                for fallback in config['fallback']:
-                    self.logger.info(f"{commodity}: Trying fallback {fallback}")
-                    data = self._fetch_ticker(fallback)
-                    if data:
-                        break
-
-            if data:
-                data['description'] = config['description']
-                data['units'] = config['units']
-                results[commodity] = data
-            else:
-                self.logger.error(f"{commodity}: All sources failed")
-                results[commodity] = {
-                    'error': 'Data unavailable',
-                    'description': config['description']
-                }
-
-        return results
-
-
-# Example usage
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    collector = MarketProxyCollector()
-    data = collector.collect()
-
-    print("Market Proxy Data:")
-    for key, value in data.items():
-        if key != 'metadata':
-            print(f"\n{key.upper()}:")
-            if 'price' in value:
-                print(f"  Price: {value['price']:.2f}")
-                print(f"  Ticker: {value['ticker']}")
-                print(f"  Date: {value['date']}")
-            else:
-                print(f"  Error: {value.get('error', 'Unknown')}")
+# Run: asyncio.run(collect_market_proxies())
 ```
+
+For the full implementation with lag features, caching, and fallbacks, see `collectors/market_proxies.py`.
 
 ### Integration with Data Fetcher
 
@@ -508,14 +424,14 @@ print(f"KEUA Price: ${quote['c']}")  # Current price
 
 ### API Comparison Summary
 
-| API | Free Tier | ETF Data | Futures | Commodities | Best For |
+| API | Free Tier | ETF Data | Futures | Reliability | Best For |
 |-----|-----------|----------|---------|-------------|----------|
-| **yfinance** | Unlimited* | Yes | Some | Limited | Primary source |
-| **Alpha Vantage** | 25/day | Yes | No | Some | Backup for ETFs |
-| **Finnhub** | 60/min | Yes | No | No | Real-time ETF |
-| **Trading Economics** | Scrape only | Web | Web | Web | Manual backup |
+| **Alpha Vantage** | 25/day | Yes | No | ⭐⭐⭐⭐⭐ | **Primary source** |
+| **yfinance** | Unlimited* | Yes | Some | ⭐⭐ (often blocked) | Fallback |
+| **Finnhub** | 60/min | Yes | No | ⭐⭐⭐⭐ | Alternative |
+| **Trading Economics** | Scrape only | Web | Web | ⭐⭐ | Manual backup |
 
-*yfinance has unofficial rate limits, may fail during high traffic
+*yfinance frequently blocked since 2024 due to Yahoo Finance tightening access
 
 ---
 
@@ -708,4 +624,4 @@ yfinance depends on Yahoo Finance:
 ---
 
 *Document created: 2025-12-01*
-*Last updated: 2025-12-01*
+*Last updated: 2025-12-02 (Pivoted to Alpha Vantage as primary source, UNG for gas proxy)*

@@ -75,6 +75,7 @@ def load_secrets(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser
         'GOOGLE_WEATHER_API_KEY': ('api_keys', 'google_weather'),
         'TENNET_API_KEY': ('api_keys', 'tennet'),
         'NED_API_KEY': ('api_keys', 'ned'),
+        'ALPHA_VANTAGE_API_KEY': ('api_keys', 'alpha_vantage'),
         # Location
         'LATITUDE': ('location', 'latitude'),
         'LONGITUDE': ('location', 'longitude'),
