@@ -3,8 +3,6 @@
 **/__pycache__/**
 secrets.ini
 secrets.local.ini
-# *.json
-# *.log
 
 # Claude Code configuration
 .claude/
@@ -13,6 +11,10 @@ CLAUDE.md
 # Log files
 *.log
 data/*.log
+
+# Local data files (timestamped copies - CI manages these)
+data/[0-9][0-9][0-9][0-9][0-9][0-9]_*.json
+data/market_proxy_cache.json
 
 # Test coverage
 .coverage

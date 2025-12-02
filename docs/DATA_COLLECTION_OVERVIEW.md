@@ -149,14 +149,42 @@ French nuclear (~61 GW installed) is the largest single source in Europe. Outage
 
 ---
 
+### 9. Market Proxies (Carbon & Gas Prices)
+
+| Source | File | Variables | Coverage |
+|--------|------|-----------|----------|
+| Alpha Vantage | `market_proxies.json` | Carbon price (KEUA ETF) | EU ETS proxy |
+| Alpha Vantage | `market_proxies.json` | Gas price (UNG ETF) | US gas (correlates with EU) |
+
+**Why ETF Proxies?**
+Direct access to EU carbon (EUA) and TTF gas prices requires expensive exchange subscriptions. ETFs that track these commodities provide free, daily, market-reflective prices via Alpha Vantage API.
+
+**Tickers Used**:
+- **KEUA**: KraneShares European Carbon Allowance ETF (tracks EUA futures)
+- **UNG**: United States Natural Gas Fund (correlates with EU gas prices)
+
+**Collected Variables**:
+- Current price, open, high, low, volume
+- Lagged values (T-1, T-2, T-7) for ML features
+- Rolling statistics (7d/30d mean, volatility, trend)
+- 30-day price history
+
+**Data Leakage Prevention**: Use lagged values (`price_lag1`, `price_lag7`) instead of current price for prediction models.
+
+See [CARBON_GAS_PRICE_PROXIES.md](CARBON_GAS_PRICE_PROXIES.md) for detailed documentation.
+
+**Historical Records**: ~1 day (new)
+
+---
+
 ## Gap Analysis: What's Missing?
 
 ### 🔴 Critical Gaps (High Impact on Price)
 
 | Data Type | Why Important | Potential Sources | Status |
 |-----------|---------------|-------------------|--------|
-| **Gas Prices** | Natural gas often sets marginal electricity price | TTF (ICE), PEGAS | ❌ Not collected |
-| **CO2/Carbon Prices** | EU ETS affects fossil generation costs | EEX, ICE | ❌ Not collected |
+| **Gas Prices** | Natural gas often sets marginal electricity price | Alpha Vantage (UNG ETF) | ✅ Collecting (proxy) |
+| **CO2/Carbon Prices** | EU ETS affects fossil generation costs | Alpha Vantage (KEUA ETF) | ✅ Collecting (proxy) |
 | **Cross-border Flows** | Import/export affects supply | ENTSO-E | ✅ Collecting |
 | **Load Forecast** | Actual demand predictions | ENTSO-E, TenneT | ✅ Collecting |
 
@@ -181,23 +209,23 @@ French nuclear (~61 GW installed) is the largest single source in Europe. Outage
 
 ## Recommended Additional Data Sources
 
-### 1. Gas Prices (TTF) - HIGH PRIORITY
+### 1. Gas Prices - ✅ IMPLEMENTED
 ```
-Source: ICE Endex / PEGAS
-API: Paid subscription required
-Alternative: EEX (European Energy Exchange)
+Source: Alpha Vantage API (UNG ETF proxy)
+API: Free tier (25 requests/day)
 Why: Gas plants often set marginal price, especially during low renewable periods
+Note: UNG tracks US gas which correlates with EU prices via LNG trade
 ```
 
-### 2. Carbon Prices (EU ETS) - HIGH PRIORITY
+### 2. Carbon Prices (EU ETS) - ✅ IMPLEMENTED
 ```
-Source: EEX (European Energy Exchange)
-API: https://www.eex.com/en/market-data/environmental-markets
+Source: Alpha Vantage API (KEUA ETF proxy)
+API: Free tier (25 requests/day)
 Why: CO2 cost adds €20-100/MWh to fossil generation
-Free alternative: Ember Climate (delayed data)
+Note: KEUA directly tracks EU ETS carbon allowance futures
 ```
 
-### 3. Cross-border Flows - MEDIUM PRIORITY
+### 3. Cross-border Flows - ✅ IMPLEMENTED
 ```
 Source: ENTSO-E Transparency Platform
 API: Already have API key
@@ -266,26 +294,27 @@ Why: French nuclear outages cause price spikes across Europe
 | Google Weather | **Paid** | ✅ Yes |
 | Open-Meteo | **Free** | ❌ No |
 | Open-Meteo Historical | **Free** | ❌ No |
+| Alpha Vantage | **Free** (25/day) | ✅ Yes |
 
 ---
 
 ## Recommended Next Steps
 
-### Phase 1: Quick Wins (Free Data)
-1. [x] Add ENTSO-E cross-border flows (already have API key) ✅ **DONE**
-2. [x] Add ENTSO-E load forecast (already have API key) ✅ **DONE**
+### Phase 1: Quick Wins (Free Data) - ✅ COMPLETE
+1. [x] Add ENTSO-E cross-border flows ✅ **DONE**
+2. [x] Add ENTSO-E load forecast ✅ **DONE**
 3. [x] Add French nuclear availability from ENTSO-E ✅ **DONE**
 4. [x] Add calendar features (holidays, day-of-week) ✅ **DONE**
-5. [ ] Backfill historical data using Open-Meteo + ENTSO-E
+5. [x] Add gas/carbon price proxies via Alpha Vantage ✅ **DONE**
+6. [ ] Backfill historical data using Open-Meteo + ENTSO-E
 
-### Phase 2: Enhanced Coverage (May Require Paid APIs)
-1. [ ] Add gas prices (TTF) - check free alternatives first
-2. [ ] Add carbon prices (EU ETS) - Ember Climate has free delayed data
+### Phase 2: Enhanced Coverage
+1. [ ] Interconnector capacity and congestion (JAO)
+2. [ ] Hydro reservoir levels (Nordic)
 
 ### Phase 3: Advanced Features
-1. [ ] Interconnector capacity and congestion
-2. [ ] Hydro reservoir levels (Nordic)
-3. [ ] Economic indicators
+1. [ ] Economic indicators (industrial production)
+2. [ ] More granular weather data
 
 ---
 
@@ -304,6 +333,7 @@ data/
 ├── solar_forecast.json                 # Open-Meteo solar irradiance (7 locations)
 ├── demand_weather_forecast.json        # Open-Meteo demand weather (11 locations)
 ├── calendar_features.json              # Calendar features (holidays, day type, season)
+├── market_proxies.json                 # Carbon/gas prices via Alpha Vantage (KEUA, UNG)
 └── YYMMDD_HHMMSS_*.json               # Timestamped historical copies
 ```
 
@@ -315,10 +345,10 @@ data/
 - [Open-Meteo API](https://open-meteo.com/)
 - [TenneT API](https://www.tennet.eu/)
 - [NED.nl](https://ned.nl/)
-- [EEX Market Data](https://www.eex.com/)
-- [ICE Endex](https://www.theice.com/endex)
+- [Alpha Vantage API](https://www.alphavantage.co/)
+- [KraneShares KEUA ETF](https://kraneshares.com/keua/)
 
 ---
 
 *Document created: 2025-12-01*
-*Last updated: 2025-12-01 (Added cross-border flows, load forecasts, nuclear generation, calendar features)*
+*Last updated: 2025-12-02 (Added market proxies for carbon/gas prices via Alpha Vantage)*
