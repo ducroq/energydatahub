@@ -34,6 +34,7 @@ from collectors.tennet import TennetCollector
 from collectors.ned import NedCollector
 from collectors.openmeteo_solar import OpenMeteoSolarCollector
 from collectors.openmeteo_weather import OpenMeteoWeatherCollector
+from collectors.market_proxies import MarketProxyCollector
 
 __all__ = [
     # Base classes
@@ -73,4 +74,7 @@ __all__ = [
 
     # Demand-side weather
     'OpenMeteoWeatherCollector', # Open-Meteo weather for demand prediction (free)
+
+    # Market prices (carbon, gas)
+    'MarketProxyCollector',      # Carbon and gas price proxies via Alpha Vantage
 ]

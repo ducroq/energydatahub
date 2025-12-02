@@ -83,7 +83,8 @@ from collectors import (
     TennetCollector,
     NedCollector,
     OpenMeteoSolarCollector,
-    OpenMeteoWeatherCollector
+    OpenMeteoWeatherCollector,
+    MarketProxyCollector
 )
 
 # Constants
@@ -173,6 +174,13 @@ async def main() -> None:
         except Exception:
             ned_api_key = None
             logging.info("NED.nl API key not configured - skipping NED.nl collection")
+
+        # Alpha Vantage API key (optional - for carbon/gas price proxies)
+        try:
+            alpha_vantage_api_key = config.get('api_keys', 'alpha_vantage')
+        except Exception:
+            alpha_vantage_api_key = None
+            logging.info("Alpha Vantage API key not configured - skipping market proxies")
         encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))
         hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
         handler = SecureDataHandler(encryption_key, hmac_key)
@@ -339,6 +347,15 @@ async def main() -> None:
             include_actual=True
         )
 
+        # Market Proxy collector for carbon and gas prices (requires Alpha Vantage API key)
+        # Carbon and gas prices are key drivers of electricity prices
+        market_proxy_collector = None
+        if alpha_vantage_api_key:
+            market_proxy_collector = MarketProxyCollector(
+                api_key=alpha_vantage_api_key,
+                cache_dir=output_path
+            )
+
         # Collect data from all sources (national/regional for price prediction)
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
@@ -359,13 +376,26 @@ async def main() -> None:
         if ned_collector:
             tasks.append(ned_collector.collect(today, tomorrow))
 
+        # Add market proxy collection if API key is configured
+        if market_proxy_collector:
+            tasks.append(market_proxy_collector.collect(today, today))
+
         results = await asyncio.gather(*tasks)
 
-        # Unpack results - NED.nl is optional at the end
+        # Unpack results - NED.nl and market proxies are optional at the end
         (entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data,
          tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
          flows_data, load_data, generation_data) = results[:12]
-        ned_data = results[12] if len(results) > 12 else None
+
+        # Handle optional collectors (NED.nl and market proxies)
+        optional_idx = 12
+        ned_data = None
+        market_proxy_data = None
+        if ned_collector:
+            ned_data = results[optional_idx] if len(results) > optional_idx else None
+            optional_idx += 1
+        if market_proxy_collector:
+            market_proxy_data = results[optional_idx] if len(results) > optional_idx else None
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -498,6 +528,15 @@ async def main() -> None:
         save_data_file(data=calendar_dataset, file_path=full_path, handler=handler, encrypt=encryption)
         shutil.copy(full_path, os.path.join(output_path, "calendar_features.json"))
         logging.info(f"Saved calendar features for {len(calendar_data)} hours, {len(upcoming_holidays)} upcoming holidays")
+
+        # Save market proxy data (carbon and gas prices)
+        if market_proxy_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_market_proxies.json")
+            save_data_file(data=market_proxy_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "market_proxies.json"))
+            carbon_price = market_proxy_data.data.get('carbon', {}).get('price', 'N/A')
+            gas_price = market_proxy_data.data.get('gas', {}).get('price', 'N/A')
+            logging.info(f"Saved market proxies: carbon=${carbon_price}, gas=${gas_price}")
 
     except Exception as e:
         logging.error(e)
