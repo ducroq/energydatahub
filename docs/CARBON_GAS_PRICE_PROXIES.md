@@ -80,6 +80,65 @@ The TTF price is critical for electricity price prediction because:
 
 ## Why These Proxies Matter for Price Prediction
 
+### Causality: Gas/Carbon → Electricity (Not Circular)
+
+A common concern is whether using gas prices to predict electricity prices is circular. **It is not** - the causality is one-directional:
+
+```
+Gas Supply/Demand → TTF Gas Price → Marginal Electricity Cost → Day-Ahead Electricity Price
+      ↑
+   (LNG imports,
+    pipelines,
+    storage levels,
+    heating demand)
+```
+
+**Key points:**
+1. **Gas market sets prices first**: TTF gas is traded before the electricity day-ahead auction
+2. **Power plants are price-takers**: They buy gas at market price, don't set it
+3. **Gas demand is diversified**: Power generation is only ~25% of EU gas demand
+
+### Avoiding Data Leakage (Critical for ML Models)
+
+While causality flows from gas to electricity, **timing matters** for prediction:
+
+| Prediction Task | Valid Input | Invalid (Data Leakage) |
+|-----------------|-------------|------------------------|
+| Tomorrow's electricity price | Today's gas price | Tomorrow's gas price |
+| Hour-ahead electricity | Previous hour's gas | Same hour's gas |
+| Week-ahead electricity | Current gas futures | Future spot prices |
+
+**Correct feature engineering:**
+
+```python
+# WRONG - Data leakage! Uses information not available at prediction time
+features['gas_price'] = same_day_ttf_spot  # Don't do this!
+
+# CORRECT - Use lagged values (available at prediction time)
+features['gas_price_lag1'] = previous_day_ttf_spot
+features['gas_price_lag2'] = two_days_ago_ttf_spot
+
+# CORRECT - Use forward-looking futures (already priced in)
+features['gas_futures_m1'] = ttf_month_ahead_contract
+features['gas_futures_q1'] = ttf_quarter_ahead_contract
+
+# ALSO VALID - Use percentage changes (relative movements)
+features['gas_price_change_1d'] = (ttf_t0 - ttf_t1) / ttf_t1
+```
+
+### Recommended Feature Set for Price Prediction
+
+| Feature | Lag/Type | Why Valid |
+|---------|----------|-----------|
+| `gas_price_lag1` | T-1 spot | Already known at prediction time |
+| `gas_futures_m1` | Month-ahead | Forward-looking, priced in expectations |
+| `carbon_price_lag1` | T-1 spot | Already known |
+| `gas_storage_level` | Current | Fundamental driver, not price |
+| `gas_price_volatility_7d` | Rolling | Historical measure |
+| `gas_price_trend_30d` | Rolling | Direction indicator |
+
+---
+
 ### Carbon Price Impact on Electricity
 
 ```
@@ -513,6 +572,8 @@ def get_price_with_fallback(commodity):
 
 ### market_proxies.json
 
+The output includes **lagged values** and **rolling statistics** to enable proper ML feature engineering without data leakage:
+
 ```json
 {
   "metadata": {
@@ -522,6 +583,10 @@ def get_price_with_fallback(commodity):
   },
   "carbon": {
     "ticker": "KEUA",
+    "description": "EU Carbon Allowance (EUA) proxy",
+    "units": "USD/share (correlates to EUR/tonne EUA)",
+
+    "// CURRENT VALUES (use with caution - check timing for your prediction task)": "",
     "price": 28.50,
     "date": "2025-12-01T00:00:00-05:00",
     "open": 28.20,
@@ -529,22 +594,71 @@ def get_price_with_fallback(commodity):
     "low": 27.90,
     "volume": 125000,
     "change_pct": 1.2,
-    "description": "EU Carbon Allowance (EUA) proxy",
-    "units": "USD/share (correlates to EUR/tonne EUA)"
+
+    "// LAGGED VALUES (SAFE for prediction - no data leakage)": "",
+    "price_lag1": 28.15,
+    "price_lag2": 27.90,
+    "price_lag7": 27.20,
+
+    "// ROLLING STATISTICS (SAFE - based on historical data)": "",
+    "volatility_7d": 0.85,
+    "mean_7d": 28.10,
+    "mean_30d": 27.50,
+    "trend_7d": "up",
+
+    "// FULL HISTORY (for custom lag calculations)": "",
+    "history": {
+      "2025-11-01T00:00:00-05:00": 26.50,
+      "2025-11-02T00:00:00-05:00": 26.80,
+      "...": "..."
+    }
   },
   "gas": {
     "ticker": "TTF=F",
+    "description": "Dutch TTF Natural Gas proxy",
+    "units": "EUR/MWh",
+
     "price": 45.20,
     "date": "2025-12-01T00:00:00+00:00",
-    "open": 46.10,
-    "high": 46.50,
-    "low": 44.80,
-    "volume": 50000,
     "change_pct": -2.0,
-    "description": "Dutch TTF Natural Gas proxy",
-    "units": "EUR/MWh"
+
+    "price_lag1": 46.10,
+    "price_lag2": 45.80,
+    "price_lag7": 48.50,
+
+    "volatility_7d": 2.15,
+    "mean_7d": 46.30,
+    "mean_30d": 44.80,
+    "trend_7d": "down",
+
+    "history": {"...": "..."}
   }
 }
+```
+
+### Using Lagged Values in ML Models
+
+```python
+import json
+
+with open('data/market_proxies.json') as f:
+    proxies = json.load(f)
+
+# CORRECT: Use lagged values for prediction features
+features = {
+    # Gas features (no data leakage)
+    'gas_price_lag1': proxies['gas']['price_lag1'],
+    'gas_price_lag7': proxies['gas']['price_lag7'],
+    'gas_volatility_7d': proxies['gas']['volatility_7d'],
+    'gas_trend': 1 if proxies['gas']['trend_7d'] == 'up' else 0,
+
+    # Carbon features (no data leakage)
+    'carbon_price_lag1': proxies['carbon']['price_lag1'],
+    'carbon_mean_7d': proxies['carbon']['mean_7d'],
+}
+
+# Use these features to predict tomorrow's electricity price
+prediction = model.predict([features])
 ```
 
 ---

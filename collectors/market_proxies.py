@@ -100,16 +100,19 @@ class MarketProxyCollector(BaseCollector):
         if not YFINANCE_AVAILABLE:
             self.logger.warning("yfinance not installed - market proxy collection will fail")
 
-    def _fetch_ticker_sync(self, ticker: str, period: str = '5d') -> Optional[Dict[str, Any]]:
+    def _fetch_ticker_sync(self, ticker: str, period: str = '30d') -> Optional[Dict[str, Any]]:
         """
         Fetch data for a single ticker (synchronous).
 
+        Fetches 30 days of history to enable proper lagging for ML models.
+        This avoids data leakage by providing historical values.
+
         Args:
             ticker: Yahoo Finance ticker symbol
-            period: Data period (e.g., '5d', '1mo', '1y')
+            period: Data period (default: '30d' for lag features)
 
         Returns:
-            Dict with price data or None if failed
+            Dict with current price AND historical data for lagging
         """
         if not YFINANCE_AVAILABLE:
             return None
@@ -125,8 +128,27 @@ class MarketProxyCollector(BaseCollector):
             latest = hist.iloc[-1]
             prev_close = hist.iloc[-2]['Close'] if len(hist) > 1 else latest['Close']
 
+            # Calculate lagged values for ML (avoid data leakage)
+            # T-1, T-2, T-7 are commonly used lags
+            lag_1 = round(float(hist.iloc[-2]['Close']), 2) if len(hist) > 1 else None
+            lag_2 = round(float(hist.iloc[-3]['Close']), 2) if len(hist) > 2 else None
+            lag_7 = round(float(hist.iloc[-8]['Close']), 2) if len(hist) > 7 else None
+
+            # Calculate rolling statistics (for trend features)
+            prices = hist['Close']
+            volatility_7d = round(float(prices.tail(7).std()), 2) if len(hist) >= 7 else None
+            mean_7d = round(float(prices.tail(7).mean()), 2) if len(hist) >= 7 else None
+            mean_30d = round(float(prices.tail(30).mean()), 2) if len(hist) >= 30 else None
+
+            # Trend direction
+            if len(hist) >= 7:
+                trend_7d = 'up' if prices.iloc[-1] > prices.iloc[-7] else 'down'
+            else:
+                trend_7d = None
+
             return {
                 'ticker': ticker,
+                # Current values (use with caution - check timing!)
                 'price': round(float(latest['Close']), 2),
                 'date': hist.index[-1].isoformat(),
                 'open': round(float(latest['Open']), 2),
@@ -134,7 +156,23 @@ class MarketProxyCollector(BaseCollector):
                 'low': round(float(latest['Low']), 2),
                 'volume': int(latest['Volume']) if 'Volume' in latest and latest['Volume'] > 0 else None,
                 'change_pct': round((latest['Close'] - prev_close) / prev_close * 100, 2) if prev_close > 0 else 0,
-                'prev_close': round(float(prev_close), 2)
+
+                # Lagged values (SAFE for prediction - no data leakage)
+                'price_lag1': lag_1,  # Yesterday's price
+                'price_lag2': lag_2,  # 2 days ago
+                'price_lag7': lag_7,  # 1 week ago
+
+                # Rolling statistics (SAFE - based on historical data)
+                'volatility_7d': volatility_7d,
+                'mean_7d': mean_7d,
+                'mean_30d': mean_30d,
+                'trend_7d': trend_7d,
+
+                # Full history for custom analysis
+                'history': {
+                    d.isoformat(): round(float(p), 2)
+                    for d, p in zip(hist.index, hist['Close'])
+                }
             }
         except Exception as e:
             self.logger.debug(f"{ticker}: Error fetching - {e}")
