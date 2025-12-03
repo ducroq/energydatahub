@@ -4,7 +4,7 @@ A robust Python-based system for collecting, processing, and publishing energy p
 
 ## 🌟 Features
 
-- **Multi-Source Data Collection**: Automated collection from 9 energy, weather, and grid APIs
+- **Multi-Source Data Collection**: Automated collection from 16+ energy, weather, and grid APIs
 - **Robust Architecture**: BaseCollector pattern with retry logic and circuit breakers
 - **Data Validation**: Comprehensive timezone normalization and data type validation
 - **Secure Publishing**: AES-CBC encryption with HMAC-SHA256 for all published data
@@ -19,15 +19,21 @@ A robust Python-based system for collecting, processing, and publishing energy p
 │                    Energy Data Hub (Backend)               │
 │  ┌───────────────────────────────────────────────────────┐ │
 │  │  Data Collectors (BaseCollector Pattern)              │ │
+│  │  ├── EntsoeCollector        (Day-ahead Prices)        │ │
 │  │  ├── EnergyZeroCollector    (NL Energy Prices)        │ │
 │  │  ├── EpexCollector          (EPEX SPOT)               │ │
 │  │  ├── ElspotCollector        (Nord Pool)               │ │
-│  │  ├── EntsoeCollector        (ENTSO-E)                 │ │
-│  │  ├── OpenWeatherCollector   (Weather Data)            │ │
-│  │  ├── MeteoServerCollector   (NL Weather)              │ │
 │  │  ├── GoogleWeatherCollector (Multi-Location Weather)  │ │
-│  │  ├── LuchtmeetnetCollector  (Air Quality)             │ │
-│  │  └── TennetCollector        (Grid Imbalance)          │ │
+│  │  ├── TennetCollector        (Grid Imbalance)          │ │
+│  │  ├── EntsoeWindCollector    (Wind Generation)         │ │
+│  │  ├── EntsoeFlowsCollector   (Cross-border Flows)      │ │
+│  │  ├── EntsoeLoadCollector    (Load Forecasts)          │ │
+│  │  ├── EntsoeGenerationColl.  (Nuclear Generation)      │ │
+│  │  ├── NedCollector           (NL Energy Production)    │ │
+│  │  ├── OpenMeteoSolarColl.    (Solar Irradiance)        │ │
+│  │  ├── OpenMeteoWeatherColl.  (Demand Weather)          │ │
+│  │  ├── OpenMeteoOffshoreColl. (Offshore Wind)           │ │
+│  │  └── MarketProxyCollector   (Carbon/Gas Prices)       │ │
 │  └───────────────────────────────────────────────────────┘ │
 │  ┌───────────────────────────────────────────────────────┐ │
 │  │  Data Processing Pipeline                             │ │
@@ -202,15 +208,23 @@ export METEO_API_KEY="your_api_key"
 
 ## 📊 Data Sources
 
-| Source | Data Type | Coverage | Update Frequency | Coverage |
-|--------|-----------|----------|------------------|----------|
-| **ENTSO-E** | Energy Prices | Europe | Hourly | Day-ahead prices |
-| **Energy Zero** | Energy Prices | Netherlands | Hourly | Real-time + forecast |
-| **EPEX SPOT** | Energy Prices | Central Europe | Hourly | Day-ahead auction |
-| **Nord Pool Elspot** | Energy Prices | Nordic/Baltic | Hourly | Day-ahead market |
-| **OpenWeather** | Weather | Global | 3-hour intervals | 5-day forecast |
-| **MeteoServer** | Weather | Netherlands | Hourly | Detailed NL forecast |
-| **Luchtmeetnet** | Air Quality | Netherlands | Hourly | Real-time AQI |
+| Source | Data Type | Coverage | Update Frequency |
+|--------|-----------|----------|------------------|
+| **ENTSO-E** | Energy Prices | Europe | Hourly |
+| **Energy Zero** | Energy Prices | Netherlands | Hourly |
+| **EPEX SPOT** | Energy Prices | Central Europe | Hourly |
+| **Nord Pool Elspot** | Energy Prices | Nordic/Baltic | Hourly |
+| **Google Weather** | Weather (Onshore) | 15 strategic locations | Hourly |
+| **Open-Meteo** | Weather (Demand) | 11 population centers | Hourly |
+| **Open-Meteo** | Solar Irradiance | 7 solar locations | Hourly |
+| **Open-Meteo** | Offshore Wind | 9 offshore locations | Hourly |
+| **ENTSO-E** | Wind Generation | NL, DE, BE, DK | Hourly |
+| **ENTSO-E** | Cross-border Flows | 10 NL borders | Hourly |
+| **ENTSO-E** | Load Forecasts | NL, DE | Hourly |
+| **ENTSO-E** | Nuclear Generation | France | Hourly |
+| **NED.nl** | Energy Production | Netherlands | 15-min |
+| **TenneT** | Grid Imbalance | Netherlands | 15-min |
+| **Alpha Vantage** | Carbon/Gas Prices | Global | Daily |
 
 ## 🛡️ Security & Reliability
 
@@ -231,10 +245,10 @@ export METEO_API_KEY="your_api_key"
 
 ### Test Coverage
 
-- **Overall**: 49% code coverage
+- **Overall**: 61% code coverage
 - **Base Collector**: 94% coverage
 - **Utils**: 75-91% coverage
-- **177 tests**: Unit, integration, and failure scenario tests
+- **246 tests**: Unit, integration, and failure scenario tests
 
 ## 🔗 Related Projects
 
@@ -345,11 +359,11 @@ python -c "from collectors import EpexCollector; c = EpexCollector(); print(c.ge
 ✅ **Production Ready** - Active development and maintenance
 
 **Latest Updates:**
-- ✅ Phase 6: Performance optimizations and test coverage (49%)
-- ✅ Phase 5: Production integration with GitHub Actions & Google Drive
+- ✅ Offshore Wind: Open-Meteo collector for actual offshore coordinates (Dec 2025)
+- ✅ Phase 6: Performance optimizations and test coverage (61%)
+- ✅ Phase 5: 16+ collectors with ENTSO-E, Open-Meteo, NED.nl integration
 - ✅ Phase 4: BaseCollector architecture with retry/circuit breaker
 - ✅ Phase 3: CI/CD pipeline with automated testing
-- ✅ Phase 2: Timezone normalization fixes
 
 **Roadmap:**
 - 🔄 REST API layer for third-party integrations

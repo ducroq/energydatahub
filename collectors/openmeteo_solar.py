@@ -162,14 +162,16 @@ class OpenMeteoSolarCollector(BaseCollector):
         self.logger.debug(f"Fetching solar data for {len(self.locations)} locations")
 
         results = {}
-        async with aiohttp.ClientSession() as session:
-            # Fetch all locations concurrently (with small delay to be nice to API)
-            tasks = []
-            for i, location in enumerate(self.locations):
-                if i > 0:
-                    await asyncio.sleep(0.1)  # Small delay between requests
-                tasks.append(self._fetch_location_data(session, location))
+        # Use semaphore to limit concurrent requests and avoid rate limiting (HTTP 429)
+        semaphore = asyncio.Semaphore(3)  # Max 3 concurrent requests
 
+        async def fetch_with_rate_limit(session: aiohttp.ClientSession, location: Dict[str, Any]):
+            async with semaphore:
+                await asyncio.sleep(0.1)  # Small delay between requests
+                return await self._fetch_location_data(session, location)
+
+        async with aiohttp.ClientSession() as session:
+            tasks = [fetch_with_rate_limit(session, loc) for loc in self.locations]
             responses = await asyncio.gather(*tasks)
 
             for response in responses:
@@ -279,6 +281,19 @@ class OpenMeteoSolarCollector(BaseCollector):
                 self.logger.debug(f"{location_name}: Parsed {len(location_data)} timestamps")
 
         return parsed
+
+    def _normalize_timestamps(
+        self,
+        data: Dict[str, Dict[str, Any]]
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Override base class method - timestamps already normalized in _parse_response.
+
+        The base class expects a flat dict {timestamp: value}, but we return
+        a nested dict {location_name: {timestamp: values}}. Skip normalization
+        since timestamps are already in correct format.
+        """
+        return data
 
     def _validate_data(
         self,

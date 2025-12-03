@@ -570,13 +570,21 @@ async def get_Elspot_data(country_code, start_time, end_time):
 ### Migration Roadmap
 
 - [x] Phase 3: Base collector architecture (completed)
-- [ ] Phase 4: Migrate ENTSO-E collector
-- [ ] Phase 4: Migrate EPEX collector
-- [ ] Phase 4: Migrate EnergyZero collector
-- [ ] Phase 4: Migrate OpenWeather collector
-- [ ] Phase 4: Migrate MeteoServer collector
-- [ ] Phase 4: Migrate Luchtmeetnet collector
-- [ ] Phase 5: Add circuit breaker and rate limiting
+- [x] Phase 4: Migrate ENTSO-E collector ✅
+- [x] Phase 4: Migrate EPEX collector ✅
+- [x] Phase 4: Migrate EnergyZero collector ✅
+- [x] Phase 4: Migrate OpenWeather collector ✅
+- [x] Phase 4: Migrate Google Weather collector ✅
+- [x] Phase 4: Migrate TenneT collector ✅
+- [x] Phase 4: Add NED.nl collector ✅
+- [x] Phase 5: Add Open-Meteo Solar collector ✅
+- [x] Phase 5: Add Open-Meteo Weather (demand) collector ✅
+- [x] Phase 5: Add Open-Meteo Offshore Wind collector ✅
+- [x] Phase 5: Add ENTSO-E Wind collector ✅
+- [x] Phase 5: Add ENTSO-E Flows collector ✅
+- [x] Phase 5: Add ENTSO-E Load collector ✅
+- [x] Phase 5: Add ENTSO-E Generation collector ✅
+- [x] Phase 5: Add circuit breaker and rate limiting ✅
 
 ## Troubleshooting
 
@@ -625,7 +633,7 @@ async def get_Elspot_data(country_code, start_time, end_time):
 
 ---
 
-**Last Updated**: 2025-10-25
+**Last Updated**: 2025-12-03
 **Status**: ✅ Production Ready
 **Test Coverage**: 93% (collectors/base.py), 99% (test_base_collector.py)
-**Next Steps**: Migrate remaining collectors to new architecture
+**Active Collectors**: 16+ collectors using base architecture

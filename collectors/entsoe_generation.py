@@ -190,6 +190,10 @@ class EntsoeGenerationCollector(BaseCollector):
                     actual_df = await loop.run_in_executor(None, query_func)
 
                     if actual_df is not None and not actual_df.empty:
+                        # ENTSO-E may return Series or DataFrame depending on query
+                        if isinstance(actual_df, pd.Series):
+                            actual_df = actual_df.to_frame()
+
                         # Filter to requested types
                         for gen_type in self.generation_types:
                             type_name = self.TYPE_NAMES.get(gen_type, gen_type)
@@ -222,6 +226,10 @@ class EntsoeGenerationCollector(BaseCollector):
                     forecast_df = await loop.run_in_executor(None, query_func)
 
                     if forecast_df is not None and not forecast_df.empty:
+                        # ENTSO-E may return Series or DataFrame depending on country/query
+                        if isinstance(forecast_df, pd.Series):
+                            forecast_df = forecast_df.to_frame()
+
                         for gen_type in self.generation_types:
                             type_name = self.TYPE_NAMES.get(gen_type, gen_type)
                             matching_cols = [

@@ -34,15 +34,18 @@ This document provides a comprehensive overview of all data collected by the Ene
 | Source | File | Variables | Coverage |
 |--------|------|-----------|----------|
 | ENTSO-E | `wind_forecast.json` | Wind generation forecast (MW) | NL, DE_LU, BE, DK_1 |
-| Google Weather | `wind_forecast.json` | Wind speed, direction | 9 offshore locations |
-| Google Weather | `weather_forecast_multi_location.json` | Full weather data | 15 strategic + offshore |
+| Open-Meteo | `wind_forecast.json` | Wind speed at 10m/80m/120m/180m, direction, gusts, air density | 9 offshore locations |
+| Google Weather | `weather_forecast_multi_location.json` | Full weather data | 15 strategic onshore locations |
 
-**Offshore Wind Locations**:
+**Offshore Wind Locations** (via Open-Meteo - actual offshore coordinates):
 - 🇳🇱 Borssele (1.5 GW), Hollandse Kust (3.5 GW), Gemini (600 MW), IJmuiden Ver (4 GW)
 - 🇩🇪 Helgoland Cluster, Borkum Riffgrund
 - 🇬🇧 Dogger Bank (3.6 GW)
 - 🇩🇰 Horns Rev
 - 🇧🇪 North Sea BE
+
+**Why Open-Meteo for Offshore?**
+Google Weather API doesn't support open-sea coordinates (returns 404 errors). Open-Meteo's global ICON/GFS models work for any location including offshore, and provide wind at multiple heights relevant for wind turbine hub heights (80m, 120m, 180m).
 
 **Historical Records**: ~7 days (wind_forecast), ~43 days (multi_location)
 
@@ -254,8 +257,10 @@ Why: French nuclear outages cause price spikes across Europe
 
 ### ✅ Strengths
 - Multiple price sources for cross-validation
-- Good offshore wind coverage (major capacity areas)
+- Good offshore wind coverage (major capacity areas) using actual offshore coordinates
+- Multi-height wind data (10m, 80m, 120m, 180m) for accurate turbine power estimation
 - Free solar/demand weather via Open-Meteo
+- Free offshore wind via Open-Meteo (no API key required)
 - Automated daily collection with CI/CD
 - Cross-border flows for all 5 NL interconnectors
 - Load forecasts for NL and Germany
@@ -275,7 +280,7 @@ Why: French nuclear outages cause price spikes across Europe
 | Grid imbalance | ✅ ~2 years | TenneT |
 | Solar irradiance | ✅ Since 1940 | Open-Meteo Historical |
 | Demand weather | ✅ Since 1940 | Open-Meteo Historical |
-| Offshore wind weather | ❌ 24h only | Google Weather |
+| Offshore wind weather | ✅ Since 1940 | Open-Meteo Historical |
 | Gas prices | ✅ Years | ICE/EEX (paid) |
 | Carbon prices | ✅ Years | EEX |
 
@@ -292,7 +297,9 @@ Why: French nuclear outages cause price spikes across Europe
 | TenneT | Free | ✅ Yes |
 | NED.nl | Free | ✅ Yes |
 | Google Weather | **Paid** | ✅ Yes |
-| Open-Meteo | **Free** | ❌ No |
+| Open-Meteo (Solar) | **Free** | ❌ No |
+| Open-Meteo (Demand Weather) | **Free** | ❌ No |
+| Open-Meteo (Offshore Wind) | **Free** | ❌ No |
 | Open-Meteo Historical | **Free** | ❌ No |
 | Alpha Vantage | **Free** (25/day) | ✅ Yes |
 
@@ -351,4 +358,4 @@ data/
 ---
 
 *Document created: 2025-12-01*
-*Last updated: 2025-12-02 (Added market proxies for carbon/gas prices via Alpha Vantage)*
+*Last updated: 2025-12-03 (Added Open-Meteo offshore wind collector for actual offshore coordinates)*
