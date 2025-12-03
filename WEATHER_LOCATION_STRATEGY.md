@@ -322,13 +322,35 @@ price_rolling_std_24h
 
 ### Implementation Approach
 
-**Use Google Weather API for multi-location collection:**
+**Dual-API Strategy for Weather Collection:**
 
-- **API**: Google Weather API (https://developers.google.com/maps/documentation/weather)
-- **Forecast horizon**: 240 hours (10 days) - covers full 7-day prediction need
-- **Update frequency**: Once daily (16:30 UTC, after ENTSO-E price publication)
-- **Locations**: 6 (Tier 1)
-- **Cost**: FREE (120 calls/month << 10,000 free tier)
+We use two complementary weather APIs:
+
+1. **Google Weather API** - For strategic onshore locations
+   - **API**: Google Weather API (https://developers.google.com/maps/documentation/weather)
+   - **Forecast horizon**: 240 hours (10 days)
+   - **Locations**: 15 strategic onshore locations (major cities, renewable hubs)
+   - **Limitation**: Does not support open-sea coordinates (returns 404 errors)
+
+2. **Open-Meteo API** - For offshore wind farm locations
+   - **API**: Open-Meteo API (https://open-meteo.com/en/docs)
+   - **Forecast horizon**: 10 days
+   - **Locations**: 9 actual offshore wind farm coordinates
+   - **Advantage**: Global ICON/GFS models work for any coordinate including offshore
+   - **Cost**: FREE (no API key required)
+   - **Wind heights**: 10m, 80m, 120m, 180m (matches turbine hub heights)
+
+### Why Two APIs?
+
+Google Weather API provides excellent forecasts for land-based locations but returns 404 errors for open-sea coordinates. Since offshore wind farms are located 20-50km offshore, we need Open-Meteo's global models which support any coordinate worldwide.
+
+**Benefits of Open-Meteo for Offshore:**
+- Actual offshore coordinates (not coastal proxies)
+- Multi-height wind data (80m, 120m, 180m for turbine hub heights)
+- Air density calculation (affects power output)
+- Wind gusts (important for turbine safety)
+- Free with no API key required
+- Historical data available since 1940 (for backfilling)
 
 ### Parallel with Existing Data
 
@@ -566,6 +588,69 @@ One location per ENTSO-E bidding zone: DE-LU, NL, BE, DK1, DK2, FR, NO2, GB, PL,
 
 ---
 
+## Offshore Wind Farm Locations
+
+### Dedicated Offshore Wind Collector
+
+In addition to the strategic onshore locations, we collect wind data at **actual offshore wind farm coordinates** using Open-Meteo's global weather models.
+
+### Offshore Wind Locations (9 locations)
+
+| Location | Country | Coordinates | Capacity | Notes |
+|----------|---------|-------------|----------|-------|
+| Borssele | 🇳🇱 NL | 51.7000°N, 3.0000°E | 1.5 GW | Southern Dutch North Sea |
+| Hollandse Kust | 🇳🇱 NL | 52.5000°N, 4.2000°E | 3.5 GW | Off IJmuiden coast |
+| Gemini | 🇳🇱 NL | 54.0361°N, 5.9625°E | 600 MW | Northern Dutch waters |
+| IJmuiden Ver | 🇳🇱 NL | 52.8500°N, 3.5000°E | 4 GW | Planned mega-project |
+| Helgoland Cluster | 🇩🇪 DE | 54.2000°N, 7.5000°E | Multi-GW | German Bight cluster |
+| Borkum Riffgrund | 🇩🇪 DE | 53.9667°N, 6.5500°E | 1+ GW | Near Borkum island |
+| Dogger Bank | 🇬🇧 UK | 54.7500°N, 2.5000°E | 3.6 GW | World's largest offshore wind farm |
+| Horns Rev | 🇩🇰 DK | 55.4833°N, 7.8500°E | 1+ GW | Danish North Sea |
+| North Sea BE | 🇧🇪 BE | 51.5833°N, 2.8000°E | 2+ GW | Belgian offshore cluster |
+
+### Offshore Wind Variables Collected
+
+| Variable | Unit | Description |
+|----------|------|-------------|
+| `wind_speed_10m` | m/s | Surface wind speed |
+| `wind_speed_80m` | m/s | Near hub height (small turbines) |
+| `wind_speed_120m` | m/s | Hub height for large turbines |
+| `wind_speed_180m` | m/s | Top of rotor sweep |
+| `wind_direction_*` | degrees | Direction at each height (0°=N, 90°=E) |
+| `wind_gusts_10m` | m/s | Wind gusts (turbine safety) |
+| `temperature` | °C | Air temperature |
+| `pressure` | hPa | Surface pressure |
+| `air_density` | kg/m³ | Calculated from temp & pressure |
+
+### Why Multi-Height Wind Data Matters
+
+Wind power is proportional to wind speed cubed (P ∝ v³). Modern offshore turbines have:
+- **Hub height**: 100-150m above sea level
+- **Rotor diameter**: 150-220m
+- **Rotor sweep**: from ~30m to ~260m above sea level
+
+By collecting wind at 80m, 120m, and 180m, we can:
+1. Estimate wind shear (speed variation with height)
+2. Calculate rotor-averaged wind speed
+3. More accurately predict power output
+
+### Air Density Calculation
+
+Wind power also depends on air density: P = ½ρAv³
+
+Air density is calculated from temperature and pressure:
+```
+ρ = P / (R × T)
+where:
+  P = pressure in Pa
+  R = 287.05 J/(kg·K) (gas constant for air)
+  T = temperature in Kelvin
+```
+
+Cold, high-pressure days produce more power from the same wind speed.
+
+---
+
 ## Document Maintenance
 
 **Review Trigger Events:**
@@ -578,6 +663,6 @@ One location per ENTSO-E bidding zone: DE-LU, NL, BE, DK1, DK2, FR, NO2, GB, PL,
 
 ---
 
-**Document Status**: Planning Complete - Ready for Implementation
-**Approval**: Awaiting implementation and validation
-**Last Updated**: 2025-01-04
+**Document Status**: Implemented
+**Approval**: Implemented and operational
+**Last Updated**: 2025-12-03 (Added offshore wind collector using Open-Meteo)
