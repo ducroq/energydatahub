@@ -390,6 +390,32 @@ Retry stops when:
 2. Max attempts exhausted
 3. Non-retryable error (you can customize this by catching specific exceptions)
 
+### Custom Retry Configs
+
+For APIs with known reliability issues (e.g., temporary 503 errors), configure longer retry delays:
+
+```python
+# ENTSO-E flows: longer waits for temporary API outages
+entsoe_flows_collector = EntsoeFlowsCollector(
+    api_key=api_key,
+    retry_config=RetryConfig(
+        max_attempts=5,       # Try 5 times instead of 3
+        initial_delay=30.0,   # Wait 30 seconds before first retry
+        max_delay=120.0,      # Cap at 2 minutes between retries
+        exponential_base=1.5  # Gentler backoff: 30s, 45s, 67s, 100s, 120s
+    )
+)
+```
+
+**When to use custom retry configs:**
+- API has known temporary outages (503 errors)
+- Data is critical and worth waiting for
+- Default ~7 second total retry time is too short
+
+**When NOT to use:**
+- Data simply isn't published yet (retries won't help)
+- API consistently returns errors (fix the root cause instead)
+
 ## Logging
 
 ### Structured Logging with Correlation IDs
@@ -633,7 +659,7 @@ async def get_Elspot_data(country_code, start_time, end_time):
 
 ---
 
-**Last Updated**: 2025-12-03
+**Last Updated**: 2025-12-04
 **Status**: ✅ Production Ready
 **Test Coverage**: 93% (collectors/base.py), 99% (test_base_collector.py)
 **Active Collectors**: 16+ collectors using base architecture
