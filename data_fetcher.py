@@ -84,7 +84,8 @@ from collectors import (
     NedCollector,
     OpenMeteoSolarCollector,
     OpenMeteoWeatherCollector,
-    MarketProxyCollector
+    MarketProxyCollector,
+    RetryConfig
 )
 from collectors.openmeteo_offshore_wind import OpenMeteoOffshoreWindCollector
 
@@ -337,7 +338,16 @@ async def main() -> None:
 
         # ENTSO-E Cross-border flows collector (FREE - uses existing API key)
         # Import/export flows directly impact local electricity prices
-        entsoe_flows_collector = EntsoeFlowsCollector(api_key=entsoe_api_key)
+        # Use longer retry delays (30s initial, up to 120s) to handle temporary 503 errors
+        entsoe_flows_collector = EntsoeFlowsCollector(
+            api_key=entsoe_api_key,
+            retry_config=RetryConfig(
+                max_attempts=5,       # Try 5 times instead of 3
+                initial_delay=30.0,   # Wait 30 seconds before first retry
+                max_delay=120.0,      # Cap at 2 minutes between retries
+                exponential_base=1.5  # Gentler backoff: 30s, 45s, 67s, 100s, 120s
+            )
+        )
 
         # ENTSO-E Load forecast collector (FREE - uses existing API key)
         # Load (demand) is a key driver of electricity prices
