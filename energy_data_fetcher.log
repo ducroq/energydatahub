@@ -1,519 +1,519 @@
-2025-12-05 16:19:17,499 DEBUG Using selector: EpollSelector
-2025-12-05 16:19:17,499 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
-2025-12-05 16:19:18,664 INFO No secrets.ini found, using environment variables only
-2025-12-05 16:19:18,665 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
-2025-12-05 16:19:18,665 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
-2025-12-05 16:19:18,665 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
-2025-12-05 16:19:18,665 DEBUG Overriding api_keys.google_weather from environment variable GOOGLE_WEATHER_API_KEY
-2025-12-05 16:19:18,665 DEBUG Overriding api_keys.tennet from environment variable TENNET_API_KEY
-2025-12-05 16:19:18,665 DEBUG Overriding api_keys.ned from environment variable NED_API_KEY
-2025-12-05 16:19:18,665 DEBUG Overriding api_keys.alpha_vantage from environment variable ALPHA_VANTAGE_API_KEY
-2025-12-05 16:19:18,665 INFO Initialized for 6 locations
-2025-12-05 16:19:18,666 INFO Initialized for 9 offshore locations, 10 day forecast
-2025-12-05 16:19:18,666 INFO Initialized for countries: NL, DE_LU, BE, DK_1
-2025-12-05 16:19:18,666 INFO Initialized for types: ['solar', 'wind_onshore', 'wind_offshore'], forecast=True, actual=True
-2025-12-05 16:19:18,666 INFO Initialized for 7 locations, 7 day forecast
-2025-12-05 16:19:18,666 INFO Initialized for 11 population centers, 7 day forecast
-2025-12-05 16:19:18,666 INFO Initialized for borders: NL→DE, DE→NL, NL→BE, BE→NL, NL→NO, NO→NL, NL→GB, GB→NL, NL→DK, DK→NL
-2025-12-05 16:19:18,666 INFO Initialized for countries: NL, DE_LU, include_actual=True
-2025-12-05 16:19:18,666 INFO Initialized for ['FR'], types: ['nuclear'], forecast=True, actual=True
-2025-12-05 16:19:18,666 INFO [e2f4dde3] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 23:59:59+01:00
-2025-12-05 16:19:18,666 DEBUG [e2f4dde3] Fetching raw data...
-2025-12-05 16:19:18,667 DEBUG Attempt 1/3
-2025-12-05 16:19:18,667 DEBUG Fetching ENTSO-E data for NL
-2025-12-05 16:19:18,667 DEBUG Querying ENTSO-E API: 2025-12-04 23:00:00+00:00 to 2025-12-06 22:59:59+00:00 (UTC)
-2025-12-05 16:19:18,673 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512072300'}
-2025-12-05 16:19:18,674 INFO [68c73aa1] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 23:59:59+01:00
-2025-12-05 16:19:18,675 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-12-05 16:19:18,675 DEBUG [68c73aa1] Fetching raw data...
-2025-12-05 16:19:18,675 DEBUG Attempt 1/3
-2025-12-05 16:19:18,675 DEBUG Fetching EnergyZero data
-2025-12-05 16:19:18,676 INFO [027f5484] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 23:59:59+01:00
-2025-12-05 16:19:18,676 DEBUG [027f5484] Fetching raw data...
-2025-12-05 16:19:18,676 DEBUG Attempt 1/3
-2025-12-05 16:19:18,677 DEBUG Fetching EPEX data from Awattar API
-2025-12-05 16:19:18,677 INFO [6a725405] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-15 00:00:00+01:00
-2025-12-05 16:19:18,677 DEBUG [6a725405] Fetching raw data...
-2025-12-05 16:19:18,677 DEBUG Attempt 1/3
-2025-12-05 16:19:18,677 INFO Fetching weather for 6 locations in parallel
-2025-12-05 16:19:18,677 INFO [0d131cbd] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 23:59:59+01:00
-2025-12-05 16:19:18,678 DEBUG [0d131cbd] Fetching raw data...
-2025-12-05 16:19:18,678 DEBUG Attempt 1/3
-2025-12-05 16:19:18,678 DEBUG Fetching Elspot data for NL
-2025-12-05 16:19:18,679 INFO [2a3ef496] Starting collection: 2025-12-04 00:00:00+01:00 to 2025-12-05 00:00:00+01:00
-2025-12-05 16:19:18,679 DEBUG [2a3ef496] Fetching raw data...
-2025-12-05 16:19:18,679 DEBUG Attempt 1/3
-2025-12-05 16:19:18,679 DEBUG Fetching TenneT data from 2025-12-04 to 2025-12-05
-2025-12-05 16:19:18,679 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
-2025-12-05 16:19:18,680 DEBUG Starting new HTTPS connection (1): api.tennet.eu:443
-2025-12-05 16:19:18,680 INFO [bab4f938] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 23:59:59+01:00
-2025-12-05 16:19:18,680 DEBUG [bab4f938] Fetching raw data...
-2025-12-05 16:19:18,680 DEBUG Attempt 1/3
-2025-12-05 16:19:18,681 DEBUG Fetching wind forecasts for: ['NL', 'DE_LU', 'BE', 'DK_1']
-2025-12-05 16:19:18,681 DEBUG Query range: 2025-12-04 23:00:00+00:00 to 2025-12-06 22:59:59+00:00 (UTC)
-2025-12-05 16:19:18,681 DEBUG Fetching wind forecast for NL
-2025-12-05 16:19:18,682 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A69', 'processType': 'A01', 'in_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:18,682 INFO [4a9c364f] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-15 00:00:00+01:00
-2025-12-05 16:19:18,682 DEBUG [4a9c364f] Fetching raw data...
-2025-12-05 16:19:18,682 DEBUG Attempt 1/3
-2025-12-05 16:19:18,683 DEBUG Fetching solar data for 7 locations
-2025-12-05 16:19:18,683 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-12-05 16:19:18,683 INFO [cd9020ca] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-15 00:00:00+01:00
-2025-12-05 16:19:18,683 DEBUG [cd9020ca] Fetching raw data...
-2025-12-05 16:19:18,683 DEBUG Attempt 1/3
-2025-12-05 16:19:18,683 DEBUG Fetching demand weather for 11 locations
-2025-12-05 16:19:18,683 INFO [91997ac5] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-15 00:00:00+01:00
-2025-12-05 16:19:18,684 DEBUG [91997ac5] Fetching raw data...
-2025-12-05 16:19:18,684 DEBUG Attempt 1/3
-2025-12-05 16:19:18,684 DEBUG Fetching offshore wind data for 9 locations
-2025-12-05 16:19:18,684 INFO [9357738f] Starting collection: 2025-12-04 00:00:00+01:00 to 2025-12-05 00:00:00+01:00
-2025-12-05 16:19:18,684 DEBUG [9357738f] Fetching raw data...
-2025-12-05 16:19:18,684 DEBUG Attempt 1/5
-2025-12-05 16:19:18,684 DEBUG Fetching cross-border flows for 10 borders
-2025-12-05 16:19:18,684 DEBUG Query range: 2025-12-03 23:00:00+00:00 to 2025-12-04 23:00:00+00:00 (UTC)
-2025-12-05 16:19:18,684 DEBUG Fetching flow NL→DE
-2025-12-05 16:19:18,685 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10Y1001A1001A82H', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:19:18,685 INFO [3fe8f930] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 23:59:59+01:00
-2025-12-05 16:19:18,685 DEBUG [3fe8f930] Fetching raw data...
-2025-12-05 16:19:18,685 DEBUG Attempt 1/3
-2025-12-05 16:19:18,685 DEBUG Fetching load forecasts for: ['NL', 'DE_LU']
-2025-12-05 16:19:18,686 DEBUG Query range: 2025-12-04 23:00:00+00:00 to 2025-12-06 22:59:59+00:00 (UTC)
-2025-12-05 16:19:18,686 DEBUG Fetching load forecast for NL
-2025-12-05 16:19:18,686 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A65', 'processType': 'A01', 'outBiddingZone_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:18,687 INFO [ad5c7af2] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 23:59:59+01:00
-2025-12-05 16:19:18,687 DEBUG [ad5c7af2] Fetching raw data...
-2025-12-05 16:19:18,687 DEBUG Attempt 1/3
-2025-12-05 16:19:18,687 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-12-05 16:19:18,688 DEBUG Fetching generation for ['FR'], types: ['nuclear']
-2025-12-05 16:19:18,688 DEBUG Query range: 2025-12-04 23:00:00+00:00 to 2025-12-06 22:59:59+00:00 (UTC)
-2025-12-05 16:19:18,688 DEBUG Fetching actual generation for FR
-2025-12-05 16:19:18,689 INFO [57bab5e5] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 23:59:59+01:00
-2025-12-05 16:19:18,689 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-12-05 16:19:18,689 DEBUG [57bab5e5] Fetching raw data...
-2025-12-05 16:19:18,689 DEBUG Attempt 1/3
-2025-12-05 16:19:18,828 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A75', 'processType': 'A16', 'in_Domain': '10YFR-RTE------C', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:18,829 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
-2025-12-05 16:19:18,831 DEBUG Fetching NED.nl data from 2025-12-05 to 2025-12-06
-2025-12-05 16:19:18,831 DEBUG Fetching solar forecast
-2025-12-05 16:19:18,831 INFO [ef66dab1] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-05 00:00:00+01:00
-2025-12-05 16:19:18,831 DEBUG [ef66dab1] Fetching raw data...
-2025-12-05 16:19:18,831 DEBUG Attempt 1/3
-2025-12-05 16:19:18,831 DEBUG Fetching market proxy data via Alpha Vantage
-2025-12-05 16:19:18,832 DEBUG Fetching carbon via Alpha Vantage (KEUA)
-2025-12-05 16:19:18,832 DEBUG Attempt 1/3 for Hamburg_DE
-2025-12-05 16:19:18,832 DEBUG Fetching Google Weather data for Hamburg_DE
-2025-12-05 16:19:18,832 DEBUG Fetching page 1 for Hamburg_DE
-2025-12-05 16:19:18,832 DEBUG Attempt 1/3 for Munich_DE
-2025-12-05 16:19:18,832 DEBUG Fetching Google Weather data for Munich_DE
-2025-12-05 16:19:18,832 DEBUG Fetching page 1 for Munich_DE
-2025-12-05 16:19:18,832 DEBUG Attempt 1/3 for Arnhem_NL
-2025-12-05 16:19:18,832 DEBUG Fetching Google Weather data for Arnhem_NL
-2025-12-05 16:19:18,832 DEBUG Fetching page 1 for Arnhem_NL
-2025-12-05 16:19:18,832 DEBUG Attempt 1/3 for IJmuiden_NL
-2025-12-05 16:19:18,833 DEBUG Fetching Google Weather data for IJmuiden_NL
-2025-12-05 16:19:18,833 DEBUG Fetching page 1 for IJmuiden_NL
-2025-12-05 16:19:18,833 DEBUG Attempt 1/3 for Brussels_BE
-2025-12-05 16:19:18,833 DEBUG Fetching Google Weather data for Brussels_BE
-2025-12-05 16:19:18,833 DEBUG Fetching page 1 for Brussels_BE
-2025-12-05 16:19:18,833 DEBUG Attempt 1/3 for Esbjerg_DK
-2025-12-05 16:19:18,833 DEBUG Fetching Google Weather data for Esbjerg_DK
-2025-12-05 16:19:18,833 DEBUG Fetching page 1 for Esbjerg_DK
-2025-12-05 16:19:19,007 DEBUG [027f5484] Parsing response...
-2025-12-05 16:19:19,007 DEBUG Parsed 47 data points from Awattar response
-2025-12-05 16:19:19,008 DEBUG [027f5484] Normalizing timestamps...
-2025-12-05 16:19:19,008 DEBUG [027f5484] Validating data...
-2025-12-05 16:19:19,008 INFO [027f5484] Collection complete: 47 data points in 0.33s (status: success)
-2025-12-05 16:19:19,256 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-12-06&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
-2025-12-05 16:19:19,261 DEBUG [0d131cbd] Parsing response...
-2025-12-05 16:19:19,262 DEBUG Parsed 24 data points from Elspot response
-2025-12-05 16:19:19,262 DEBUG [0d131cbd] Normalizing timestamps...
-2025-12-05 16:19:19,262 DEBUG [0d131cbd] Validating data...
-2025-12-05 16:19:19,262 INFO [0d131cbd] Collection complete: 24 data points in 0.58s (status: success)
-2025-12-05 16:19:19,320 DEBUG Page 1: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,320 DEBUG Fetching page 2 for Arnhem_NL
-2025-12-05 16:19:19,382 DEBUG [68c73aa1] Parsing response...
-2025-12-05 16:19:19,382 DEBUG Parsed 47 data points from EnergyZero response
-2025-12-05 16:19:19,382 DEBUG [68c73aa1] Normalizing timestamps...
-2025-12-05 16:19:19,382 DEBUG [68c73aa1] Validating data...
-2025-12-05 16:19:19,383 INFO [68c73aa1] Collection complete: 47 data points in 0.71s (status: success)
-2025-12-05 16:19:19,404 DEBUG Page 2: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,405 DEBUG Fetching page 3 for Arnhem_NL
-2025-12-05 16:19:19,434 DEBUG Page 1: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:19,434 DEBUG Fetching page 2 for Hamburg_DE
-2025-12-05 16:19:19,436 DEBUG Page 1: Got 24 hours for Munich_DE
-2025-12-05 16:19:19,436 DEBUG Fetching page 2 for Munich_DE
-2025-12-05 16:19:19,452 DEBUG Page 1: Got 24 hours for Brussels_BE
-2025-12-05 16:19:19,452 DEBUG Fetching page 2 for Brussels_BE
-2025-12-05 16:19:19,455 DEBUG Page 1: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:19,455 DEBUG Fetching page 2 for Esbjerg_DK
-2025-12-05 16:19:19,470 DEBUG Page 1: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:19,470 DEBUG Fetching page 2 for IJmuiden_NL
-2025-12-05 16:19:19,475 DEBUG Page 3: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,475 DEBUG Fetching page 4 for Arnhem_NL
-2025-12-05 16:19:19,508 DEBUG Page 2: Got 24 hours for Munich_DE
-2025-12-05 16:19:19,508 DEBUG Fetching page 3 for Munich_DE
-2025-12-05 16:19:19,512 DEBUG Page 2: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:19,512 DEBUG Fetching page 3 for Hamburg_DE
-2025-12-05 16:19:19,528 DEBUG Page 2: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:19,528 DEBUG Fetching page 3 for Esbjerg_DK
-2025-12-05 16:19:19,535 DEBUG Page 2: Got 24 hours for Brussels_BE
-2025-12-05 16:19:19,535 DEBUG Fetching page 3 for Brussels_BE
-2025-12-05 16:19:19,554 DEBUG Page 4: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,554 DEBUG Fetching page 5 for Arnhem_NL
-2025-12-05 16:19:19,557 DEBUG Page 2: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:19,557 DEBUG Fetching page 3 for IJmuiden_NL
-2025-12-05 16:19:19,582 DEBUG Page 3: Got 24 hours for Munich_DE
-2025-12-05 16:19:19,582 DEBUG Fetching page 4 for Munich_DE
-2025-12-05 16:19:19,584 DEBUG Page 3: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:19,584 DEBUG Fetching page 4 for Hamburg_DE
-2025-12-05 16:19:19,598 DEBUG Page 3: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:19,598 DEBUG Fetching page 4 for Esbjerg_DK
-2025-12-05 16:19:19,615 DEBUG Page 3: Got 24 hours for Brussels_BE
-2025-12-05 16:19:19,615 DEBUG Fetching page 4 for Brussels_BE
-2025-12-05 16:19:19,626 DEBUG https://api.tennet.eu:443 "GET /publications/v1/settlement-prices?date_from=04-12-2025+00%3A00%3A00&date_to=05-12-2025+00%3A00%3A00 HTTP/1.1" 200 None
-2025-12-05 16:19:19,635 DEBUG Page 5: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,635 DEBUG Fetching page 6 for Arnhem_NL
-2025-12-05 16:19:19,646 DEBUG Page 3: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:19,646 DEBUG Fetching page 4 for IJmuiden_NL
-2025-12-05 16:19:19,657 DEBUG Page 4: Got 24 hours for Munich_DE
-2025-12-05 16:19:19,657 DEBUG Fetching page 5 for Munich_DE
-2025-12-05 16:19:19,664 DEBUG Page 4: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:19,664 DEBUG Fetching page 5 for Hamburg_DE
-2025-12-05 16:19:19,666 DEBUG Page 4: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:19,667 DEBUG Fetching page 5 for Esbjerg_DK
-2025-12-05 16:19:19,692 DEBUG Page 4: Got 24 hours for Brussels_BE
-2025-12-05 16:19:19,692 DEBUG Fetching page 5 for Brussels_BE
-2025-12-05 16:19:19,709 DEBUG Page 6: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,709 DEBUG Fetching page 7 for Arnhem_NL
-2025-12-05 16:19:19,727 DEBUG Page 4: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:19,727 DEBUG Fetching page 5 for IJmuiden_NL
-2025-12-05 16:19:19,735 DEBUG Page 5: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:19,735 DEBUG Fetching page 6 for Hamburg_DE
-2025-12-05 16:19:19,739 DEBUG Page 5: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:19,739 DEBUG Fetching page 6 for Esbjerg_DK
-2025-12-05 16:19:19,745 DEBUG Page 5: Got 24 hours for Munich_DE
-2025-12-05 16:19:19,745 DEBUG Fetching page 6 for Munich_DE
-2025-12-05 16:19:19,757 DEBUG solar forecast: 23 records
-2025-12-05 16:19:19,757 DEBUG Fetching solar actual
-2025-12-05 16:19:19,765 DEBUG Page 5: Got 24 hours for Brussels_BE
-2025-12-05 16:19:19,765 DEBUG Fetching page 6 for Brussels_BE
-2025-12-05 16:19:19,778 DEBUG Page 7: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,778 DEBUG Fetching page 8 for Arnhem_NL
-2025-12-05 16:19:19,802 DEBUG Page 5: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:19,803 DEBUG Fetching page 6 for IJmuiden_NL
-2025-12-05 16:19:19,812 DEBUG Page 6: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:19,812 DEBUG Fetching page 7 for Hamburg_DE
-2025-12-05 16:19:19,815 DEBUG Page 6: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:19,815 DEBUG Fetching page 7 for Esbjerg_DK
-2025-12-05 16:19:19,820 DEBUG Page 6: Got 24 hours for Munich_DE
-2025-12-05 16:19:19,821 DEBUG Fetching page 7 for Munich_DE
-2025-12-05 16:19:19,844 DEBUG Page 6: Got 24 hours for Brussels_BE
-2025-12-05 16:19:19,844 DEBUG Fetching page 7 for Brussels_BE
-2025-12-05 16:19:19,853 DEBUG Page 8: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,853 DEBUG Fetching page 9 for Arnhem_NL
-2025-12-05 16:19:19,876 DEBUG Fetching gas via Alpha Vantage (UNG)
-2025-12-05 16:19:19,880 DEBUG Page 7: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:19,880 DEBUG Fetching page 8 for Esbjerg_DK
-2025-12-05 16:19:19,887 DEBUG Page 6: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:19,887 DEBUG Fetching page 7 for IJmuiden_NL
-2025-12-05 16:19:19,889 DEBUG https://api.tennet.eu:443 "GET /publications/v1/balance-delta?date_from=04-12-2025+00%3A00%3A00&date_to=05-12-2025+00%3A00%3A00 HTTP/1.1" 200 None
-2025-12-05 16:19:19,889 DEBUG Page 7: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:19,890 DEBUG Fetching page 8 for Hamburg_DE
-2025-12-05 16:19:19,891 DEBUG Page 7: Got 24 hours for Munich_DE
-2025-12-05 16:19:19,891 DEBUG Fetching page 8 for Munich_DE
-2025-12-05 16:19:19,922 DEBUG Page 9: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,923 DEBUG Fetching page 10 for Arnhem_NL
-2025-12-05 16:19:19,932 DEBUG Page 7: Got 24 hours for Brussels_BE
-2025-12-05 16:19:19,932 DEBUG Fetching page 8 for Brussels_BE
-2025-12-05 16:19:19,947 DEBUG Page 8: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:19,947 DEBUG Fetching page 9 for Esbjerg_DK
-2025-12-05 16:19:19,963 DEBUG Page 8: Got 24 hours for Munich_DE
-2025-12-05 16:19:19,963 DEBUG Fetching page 9 for Munich_DE
-2025-12-05 16:19:19,966 DEBUG Page 8: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:19,966 DEBUG Fetching page 9 for Hamburg_DE
-2025-12-05 16:19:19,969 DEBUG solar actual: 17 records
-2025-12-05 16:19:19,969 DEBUG Fetching wind_onshore forecast
-2025-12-05 16:19:19,977 DEBUG Page 7: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:19,978 DEBUG Fetching page 8 for IJmuiden_NL
-2025-12-05 16:19:19,990 DEBUG Page 10: Got 24 hours for Arnhem_NL
-2025-12-05 16:19:19,991 DEBUG Successfully fetched 240 hours across 10 pages for Arnhem_NL
-2025-12-05 16:19:19,991 DEBUG Successfully fetched Arnhem_NL on attempt 1
-2025-12-05 16:19:20,007 DEBUG Page 8: Got 24 hours for Brussels_BE
-2025-12-05 16:19:20,007 DEBUG Fetching page 9 for Brussels_BE
-2025-12-05 16:19:20,017 DEBUG Page 9: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:20,017 DEBUG Fetching page 10 for Esbjerg_DK
-2025-12-05 16:19:20,042 DEBUG Page 9: Got 24 hours for Munich_DE
-2025-12-05 16:19:20,042 DEBUG Fetching page 10 for Munich_DE
-2025-12-05 16:19:20,043 DEBUG Page 9: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:20,043 DEBUG Fetching page 10 for Hamburg_DE
-2025-12-05 16:19:20,056 INFO Carbon proxy: KEUA = $27.71 (alpha_vantage)
-2025-12-05 16:19:20,056 INFO Gas proxy: UNG = $15.66 (alpha_vantage)
-2025-12-05 16:19:20,057 DEBUG [ef66dab1] Parsing response...
-2025-12-05 16:19:20,057 DEBUG [ef66dab1] Normalizing timestamps...
-2025-12-05 16:19:20,057 DEBUG [ef66dab1] Validating data...
-2025-12-05 16:19:20,057 INFO [ef66dab1] Collection complete: 2 data points in 1.23s (status: success)
-2025-12-05 16:19:20,058 DEBUG Page 8: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:20,058 DEBUG Fetching page 9 for IJmuiden_NL
-2025-12-05 16:19:20,078 DEBUG Page 9: Got 24 hours for Brussels_BE
-2025-12-05 16:19:20,078 DEBUG Fetching page 10 for Brussels_BE
-2025-12-05 16:19:20,084 DEBUG Page 10: Got 24 hours for Esbjerg_DK
-2025-12-05 16:19:20,084 DEBUG Successfully fetched 240 hours across 10 pages for Esbjerg_DK
-2025-12-05 16:19:20,084 DEBUG Successfully fetched Esbjerg_DK on attempt 1
-2025-12-05 16:19:20,119 DEBUG Page 10: Got 24 hours for Munich_DE
-2025-12-05 16:19:20,120 DEBUG Successfully fetched 240 hours across 10 pages for Munich_DE
-2025-12-05 16:19:20,120 DEBUG Successfully fetched Munich_DE on attempt 1
-2025-12-05 16:19:20,123 DEBUG Page 10: Got 24 hours for Hamburg_DE
-2025-12-05 16:19:20,123 DEBUG Successfully fetched 240 hours across 10 pages for Hamburg_DE
-2025-12-05 16:19:20,123 DEBUG Successfully fetched Hamburg_DE on attempt 1
-2025-12-05 16:19:20,135 DEBUG Page 9: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:20,135 DEBUG Fetching page 10 for IJmuiden_NL
-2025-12-05 16:19:20,204 DEBUG Page 10: Got 24 hours for Brussels_BE
-2025-12-05 16:19:20,205 DEBUG wind_onshore forecast: 23 records
-2025-12-05 16:19:20,205 DEBUG Fetching wind_onshore actual
-2025-12-05 16:19:20,205 INFO Fetched TenneT data: 96 settlement price records, 1440 balance delta records
-2025-12-05 16:19:20,205 DEBUG [2a3ef496] Parsing response...
-2025-12-05 16:19:20,282 INFO Parsed 1440 TenneT data points
-2025-12-05 16:19:20,282 DEBUG [2a3ef496] Normalizing timestamps...
-2025-12-05 16:19:20,286 DEBUG [2a3ef496] Creating dataset...
-2025-12-05 16:19:20,287 INFO [2a3ef496] Collection complete: 1440 data points in 1.61s (status: success)
-2025-12-05 16:19:20,288 DEBUG Page 10: Got 24 hours for IJmuiden_NL
-2025-12-05 16:19:20,290 DEBUG Successfully fetched 240 hours across 10 pages for Brussels_BE
-2025-12-05 16:19:20,290 DEBUG Successfully fetched Brussels_BE on attempt 1
-2025-12-05 16:19:20,290 DEBUG Rotterdam_NL: Got solar data
-2025-12-05 16:19:20,290 DEBUG Eindhoven_NL: Got solar data
-2025-12-05 16:19:20,291 DEBUG Lelystad_NL: Got solar data
-2025-12-05 16:19:20,291 DEBUG Groningen_NL: Got solar data
-2025-12-05 16:19:20,291 DEBUG Munich_DE: Got solar data
-2025-12-05 16:19:20,291 DEBUG Stuttgart_DE: Got solar data
-2025-12-05 16:19:20,291 DEBUG Antwerp_BE: Got solar data
-2025-12-05 16:19:20,291 DEBUG Successfully fetched 240 hours across 10 pages for IJmuiden_NL
-2025-12-05 16:19:20,292 DEBUG Successfully fetched IJmuiden_NL on attempt 1
-2025-12-05 16:19:20,292 DEBUG [6a725405] Parsing response...
-2025-12-05 16:19:20,292 DEBUG Parsing 240 forecast hours
-2025-12-05 16:19:20,292 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-12-05 16:19:20,295 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-12-05 16:19:20,295 DEBUG Parsing 240 forecast hours
-2025-12-05 16:19:20,295 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-12-05 16:19:20,298 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-12-05 16:19:20,298 DEBUG Parsing 240 forecast hours
-2025-12-05 16:19:20,298 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-12-05 16:19:20,301 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-12-05 16:19:20,301 DEBUG Parsing 240 forecast hours
-2025-12-05 16:19:20,301 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-12-05 16:19:20,304 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-12-05 16:19:20,304 DEBUG Parsing 240 forecast hours
-2025-12-05 16:19:20,304 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-12-05 16:19:20,307 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-12-05 16:19:20,307 DEBUG Parsing 240 forecast hours
-2025-12-05 16:19:20,307 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
-2025-12-05 16:19:20,310 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
-2025-12-05 16:19:20,310 DEBUG [6a725405] Normalizing timestamps...
-2025-12-05 16:19:20,310 DEBUG [6a725405] Validating data...
-2025-12-05 16:19:20,315 INFO [6a725405] Collection complete: 6 data points in 1.64s (status: success)
-2025-12-05 16:19:20,320 DEBUG [4a9c364f] Parsing response...
-2025-12-05 16:19:20,321 DEBUG Rotterdam_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,322 DEBUG Eindhoven_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,322 DEBUG Lelystad_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,323 DEBUG Groningen_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,324 DEBUG Munich_DE: Parsed 168 timestamps
-2025-12-05 16:19:20,325 DEBUG Stuttgart_DE: Parsed 168 timestamps
-2025-12-05 16:19:20,326 DEBUG Antwerp_BE: Parsed 168 timestamps
-2025-12-05 16:19:20,326 DEBUG [4a9c364f] Normalizing timestamps...
-2025-12-05 16:19:20,326 DEBUG [4a9c364f] Validating data...
-2025-12-05 16:19:20,326 INFO [4a9c364f] Collection complete: 7 data points in 1.64s (status: success)
-2025-12-05 16:19:20,327 DEBUG Borssele_NL: Got offshore wind data
-2025-12-05 16:19:20,327 DEBUG HollandseKust_NL: Got offshore wind data
-2025-12-05 16:19:20,327 DEBUG Gemini_NL: Got offshore wind data
-2025-12-05 16:19:20,327 DEBUG IJmuidenVer_NL: Got offshore wind data
-2025-12-05 16:19:20,328 DEBUG HelgolandCluster_DE: Got offshore wind data
-2025-12-05 16:19:20,328 DEBUG BorkumRiffgrund_DE: Got offshore wind data
-2025-12-05 16:19:20,328 DEBUG DoggerBank_UK: Got offshore wind data
-2025-12-05 16:19:20,328 DEBUG HornsRev_DK: Got offshore wind data
-2025-12-05 16:19:20,328 DEBUG NorthSeaBE_BE: Got offshore wind data
-2025-12-05 16:19:20,328 DEBUG [91997ac5] Parsing response...
-2025-12-05 16:19:20,330 DEBUG Borssele_NL: Parsed 240 timestamps
-2025-12-05 16:19:20,332 DEBUG HollandseKust_NL: Parsed 240 timestamps
-2025-12-05 16:19:20,334 DEBUG Gemini_NL: Parsed 240 timestamps
-2025-12-05 16:19:20,336 DEBUG IJmuidenVer_NL: Parsed 240 timestamps
-2025-12-05 16:19:20,338 DEBUG HelgolandCluster_DE: Parsed 240 timestamps
-2025-12-05 16:19:20,340 DEBUG BorkumRiffgrund_DE: Parsed 240 timestamps
-2025-12-05 16:19:20,342 DEBUG DoggerBank_UK: Parsed 240 timestamps
-2025-12-05 16:19:20,344 DEBUG HornsRev_DK: Parsed 240 timestamps
-2025-12-05 16:19:20,346 DEBUG NorthSeaBE_BE: Parsed 240 timestamps
-2025-12-05 16:19:20,347 DEBUG [91997ac5] Normalizing timestamps...
-2025-12-05 16:19:20,347 DEBUG [91997ac5] Validating data...
-2025-12-05 16:19:20,347 INFO [91997ac5] Collection complete: 9 data points in 1.66s (status: success)
-2025-12-05 16:19:20,405 DEBUG wind_onshore actual: 17 records
-2025-12-05 16:19:20,406 DEBUG Fetching wind_offshore forecast
-2025-12-05 16:19:20,531 DEBUG Amsterdam_NL: Got weather data
-2025-12-05 16:19:20,531 DEBUG Rotterdam_NL: Got weather data
-2025-12-05 16:19:20,531 DEBUG The_Hague_NL: Got weather data
-2025-12-05 16:19:20,531 DEBUG Utrecht_NL: Got weather data
-2025-12-05 16:19:20,531 DEBUG Eindhoven_NL: Got weather data
-2025-12-05 16:19:20,531 DEBUG Groningen_NL: Got weather data
-2025-12-05 16:19:20,531 DEBUG Dusseldorf_DE: Got weather data
-2025-12-05 16:19:20,531 DEBUG Cologne_DE: Got weather data
-2025-12-05 16:19:20,531 DEBUG Hamburg_DE: Got weather data
-2025-12-05 16:19:20,531 DEBUG Brussels_BE: Got weather data
-2025-12-05 16:19:20,531 DEBUG Antwerp_BE: Got weather data
-2025-12-05 16:19:20,532 DEBUG [cd9020ca] Parsing response...
-2025-12-05 16:19:20,533 DEBUG Amsterdam_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,534 DEBUG Rotterdam_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,536 DEBUG The_Hague_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,537 DEBUG Utrecht_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,540 DEBUG Eindhoven_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,541 DEBUG Groningen_NL: Parsed 168 timestamps
-2025-12-05 16:19:20,542 DEBUG Dusseldorf_DE: Parsed 168 timestamps
-2025-12-05 16:19:20,543 DEBUG Cologne_DE: Parsed 168 timestamps
-2025-12-05 16:19:20,545 DEBUG Hamburg_DE: Parsed 168 timestamps
-2025-12-05 16:19:20,546 DEBUG Brussels_BE: Parsed 168 timestamps
-2025-12-05 16:19:20,547 DEBUG Antwerp_BE: Parsed 168 timestamps
-2025-12-05 16:19:20,547 DEBUG [cd9020ca] Normalizing timestamps...
-2025-12-05 16:19:20,547 DEBUG [cd9020ca] Validating data...
-2025-12-05 16:19:20,547 INFO [cd9020ca] Collection complete: 11 data points in 1.86s (status: success)
-2025-12-05 16:19:20,604 DEBUG wind_offshore forecast: 23 records
-2025-12-05 16:19:20,604 DEBUG Fetching wind_offshore actual
-2025-12-05 16:19:20,806 DEBUG wind_offshore actual: 17 records
-2025-12-05 16:19:20,807 DEBUG [57bab5e5] Parsing response...
-2025-12-05 16:19:20,807 DEBUG solar forecast: Parsed 23 data points
-2025-12-05 16:19:20,807 DEBUG solar actual: Parsed 17 data points
-2025-12-05 16:19:20,807 DEBUG wind_onshore forecast: Parsed 23 data points
-2025-12-05 16:19:20,807 DEBUG wind_onshore actual: Parsed 17 data points
-2025-12-05 16:19:20,808 DEBUG wind_offshore forecast: Parsed 23 data points
-2025-12-05 16:19:20,808 DEBUG wind_offshore actual: Parsed 17 data points
-2025-12-05 16:19:20,808 DEBUG [57bab5e5] Normalizing timestamps...
-2025-12-05 16:19:20,808 DEBUG [57bab5e5] Validating data...
-2025-12-05 16:19:20,808 INFO [57bab5e5] Collection complete: 3 data points in 2.12s (status: success)
-2025-12-05 16:19:25,477 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10Y1001A1001A82H&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 None
-2025-12-05 16:19:25,494 DEBUG NL→DE: Got 96 data points
-2025-12-05 16:19:25,495 DEBUG Fetching flow DE→NL
-2025-12-05 16:19:25,495 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10Y1001A1001A82H', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:19:28,544 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512072300 HTTP/1.1" 200 None
-2025-12-05 16:19:28,590 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512072300'}
-2025-12-05 16:19:29,111 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A69&processType=A01&in_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:29,177 DEBUG NL: Got 192 data points, columns: ['Solar', 'Wind Offshore', 'Wind Onshore']
-2025-12-05 16:19:29,178 DEBUG Fetching wind forecast for DE_LU
-2025-12-05 16:19:29,178 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A69', 'processType': 'A01', 'in_Domain': '10Y1001A1001A82H', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:30,876 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A65&processType=A01&outBiddingZone_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:30,905 DEBUG NL forecast: 192 points
-2025-12-05 16:19:30,905 DEBUG Fetching actual load for NL
-2025-12-05 16:19:30,906 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A65', 'processType': 'A16', 'outBiddingZone_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:31,522 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10Y1001A1001A82H&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 1509
-2025-12-05 16:19:31,526 DEBUG DE→NL: Got 96 data points
-2025-12-05 16:19:31,527 DEBUG Fetching flow NL→BE
-2025-12-05 16:19:31,527 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YBE----------2', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:19:31,888 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A75&processType=A16&in_Domain=10YFR-RTE------C&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:32,049 DEBUG FR nuclear actual: 68 points
-2025-12-05 16:19:32,049 DEBUG Fetching generation forecast for FR
-2025-12-05 16:19:32,050 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A71', 'processType': 'A01', 'in_Domain': '10YFR-RTE------C', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:33,674 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A65&processType=A16&outBiddingZone_Domain=10YNL----------L&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:33,687 DEBUG NL actual: 67 points
-2025-12-05 16:19:33,687 DEBUG Fetching load forecast for DE_LU
-2025-12-05 16:19:33,687 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A65', 'processType': 'A01', 'outBiddingZone_Domain': '10Y1001A1001A82H', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:33,976 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YBE----------2&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 None
-2025-12-05 16:19:33,983 DEBUG NL→BE: Got 24 data points
-2025-12-05 16:19:33,983 DEBUG Fetching flow BE→NL
-2025-12-05 16:19:33,984 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10YBE----------2', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:19:34,189 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A71&processType=A01&in_Domain=10YFR-RTE------C&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:34,220 DEBUG [ad5c7af2] Parsing response...
-2025-12-05 16:19:34,223 DEBUG FR: Parsed 68 generation points
-2025-12-05 16:19:34,223 DEBUG [ad5c7af2] Normalizing timestamps...
-2025-12-05 16:19:34,223 DEBUG [ad5c7af2] Validating data...
-2025-12-05 16:19:34,223 INFO [ad5c7af2] Collection complete: 1 data points in 15.54s (status: success)
-2025-12-05 16:19:34,380 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512072300 HTTP/1.1" 200 922
-2025-12-05 16:19:34,381 DEBUG NoMatchingDataError: for offset 100
-2025-12-05 16:19:34,383 DEBUG [e2f4dde3] Parsing response...
-2025-12-05 16:19:34,384 DEBUG Parsed 192 data points from ENTSO-E response
-2025-12-05 16:19:34,384 DEBUG [e2f4dde3] Normalizing timestamps...
-2025-12-05 16:19:34,385 DEBUG [e2f4dde3] Validating data...
-2025-12-05 16:19:34,386 INFO [e2f4dde3] Collection complete: 192 data points in 15.72s (status: success)
-2025-12-05 16:19:36,473 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A69&processType=A01&in_Domain=10Y1001A1001A82H&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:36,511 DEBUG DE_LU: Got 96 data points, columns: ['Solar', 'Wind Offshore', 'Wind Onshore']
-2025-12-05 16:19:36,511 DEBUG Fetching wind forecast for BE
-2025-12-05 16:19:36,512 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A69', 'processType': 'A01', 'in_Domain': '10YBE----------2', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:38,622 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A65&processType=A01&outBiddingZone_Domain=10Y1001A1001A82H&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:38,651 DEBUG DE_LU forecast: 192 points
-2025-12-05 16:19:38,651 DEBUG Fetching actual load for DE_LU
-2025-12-05 16:19:38,652 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A65', 'processType': 'A16', 'outBiddingZone_Domain': '10Y1001A1001A82H', 'out_Domain': '10Y1001A1001A82H', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:39,990 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10YBE----------2&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 1509
-2025-12-05 16:19:39,995 DEBUG BE→NL: Got 24 data points
-2025-12-05 16:19:39,995 DEBUG Fetching flow NL→NO
-2025-12-05 16:19:39,996 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNO-2--------T', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:19:40,847 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A69&processType=A01&in_Domain=10YBE----------2&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:40,870 DEBUG BE: Got 48 data points, columns: ['Solar', 'Wind Offshore', 'Wind Onshore']
-2025-12-05 16:19:40,870 DEBUG Fetching wind forecast for DK_1
-2025-12-05 16:19:40,871 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A69', 'processType': 'A01', 'in_Domain': '10YDK-1--------W', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512062300'}
-2025-12-05 16:19:41,478 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNO-2--------T&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 None
-2025-12-05 16:19:41,485 DEBUG NL→NO: Got 96 data points
-2025-12-05 16:19:41,485 DEBUG Fetching flow NO→NL
-2025-12-05 16:19:41,486 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNO-2--------T', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:19:42,274 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A69&processType=A01&in_Domain=10YDK-1--------W&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:42,315 DEBUG DK_1: Got 96 data points, columns: ['Solar', 'Wind Offshore', 'Wind Onshore']
-2025-12-05 16:19:42,316 DEBUG [bab4f938] Parsing response...
-2025-12-05 16:19:42,316 DEBUG NL columns found - offshore: Wind Offshore, onshore: Wind Onshore, total: None
-2025-12-05 16:19:42,325 DEBUG NL: Parsed 192 wind forecast points
-2025-12-05 16:19:42,325 DEBUG DE_LU columns found - offshore: Wind Offshore, onshore: Wind Onshore, total: None
-2025-12-05 16:19:42,330 DEBUG DE_LU: Parsed 96 wind forecast points
-2025-12-05 16:19:42,330 DEBUG BE columns found - offshore: Wind Offshore, onshore: Wind Onshore, total: None
-2025-12-05 16:19:42,333 DEBUG BE: Parsed 48 wind forecast points
-2025-12-05 16:19:42,333 DEBUG DK_1 columns found - offshore: Wind Offshore, onshore: Wind Onshore, total: None
-2025-12-05 16:19:42,338 DEBUG DK_1: Parsed 96 wind forecast points
-2025-12-05 16:19:42,338 DEBUG [bab4f938] Normalizing timestamps...
-2025-12-05 16:19:42,338 DEBUG [bab4f938] Validating data...
-2025-12-05 16:19:42,338 INFO [bab4f938] Collection complete: 4 data points in 23.66s (status: success)
-2025-12-05 16:19:42,841 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A65&processType=A16&outBiddingZone_Domain=10Y1001A1001A82H&out_Domain=10Y1001A1001A82H&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512062300 HTTP/1.1" 200 None
-2025-12-05 16:19:42,853 DEBUG DE_LU actual: 63 points
-2025-12-05 16:19:42,854 DEBUG [3fe8f930] Parsing response...
-2025-12-05 16:19:42,871 DEBUG NL: Parsed 192 load points
-2025-12-05 16:19:42,889 DEBUG DE_LU: Parsed 192 load points
-2025-12-05 16:19:42,889 DEBUG [3fe8f930] Normalizing timestamps...
-2025-12-05 16:19:42,889 DEBUG [3fe8f930] Validating data...
-2025-12-05 16:19:42,889 INFO [3fe8f930] Collection complete: 2 data points in 24.20s (status: success)
-2025-12-05 16:19:47,001 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10YNO-2--------T&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 None
-2025-12-05 16:19:47,085 DEBUG NO→NL: Got 96 data points
-2025-12-05 16:19:47,085 DEBUG Fetching flow NL→GB
-2025-12-05 16:19:47,086 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YGB----------A', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:19:54,245 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YGB----------A&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 None
-2025-12-05 16:19:54,256 DEBUG NL→GB: Got 96 data points
-2025-12-05 16:19:54,256 DEBUG Fetching flow GB→NL
-2025-12-05 16:19:54,257 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10YGB----------A', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:19:57,880 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10YGB----------A&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 None
-2025-12-05 16:19:57,890 DEBUG GB→NL: Got 96 data points
-2025-12-05 16:19:57,890 DEBUG Fetching flow NL→DK
-2025-12-05 16:19:57,891 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YDK-1--------W', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:20:00,551 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YDK-1--------W&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 None
-2025-12-05 16:20:00,566 DEBUG NL→DK: Got 96 data points
-2025-12-05 16:20:00,566 DEBUG Fetching flow DK→NL
-2025-12-05 16:20:00,567 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10YDK-1--------W', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512032300', 'periodEnd': '202512042300'}
-2025-12-05 16:20:03,408 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10YDK-1--------W&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512032300&periodEnd=202512042300 HTTP/1.1" 200 1509
-2025-12-05 16:20:03,412 DEBUG DK→NL: Got 96 data points
-2025-12-05 16:20:03,413 DEBUG [9357738f] Parsing response...
-2025-12-05 16:20:03,420 DEBUG Parsed 96 flow timestamps, avg net: -5722.0 MW
-2025-12-05 16:20:03,420 DEBUG [9357738f] Normalizing timestamps...
-2025-12-05 16:20:03,420 DEBUG [9357738f] Validating data...
-2025-12-05 16:20:03,421 INFO [9357738f] Collection complete: 2 data points in 44.74s (status: success)
-2025-12-05 16:20:03,421 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,429 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,450 INFO Saved multi-location weather forecast for 6 strategic onshore locations
-2025-12-05 16:20:03,450 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,452 INFO Saved TenneT grid imbalance data with 1440 data points
-2025-12-05 16:20:03,452 INFO Added ENTSO-E wind generation forecasts for 4 countries
-2025-12-05 16:20:03,452 INFO Added Open-Meteo offshore wind data for 9 offshore locations
-2025-12-05 16:20:03,457 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,473 INFO Saved combined wind forecast with 2 data sources
-2025-12-05 16:20:03,473 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,474 INFO Saved NED.nl production data for 3 energy types: ['solar', 'wind_onshore', 'wind_offshore']
-2025-12-05 16:20:03,474 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,477 INFO Saved solar irradiance forecast for 7 locations
-2025-12-05 16:20:03,477 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,483 INFO Saved demand weather forecast for 11 population centers (8,267,338 total population)
-2025-12-05 16:20:03,484 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,485 INFO Saved cross-border flows for 10 borders, avg net: -5722.0 MW
-2025-12-05 16:20:03,485 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,486 INFO Saved load forecast for 2 countries
-2025-12-05 16:20:03,486 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,486 INFO Saved generation data for 1 countries (nuclear availability)
-2025-12-05 16:20:03,497 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,499 INFO Saved calendar features for 240 hours, 10 upcoming holidays
-2025-12-05 16:20:03,499 INFO Timestamp validation passed - all timestamps correctly formatted
-2025-12-05 16:20:03,499 INFO Saved market proxies: carbon=$27.71, gas=$15.66
+2025-12-06 16:16:38,566 DEBUG Using selector: EpollSelector
+2025-12-06 16:16:38,566 INFO Output directory ensured: /home/runner/work/energydatahub/energydatahub/data
+2025-12-06 16:16:39,755 INFO No secrets.ini found, using environment variables only
+2025-12-06 16:16:39,755 DEBUG Overriding security_keys.encryption from environment variable ENCRYPTION_KEY
+2025-12-06 16:16:39,755 DEBUG Overriding security_keys.hmac from environment variable HMAC_KEY
+2025-12-06 16:16:39,755 DEBUG Overriding api_keys.entsoe from environment variable ENTSOE_API_KEY
+2025-12-06 16:16:39,756 DEBUG Overriding api_keys.google_weather from environment variable GOOGLE_WEATHER_API_KEY
+2025-12-06 16:16:39,756 DEBUG Overriding api_keys.tennet from environment variable TENNET_API_KEY
+2025-12-06 16:16:39,756 DEBUG Overriding api_keys.ned from environment variable NED_API_KEY
+2025-12-06 16:16:39,756 DEBUG Overriding api_keys.alpha_vantage from environment variable ALPHA_VANTAGE_API_KEY
+2025-12-06 16:16:39,756 INFO Initialized for 6 locations
+2025-12-06 16:16:39,756 INFO Initialized for 9 offshore locations, 10 day forecast
+2025-12-06 16:16:39,756 INFO Initialized for countries: NL, DE_LU, BE, DK_1
+2025-12-06 16:16:39,756 INFO Initialized for types: ['solar', 'wind_onshore', 'wind_offshore'], forecast=True, actual=True
+2025-12-06 16:16:39,757 INFO Initialized for 7 locations, 7 day forecast
+2025-12-06 16:16:39,757 INFO Initialized for 11 population centers, 7 day forecast
+2025-12-06 16:16:39,757 INFO Initialized for borders: NL→DE, DE→NL, NL→BE, BE→NL, NL→NO, NO→NL, NL→GB, GB→NL, NL→DK, DK→NL
+2025-12-06 16:16:39,757 INFO Initialized for countries: NL, DE_LU, include_actual=True
+2025-12-06 16:16:39,757 INFO Initialized for ['FR'], types: ['nuclear'], forecast=True, actual=True
+2025-12-06 16:16:39,757 INFO [c4d0e1b5] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-07 23:59:59+01:00
+2025-12-06 16:16:39,757 DEBUG [c4d0e1b5] Fetching raw data...
+2025-12-06 16:16:39,757 DEBUG Attempt 1/3
+2025-12-06 16:16:39,757 DEBUG Fetching ENTSO-E data for NL
+2025-12-06 16:16:39,757 DEBUG Querying ENTSO-E API: 2025-12-05 23:00:00+00:00 to 2025-12-07 22:59:59+00:00 (UTC)
+2025-12-06 16:16:39,765 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 0, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512082300'}
+2025-12-06 16:16:39,765 INFO [35c88942] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-07 23:59:59+01:00
+2025-12-06 16:16:39,765 DEBUG [35c88942] Fetching raw data...
+2025-12-06 16:16:39,765 DEBUG Attempt 1/3
+2025-12-06 16:16:39,766 DEBUG Fetching EnergyZero data
+2025-12-06 16:16:39,767 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-12-06 16:16:39,768 INFO [439d5c60] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-07 23:59:59+01:00
+2025-12-06 16:16:39,768 DEBUG [439d5c60] Fetching raw data...
+2025-12-06 16:16:39,768 DEBUG Attempt 1/3
+2025-12-06 16:16:39,768 DEBUG Fetching EPEX data from Awattar API
+2025-12-06 16:16:39,768 INFO [c002d70e] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-16 00:00:00+01:00
+2025-12-06 16:16:39,769 DEBUG [c002d70e] Fetching raw data...
+2025-12-06 16:16:39,769 DEBUG Attempt 1/3
+2025-12-06 16:16:39,769 INFO Fetching weather for 6 locations in parallel
+2025-12-06 16:16:39,769 INFO [a43f6d25] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-07 23:59:59+01:00
+2025-12-06 16:16:39,769 DEBUG [a43f6d25] Fetching raw data...
+2025-12-06 16:16:39,769 DEBUG Attempt 1/3
+2025-12-06 16:16:39,769 DEBUG Fetching Elspot data for NL
+2025-12-06 16:16:39,770 INFO [140dc3ea] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 00:00:00+01:00
+2025-12-06 16:16:39,770 DEBUG [140dc3ea] Fetching raw data...
+2025-12-06 16:16:39,770 DEBUG Attempt 1/3
+2025-12-06 16:16:39,770 DEBUG Starting new HTTPS connection (1): dataportal-api.nordpoolgroup.com:443
+2025-12-06 16:16:39,770 DEBUG Fetching TenneT data from 2025-12-05 to 2025-12-06
+2025-12-06 16:16:39,771 INFO [76121d1f] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-07 23:59:59+01:00
+2025-12-06 16:16:39,772 DEBUG [76121d1f] Fetching raw data...
+2025-12-06 16:16:39,772 DEBUG Attempt 1/3
+2025-12-06 16:16:39,772 DEBUG Starting new HTTPS connection (1): api.tennet.eu:443
+2025-12-06 16:16:39,772 DEBUG Fetching wind forecasts for: ['NL', 'DE_LU', 'BE', 'DK_1']
+2025-12-06 16:16:39,772 DEBUG Query range: 2025-12-05 23:00:00+00:00 to 2025-12-07 22:59:59+00:00 (UTC)
+2025-12-06 16:16:39,773 DEBUG Fetching wind forecast for NL
+2025-12-06 16:16:39,773 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A69', 'processType': 'A01', 'in_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:39,774 INFO [05bef572] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-16 00:00:00+01:00
+2025-12-06 16:16:39,774 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-12-06 16:16:39,774 DEBUG [05bef572] Fetching raw data...
+2025-12-06 16:16:39,775 DEBUG Attempt 1/3
+2025-12-06 16:16:39,775 DEBUG Fetching solar data for 7 locations
+2025-12-06 16:16:39,775 INFO [1ba8b6c9] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-16 00:00:00+01:00
+2025-12-06 16:16:39,775 DEBUG [1ba8b6c9] Fetching raw data...
+2025-12-06 16:16:39,775 DEBUG Attempt 1/3
+2025-12-06 16:16:39,775 DEBUG Fetching demand weather for 11 locations
+2025-12-06 16:16:39,775 INFO [af7c13bf] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-16 00:00:00+01:00
+2025-12-06 16:16:39,775 DEBUG [af7c13bf] Fetching raw data...
+2025-12-06 16:16:39,775 DEBUG Attempt 1/3
+2025-12-06 16:16:39,776 DEBUG Fetching offshore wind data for 9 locations
+2025-12-06 16:16:39,776 INFO [ce55591d] Starting collection: 2025-12-05 00:00:00+01:00 to 2025-12-06 00:00:00+01:00
+2025-12-06 16:16:39,776 DEBUG [ce55591d] Fetching raw data...
+2025-12-06 16:16:39,776 DEBUG Attempt 1/5
+2025-12-06 16:16:39,776 DEBUG Fetching cross-border flows for 10 borders
+2025-12-06 16:16:39,776 DEBUG Query range: 2025-12-04 23:00:00+00:00 to 2025-12-05 23:00:00+00:00 (UTC)
+2025-12-06 16:16:39,776 DEBUG Fetching flow NL→DE
+2025-12-06 16:16:39,777 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10Y1001A1001A82H', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:16:39,777 INFO [5e2c63c0] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-07 23:59:59+01:00
+2025-12-06 16:16:39,778 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-12-06 16:16:39,778 DEBUG [5e2c63c0] Fetching raw data...
+2025-12-06 16:16:39,778 DEBUG Attempt 1/3
+2025-12-06 16:16:39,778 DEBUG Fetching load forecasts for: ['NL', 'DE_LU']
+2025-12-06 16:16:39,778 DEBUG Query range: 2025-12-05 23:00:00+00:00 to 2025-12-07 22:59:59+00:00 (UTC)
+2025-12-06 16:16:39,779 DEBUG Fetching load forecast for NL
+2025-12-06 16:16:39,779 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A65', 'processType': 'A01', 'outBiddingZone_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:39,779 INFO [93a84500] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-07 23:59:59+01:00
+2025-12-06 16:16:39,780 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-12-06 16:16:39,780 DEBUG [93a84500] Fetching raw data...
+2025-12-06 16:16:39,780 DEBUG Attempt 1/3
+2025-12-06 16:16:39,780 DEBUG Fetching generation for ['FR'], types: ['nuclear']
+2025-12-06 16:16:39,781 DEBUG Query range: 2025-12-05 23:00:00+00:00 to 2025-12-07 22:59:59+00:00 (UTC)
+2025-12-06 16:16:39,781 DEBUG Fetching actual generation for FR
+2025-12-06 16:16:39,781 INFO [7d15dc7a] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-07 23:59:59+01:00
+2025-12-06 16:16:39,781 DEBUG [7d15dc7a] Fetching raw data...
+2025-12-06 16:16:39,781 DEBUG Attempt 1/3
+2025-12-06 16:16:39,882 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A75', 'processType': 'A16', 'in_Domain': '10YFR-RTE------C', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:39,899 DEBUG Starting new HTTPS connection (1): web-api.tp.entsoe.eu:443
+2025-12-06 16:16:39,935 DEBUG Fetching NED.nl data from 2025-12-06 to 2025-12-07
+2025-12-06 16:16:39,935 DEBUG Fetching solar forecast
+2025-12-06 16:16:39,935 INFO [f161d9bb] Starting collection: 2025-12-06 00:00:00+01:00 to 2025-12-06 00:00:00+01:00
+2025-12-06 16:16:39,936 DEBUG [f161d9bb] Fetching raw data...
+2025-12-06 16:16:39,936 DEBUG Attempt 1/3
+2025-12-06 16:16:39,936 DEBUG Fetching market proxy data via Alpha Vantage
+2025-12-06 16:16:39,936 DEBUG Fetching carbon via Alpha Vantage (KEUA)
+2025-12-06 16:16:39,936 DEBUG Attempt 1/3 for Hamburg_DE
+2025-12-06 16:16:39,936 DEBUG Fetching Google Weather data for Hamburg_DE
+2025-12-06 16:16:39,936 DEBUG Fetching page 1 for Hamburg_DE
+2025-12-06 16:16:39,937 DEBUG Attempt 1/3 for Munich_DE
+2025-12-06 16:16:39,937 DEBUG Fetching Google Weather data for Munich_DE
+2025-12-06 16:16:39,937 DEBUG Fetching page 1 for Munich_DE
+2025-12-06 16:16:39,937 DEBUG Attempt 1/3 for Arnhem_NL
+2025-12-06 16:16:39,937 DEBUG Fetching Google Weather data for Arnhem_NL
+2025-12-06 16:16:39,937 DEBUG Fetching page 1 for Arnhem_NL
+2025-12-06 16:16:39,937 DEBUG Attempt 1/3 for IJmuiden_NL
+2025-12-06 16:16:39,937 DEBUG Fetching Google Weather data for IJmuiden_NL
+2025-12-06 16:16:39,937 DEBUG Fetching page 1 for IJmuiden_NL
+2025-12-06 16:16:39,937 DEBUG Attempt 1/3 for Brussels_BE
+2025-12-06 16:16:39,937 DEBUG Fetching Google Weather data for Brussels_BE
+2025-12-06 16:16:39,937 DEBUG Fetching page 1 for Brussels_BE
+2025-12-06 16:16:39,938 DEBUG Attempt 1/3 for Esbjerg_DK
+2025-12-06 16:16:39,938 DEBUG Fetching Google Weather data for Esbjerg_DK
+2025-12-06 16:16:39,938 DEBUG Fetching page 1 for Esbjerg_DK
+2025-12-06 16:16:40,055 DEBUG [439d5c60] Parsing response...
+2025-12-06 16:16:40,056 DEBUG Parsed 47 data points from Awattar response
+2025-12-06 16:16:40,056 DEBUG [439d5c60] Normalizing timestamps...
+2025-12-06 16:16:40,057 DEBUG [439d5c60] Validating data...
+2025-12-06 16:16:40,057 INFO [439d5c60] Collection complete: 47 data points in 0.29s (status: success)
+2025-12-06 16:16:40,240 DEBUG https://dataportal-api.nordpoolgroup.com:443 "GET /api/DayAheadPriceIndices?currency=EUR&market=DayAhead&date=2025-12-07&resolutionInMinutes=60&indexNames=NL HTTP/1.1" 200 None
+2025-12-06 16:16:40,246 DEBUG [a43f6d25] Parsing response...
+2025-12-06 16:16:40,246 DEBUG Parsed 24 data points from Elspot response
+2025-12-06 16:16:40,246 DEBUG [a43f6d25] Normalizing timestamps...
+2025-12-06 16:16:40,246 DEBUG [a43f6d25] Validating data...
+2025-12-06 16:16:40,246 INFO [a43f6d25] Collection complete: 24 data points in 0.48s (status: success)
+2025-12-06 16:16:40,263 DEBUG Page 1: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,263 DEBUG Fetching page 2 for Esbjerg_DK
+2025-12-06 16:16:40,315 DEBUG Page 1: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,315 DEBUG Fetching page 2 for Munich_DE
+2025-12-06 16:16:40,318 DEBUG Page 2: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,318 DEBUG Fetching page 3 for Esbjerg_DK
+2025-12-06 16:16:40,334 DEBUG Page 1: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,334 DEBUG Fetching page 2 for IJmuiden_NL
+2025-12-06 16:16:40,340 DEBUG Page 1: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,340 DEBUG Fetching page 2 for Brussels_BE
+2025-12-06 16:16:40,344 DEBUG Page 1: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,344 DEBUG Fetching page 2 for Arnhem_NL
+2025-12-06 16:16:40,351 DEBUG Page 1: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,351 DEBUG Fetching page 2 for Hamburg_DE
+2025-12-06 16:16:40,365 DEBUG Page 2: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,365 DEBUG Fetching page 3 for Munich_DE
+2025-12-06 16:16:40,368 DEBUG Page 3: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,368 DEBUG Fetching page 4 for Esbjerg_DK
+2025-12-06 16:16:40,397 DEBUG Page 2: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,397 DEBUG Fetching page 3 for Brussels_BE
+2025-12-06 16:16:40,399 DEBUG Page 2: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,399 DEBUG Fetching page 3 for IJmuiden_NL
+2025-12-06 16:16:40,403 DEBUG Page 2: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,403 DEBUG Fetching page 3 for Arnhem_NL
+2025-12-06 16:16:40,405 DEBUG Page 2: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,405 DEBUG Fetching page 3 for Hamburg_DE
+2025-12-06 16:16:40,410 DEBUG Page 4: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,410 DEBUG Fetching page 5 for Esbjerg_DK
+2025-12-06 16:16:40,411 DEBUG Page 3: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,411 DEBUG Fetching page 4 for Munich_DE
+2025-12-06 16:16:40,448 DEBUG [35c88942] Parsing response...
+2025-12-06 16:16:40,448 DEBUG Parsed 47 data points from EnergyZero response
+2025-12-06 16:16:40,448 DEBUG [35c88942] Normalizing timestamps...
+2025-12-06 16:16:40,449 DEBUG [35c88942] Validating data...
+2025-12-06 16:16:40,449 INFO [35c88942] Collection complete: 47 data points in 0.68s (status: success)
+2025-12-06 16:16:40,452 DEBUG Page 5: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,452 DEBUG Fetching page 6 for Esbjerg_DK
+2025-12-06 16:16:40,453 DEBUG Page 3: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,453 DEBUG Fetching page 4 for Brussels_BE
+2025-12-06 16:16:40,455 DEBUG Page 3: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,455 DEBUG Fetching page 4 for Arnhem_NL
+2025-12-06 16:16:40,458 DEBUG Page 3: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,459 DEBUG Fetching page 4 for IJmuiden_NL
+2025-12-06 16:16:40,460 DEBUG Page 4: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,460 DEBUG Fetching page 5 for Munich_DE
+2025-12-06 16:16:40,461 DEBUG Page 3: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,461 DEBUG Fetching page 4 for Hamburg_DE
+2025-12-06 16:16:40,499 DEBUG Page 6: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,499 DEBUG Fetching page 7 for Esbjerg_DK
+2025-12-06 16:16:40,506 DEBUG Page 5: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,506 DEBUG Fetching page 6 for Munich_DE
+2025-12-06 16:16:40,507 DEBUG Page 4: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,507 DEBUG Fetching page 5 for Brussels_BE
+2025-12-06 16:16:40,508 DEBUG Page 4: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,508 DEBUG Fetching page 5 for IJmuiden_NL
+2025-12-06 16:16:40,518 DEBUG Page 4: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,518 DEBUG Fetching page 5 for Hamburg_DE
+2025-12-06 16:16:40,522 DEBUG Page 4: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,522 DEBUG Fetching page 5 for Arnhem_NL
+2025-12-06 16:16:40,537 DEBUG https://api.tennet.eu:443 "GET /publications/v1/settlement-prices?date_from=05-12-2025+00%3A00%3A00&date_to=06-12-2025+00%3A00%3A00 HTTP/1.1" 200 None
+2025-12-06 16:16:40,546 DEBUG Page 7: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,546 DEBUG Fetching page 8 for Esbjerg_DK
+2025-12-06 16:16:40,556 DEBUG Page 6: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,557 DEBUG Fetching page 7 for Munich_DE
+2025-12-06 16:16:40,560 DEBUG Page 5: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,560 DEBUG Fetching page 6 for Brussels_BE
+2025-12-06 16:16:40,567 DEBUG Page 5: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,567 DEBUG Fetching page 6 for IJmuiden_NL
+2025-12-06 16:16:40,571 DEBUG Page 5: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,571 DEBUG Fetching page 6 for Arnhem_NL
+2025-12-06 16:16:40,572 DEBUG Page 5: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,572 DEBUG Fetching page 6 for Hamburg_DE
+2025-12-06 16:16:40,591 DEBUG Page 8: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,591 DEBUG Fetching page 9 for Esbjerg_DK
+2025-12-06 16:16:40,598 DEBUG solar forecast: 23 records
+2025-12-06 16:16:40,598 DEBUG Fetching solar actual
+2025-12-06 16:16:40,604 DEBUG Page 7: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,604 DEBUG Fetching page 8 for Munich_DE
+2025-12-06 16:16:40,610 DEBUG Page 6: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,610 DEBUG Fetching page 7 for Brussels_BE
+2025-12-06 16:16:40,614 DEBUG Page 6: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,615 DEBUG Fetching page 7 for Arnhem_NL
+2025-12-06 16:16:40,619 WARNING HollandseKust_NL: HTTP 429 - {"error":true,"reason":"Too many concurrent requests"}
+2025-12-06 16:16:40,620 DEBUG Page 6: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,620 DEBUG Fetching page 7 for IJmuiden_NL
+2025-12-06 16:16:40,623 DEBUG Page 6: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,623 DEBUG Fetching page 7 for Hamburg_DE
+2025-12-06 16:16:40,638 DEBUG Page 9: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,638 DEBUG Fetching page 10 for Esbjerg_DK
+2025-12-06 16:16:40,651 DEBUG Page 8: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,651 DEBUG Fetching page 9 for Munich_DE
+2025-12-06 16:16:40,659 DEBUG Page 7: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,659 DEBUG Fetching page 8 for Arnhem_NL
+2025-12-06 16:16:40,666 DEBUG Page 7: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,666 DEBUG Fetching page 8 for Brussels_BE
+2025-12-06 16:16:40,673 DEBUG Page 7: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,673 DEBUG Fetching page 8 for IJmuiden_NL
+2025-12-06 16:16:40,678 DEBUG Page 7: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,678 DEBUG Fetching page 8 for Hamburg_DE
+2025-12-06 16:16:40,680 DEBUG Page 10: Got 24 hours for Esbjerg_DK
+2025-12-06 16:16:40,680 DEBUG Successfully fetched 240 hours across 10 pages for Esbjerg_DK
+2025-12-06 16:16:40,680 DEBUG Successfully fetched Esbjerg_DK on attempt 1
+2025-12-06 16:16:40,704 DEBUG Page 9: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,705 DEBUG Fetching page 10 for Munich_DE
+2025-12-06 16:16:40,705 DEBUG Page 8: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,705 DEBUG Fetching page 9 for Arnhem_NL
+2025-12-06 16:16:40,720 DEBUG Page 8: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,720 DEBUG Fetching page 9 for Brussels_BE
+2025-12-06 16:16:40,725 DEBUG Page 8: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,725 DEBUG Fetching page 9 for IJmuiden_NL
+2025-12-06 16:16:40,731 DEBUG Page 8: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,732 DEBUG Fetching page 9 for Hamburg_DE
+2025-12-06 16:16:40,736 DEBUG https://api.tennet.eu:443 "GET /publications/v1/balance-delta?date_from=05-12-2025+00%3A00%3A00&date_to=06-12-2025+00%3A00%3A00 HTTP/1.1" 200 None
+2025-12-06 16:16:40,748 DEBUG Page 10: Got 24 hours for Munich_DE
+2025-12-06 16:16:40,749 DEBUG Successfully fetched 240 hours across 10 pages for Munich_DE
+2025-12-06 16:16:40,749 DEBUG Successfully fetched Munich_DE on attempt 1
+2025-12-06 16:16:40,751 DEBUG Page 9: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,751 DEBUG Fetching page 10 for Arnhem_NL
+2025-12-06 16:16:40,757 DEBUG solar actual: 17 records
+2025-12-06 16:16:40,757 DEBUG Fetching wind_onshore forecast
+2025-12-06 16:16:40,765 DEBUG Fetching gas via Alpha Vantage (UNG)
+2025-12-06 16:16:40,770 DEBUG Page 9: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,770 DEBUG Fetching page 10 for Brussels_BE
+2025-12-06 16:16:40,782 DEBUG Page 9: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,782 DEBUG Fetching page 10 for IJmuiden_NL
+2025-12-06 16:16:40,784 DEBUG Page 9: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,784 DEBUG Fetching page 10 for Hamburg_DE
+2025-12-06 16:16:40,794 DEBUG Page 10: Got 24 hours for Arnhem_NL
+2025-12-06 16:16:40,795 DEBUG Successfully fetched 240 hours across 10 pages for Arnhem_NL
+2025-12-06 16:16:40,795 DEBUG Successfully fetched Arnhem_NL on attempt 1
+2025-12-06 16:16:40,824 DEBUG Page 10: Got 24 hours for Brussels_BE
+2025-12-06 16:16:40,825 DEBUG Successfully fetched 240 hours across 10 pages for Brussels_BE
+2025-12-06 16:16:40,825 DEBUG Successfully fetched Brussels_BE on attempt 1
+2025-12-06 16:16:40,827 WARNING BorkumRiffgrund_DE: HTTP 429 - {"reason":"Too many concurrent requests","error":true}
+2025-12-06 16:16:40,892 DEBUG Page 10: Got 24 hours for Hamburg_DE
+2025-12-06 16:16:40,894 DEBUG Page 10: Got 24 hours for IJmuiden_NL
+2025-12-06 16:16:40,895 DEBUG Successfully fetched 240 hours across 10 pages for Hamburg_DE
+2025-12-06 16:16:40,895 DEBUG Successfully fetched Hamburg_DE on attempt 1
+2025-12-06 16:16:40,895 DEBUG Successfully fetched 240 hours across 10 pages for IJmuiden_NL
+2025-12-06 16:16:40,895 DEBUG Successfully fetched IJmuiden_NL on attempt 1
+2025-12-06 16:16:40,895 INFO Carbon proxy: KEUA = $27.47 (alpha_vantage)
+2025-12-06 16:16:40,895 INFO Gas proxy: UNG = $16.37 (alpha_vantage)
+2025-12-06 16:16:40,896 DEBUG [f161d9bb] Parsing response...
+2025-12-06 16:16:40,896 DEBUG [f161d9bb] Normalizing timestamps...
+2025-12-06 16:16:40,896 DEBUG [f161d9bb] Validating data...
+2025-12-06 16:16:40,896 INFO [f161d9bb] Collection complete: 2 data points in 0.96s (status: success)
+2025-12-06 16:16:40,896 DEBUG [c002d70e] Parsing response...
+2025-12-06 16:16:40,896 DEBUG Parsing 240 forecast hours
+2025-12-06 16:16:40,896 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-12-06 16:16:40,899 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-12-06 16:16:40,899 DEBUG Parsing 240 forecast hours
+2025-12-06 16:16:40,900 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-12-06 16:16:40,903 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-12-06 16:16:40,903 DEBUG Parsing 240 forecast hours
+2025-12-06 16:16:40,903 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-12-06 16:16:40,906 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-12-06 16:16:40,906 DEBUG Parsing 240 forecast hours
+2025-12-06 16:16:40,906 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-12-06 16:16:40,909 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-12-06 16:16:40,909 DEBUG Parsing 240 forecast hours
+2025-12-06 16:16:40,909 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-12-06 16:16:40,913 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-12-06 16:16:40,913 DEBUG Parsing 240 forecast hours
+2025-12-06 16:16:40,913 DEBUG First forecast keys: ['interval', 'displayDateTime', 'weatherCondition', 'temperature', 'feelsLikeTemperature', 'dewPoint', 'heatIndex', 'windChill', 'wetBulbTemperature', 'precipitation', 'airPressure', 'wind', 'visibility', 'iceThickness', 'isDaytime', 'relativeHumidity', 'uvIndex', 'thunderstormProbability', 'cloudCover']
+2025-12-06 16:16:40,916 DEBUG Parsed 240 forecasts, skipped: no_time=0, parse_error=0, filtered=0
+2025-12-06 16:16:40,916 DEBUG [c002d70e] Normalizing timestamps...
+2025-12-06 16:16:40,916 DEBUG [c002d70e] Validating data...
+2025-12-06 16:16:40,922 INFO [c002d70e] Collection complete: 6 data points in 1.15s (status: success)
+2025-12-06 16:16:40,928 DEBUG wind_onshore forecast: 23 records
+2025-12-06 16:16:40,928 DEBUG Fetching wind_onshore actual
+2025-12-06 16:16:40,937 INFO Fetched TenneT data: 96 settlement price records, 1440 balance delta records
+2025-12-06 16:16:40,937 DEBUG [140dc3ea] Parsing response...
+2025-12-06 16:16:41,013 INFO Parsed 1440 TenneT data points
+2025-12-06 16:16:41,013 DEBUG [140dc3ea] Normalizing timestamps...
+2025-12-06 16:16:41,017 DEBUG [140dc3ea] Creating dataset...
+2025-12-06 16:16:41,018 INFO [140dc3ea] Collection complete: 1440 data points in 1.25s (status: success)
+2025-12-06 16:16:41,032 DEBUG Rotterdam_NL: Got solar data
+2025-12-06 16:16:41,032 DEBUG Eindhoven_NL: Got solar data
+2025-12-06 16:16:41,032 DEBUG Lelystad_NL: Got solar data
+2025-12-06 16:16:41,032 DEBUG Groningen_NL: Got solar data
+2025-12-06 16:16:41,032 DEBUG Munich_DE: Got solar data
+2025-12-06 16:16:41,032 DEBUG Stuttgart_DE: Got solar data
+2025-12-06 16:16:41,032 DEBUG Antwerp_BE: Got solar data
+2025-12-06 16:16:41,033 DEBUG [05bef572] Parsing response...
+2025-12-06 16:16:41,034 DEBUG Rotterdam_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,035 DEBUG Eindhoven_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,036 DEBUG Lelystad_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,037 DEBUG Groningen_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,038 DEBUG Munich_DE: Parsed 168 timestamps
+2025-12-06 16:16:41,039 DEBUG Stuttgart_DE: Parsed 168 timestamps
+2025-12-06 16:16:41,040 DEBUG Antwerp_BE: Parsed 168 timestamps
+2025-12-06 16:16:41,040 DEBUG [05bef572] Normalizing timestamps...
+2025-12-06 16:16:41,040 DEBUG [05bef572] Validating data...
+2025-12-06 16:16:41,040 INFO [05bef572] Collection complete: 7 data points in 1.27s (status: success)
+2025-12-06 16:16:41,074 DEBUG wind_onshore actual: 17 records
+2025-12-06 16:16:41,074 DEBUG Fetching wind_offshore forecast
+2025-12-06 16:16:41,123 DEBUG Borssele_NL: Got offshore wind data
+2025-12-06 16:16:41,123 WARNING HollandseKust_NL: No data - {"error":true,"reason":"Too many concurrent requests"}
+2025-12-06 16:16:41,123 DEBUG Gemini_NL: Got offshore wind data
+2025-12-06 16:16:41,123 DEBUG IJmuidenVer_NL: Got offshore wind data
+2025-12-06 16:16:41,124 DEBUG HelgolandCluster_DE: Got offshore wind data
+2025-12-06 16:16:41,124 WARNING BorkumRiffgrund_DE: No data - {"reason":"Too many concurrent requests","error":true}
+2025-12-06 16:16:41,124 DEBUG DoggerBank_UK: Got offshore wind data
+2025-12-06 16:16:41,124 DEBUG HornsRev_DK: Got offshore wind data
+2025-12-06 16:16:41,124 DEBUG NorthSeaBE_BE: Got offshore wind data
+2025-12-06 16:16:41,124 DEBUG [af7c13bf] Parsing response...
+2025-12-06 16:16:41,127 DEBUG Borssele_NL: Parsed 240 timestamps
+2025-12-06 16:16:41,129 DEBUG Gemini_NL: Parsed 240 timestamps
+2025-12-06 16:16:41,131 DEBUG IJmuidenVer_NL: Parsed 240 timestamps
+2025-12-06 16:16:41,133 DEBUG HelgolandCluster_DE: Parsed 240 timestamps
+2025-12-06 16:16:41,135 DEBUG DoggerBank_UK: Parsed 240 timestamps
+2025-12-06 16:16:41,138 DEBUG HornsRev_DK: Parsed 240 timestamps
+2025-12-06 16:16:41,140 DEBUG NorthSeaBE_BE: Parsed 240 timestamps
+2025-12-06 16:16:41,140 DEBUG [af7c13bf] Normalizing timestamps...
+2025-12-06 16:16:41,140 DEBUG [af7c13bf] Validating data...
+2025-12-06 16:16:41,141 INFO [af7c13bf] Collection complete: 7 data points in 1.37s (status: success)
+2025-12-06 16:16:41,225 DEBUG wind_offshore forecast: 23 records
+2025-12-06 16:16:41,225 DEBUG Fetching wind_offshore actual
+2025-12-06 16:16:41,372 DEBUG wind_offshore actual: 17 records
+2025-12-06 16:16:41,372 DEBUG [7d15dc7a] Parsing response...
+2025-12-06 16:16:41,373 DEBUG solar forecast: Parsed 23 data points
+2025-12-06 16:16:41,373 DEBUG solar actual: Parsed 17 data points
+2025-12-06 16:16:41,373 DEBUG wind_onshore forecast: Parsed 23 data points
+2025-12-06 16:16:41,373 DEBUG wind_onshore actual: Parsed 17 data points
+2025-12-06 16:16:41,374 DEBUG wind_offshore forecast: Parsed 23 data points
+2025-12-06 16:16:41,374 DEBUG wind_offshore actual: Parsed 17 data points
+2025-12-06 16:16:41,374 DEBUG [7d15dc7a] Normalizing timestamps...
+2025-12-06 16:16:41,374 DEBUG [7d15dc7a] Validating data...
+2025-12-06 16:16:41,374 INFO [7d15dc7a] Collection complete: 3 data points in 1.59s (status: success)
+2025-12-06 16:16:41,831 DEBUG Amsterdam_NL: Got weather data
+2025-12-06 16:16:41,831 DEBUG Rotterdam_NL: Got weather data
+2025-12-06 16:16:41,831 DEBUG The_Hague_NL: Got weather data
+2025-12-06 16:16:41,831 DEBUG Utrecht_NL: Got weather data
+2025-12-06 16:16:41,831 DEBUG Eindhoven_NL: Got weather data
+2025-12-06 16:16:41,831 DEBUG Groningen_NL: Got weather data
+2025-12-06 16:16:41,831 DEBUG Dusseldorf_DE: Got weather data
+2025-12-06 16:16:41,831 DEBUG Cologne_DE: Got weather data
+2025-12-06 16:16:41,831 DEBUG Hamburg_DE: Got weather data
+2025-12-06 16:16:41,831 DEBUG Brussels_BE: Got weather data
+2025-12-06 16:16:41,831 DEBUG Antwerp_BE: Got weather data
+2025-12-06 16:16:41,832 DEBUG [1ba8b6c9] Parsing response...
+2025-12-06 16:16:41,833 DEBUG Amsterdam_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,835 DEBUG Rotterdam_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,836 DEBUG The_Hague_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,837 DEBUG Utrecht_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,838 DEBUG Eindhoven_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,840 DEBUG Groningen_NL: Parsed 168 timestamps
+2025-12-06 16:16:41,841 DEBUG Dusseldorf_DE: Parsed 168 timestamps
+2025-12-06 16:16:41,842 DEBUG Cologne_DE: Parsed 168 timestamps
+2025-12-06 16:16:41,843 DEBUG Hamburg_DE: Parsed 168 timestamps
+2025-12-06 16:16:41,844 DEBUG Brussels_BE: Parsed 168 timestamps
+2025-12-06 16:16:41,845 DEBUG Antwerp_BE: Parsed 168 timestamps
+2025-12-06 16:16:41,846 DEBUG [1ba8b6c9] Normalizing timestamps...
+2025-12-06 16:16:41,846 DEBUG [1ba8b6c9] Validating data...
+2025-12-06 16:16:41,846 INFO [1ba8b6c9] Collection complete: 11 data points in 2.07s (status: success)
+2025-12-06 16:16:43,181 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A65&processType=A01&outBiddingZone_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:16:43,213 DEBUG NL forecast: 192 points
+2025-12-06 16:16:43,213 DEBUG Fetching actual load for NL
+2025-12-06 16:16:43,214 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A65', 'processType': 'A16', 'outBiddingZone_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:43,292 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10Y1001A1001A82H&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 None
+2025-12-06 16:16:43,308 DEBUG NL→DE: Got 96 data points
+2025-12-06 16:16:43,308 DEBUG Fetching flow DE→NL
+2025-12-06 16:16:43,309 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10Y1001A1001A82H', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:16:43,494 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A75&processType=A16&in_Domain=10YFR-RTE------C&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:16:43,664 DEBUG FR nuclear actual: 68 points
+2025-12-06 16:16:43,664 DEBUG Fetching generation forecast for FR
+2025-12-06 16:16:43,666 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A71', 'processType': 'A01', 'in_Domain': '10YFR-RTE------C', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:46,037 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=0&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512082300 HTTP/1.1" 200 None
+2025-12-06 16:16:46,069 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A65&processType=A16&outBiddingZone_Domain=10YNL----------L&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:16:46,087 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A44', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNL----------L', 'offset': 100, 'contract_MarketAgreement.type': 'A01', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512082300'}
+2025-12-06 16:16:46,102 DEBUG NL actual: 67 points
+2025-12-06 16:16:46,102 DEBUG Fetching load forecast for DE_LU
+2025-12-06 16:16:46,103 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A65', 'processType': 'A01', 'outBiddingZone_Domain': '10Y1001A1001A82H', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:46,407 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A69&processType=A01&in_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:16:46,477 DEBUG NL: Got 192 data points, columns: ['Solar', 'Wind Offshore', 'Wind Onshore']
+2025-12-06 16:16:46,477 DEBUG Fetching wind forecast for DE_LU
+2025-12-06 16:16:46,478 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A69', 'processType': 'A01', 'in_Domain': '10Y1001A1001A82H', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:47,463 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10Y1001A1001A82H&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 None
+2025-12-06 16:16:47,469 DEBUG DE→NL: Got 96 data points
+2025-12-06 16:16:47,469 DEBUG Fetching flow NL→BE
+2025-12-06 16:16:47,469 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YBE----------2', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:16:48,217 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A44&in_Domain=10YNL----------L&out_Domain=10YNL----------L&offset=100&contract_MarketAgreement.type=A01&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512082300 HTTP/1.1" 200 922
+2025-12-06 16:16:48,217 DEBUG NoMatchingDataError: for offset 100
+2025-12-06 16:16:48,220 DEBUG [c4d0e1b5] Parsing response...
+2025-12-06 16:16:48,221 DEBUG Parsed 192 data points from ENTSO-E response
+2025-12-06 16:16:48,221 DEBUG [c4d0e1b5] Normalizing timestamps...
+2025-12-06 16:16:48,222 DEBUG [c4d0e1b5] Validating data...
+2025-12-06 16:16:48,222 INFO [c4d0e1b5] Collection complete: 192 data points in 8.47s (status: success)
+2025-12-06 16:16:52,354 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YBE----------2&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 None
+2025-12-06 16:16:52,362 DEBUG NL→BE: Got 24 data points
+2025-12-06 16:16:52,362 DEBUG Fetching flow BE→NL
+2025-12-06 16:16:52,363 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10YBE----------2', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:16:53,627 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A71&processType=A01&in_Domain=10YFR-RTE------C&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:16:53,660 DEBUG [93a84500] Parsing response...
+2025-12-06 16:16:53,662 DEBUG FR: Parsed 68 generation points
+2025-12-06 16:16:53,662 DEBUG [93a84500] Normalizing timestamps...
+2025-12-06 16:16:53,662 DEBUG [93a84500] Validating data...
+2025-12-06 16:16:53,662 INFO [93a84500] Collection complete: 1 data points in 13.88s (status: success)
+2025-12-06 16:16:53,999 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A69&processType=A01&in_Domain=10Y1001A1001A82H&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:16:54,039 DEBUG DE_LU: Got 96 data points, columns: ['Solar', 'Wind Offshore', 'Wind Onshore']
+2025-12-06 16:16:54,039 DEBUG Fetching wind forecast for BE
+2025-12-06 16:16:54,040 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A69', 'processType': 'A01', 'in_Domain': '10YBE----------2', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:55,902 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A65&processType=A01&outBiddingZone_Domain=10Y1001A1001A82H&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:16:55,935 DEBUG DE_LU forecast: 192 points
+2025-12-06 16:16:55,935 DEBUG Fetching actual load for DE_LU
+2025-12-06 16:16:55,936 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A65', 'processType': 'A16', 'outBiddingZone_Domain': '10Y1001A1001A82H', 'out_Domain': '10Y1001A1001A82H', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:16:59,674 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A69&processType=A01&in_Domain=10YBE----------2&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:16:59,699 DEBUG BE: Got 48 data points, columns: ['Solar', 'Wind Offshore', 'Wind Onshore']
+2025-12-06 16:16:59,699 DEBUG Fetching wind forecast for DK_1
+2025-12-06 16:16:59,700 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A69', 'processType': 'A01', 'in_Domain': '10YDK-1--------W', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512052300', 'periodEnd': '202512072300'}
+2025-12-06 16:17:01,476 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10YBE----------2&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 1509
+2025-12-06 16:17:01,480 DEBUG BE→NL: Got 24 data points
+2025-12-06 16:17:01,481 DEBUG Fetching flow NL→NO
+2025-12-06 16:17:01,482 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNO-2--------T', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:17:03,641 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A69&processType=A01&in_Domain=10YDK-1--------W&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:17:03,665 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A65&processType=A16&outBiddingZone_Domain=10Y1001A1001A82H&out_Domain=10Y1001A1001A82H&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512052300&periodEnd=202512072300 HTTP/1.1" 200 None
+2025-12-06 16:17:03,697 DEBUG DE_LU actual: 63 points
+2025-12-06 16:17:03,700 DEBUG [5e2c63c0] Parsing response...
+2025-12-06 16:17:03,717 DEBUG NL: Parsed 192 load points
+2025-12-06 16:17:03,735 DEBUG DE_LU: Parsed 192 load points
+2025-12-06 16:17:03,735 DEBUG [5e2c63c0] Normalizing timestamps...
+2025-12-06 16:17:03,735 DEBUG [5e2c63c0] Validating data...
+2025-12-06 16:17:03,735 INFO [5e2c63c0] Collection complete: 2 data points in 23.96s (status: success)
+2025-12-06 16:17:03,736 DEBUG DK_1: Got 96 data points, columns: ['Solar', 'Wind Offshore', 'Wind Onshore']
+2025-12-06 16:17:03,737 DEBUG [76121d1f] Parsing response...
+2025-12-06 16:17:03,737 DEBUG NL columns found - offshore: Wind Offshore, onshore: Wind Onshore, total: None
+2025-12-06 16:17:03,746 DEBUG NL: Parsed 192 wind forecast points
+2025-12-06 16:17:03,746 DEBUG DE_LU columns found - offshore: Wind Offshore, onshore: Wind Onshore, total: None
+2025-12-06 16:17:03,751 DEBUG DE_LU: Parsed 96 wind forecast points
+2025-12-06 16:17:03,751 DEBUG BE columns found - offshore: Wind Offshore, onshore: Wind Onshore, total: None
+2025-12-06 16:17:03,754 DEBUG BE: Parsed 48 wind forecast points
+2025-12-06 16:17:03,755 DEBUG DK_1 columns found - offshore: Wind Offshore, onshore: Wind Onshore, total: None
+2025-12-06 16:17:03,760 DEBUG DK_1: Parsed 96 wind forecast points
+2025-12-06 16:17:03,760 DEBUG [76121d1f] Normalizing timestamps...
+2025-12-06 16:17:03,760 DEBUG [76121d1f] Validating data...
+2025-12-06 16:17:03,760 INFO [76121d1f] Collection complete: 4 data points in 23.99s (status: success)
+2025-12-06 16:17:08,357 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNO-2--------T&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 1509
+2025-12-06 16:17:08,361 DEBUG NL→NO: Got 96 data points
+2025-12-06 16:17:08,362 DEBUG Fetching flow NO→NL
+2025-12-06 16:17:08,363 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10YNO-2--------T', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:17:19,373 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10YNO-2--------T&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 None
+2025-12-06 16:17:19,388 DEBUG NO→NL: Got 96 data points
+2025-12-06 16:17:19,388 DEBUG Fetching flow NL→GB
+2025-12-06 16:17:19,388 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YGB----------A', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:17:27,281 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YGB----------A&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 1509
+2025-12-06 16:17:27,285 DEBUG NL→GB: Got 96 data points
+2025-12-06 16:17:27,285 DEBUG Fetching flow GB→NL
+2025-12-06 16:17:27,286 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10YGB----------A', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:17:32,484 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10YGB----------A&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 None
+2025-12-06 16:17:32,590 DEBUG GB→NL: Got 96 data points
+2025-12-06 16:17:32,590 DEBUG Fetching flow NL→DK
+2025-12-06 16:17:32,591 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YDK-1--------W', 'out_Domain': '10YNL----------L', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:17:38,284 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YDK-1--------W&out_Domain=10YNL----------L&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 None
+2025-12-06 16:17:38,300 DEBUG NL→DK: Got 96 data points
+2025-12-06 16:17:38,300 DEBUG Fetching flow DK→NL
+2025-12-06 16:17:38,301 DEBUG Performing request to https://web-api.tp.entsoe.eu/api with params {'documentType': 'A11', 'in_Domain': '10YNL----------L', 'out_Domain': '10YDK-1--------W', 'securityToken': 'e764dd40-0108-4de7-81e7-b32f7fa55d69', 'periodStart': '202512042300', 'periodEnd': '202512052300'}
+2025-12-06 16:17:39,936 DEBUG https://web-api.tp.entsoe.eu:443 "GET /api?documentType=A11&in_Domain=10YNL----------L&out_Domain=10YDK-1--------W&securityToken=e764dd40-0108-4de7-81e7-b32f7fa55d69&periodStart=202512042300&periodEnd=202512052300 HTTP/1.1" 200 1987
+2025-12-06 16:17:39,941 DEBUG DK→NL: Got 96 data points
+2025-12-06 16:17:39,942 DEBUG [ce55591d] Parsing response...
+2025-12-06 16:17:39,949 DEBUG Parsed 96 flow timestamps, avg net: -3489.3 MW
+2025-12-06 16:17:39,949 DEBUG [ce55591d] Normalizing timestamps...
+2025-12-06 16:17:39,949 DEBUG [ce55591d] Validating data...
+2025-12-06 16:17:39,949 INFO [ce55591d] Collection complete: 2 data points in 60.17s (status: success)
+2025-12-06 16:17:39,950 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:39,957 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:39,979 INFO Saved multi-location weather forecast for 6 strategic onshore locations
+2025-12-06 16:17:39,979 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:39,981 INFO Saved TenneT grid imbalance data with 1440 data points
+2025-12-06 16:17:39,981 INFO Added ENTSO-E wind generation forecasts for 4 countries
+2025-12-06 16:17:39,981 INFO Added Open-Meteo offshore wind data for 7 offshore locations
+2025-12-06 16:17:39,985 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:39,998 INFO Saved combined wind forecast with 2 data sources
+2025-12-06 16:17:39,999 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:39,999 INFO Saved NED.nl production data for 3 energy types: ['solar', 'wind_onshore', 'wind_offshore']
+2025-12-06 16:17:40,000 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:40,002 INFO Saved solar irradiance forecast for 7 locations
+2025-12-06 16:17:40,002 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:40,009 INFO Saved demand weather forecast for 11 population centers (8,267,338 total population)
+2025-12-06 16:17:40,009 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:40,010 INFO Saved cross-border flows for 10 borders, avg net: -3489.3 MW
+2025-12-06 16:17:40,010 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:40,011 INFO Saved load forecast for 2 countries
+2025-12-06 16:17:40,012 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:40,012 INFO Saved generation data for 1 countries (nuclear availability)
+2025-12-06 16:17:40,021 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:40,023 INFO Saved calendar features for 240 hours, 10 upcoming holidays
+2025-12-06 16:17:40,023 INFO Timestamp validation passed - all timestamps correctly formatted
+2025-12-06 16:17:40,024 INFO Saved market proxies: carbon=$27.47, gas=$16.37
