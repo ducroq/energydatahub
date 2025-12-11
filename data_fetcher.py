@@ -379,6 +379,7 @@ async def main() -> None:
         # Collect data from all sources (national/regional for price prediction)
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
+            entsoe_collector.collect(today, tomorrow, country_code='DE_LU'),  # German prices (coupled market)
             energy_zero_collector.collect(today, tomorrow),
             epex_collector.collect(today, tomorrow),
             googleweather_collector.collect(today, ten_days_ahead),  # 10-day forecast for price prediction
@@ -404,12 +405,12 @@ async def main() -> None:
         results = await asyncio.gather(*tasks)
 
         # Unpack results - NED.nl and market proxies are optional at the end
-        (entsoe_data, energy_zero_data, epex_data, google_weather_data, elspot_data,
+        (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, google_weather_data, elspot_data,
          tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
-         offshore_wind_data, flows_data, load_data, generation_data) = results[:13]
+         offshore_wind_data, flows_data, load_data, generation_data) = results[:14]
 
         # Handle optional collectors (NED.nl and market proxies)
-        optional_idx = 13
+        optional_idx = 14
         ned_data = None
         market_proxy_data = None
         if ned_collector:
@@ -420,6 +421,7 @@ async def main() -> None:
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
+        combined_data.add_dataset('entsoe_de', entsoe_de_data)  # German day-ahead prices
         combined_data.add_dataset('energy_zero', energy_zero_data)
         combined_data.add_dataset('epex', epex_data)
         combined_data.add_dataset('elspot', elspot_data)
@@ -433,6 +435,8 @@ async def main() -> None:
             # else:
             #     combined_data.write_to_json(full_path)
             shutil.copy(full_path, os.path.join(output_path, "energy_price_forecast.json"))
+            de_points = len(entsoe_de_data.data) if entsoe_de_data else 0
+            logging.info(f"Saved energy prices: NL + DE ({de_points} German price points)")
 
         # Save Google Weather multi-location data for price prediction (supply/demand factors)
         if google_weather_data:
