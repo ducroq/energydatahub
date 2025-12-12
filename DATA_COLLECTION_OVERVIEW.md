@@ -20,10 +20,13 @@ This document provides a comprehensive overview of all data collected by the Ene
 
 | Source | File | Variables | Resolution | Forecast Horizon |
 |--------|------|-----------|------------|------------------|
-| ENTSO-E | `energy_price_forecast.json` | Day-ahead price (€/MWh) | Hourly | Next day |
+| ENTSO-E (NL) | `energy_price_forecast.json` | Day-ahead price (€/MWh) | Hourly | Next day |
+| ENTSO-E (DE_LU) | `energy_price_forecast.json` | German day-ahead price (€/MWh) | Hourly | Next day |
 | EnergyZero | `energy_price_forecast.json` | Day-ahead price (€/MWh) | Hourly | Next day |
 | EPEX (via Awattar) | `energy_price_forecast.json` | Day-ahead price (€/MWh) | Hourly | Next day |
 | Nord Pool Elspot | `energy_price_forecast.json` | Day-ahead price (€/MWh) | Hourly | Next day |
+
+**German Prices (DE_LU)**: German day-ahead prices are highly relevant for Dutch price prediction due to market coupling. When there is no congestion, NL and DE prices converge; price divergence signals interconnector constraints. The NL-DE price spread is a useful ML feature.
 
 **Historical Records**: ~89 days (since Sep 28, 2025)
 
