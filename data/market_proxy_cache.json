@@ -1,5 +1,5 @@
 {
-  "cached_at": "2025-12-13T16:17:25.964074",
+  "cached_at": "2025-12-14T16:17:10.418261",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -18,16 +18,16 @@
       "name": "KraneShares European Carbon Allowance ETF"
     },
     "gas": {
-      "ticker": "UNG",
-      "price": 12.73,
+      "ticker": "FCG",
+      "price": 24.08,
       "date": "2025-12-12",
-      "open": 12.72,
-      "high": 12.92,
-      "low": 12.58,
-      "volume": 18834729,
-      "prev_close": 13.08,
-      "change": -0.35,
-      "change_pct": -2.68,
+      "open": 24.37,
+      "high": 24.48,
+      "low": 24.06,
+      "volume": 1133899,
+      "prev_close": 24.24,
+      "change": -0.16,
+      "change_pct": -0.67,
       "source": "alpha_vantage",
       "description": "Natural Gas proxy (US benchmark, correlates with EU)",
       "units": "USD/share",
