@@ -12,7 +12,7 @@ Description:
     Implements BaseCollector for EnergyZero data. Handles real-time and
     day-ahead price data for the Dutch energy market.
 
-    Updated for energyzero 3.0.0 API which removed class-level VAT parameter.
+    Updated for energyzero 5.0.0 API which replaced VatOption with PriceType.
 
 Usage:
     from collectors.energyzero import EnergyZeroCollector
@@ -30,7 +30,7 @@ Usage:
 import asyncio
 from datetime import datetime
 from typing import Any, Dict
-from energyzero import EnergyZero, VatOption
+from energyzero import EnergyZero, PriceType, Interval
 
 from collectors.base import BaseCollector, RetryConfig
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
@@ -41,27 +41,32 @@ class EnergyZeroCollector(BaseCollector):
     Collector for EnergyZero API energy prices.
 
     Fetches prices from the Dutch energy market including VAT.
-    Compatible with energyzero 3.0.0+ API.
+    Compatible with energyzero 5.0.0+ API.
     """
 
-    def __init__(self, vat_option: VatOption = VatOption.INCLUDE, retry_config: RetryConfig = None, circuit_breaker_config=None):
+    def __init__(self, price_type: PriceType = PriceType.ALL_IN, retry_config: RetryConfig = None, circuit_breaker_config=None):
         """
         Initialize EnergyZero collector.
 
         Args:
-            vat_option: VAT option (INCLUDE or EXCLUDE) - passed to function level
+            price_type: Price type to fetch:
+                - PriceType.MARKET: Wholesale price excl. VAT
+                - PriceType.MARKET_WITH_VAT: Market price incl. VAT
+                - PriceType.ALL_IN_EXCL_VAT: Market + surcharges excl. VAT
+                - PriceType.ALL_IN: Final consumer rate incl. VAT (default)
             retry_config: Optional retry configuration
             circuit_breaker_config: Optional circuit breaker configuration
         """
+        vat_included = price_type in (PriceType.MARKET_WITH_VAT, PriceType.ALL_IN)
         super().__init__(
             name="EnergyZeroCollector",
             data_type="energy_price",
-            source="EnergyZero API v3.0",
-            units="EUR/kWh (incl. VAT)" if vat_option == VatOption.INCLUDE else "EUR/kWh (excl. VAT)",
+            source="EnergyZero API v5.0",
+            units="EUR/kWh (incl. VAT)" if vat_included else "EUR/kWh (excl. VAT)",
             retry_config=retry_config,
             circuit_breaker_config=circuit_breaker_config
         )
-        self.vat_option = vat_option
+        self.price_type = price_type
 
     async def _fetch_raw_data(
         self,
@@ -84,14 +89,13 @@ class EnergyZeroCollector(BaseCollector):
         """
         self.logger.debug(f"Fetching EnergyZero data")
 
-        # EnergyZero API v3.0.0 removed class-level VAT parameter
-        # VAT must be specified at function level using legacy method
+        # EnergyZero API v5.0.0 uses PriceType instead of VatOption
         async with EnergyZero() as client:
-            data = await client.get_electricity_prices_legacy(
+            data = await client.get_electricity_prices(
                 start_date=start_time.date(),
                 end_date=end_time.date(),
-                interval=4,  # 4 = hourly interval
-                vat=self.vat_option
+                interval=Interval.HOUR,
+                price_type=self.price_type
             )
 
         if not data or not hasattr(data, 'prices'):
@@ -147,13 +151,15 @@ class EnergyZeroCollector(BaseCollector):
         metadata = super()._get_metadata(start_time, end_time)
 
         # Add EnergyZero-specific metadata
+        vat_included = self.price_type in (PriceType.MARKET_WITH_VAT, PriceType.ALL_IN)
         metadata.update({
             'country_code': 'NL',
             'market': 'retail',
             'currency': 'EUR',
             'resolution': 'hourly',
-            'vat_included': self.vat_option == VatOption.INCLUDE,
-            'api_version': 'v2.1'
+            'vat_included': vat_included,
+            'price_type': self.price_type.name,
+            'api_version': 'v5.0'
         })
 
         return metadata
@@ -177,7 +183,7 @@ async def get_Energy_zero_data(
     Returns:
         EnhancedDataSet or None if failed
     """
-    collector = EnergyZeroCollector(vat_option=VatOption.INCLUDE)
+    collector = EnergyZeroCollector(price_type=PriceType.ALL_IN)
     return await collector.collect(
         start_time=start_time,
         end_time=end_time
@@ -201,7 +207,7 @@ async def main():
     end = (start + timedelta(days=1)).replace(hour=23, minute=59, second=59)
 
     # Create collector and fetch data
-    collector = EnergyZeroCollector(vat_option=VatOption.INCLUDE)
+    collector = EnergyZeroCollector(price_type=PriceType.ALL_IN)
     dataset = await collector.collect(start, end)
 
     if dataset:

@@ -129,14 +129,14 @@ async def test_energyzero_collector():
     print("="*60)
 
     from collectors.energyzero import EnergyZeroCollector
-    from energyzero import VatOption
+    from energyzero import PriceType
 
     try:
         amsterdam_tz = ZoneInfo('Europe/Amsterdam')
         start = datetime.now(amsterdam_tz)
         end = start + timedelta(hours=24)
 
-        collector = EnergyZeroCollector(vat_option=VatOption.INCLUDE)
+        collector = EnergyZeroCollector(price_type=PriceType.ALL_IN)
         dataset = await collector.collect(start, end)
 
         if dataset:
