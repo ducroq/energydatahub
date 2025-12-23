@@ -1,7 +1,7 @@
 entsoe-py
 easyenergy
 requests
-energyzero
+energyzero>=5.0.0
 nordpool
 timezonefinder
 reverse_geocoder

@@ -35,22 +35,20 @@ class TestEnergyZeroCollector:
         """Test parsing EnergyZero API response."""
         collector = EnergyZeroCollector()
 
-        # Mock API response - Electricity class expects dict of prices and average
-        from energyzero import Electricity
+        # Mock API response - create a mock object with prices attribute
+        # (energyzero v5.0.0 returns objects with .prices dict)
         tz = ZoneInfo('Europe/Amsterdam')
         mock_prices_dict = {
             datetime(2025, 10, 25, 12, 0, tzinfo=tz): 0.25,
             datetime(2025, 10, 25, 13, 0, tzinfo=tz): 0.30
         }
-        mock_electricity = Electricity(
-            prices=mock_prices_dict,
-            average_price=0.275
-        )
+        mock_response = MagicMock()
+        mock_response.prices = mock_prices_dict
 
         start = datetime(2025, 10, 25, 12, 0, tzinfo=tz)
         end = datetime(2025, 10, 25, 14, 0, tzinfo=tz)
 
-        parsed = collector._parse_response(mock_electricity, start, end)
+        parsed = collector._parse_response(mock_response, start, end)
 
         assert len(parsed) == 2
         assert all(isinstance(v, float) for v in parsed.values())
