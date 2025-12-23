@@ -108,6 +108,11 @@ Encrypted data is automatically published to GitHub Pages daily:
 
 ## 🚀 Quick Start
 
+### Requirements
+
+- **Python 3.12+** (required by energyzero v5.0.0 dependency)
+- pip package manager
+
 ### Local Setup
 
 1. **Clone the repository**
