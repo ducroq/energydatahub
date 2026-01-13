@@ -5,10 +5,6 @@ on:
     - cron: '0 16 * * *'  # Runs daily at 16:00 UTC (18:00 CET / 20:00 CEST)
   workflow_dispatch:  # Allows manual triggering
 
-concurrency:
-  group: pages-deploy
-  cancel-in-progress: false
-
 jobs:
   collect-and-publish:
     runs-on: ubuntu-latest
@@ -77,12 +73,6 @@ jobs:
         git diff --quiet && git diff --staged --quiet || (git commit -m "Update energy data" && git push)
       env:
         GITHUB_TOKEN: ${{ secrets.PAT }}
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.PAT }}
-        publish_dir: ./docs
 
     - name: Trigger dashboard rebuild
       run: |
