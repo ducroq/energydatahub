@@ -5,6 +5,10 @@ on:
     - cron: '0 16 * * *'  # Runs daily at 16:00 UTC (18:00 CET / 20:00 CEST)
   workflow_dispatch:  # Allows manual triggering
 
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
 jobs:
   collect-and-publish:
     runs-on: ubuntu-latest
