@@ -176,6 +176,27 @@ pytest --cov=. --cov-report=html
 pytest tests/unit/test_base_collector.py -v
 ```
 
+### Decrypting Data
+
+The repository includes utilities for decrypting collected data:
+
+**Batch Decryption** - Decrypt multiple files at once:
+```bash
+python scripts/batch_decrypt.py
+```
+- Input: `energyDataHub/data/` (encrypted JSON files)
+- Output: `05. Data/decrypted_data/` (decrypted JSON files)
+- Skips already-decrypted files automatically
+
+**Single File Decryption** - Decrypt and display a single file:
+```bash
+python scripts/decrypt_file.py
+```
+- Outputs decrypted JSON to console
+- Default file: `data/energy_price_forecast.json`
+
+Both scripts require `secrets.ini` with valid encryption keys in the repository root.
+
 ## 🔧 Advanced Configuration
 
 ### Collector Customization

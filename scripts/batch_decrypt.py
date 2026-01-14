@@ -1,10 +1,14 @@
 import os
+import sys
 import glob
 import base64
 from configparser import ConfigParser
-from utils.secure_data_handler import SecureDataHandler
 import json
 import logging
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.secure_data_handler import SecureDataHandler
 
 def setup_logging():
     """Configure logging for the script."""
@@ -57,15 +61,16 @@ def create_output_directory(input_dir: str) -> str:
 
 
 if __name__ == "__main__":
-    input_folder = r"C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\05. Data\encrypted_data_since_2409_decrypted"
-    output_folder = r"C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\05. Data\temp"
+    input_folder = r"C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - WebBasedControl\01. Software\energyDataHub\data"
+    output_folder = r"C:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - WebBasedControl\05. Data\decrypted_data"
 
     setup_logging()
     
     try:
-        # Get script directory and load configuration
+        # Get script directory and load configuration (secrets.ini is in parent folder)
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        encryption_key, hmac_key = load_config(script_dir)
+        parent_dir = os.path.dirname(script_dir)
+        encryption_key, hmac_key = load_config(parent_dir)
         
         # Initialize secure data handler
         handler = SecureDataHandler(encryption_key, hmac_key)

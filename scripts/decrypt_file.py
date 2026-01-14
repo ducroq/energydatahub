@@ -9,7 +9,7 @@ from utils.helpers import load_config
 SECRETS_FILE_NAME = 'secrets.ini'
 SETTINGS_FILE_NAME = 'settings.ini'
 
-file_name = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - project_nr_WebBasedControl\01. Software\energyDataHub\data\energy_price_forecast.json"
+file_name = r"c:\Users\scbry\HAN\HAN H2 LAB IPKW - Projects - WebBasedControl\01. Software\energyDataHub\data\energy_price_forecast.json"
 
 def json_serializer(obj):
     if isinstance(obj, datetime):
