@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-01-19T16:22:17.643440",
+  "cached_at": "2026-01-20T16:27:39.061203",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -18,16 +18,16 @@
       "name": "KraneShares European Carbon Allowance ETF"
     },
     "gas": {
-      "ticker": "BOIL",
-      "price": 16.42,
+      "ticker": "FCG",
+      "price": 23.62,
       "date": "2026-01-16",
-      "open": 15.93,
-      "high": 16.51,
-      "low": 15.63,
-      "volume": 11510734,
-      "prev_close": 16.13,
-      "change": 0.29,
-      "change_pct": 1.8,
+      "open": 23.63,
+      "high": 23.68,
+      "low": 23.48,
+      "volume": 644984,
+      "prev_close": 23.62,
+      "change": 0.0,
+      "change_pct": 0.0,
       "source": "alpha_vantage",
       "description": "Natural Gas proxy (US benchmark, correlates with EU)",
       "units": "USD/share",
