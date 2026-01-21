@@ -37,6 +37,7 @@ jobs:
         NED_API_KEY: ${{ secrets.NED_API_KEY }}
         ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
         GIE_API_KEY: ${{ secrets.GIE_API_KEY }}
+        PYTHONTZPATH: /usr/share/zoneinfo
 
       run: python data_fetcher.py
 
