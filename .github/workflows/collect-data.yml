@@ -24,12 +24,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Fix entsoe-py timezone bug
+    - name: Fix timezone bugs in dependencies
       run: |
-        # Fix the lowercase timezone in entsoe-py (https://github.com/EnergieID/entsoe-py bug)
-        ENTSOE_PATH=$(pip show entsoe-py | grep Location | cut -d' ' -f2)/entsoe
-        # Fix all occurrences in all files
-        find "$ENTSOE_PATH" -name "*.py" -exec sed -i "s/europe\/amsterdam/Europe\/Amsterdam/g" {} \;
+        # Fix lowercase timezone in multiple packages (entsoe-py, tenneteu-py)
+        SITE_PACKAGES=$(pip show entsoe-py | grep Location | cut -d' ' -f2)
+        # Fix all occurrences in entsoe and tenneteu packages
+        find "$SITE_PACKAGES/entsoe" "$SITE_PACKAGES/tenneteu" -name "*.py" -exec sed -i "s/europe\/amsterdam/Europe\/Amsterdam/g" {} \;
 
     - name: Create data directory
       run: mkdir -p data
