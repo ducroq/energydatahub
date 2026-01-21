@@ -27,8 +27,9 @@ jobs:
     - name: Fix entsoe-py timezone bug
       run: |
         # Fix the lowercase timezone in entsoe-py (https://github.com/EnergieID/entsoe-py bug)
-        ENTSOE_PATH=$(pip show entsoe-py | grep Location | cut -d' ' -f2)
-        sed -i "s/tz='europe\/amsterdam'/tz='Europe\/Amsterdam'/g" "$ENTSOE_PATH/entsoe/entsoe.py"
+        ENTSOE_PATH=$(pip show entsoe-py | grep Location | cut -d' ' -f2)/entsoe
+        # Fix all occurrences in all files
+        find "$ENTSOE_PATH" -name "*.py" -exec sed -i "s/europe\/amsterdam/Europe\/Amsterdam/g" {} \;
 
     - name: Create data directory
       run: mkdir -p data
