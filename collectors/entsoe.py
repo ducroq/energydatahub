@@ -151,6 +151,7 @@ class EntsoeCollector(BaseCollector):
                         timestamp = timestamp[0]
 
                     # Convert to datetime
+                    dt = None
                     if hasattr(timestamp, 'to_pydatetime'):
                         dt = timestamp.to_pydatetime()
                     elif hasattr(timestamp, 'start'):
@@ -159,8 +160,10 @@ class EntsoeCollector(BaseCollector):
                         dt = ts.to_pydatetime() if hasattr(ts, 'to_pydatetime') else ts
                     elif isinstance(timestamp, datetime):
                         dt = timestamp
-                    else:
-                        self.logger.debug(f"Skipping unknown timestamp type: {type(timestamp)}")
+
+                    # Skip if we couldn't get a valid datetime
+                    if dt is None or not isinstance(dt, datetime):
+                        self.logger.debug(f"Skipping: couldn't convert {type(timestamp)} to datetime")
                         continue
 
                     # Filter to requested time range
