@@ -82,29 +82,47 @@ class EnergyZeroCollector(BaseCollector):
             end_time: End of time range
 
         Returns:
-            Raw API response object (Electricity model)
+            Raw API response object (Electricity model) or combined dict
 
         Raises:
             Exception: If API call fails
         """
         self.logger.debug(f"Fetching EnergyZero data")
 
-        # EnergyZero API v5.0.0 uses PriceType instead of VatOption
-        async with EnergyZero() as client:
-            data = await client.get_electricity_prices(
-                start_date=start_time.date(),
-                end_date=end_time.date(),
-                interval=Interval.HOUR,
-                price_type=self.price_type
-            )
+        # EnergyZero API v5.0.0 only supports single-day requests
+        # If date range spans multiple days, make separate requests
+        start_date = start_time.date()
+        end_date = end_time.date()
 
-        if not data or not hasattr(data, 'prices'):
+        all_prices = {}
+
+        async with EnergyZero() as client:
+            current_date = start_date
+            while current_date <= end_date:
+                try:
+                    data = await client.get_electricity_prices(
+                        start_date=current_date,
+                        end_date=current_date,  # Same date for single-day request
+                        interval=Interval.HOUR,
+                        price_type=self.price_type
+                    )
+                    if data and hasattr(data, 'prices') and data.prices:
+                        all_prices.update(data.prices)
+                except Exception as e:
+                    self.logger.warning(f"Failed to fetch {current_date}: {e}")
+
+                from datetime import timedelta
+                current_date += timedelta(days=1)
+
+        if not all_prices:
             raise ValueError("No data returned from EnergyZero API")
 
-        if not data.prices:
-            raise ValueError("Empty prices dict from EnergyZero API")
+        # Return a simple object with prices attribute for compatibility
+        class CombinedData:
+            def __init__(self, prices):
+                self.prices = prices
 
-        return data
+        return CombinedData(all_prices)
 
     def _parse_response(
         self,
