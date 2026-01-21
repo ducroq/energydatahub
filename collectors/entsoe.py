@@ -123,7 +123,7 @@ class EntsoeCollector(BaseCollector):
         Parse ENTSO-E API response to standardized format.
 
         Args:
-            raw_data: Raw pandas Series from API
+            raw_data: Raw pandas Series or DataFrame from API
             start_time: Start of time range (for filtering)
             end_time: End of time range (for filtering)
 
@@ -131,6 +131,24 @@ class EntsoeCollector(BaseCollector):
             Dict mapping ISO timestamp strings to EUR/MWh prices
         """
         data = {}
+
+        # Handle DataFrame with MultiIndex (newer entsoe-py versions may return this)
+        if isinstance(raw_data, pd.DataFrame):
+            # Flatten to Series if needed
+            if len(raw_data.columns) == 1:
+                raw_data = raw_data.iloc[:, 0]
+            else:
+                # Take first column for price data
+                raw_data = raw_data.iloc[:, 0]
+
+        # Reset index if it's a MultiIndex with TimeRange objects
+        if hasattr(raw_data.index, 'get_level_values'):
+            try:
+                # Try to get the first level which should be timestamps
+                idx = raw_data.index.get_level_values(0)
+                raw_data = pd.Series(raw_data.values, index=idx)
+            except Exception:
+                pass
 
         for timestamp, price in raw_data.items():
             try:
@@ -140,8 +158,11 @@ class EntsoeCollector(BaseCollector):
                 elif hasattr(timestamp, 'start'):
                     # Handle TimeRange objects from newer entsoe-py versions
                     dt = timestamp.start.to_pydatetime() if hasattr(timestamp.start, 'to_pydatetime') else timestamp.start
+                elif isinstance(timestamp, datetime):
+                    dt = timestamp
                 else:
                     # Skip non-timestamp entries
+                    self.logger.debug(f"Skipping unknown timestamp type: {type(timestamp)}")
                     continue
 
                 # Filter to requested time range
