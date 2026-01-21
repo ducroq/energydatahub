@@ -17,7 +17,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.12'
+        python-version: '3.11'
 
     - name: Install dependencies
       run: |
@@ -26,12 +26,6 @@ jobs:
 
     - name: Create data directory
       run: mkdir -p data
-
-    - name: Fix timezone case sensitivity (workaround for entsoe-py bug)
-      run: |
-        # Create lowercase symlinks in tzdata package for entsoe-py compatibility
-        TZDATA_PATH=$(python -c "import tzdata; print(tzdata.__path__[0])")
-        sudo ln -sf "$TZDATA_PATH/zoneinfo/Europe" "$TZDATA_PATH/zoneinfo/europe"
 
     - name: Collect data
       env:
