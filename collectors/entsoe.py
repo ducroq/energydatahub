@@ -135,24 +135,21 @@ class EntsoeCollector(BaseCollector):
         try:
             # Handle DataFrame with MultiIndex (newer entsoe-py versions may return this)
             if isinstance(raw_data, pd.DataFrame):
-                # Flatten to Series if needed
                 raw_data = raw_data.iloc[:, 0]
 
-            # Convert MultiIndex to simple index by resetting and using datetime column
-            if isinstance(raw_data.index, pd.MultiIndex):
-                # Reset index to get all levels as columns
-                df = raw_data.reset_index()
-                # Find the datetime column (usually first one)
-                for col in df.columns:
-                    if col != df.columns[-1]:  # Skip the values column
-                        sample = df[col].iloc[0] if len(df) > 0 else None
-                        if hasattr(sample, 'to_pydatetime') or isinstance(sample, datetime):
-                            raw_data = pd.Series(df.iloc[:, -1].values, index=df[col])
-                            break
+            # Use index-based iteration to avoid .items() issues with TimeRange
+            values = raw_data.values
+            indices = raw_data.index
 
-            # Iterate through the data
-            for timestamp, price in raw_data.items():
+            for i in range(len(values)):
                 try:
+                    price = values[i]
+                    timestamp = indices[i]
+
+                    # Handle MultiIndex tuple
+                    if isinstance(timestamp, tuple):
+                        timestamp = timestamp[0]
+
                     # Convert to datetime
                     if hasattr(timestamp, 'to_pydatetime'):
                         dt = timestamp.to_pydatetime()
@@ -172,31 +169,11 @@ class EntsoeCollector(BaseCollector):
                         data[amsterdam_dt.isoformat()] = float(price)
 
                 except (TypeError, AttributeError) as e:
-                    self.logger.debug(f"Skipping entry: {e}")
+                    self.logger.debug(f"Skipping entry {i}: {e}")
                     continue
 
         except Exception as e:
             self.logger.warning(f"Error parsing ENTSO-E response: {e}")
-            # Fallback: try to extract data directly from values
-            if hasattr(raw_data, 'values') and hasattr(raw_data, 'index'):
-                for i, price in enumerate(raw_data.values):
-                    try:
-                        idx = raw_data.index[i]
-                        if hasattr(idx, 'to_pydatetime'):
-                            dt = idx.to_pydatetime()
-                        elif hasattr(idx, 'start'):
-                            dt = idx.start.to_pydatetime() if hasattr(idx.start, 'to_pydatetime') else idx.start
-                        elif isinstance(idx, tuple) and len(idx) > 0:
-                            first = idx[0]
-                            dt = first.to_pydatetime() if hasattr(first, 'to_pydatetime') else first
-                        else:
-                            continue
-
-                        if start_time <= dt < end_time:
-                            amsterdam_dt = normalize_timestamp_to_amsterdam(dt)
-                            data[amsterdam_dt.isoformat()] = float(price)
-                    except Exception:
-                        continue
 
         self.logger.debug(f"Parsed {len(data)} data points from ENTSO-E response")
         return data
