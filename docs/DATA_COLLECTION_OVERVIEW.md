@@ -155,7 +155,36 @@ French nuclear (~61 GW installed) is the largest single source in Europe. Outage
 
 ---
 
-### 9. Market Proxies (Carbon & Gas Prices)
+### 9. Gas Market Data (Storage & Flows)
+
+| Source | File | Variables | Coverage |
+|--------|------|-----------|----------|
+| GIE AGSI+ | `gas_storage.json` | Fill level %, working capacity, injection/withdrawal | NL (EU available) |
+| ENTSOG | `gas_flows.json` | Entry/exit flows, net flow (GWh/day) | NL |
+
+**Why Gas Data Matters**:
+- Gas-fired power plants set the marginal electricity price ~40% of the time in NL
+- Low storage levels indicate supply constraints → higher gas & electricity prices
+- Import/export flows affect local gas availability and prices
+
+**GIE AGSI+ Variables**:
+- `fill_level_pct`: Storage utilization (0-100%)
+- `working_capacity_twh`: Gas in storage (TWh)
+- `injection_gwh` / `withdrawal_gwh`: Daily flow rates
+- `net_change_gwh`: Injection - withdrawal (positive = filling)
+
+**ENTSOG Variables**:
+- `entry_total_gwh`: Gas entering transmission system (imports, production)
+- `exit_total_gwh`: Gas leaving system (exports, consumption)
+- `net_flow_gwh`: Entry - exit (positive = net import)
+
+**Data Availability**: GIE data published ~18:00 CET daily. ENTSOG is public API (no key required).
+
+**Historical Records**: ~1 day (new)
+
+---
+
+### 10. Market Proxies (Carbon & Gas Prices)
 
 | Source | File | Variables | Coverage |
 |--------|------|-----------|----------|
@@ -190,6 +219,8 @@ See [CARBON_GAS_PRICE_PROXIES.md](CARBON_GAS_PRICE_PROXIES.md) for detailed docu
 | Data Type | Why Important | Potential Sources | Status |
 |-----------|---------------|-------------------|--------|
 | **Gas Prices** | Natural gas often sets marginal electricity price | Alpha Vantage (UNG ETF) | ✅ Collecting (proxy) |
+| **Gas Storage Levels** | Low storage = supply constraints | GIE AGSI+ | ✅ Collecting |
+| **Gas Flows** | Import/export affects gas availability | ENTSOG | ✅ Collecting |
 | **CO2/Carbon Prices** | EU ETS affects fossil generation costs | Alpha Vantage (KEUA ETF) | ✅ Collecting (proxy) |
 | **Cross-border Flows** | Import/export affects supply | ENTSO-E | ✅ Collecting |
 | **Load Forecast** | Actual demand predictions | ENTSO-E, TenneT | ✅ Collecting |
@@ -305,6 +336,8 @@ Why: French nuclear outages cause price spikes across Europe
 | Open-Meteo (Offshore Wind) | **Free** | ❌ No |
 | Open-Meteo Historical | **Free** | ❌ No |
 | Alpha Vantage | **Free** (25/day) | ✅ Yes |
+| GIE AGSI+ | **Free** | ✅ Yes |
+| ENTSOG | **Free** | ❌ No |
 
 ---
 
@@ -316,7 +349,9 @@ Why: French nuclear outages cause price spikes across Europe
 3. [x] Add French nuclear availability from ENTSO-E ✅ **DONE**
 4. [x] Add calendar features (holidays, day-of-week) ✅ **DONE**
 5. [x] Add gas/carbon price proxies via Alpha Vantage ✅ **DONE**
-6. [ ] Backfill historical data using Open-Meteo + ENTSO-E
+6. [x] Add gas storage levels via GIE AGSI+ ✅ **DONE**
+7. [x] Add gas flows via ENTSOG ✅ **DONE**
+8. [ ] Backfill historical data using Open-Meteo + ENTSO-E
 
 ### Phase 2: Enhanced Coverage
 1. [ ] Interconnector capacity and congestion (JAO)
@@ -344,6 +379,8 @@ data/
 ├── demand_weather_forecast.json        # Open-Meteo demand weather (11 locations)
 ├── calendar_features.json              # Calendar features (holidays, day type, season)
 ├── market_proxies.json                 # Carbon/gas prices via Alpha Vantage (KEUA, UNG)
+├── gas_storage.json                    # GIE AGSI+ gas storage levels (NL)
+├── gas_flows.json                      # ENTSOG gas entry/exit flows (NL)
 └── YYMMDD_HHMMSS_*.json               # Timestamped historical copies
 ```
 
@@ -352,6 +389,8 @@ data/
 ## References
 
 - [ENTSO-E Transparency Platform](https://transparency.entsoe.eu/)
+- [ENTSOG Transparency Platform](https://transparency.entsog.eu/)
+- [GIE AGSI+ (Gas Storage)](https://agsi.gie.eu/)
 - [Open-Meteo API](https://open-meteo.com/)
 - [TenneT API](https://www.tennet.eu/)
 - [NED.nl](https://ned.nl/)
@@ -361,4 +400,4 @@ data/
 ---
 
 *Document created: 2025-12-01*
-*Last updated: 2025-12-03 (Added Open-Meteo offshore wind collector for actual offshore coordinates)*
+*Last updated: 2026-01-21 (Added gas storage and gas flows collectors)*
