@@ -27,6 +27,12 @@ jobs:
     - name: Create data directory
       run: mkdir -p data
 
+    - name: Fix timezone case sensitivity (workaround for entsoe-py bug)
+      run: |
+        # Create lowercase symlinks in tzdata package for entsoe-py compatibility
+        TZDATA_PATH=$(python -c "import tzdata; print(tzdata.__path__[0])")
+        sudo ln -sf "$TZDATA_PATH/zoneinfo/Europe" "$TZDATA_PATH/zoneinfo/europe"
+
     - name: Collect data
       env:
         ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
@@ -37,7 +43,6 @@ jobs:
         NED_API_KEY: ${{ secrets.NED_API_KEY }}
         ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
         GIE_API_KEY: ${{ secrets.GIE_API_KEY }}
-        PYTHONTZPATH: /usr/share/zoneinfo
 
       run: python data_fetcher.py
 
