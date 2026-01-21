@@ -133,14 +133,25 @@ class EntsoeCollector(BaseCollector):
         data = {}
 
         for timestamp, price in raw_data.items():
-            # Convert pandas Timestamp to datetime
-            dt = timestamp.to_pydatetime()
+            try:
+                # Convert pandas Timestamp to datetime
+                if hasattr(timestamp, 'to_pydatetime'):
+                    dt = timestamp.to_pydatetime()
+                elif hasattr(timestamp, 'start'):
+                    # Handle TimeRange objects from newer entsoe-py versions
+                    dt = timestamp.start.to_pydatetime() if hasattr(timestamp.start, 'to_pydatetime') else timestamp.start
+                else:
+                    # Skip non-timestamp entries
+                    continue
 
-            # Filter to requested time range
-            if start_time <= dt < end_time:
-                # Normalize to Amsterdam timezone
-                amsterdam_dt = normalize_timestamp_to_amsterdam(dt)
-                data[amsterdam_dt.isoformat()] = float(price)
+                # Filter to requested time range
+                if start_time <= dt < end_time:
+                    # Normalize to Amsterdam timezone
+                    amsterdam_dt = normalize_timestamp_to_amsterdam(dt)
+                    data[amsterdam_dt.isoformat()] = float(price)
+            except (TypeError, AttributeError) as e:
+                self.logger.debug(f"Skipping entry due to type issue: {e}")
+                continue
 
         self.logger.debug(f"Parsed {len(data)} data points from ENTSO-E response")
 
