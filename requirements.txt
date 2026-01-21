@@ -1,4 +1,4 @@
-entsoe-py==0.6.16
+entsoe-py>=0.7.8
 easyenergy
 requests
 energyzero>=5.0.0
@@ -14,7 +14,7 @@ google-auth>=2.0.0
 google-api-python-client>=2.0.0
 aiohttp>=3.9.0
 tenneteu-py>=0.1.0
-pandas>=2.0.0
+pandas>=2.0.0,<3.0.0
 nednl>=0.2.0
 holidays>=0.40
 gie-py>=0.3.0
