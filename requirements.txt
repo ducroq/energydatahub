@@ -1,4 +1,4 @@
-entsoe-py>=0.7.8
+entsoe-py==0.6.16
 easyenergy
 requests
 energyzero>=5.0.0
