@@ -76,6 +76,7 @@ def load_secrets(script_dir: str, filename: str = 'secrets.ini') -> ConfigParser
         'TENNET_API_KEY': ('api_keys', 'tennet'),
         'NED_API_KEY': ('api_keys', 'ned'),
         'ALPHA_VANTAGE_API_KEY': ('api_keys', 'alpha_vantage'),
+        'GIE_API_KEY': ('api_keys', 'gie'),
         # Location
         'LATITUDE': ('location', 'latitude'),
         'LONGITUDE': ('location', 'longitude'),

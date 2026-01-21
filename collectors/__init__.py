@@ -35,6 +35,8 @@ from collectors.ned import NedCollector
 from collectors.openmeteo_solar import OpenMeteoSolarCollector
 from collectors.openmeteo_weather import OpenMeteoWeatherCollector
 from collectors.market_proxies import MarketProxyCollector
+from collectors.gie_storage import GieStorageCollector
+from collectors.entsog_flows import EntsogFlowsCollector
 
 __all__ = [
     # Base classes
@@ -77,4 +79,8 @@ __all__ = [
 
     # Market prices (carbon, gas)
     'MarketProxyCollector',      # Carbon and gas price proxies via Alpha Vantage
+
+    # Gas data collectors
+    'GieStorageCollector',       # GIE AGSI+ gas storage levels
+    'EntsogFlowsCollector',      # ENTSOG gas flow data
 ]

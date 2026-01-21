@@ -85,6 +85,8 @@ from collectors import (
     OpenMeteoSolarCollector,
     OpenMeteoWeatherCollector,
     MarketProxyCollector,
+    GieStorageCollector,
+    EntsogFlowsCollector,
     RetryConfig
 )
 from collectors.openmeteo_offshore_wind import OpenMeteoOffshoreWindCollector
@@ -183,6 +185,13 @@ async def main() -> None:
         except Exception:
             alpha_vantage_api_key = None
             logging.info("Alpha Vantage API key not configured - skipping market proxies")
+
+        # GIE API key (optional - for gas storage data)
+        try:
+            gie_api_key = config.get('api_keys', 'gie')
+        except Exception:
+            gie_api_key = None
+            logging.info("GIE API key not configured - skipping gas storage collection")
         encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))
         hmac_key = base64.b64decode(config.get('security_keys', 'hmac'))
         handler = SecureDataHandler(encryption_key, hmac_key)
@@ -376,6 +385,19 @@ async def main() -> None:
                 cache_dir=output_path
             )
 
+        # GIE Storage collector for gas storage levels (requires GIE API key)
+        # Gas storage levels affect gas prices and electricity prices (gas-fired plants)
+        gie_collector = None
+        if gie_api_key:
+            gie_collector = GieStorageCollector(
+                api_key=gie_api_key,
+                country_code='NL'
+            )
+
+        # ENTSOG Flows collector for gas flow data (no API key required)
+        # Gas import/export flows affect gas availability and prices
+        entsog_flows_collector = EntsogFlowsCollector(country_code='NL')
+
         # Collect data from all sources (national/regional for price prediction)
         tasks = [
             entsoe_collector.collect(today, tomorrow, country_code=country_code),
@@ -402,22 +424,37 @@ async def main() -> None:
         if market_proxy_collector:
             tasks.append(market_proxy_collector.collect(today, today))
 
+        # Add GIE storage collection if API key is configured
+        if gie_collector:
+            tasks.append(gie_collector.collect(yesterday, today))
+
+        # Add ENTSOG gas flows collection (no API key required)
+        tasks.append(entsog_flows_collector.collect(yesterday, today))
+
         results = await asyncio.gather(*tasks)
 
-        # Unpack results - NED.nl and market proxies are optional at the end
+        # Unpack results - NED.nl, market proxies, and gas collectors are optional at the end
         (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, google_weather_data, elspot_data,
          tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
          offshore_wind_data, flows_data, load_data, generation_data) = results[:14]
 
-        # Handle optional collectors (NED.nl and market proxies)
+        # Handle optional collectors (NED.nl, market proxies, and gas data)
         optional_idx = 14
         ned_data = None
         market_proxy_data = None
+        gie_storage_data = None
+        entsog_flows_data = None
         if ned_collector:
             ned_data = results[optional_idx] if len(results) > optional_idx else None
             optional_idx += 1
         if market_proxy_collector:
             market_proxy_data = results[optional_idx] if len(results) > optional_idx else None
+            optional_idx += 1
+        if gie_collector:
+            gie_storage_data = results[optional_idx] if len(results) > optional_idx else None
+            optional_idx += 1
+        # ENTSOG flows is always collected (no API key required)
+        entsog_flows_data = results[optional_idx] if len(results) > optional_idx else None
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)
@@ -549,6 +586,30 @@ async def main() -> None:
             carbon_price = market_proxy_data.data.get('carbon', {}).get('price', 'N/A')
             gas_price = market_proxy_data.data.get('gas', {}).get('price', 'N/A')
             logging.info(f"Saved market proxies: carbon=${carbon_price}, gas=${gas_price}")
+
+        # Save GIE gas storage data (fill levels, injection/withdrawal)
+        if gie_storage_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_gas_storage.json")
+            save_data_file(data=gie_storage_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "gas_storage.json"))
+            # Get latest fill level for logging
+            latest_fill = None
+            if gie_storage_data.data:
+                latest_ts = max(gie_storage_data.data.keys())
+                latest_fill = gie_storage_data.data[latest_ts].get('fill_level_pct', 'N/A')
+            logging.info(f"Saved gas storage data: {len(gie_storage_data.data)} days, latest fill level: {latest_fill}%")
+
+        # Save ENTSOG gas flows data (entry/exit flows)
+        if entsog_flows_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_gas_flows.json")
+            save_data_file(data=entsog_flows_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "gas_flows.json"))
+            # Get latest net flow for logging
+            latest_net = None
+            if entsog_flows_data.data:
+                latest_ts = max(entsog_flows_data.data.keys())
+                latest_net = entsog_flows_data.data[latest_ts].get('net_flow_gwh', 'N/A')
+            logging.info(f"Saved gas flows data: {len(entsog_flows_data.data)} days, latest net flow: {latest_net} GWh")
 
     except Exception as e:
         logging.error(e)

@@ -36,6 +36,7 @@ jobs:
         TENNET_API_KEY: ${{ secrets.TENNET_API_KEY }}
         NED_API_KEY: ${{ secrets.NED_API_KEY }}
         ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+        GIE_API_KEY: ${{ secrets.GIE_API_KEY }}
 
       run: python data_fetcher.py
 
@@ -43,7 +44,7 @@ jobs:
       run: |
         mkdir -p docs
         # Copy files that exist, skip missing ones
-        for file in energy_price_forecast.json weather_forecast_multi_location.json grid_imbalance.json wind_forecast.json ned_production.json solar_forecast.json demand_weather_forecast.json cross_border_flows.json load_forecast.json generation_forecast.json calendar_features.json market_proxies.json; do
+        for file in energy_price_forecast.json weather_forecast_multi_location.json grid_imbalance.json wind_forecast.json ned_production.json solar_forecast.json demand_weather_forecast.json cross_border_flows.json load_forecast.json generation_forecast.json calendar_features.json market_proxies.json gas_storage.json gas_flows.json; do
           if [ -f "data/$file" ]; then
             cp "data/$file" docs/
             echo "Copied $file"
