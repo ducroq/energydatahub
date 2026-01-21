@@ -132,50 +132,73 @@ class EntsoeCollector(BaseCollector):
         """
         data = {}
 
-        # Handle DataFrame with MultiIndex (newer entsoe-py versions may return this)
-        if isinstance(raw_data, pd.DataFrame):
-            # Flatten to Series if needed
-            if len(raw_data.columns) == 1:
-                raw_data = raw_data.iloc[:, 0]
-            else:
-                # Take first column for price data
+        try:
+            # Handle DataFrame with MultiIndex (newer entsoe-py versions may return this)
+            if isinstance(raw_data, pd.DataFrame):
+                # Flatten to Series if needed
                 raw_data = raw_data.iloc[:, 0]
 
-        # Reset index if it's a MultiIndex with TimeRange objects
-        if hasattr(raw_data.index, 'get_level_values'):
-            try:
-                # Try to get the first level which should be timestamps
-                idx = raw_data.index.get_level_values(0)
-                raw_data = pd.Series(raw_data.values, index=idx)
-            except Exception:
-                pass
+            # Convert MultiIndex to simple index by resetting and using datetime column
+            if isinstance(raw_data.index, pd.MultiIndex):
+                # Reset index to get all levels as columns
+                df = raw_data.reset_index()
+                # Find the datetime column (usually first one)
+                for col in df.columns:
+                    if col != df.columns[-1]:  # Skip the values column
+                        sample = df[col].iloc[0] if len(df) > 0 else None
+                        if hasattr(sample, 'to_pydatetime') or isinstance(sample, datetime):
+                            raw_data = pd.Series(df.iloc[:, -1].values, index=df[col])
+                            break
 
-        for timestamp, price in raw_data.items():
-            try:
-                # Convert pandas Timestamp to datetime
-                if hasattr(timestamp, 'to_pydatetime'):
-                    dt = timestamp.to_pydatetime()
-                elif hasattr(timestamp, 'start'):
-                    # Handle TimeRange objects from newer entsoe-py versions
-                    dt = timestamp.start.to_pydatetime() if hasattr(timestamp.start, 'to_pydatetime') else timestamp.start
-                elif isinstance(timestamp, datetime):
-                    dt = timestamp
-                else:
-                    # Skip non-timestamp entries
-                    self.logger.debug(f"Skipping unknown timestamp type: {type(timestamp)}")
+            # Iterate through the data
+            for timestamp, price in raw_data.items():
+                try:
+                    # Convert to datetime
+                    if hasattr(timestamp, 'to_pydatetime'):
+                        dt = timestamp.to_pydatetime()
+                    elif hasattr(timestamp, 'start'):
+                        # Handle TimeRange objects
+                        ts = timestamp.start
+                        dt = ts.to_pydatetime() if hasattr(ts, 'to_pydatetime') else ts
+                    elif isinstance(timestamp, datetime):
+                        dt = timestamp
+                    else:
+                        self.logger.debug(f"Skipping unknown timestamp type: {type(timestamp)}")
+                        continue
+
+                    # Filter to requested time range
+                    if start_time <= dt < end_time:
+                        amsterdam_dt = normalize_timestamp_to_amsterdam(dt)
+                        data[amsterdam_dt.isoformat()] = float(price)
+
+                except (TypeError, AttributeError) as e:
+                    self.logger.debug(f"Skipping entry: {e}")
                     continue
 
-                # Filter to requested time range
-                if start_time <= dt < end_time:
-                    # Normalize to Amsterdam timezone
-                    amsterdam_dt = normalize_timestamp_to_amsterdam(dt)
-                    data[amsterdam_dt.isoformat()] = float(price)
-            except (TypeError, AttributeError) as e:
-                self.logger.debug(f"Skipping entry due to type issue: {e}")
-                continue
+        except Exception as e:
+            self.logger.warning(f"Error parsing ENTSO-E response: {e}")
+            # Fallback: try to extract data directly from values
+            if hasattr(raw_data, 'values') and hasattr(raw_data, 'index'):
+                for i, price in enumerate(raw_data.values):
+                    try:
+                        idx = raw_data.index[i]
+                        if hasattr(idx, 'to_pydatetime'):
+                            dt = idx.to_pydatetime()
+                        elif hasattr(idx, 'start'):
+                            dt = idx.start.to_pydatetime() if hasattr(idx.start, 'to_pydatetime') else idx.start
+                        elif isinstance(idx, tuple) and len(idx) > 0:
+                            first = idx[0]
+                            dt = first.to_pydatetime() if hasattr(first, 'to_pydatetime') else first
+                        else:
+                            continue
+
+                        if start_time <= dt < end_time:
+                            amsterdam_dt = normalize_timestamp_to_amsterdam(dt)
+                            data[amsterdam_dt.isoformat()] = float(price)
+                    except Exception:
+                        continue
 
         self.logger.debug(f"Parsed {len(data)} data points from ENTSO-E response")
-
         return data
 
     def _get_metadata(self, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
