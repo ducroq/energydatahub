@@ -29,9 +29,11 @@ Usage:
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 from typing import Dict, Optional, Any, List
+
+import pandas as pd
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
 
@@ -85,28 +87,29 @@ class GieStorageCollector(BaseCollector):
 
     def _query_storage_sync(
         self,
-        start_date: str,
-        end_date: str
+        query_date: str
     ) -> Any:
         """
-        Synchronous query to GIE AGSI+ API.
+        Synchronous query to GIE AGSI+ API for a single day.
+
+        Note: The GIE API only supports single-day queries (start == end).
 
         Args:
-            start_date: Start date in YYYY-MM-DD format
-            end_date: End date in YYYY-MM-DD format
+            query_date: Date in YYYY-MM-DD format
 
         Returns:
-            DataFrame with storage data
+            DataFrame with storage data for that day
         """
         from gie import GiePandasClient
 
         client = GiePandasClient(api_key=self.api_key)
 
         # Query country-level aggregated storage data
+        # API requires identical start and end dates
         df = client.query_gas_country(
             country=self.country_code,
-            start=start_date,
-            end=end_date
+            start=query_date,
+            end=query_date
         )
 
         return df
@@ -121,6 +124,7 @@ class GieStorageCollector(BaseCollector):
         Fetch gas storage data from GIE AGSI+.
 
         Uses run_in_executor to run the synchronous gie-py library.
+        Iterates through each day since the API only supports single-day queries.
 
         Args:
             start_time: Start of time range
@@ -131,20 +135,39 @@ class GieStorageCollector(BaseCollector):
         """
         self.logger.debug(f"Fetching GIE storage data for {self.country_code}")
 
-        # Format dates for API
-        start_date = start_time.strftime('%Y-%m-%d')
-        end_date = end_time.strftime('%Y-%m-%d')
-
-        # Run synchronous query in executor
         loop = asyncio.get_running_loop()
-        query_func = partial(self._query_storage_sync, start_date, end_date)
-        df = await loop.run_in_executor(None, query_func)
+        all_dfs = []
 
-        self.logger.info(
-            f"GIE storage: Retrieved {len(df)} records for {self.country_code}"
-        )
+        # Iterate through each day in the range (API only supports single-day queries)
+        current_date = start_time.date()
+        end_date = end_time.date()
 
-        return df
+        while current_date <= end_date:
+            date_str = current_date.strftime('%Y-%m-%d')
+            self.logger.debug(f"Querying GIE storage for {date_str}")
+
+            try:
+                query_func = partial(self._query_storage_sync, date_str)
+                df = await loop.run_in_executor(None, query_func)
+
+                if df is not None and len(df) > 0:
+                    all_dfs.append(df)
+                    self.logger.debug(f"GIE storage: Got {len(df)} records for {date_str}")
+            except Exception as e:
+                self.logger.warning(f"GIE storage: Failed to fetch {date_str}: {e}")
+
+            current_date += timedelta(days=1)
+
+        # Combine all DataFrames
+        if all_dfs:
+            combined_df = pd.concat(all_dfs, ignore_index=True)
+            self.logger.info(
+                f"GIE storage: Retrieved {len(combined_df)} total records for {self.country_code}"
+            )
+            return combined_df
+        else:
+            self.logger.warning(f"GIE storage: No data retrieved for {self.country_code}")
+            return pd.DataFrame()
 
     def _parse_response(
         self,
