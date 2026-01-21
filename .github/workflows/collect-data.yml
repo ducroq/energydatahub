@@ -17,12 +17,18 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+
+    - name: Fix entsoe-py timezone bug
+      run: |
+        # Fix the lowercase timezone in entsoe-py (https://github.com/EnergieID/entsoe-py bug)
+        ENTSOE_FILE=$(python -c "import entsoe; print(entsoe.__file__.replace('__init__.py', 'entsoe.py'))")
+        sed -i "s/tz='europe\/amsterdam'/tz='Europe\/Amsterdam'/g" "$ENTSOE_FILE"
 
     - name: Create data directory
       run: mkdir -p data
