@@ -149,8 +149,12 @@ class EnergyZeroCollector(BaseCollector):
                 dt = None
                 if hasattr(timestamp, 'to_pydatetime'):
                     dt = timestamp.to_pydatetime()
+                elif hasattr(timestamp, 'start_including'):
+                    # Handle EnergyZero TimeRange objects (energyzero.models.TimeRange)
+                    ts = timestamp.start_including
+                    dt = ts.to_pydatetime() if hasattr(ts, 'to_pydatetime') else ts
                 elif hasattr(timestamp, 'start'):
-                    # Handle TimeRange objects from pandas
+                    # Handle pandas TimeRange objects
                     ts = timestamp.start
                     dt = ts.to_pydatetime() if hasattr(ts, 'to_pydatetime') else ts
                 elif isinstance(timestamp, datetime):
