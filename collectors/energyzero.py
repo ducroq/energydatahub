@@ -144,11 +144,31 @@ class EnergyZeroCollector(BaseCollector):
         data = {}
 
         for timestamp, price in raw_data.prices.items():
-            # Filter to requested time range
-            if start_time <= timestamp < end_time:
-                # Normalize to Amsterdam timezone
-                amsterdam_dt = normalize_timestamp_to_amsterdam(timestamp)
-                data[amsterdam_dt.isoformat()] = float(price)
+            try:
+                # Convert timestamp to datetime if needed (handle TimeRange objects)
+                dt = None
+                if hasattr(timestamp, 'to_pydatetime'):
+                    dt = timestamp.to_pydatetime()
+                elif hasattr(timestamp, 'start'):
+                    # Handle TimeRange objects from pandas
+                    ts = timestamp.start
+                    dt = ts.to_pydatetime() if hasattr(ts, 'to_pydatetime') else ts
+                elif isinstance(timestamp, datetime):
+                    dt = timestamp
+
+                if dt is None or not isinstance(dt, datetime):
+                    self.logger.debug(f"Skipping: couldn't convert {type(timestamp)} to datetime")
+                    continue
+
+                # Filter to requested time range
+                if start_time <= dt < end_time:
+                    # Normalize to Amsterdam timezone
+                    amsterdam_dt = normalize_timestamp_to_amsterdam(dt)
+                    data[amsterdam_dt.isoformat()] = float(price)
+
+            except (TypeError, AttributeError) as e:
+                self.logger.debug(f"Skipping entry: {e}")
+                continue
 
         self.logger.debug(f"Parsed {len(data)} data points from EnergyZero response")
 

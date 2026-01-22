@@ -153,8 +153,12 @@ class GieStorageCollector(BaseCollector):
                 if df is not None and len(df) > 0:
                     all_dfs.append(df)
                     self.logger.debug(f"GIE storage: Got {len(df)} records for {date_str}")
+                else:
+                    self.logger.debug(f"GIE storage: Empty response for {date_str}")
             except Exception as e:
-                self.logger.warning(f"GIE storage: Failed to fetch {date_str}: {e}")
+                error_type = type(e).__name__
+                error_msg = str(e) if str(e) else repr(e)
+                self.logger.warning(f"GIE storage: Failed to fetch {date_str}: {error_type}: {error_msg}")
 
             current_date += timedelta(days=1)
 
