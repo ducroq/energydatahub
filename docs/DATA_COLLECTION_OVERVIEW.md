@@ -178,9 +178,12 @@ French nuclear (~61 GW installed) is the largest single source in Europe. Outage
 - `exit_total_gwh`: Gas leaving system (exports, consumption)
 - `net_flow_gwh`: Entry - exit (positive = net import)
 
-**Data Availability**: GIE data published ~18:00 CET daily. ENTSOG is public API (no key required).
+**Data Availability**:
+- GIE AGSI+ data has a ~2-3 day publication delay (data for Monday available ~Wednesday)
+- Collection queries 9-2 days ago to ensure data availability
+- ENTSOG is public API (no key required), near real-time
 
-**Historical Records**: ~1 day (new)
+**Historical Records**: ~8 days (rolling window due to publication delay)
 
 ---
 

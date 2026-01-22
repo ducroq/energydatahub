@@ -230,6 +230,35 @@ Examples to add to code-quality job:
 - **View**: Coverage trends, file-by-file coverage
 - **Alerts**: Configure coverage drop alerts
 
+## Known Issues & Workarounds
+
+### Timezone Bug in entsoe-py and tenneteu-py
+**Problem**: Both libraries use lowercase timezone names (`europe/amsterdam`) which fail on Linux where `tzdata` is case-sensitive.
+
+**Workaround**: The `collect-data.yml` workflow includes a post-install fix:
+```yaml
+- name: Fix timezone bugs in dependencies
+  run: |
+    SITE_PACKAGES=$(pip show entsoe-py | grep Location | cut -d' ' -f2)
+    find "$SITE_PACKAGES/entsoe" "$SITE_PACKAGES/tenneteu" -name "*.py" \
+      -exec sed -i "s/europe\/amsterdam/Europe\/Amsterdam/g" {} \;
+```
+
+### pandas TimeRange Compatibility
+**Problem**: pandas 3.0+ returns `TimeRange` objects that break datetime comparisons.
+
+**Workaround**: Pin pandas in `requirements.txt`:
+```
+pandas>=2.0.0,<3.0.0
+```
+
+### EnergyZero TimeRange Objects
+**Problem**: The `energyzero` library uses custom `TimeRange` objects with `start_including` attribute (not `start`).
+
+**Solution**: The `EnergyZeroCollector` handles both pandas and energyzero TimeRange variants.
+
+---
+
 ## Troubleshooting
 
 ### Workflow Not Triggering
@@ -273,6 +302,6 @@ For issues with CI/CD:
 
 ---
 
-**Last Updated**: October 25, 2025
+**Last Updated**: January 22, 2026
 **Workflows**: 2 active (test.yml, collect-data.yml)
 **Status**: ✅ Configured and operational
