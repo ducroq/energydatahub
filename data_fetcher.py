@@ -294,6 +294,10 @@ async def main() -> None:
         # Yesterday for historical data (previous 24 hours)
         yesterday = today - timedelta(days=1)
 
+        # GIE gas storage has ~2-3 day publication delay, query older data
+        gie_end = today - timedelta(days=2)  # 2 days ago (most recent available)
+        gie_start = today - timedelta(days=9)  # 9 days ago (week of data)
+
         # Initialize collectors with new architecture
         entsoe_collector = EntsoeCollector(api_key=entsoe_api_key)
         energy_zero_collector = EnergyZeroCollector()
@@ -425,8 +429,9 @@ async def main() -> None:
             tasks.append(market_proxy_collector.collect(today, today))
 
         # Add GIE storage collection if API key is configured
+        # Note: GIE AGSI+ has ~2-3 day publication delay, so we query older dates
         if gie_collector:
-            tasks.append(gie_collector.collect(yesterday, today))
+            tasks.append(gie_collector.collect(gie_start, gie_end))
 
         # Add ENTSOG gas flows collection (no API key required)
         tasks.append(entsog_flows_collector.collect(yesterday, today))
