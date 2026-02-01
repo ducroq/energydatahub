@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-01-31T16:21:01.106618",
+  "cached_at": "2026-02-01T16:21:33.778031",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -16,6 +16,23 @@
       "description": "EU Carbon Allowance (EUA) proxy",
       "units": "USD/share (correlates to EUR/tonne EUA)",
       "name": "KraneShares European Carbon Allowance ETF"
+    },
+    "gas": {
+      "ticker": "FCG",
+      "price": 25.61,
+      "date": "2026-01-30",
+      "open": 25.46,
+      "high": 25.72,
+      "low": 25.07,
+      "volume": 1241778,
+      "prev_close": 25.47,
+      "change": 0.14,
+      "change_pct": 0.55,
+      "source": "alpha_vantage",
+      "description": "Natural Gas proxy (US benchmark, correlates with EU)",
+      "units": "USD/share",
+      "name": "United States Natural Gas Fund",
+      "note": "TTF futures not available via Alpha Vantage; UNG tracks US gas which correlates with EU prices"
     }
   }
 }
