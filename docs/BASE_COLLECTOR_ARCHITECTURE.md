@@ -550,11 +550,11 @@ pytest tests/unit/test_base_collector.py::TestBaseCollector::test_retry_on_failu
 
 To migrate an existing fetcher to the new architecture:
 
-1. **Identify the fetcher**: e.g., `energy_data_fetchers/nordpool_data_fetcher.py`
+1. **Identify the fetcher**: e.g., `legacy/fetchers/energy_data_fetchers/nordpool_data_fetcher.py`
 
 2. **Extract API logic**: Identify the API call and parsing logic
 
-3. **Create new collector**: `collectors/nordpool.py`
+3. **Create new collector**: `collectors/elspot.py` (uses pynordpool for API v2)
 
 4. **Implement abstract methods**:
    - `_fetch_raw_data()` - Extract API call logic

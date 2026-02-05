@@ -262,12 +262,12 @@ data = await collector.collect(start, end, country_code=country_code)
 **Workaround**: Data typically available after 13:00 CET for next-day prices
 **Fallback**: System uses EnergyZero and EPEX data
 
-### 2. Nord Pool JSONDecodeError
+### 2. Nord Pool API v1 Deprecation (RESOLVED)
 
-**Issue**: Nord Pool API returns invalid JSON
-**Documented**: docs/API_DEBUGGING_FINDINGS.md
-**Verified**: Same error occurs with old implementation
-**Recommendation**: Update nordpool library or contact Nord Pool support
+**Issue**: Nord Pool API v1 deprecated September 30, 2024 (returned 410 Gone)
+**Resolution**: Migrated from `nordpool` library to `pynordpool` (API v2)
+**Date Fixed**: 2026-02-05
+**New Collector**: `collectors/elspot.py` using `pynordpool.NordPoolClient`
 
 ### 3. Luchtmeetnet Slow Performance
 
