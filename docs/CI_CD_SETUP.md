@@ -232,17 +232,15 @@ Examples to add to code-quality job:
 
 ## Known Issues & Workarounds
 
-### Timezone Bug in entsoe-py and tenneteu-py
-**Problem**: Both libraries use lowercase timezone names (`europe/amsterdam`) which fail on Linux where `tzdata` is case-sensitive.
+### Timezone Bug in entsoe-py and tenneteu-py (RESOLVED)
+**Problem**: Both libraries used lowercase timezone names (`europe/amsterdam`) which failed on Linux where `tzdata` is case-sensitive.
 
-**Workaround**: The `collect-data.yml` workflow includes a post-install fix:
-```yaml
-- name: Fix timezone bugs in dependencies
-  run: |
-    SITE_PACKAGES=$(pip show entsoe-py | grep Location | cut -d' ' -f2)
-    find "$SITE_PACKAGES/entsoe" "$SITE_PACKAGES/tenneteu" -name "*.py" \
-      -exec sed -i "s/europe\/amsterdam/Europe\/Amsterdam/g" {} \;
-```
+**Resolution**: Fixed upstream in entsoe-py v0.7.10 and tenneteu-py v0.1.5 (January 2026).
+The `requirements.txt` now specifies minimum versions that include the fix:
+- `entsoe-py>=0.7.10`
+- `tenneteu-py>=0.1.5`
+
+No workaround needed - the sed patch was removed from `collect-data.yml`.
 
 ### pandas TimeRange Compatibility
 **Problem**: pandas 3.0+ returns `TimeRange` objects that break datetime comparisons.

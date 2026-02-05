@@ -77,7 +77,10 @@ if __name__ == "__main__":
         
         if not os.path.exists(input_folder):
             raise FileNotFoundError(f"Directory not found: {input_folder}")
-        
+
+        # Create output directory if it doesn't exist
+        os.makedirs(output_folder, exist_ok=True)
+
         # Process all JSON files in input directory
         json_files = glob.glob(os.path.join(input_folder, '*.json'))
         
