@@ -9,9 +9,14 @@ Created: 2025-10-25
 
 import pytest
 import asyncio
+import platform
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
 from collectors.luchtmeetnet import LuchtmeetnetCollector
+
+# Fix Windows event loop for aiodns compatibility
+if platform.system() == "Windows":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class TestLuchtmeetnetCacheBasics:
