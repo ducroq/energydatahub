@@ -93,6 +93,18 @@ class MarketProxyCollector(BaseCollector):
         'source_priority': 'yfinance'  # yfinance is primary for TTF (not on Alpha Vantage)
     }
 
+    # Timeout and rate limiting constants
+    HTTP_TIMEOUT_SECONDS = 30.0
+    YFINANCE_TIMEOUT_SECONDS = 30.0
+    API_RATE_LIMIT_DELAY = 0.5  # Seconds between API calls
+
+    # Cache settings
+    CACHE_EXPIRATION_SECONDS = 48 * 3600  # 48 hours
+
+    # TTF price validation thresholds (EUR/MWh)
+    TTF_CRISIS_THRESHOLD = 300  # Warn above this (crisis-level pricing)
+    TTF_SANITY_THRESHOLD = 1000  # Reject above this (data error)
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -388,10 +400,10 @@ class MarketProxyCollector(BaseCollector):
             if price <= 0:
                 self.logger.warning(f"TTF ({symbol}): Zero price {price} (must be positive)")
                 return None
-            if price > 1000:
+            if price > self.TTF_SANITY_THRESHOLD:
                 self.logger.error(f"TTF ({symbol}): Price {price} EUR/MWh exceeds sanity threshold")
                 return None
-            if price > 300:
+            if price > self.TTF_CRISIS_THRESHOLD:
                 self.logger.warning(f"TTF ({symbol}): Extremely high price {price} EUR/MWh - crisis level")
 
             # Check data freshness (warn if older than expected)
@@ -540,7 +552,7 @@ class MarketProxyCollector(BaseCollector):
             try:
                 quote = await asyncio.wait_for(
                     loop.run_in_executor(None, self._fetch_yfinance_sync, symbol),
-                    timeout=30.0
+                    timeout=self.YFINANCE_TIMEOUT_SECONDS
                 )
             except asyncio.TimeoutError:
                 self.logger.warning(f"{name}: yfinance timeout after 30s")
@@ -585,20 +597,20 @@ class MarketProxyCollector(BaseCollector):
 
         results = {}
 
-        # Set timeout for all HTTP requests (30s total, 10s connect)
-        timeout = aiohttp.ClientTimeout(total=30, connect=10)
+        # Set timeout for all HTTP requests
+        timeout = aiohttp.ClientTimeout(total=self.HTTP_TIMEOUT_SECONDS, connect=10)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # Fetch carbon via Alpha Vantage
             carbon_data = await self._fetch_commodity(session, 'carbon', self.CARBON_CONFIG)
 
             # Small delay to respect rate limits
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(self.API_RATE_LIMIT_DELAY)
 
             # Fetch TTF gas prices via yfinance (primary source for European gas)
             ttf_data = await self._fetch_ttf_yfinance()
 
             # Fetch US gas proxy as fallback
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(self.API_RATE_LIMIT_DELAY)
             gas_data = await self._fetch_commodity(session, 'gas', self.GAS_CONFIG)
 
         if carbon_data:
@@ -675,9 +687,9 @@ class MarketProxyCollector(BaseCollector):
                 warnings.append(f"Invalid TTF price: {ttf_price} (negative)")
             elif ttf_price <= 0:
                 warnings.append(f"Invalid TTF price: {ttf_price} (must be positive)")
-            elif ttf_price > 1000:
+            elif ttf_price > self.TTF_SANITY_THRESHOLD:
                 warnings.append(f"TTF price {ttf_price} EUR/MWh exceeds sanity threshold")
-            elif ttf_price > 300:
+            elif ttf_price > self.TTF_CRISIS_THRESHOLD:
                 warnings.append(f"TTF price unusually high: {ttf_price} EUR/MWh (crisis level)")
 
             # Validate currency
@@ -733,8 +745,16 @@ class MarketProxyCollector(BaseCollector):
             with open(self._cache_file) as f:
                 cached = json.load(f)
 
-            cache_time = datetime.fromisoformat(cached.get('cached_at', '2000-01-01'))
-            if (datetime.now() - cache_time).total_seconds() < 48 * 3600:
+            # Parse timezone-aware timestamp (fallback to epoch for old caches)
+            cached_at_str = cached.get('cached_at', '2000-01-01T00:00:00+00:00')
+            cache_time = datetime.fromisoformat(cached_at_str)
+
+            # Ensure timezone-aware comparison
+            now = datetime.now(ZoneInfo('Europe/Amsterdam'))
+            if cache_time.tzinfo is None:
+                cache_time = cache_time.replace(tzinfo=ZoneInfo('Europe/Amsterdam'))
+
+            if (now - cache_time).total_seconds() < self.CACHE_EXPIRATION_SECONDS:
                 return cached.get('data')
         except Exception as e:
             self.logger.debug(f"Cache load error: {e}")
@@ -742,7 +762,7 @@ class MarketProxyCollector(BaseCollector):
         return None
 
     def _save_cache(self, data: Dict[str, Any]) -> None:
-        """Save data to cache."""
+        """Save data to cache with timezone-aware timestamp."""
         if not self._cache_file:
             return
 
@@ -750,7 +770,7 @@ class MarketProxyCollector(BaseCollector):
             os.makedirs(os.path.dirname(self._cache_file), exist_ok=True)
             with open(self._cache_file, 'w') as f:
                 json.dump({
-                    'cached_at': datetime.now().isoformat(),
+                    'cached_at': datetime.now(ZoneInfo('Europe/Amsterdam')).isoformat(),
                     'data': data
                 }, f, indent=2)
         except Exception as e:
