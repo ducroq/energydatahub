@@ -1,62 +1,80 @@
 """
 Integration test for Nord Pool timezone fix
 
-This test verifies that the timezone bug fix works correctly with the
-actual nordpool_data_fetcher module.
+This test verifies that the timezone handling works correctly with the
+ElspotCollector (pynordpool-based) and validates timestamp formats.
+
+Updated: 2026-02-05 - Migrated from legacy nordpool to pynordpool
 """
 import pytest
 import asyncio
+import platform
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import pytz
 
-# Mock the nordpool elspot client since we don't want to hit the real API
-from unittest.mock import Mock, patch, MagicMock
+# Mock the pynordpool client since we don't want to hit the real API
+from unittest.mock import Mock, patch, MagicMock, AsyncMock
+
+# Fix Windows event loop for aiodns compatibility
+if platform.system() == "Windows":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
+def create_mock_session():
+    """Create a properly mocked aiohttp.ClientSession for async context manager usage."""
+    mock_session = MagicMock()
+    # Make it work as an async context manager
+    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session.__aexit__ = AsyncMock(return_value=None)
+    return mock_session
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_nordpool_fetcher_produces_correct_timestamps():
-    """Test that nordpool fetcher produces correct Amsterdam timezone timestamps"""
-    from legacy.fetchers.energy_data_fetchers.nordpool_data_fetcher import get_Elspot_data
+async def test_elspot_collector_produces_correct_timestamps():
+    """Test that ElspotCollector produces correct Amsterdam timezone timestamps"""
+    from collectors.elspot import ElspotCollector
 
-    # Mock the nordpool API response
-    mock_prices = MagicMock()
-    mock_response = {
-        'areas': {
-            'NL': {
-                'values': [
-                    {
-                        'start': datetime(2025, 10, 24, 0, 0, 0),  # Naive datetime (as API returns)
-                        'value': 100.5
-                    },
-                    {
-                        'start': datetime(2025, 10, 24, 1, 0, 0),
-                        'value': 95.3
-                    },
-                    {
-                        'start': datetime(2025, 10, 24, 2, 0, 0),
-                        'value': 102.1
-                    }
-                ]
-            }
-        }
-    }
+    # Create mock delivery data (pynordpool format)
+    mock_entry1 = MagicMock()
+    mock_entry1.start = datetime(2025, 10, 24, 0, 0, 0, tzinfo=ZoneInfo('UTC'))
+    mock_entry1.entry = {'NL': 100.5}
 
-    mock_prices.hourly.return_value = mock_response
+    mock_entry2 = MagicMock()
+    mock_entry2.start = datetime(2025, 10, 24, 1, 0, 0, tzinfo=ZoneInfo('UTC'))
+    mock_entry2.entry = {'NL': 95.3}
 
-    # Test during summer (CEST)
-    with patch('legacy.fetchers.energy_data_fetchers.nordpool_data_fetcher.elspot.Prices', return_value=mock_prices):
-        amsterdam_tz = pytz.timezone('Europe/Amsterdam')
-        start_time = datetime(2025, 10, 24, 0, 0, 0, tzinfo=amsterdam_tz)
-        end_time = datetime(2025, 10, 25, 0, 0, 0, tzinfo=amsterdam_tz)
+    mock_entry3 = MagicMock()
+    mock_entry3.start = datetime(2025, 10, 24, 2, 0, 0, tzinfo=ZoneInfo('UTC'))
+    mock_entry3.entry = {'NL': 102.1}
 
-        result = await get_Elspot_data('NL', start_time, end_time)
+    mock_delivery_data = MagicMock()
+    mock_delivery_data.entries = [mock_entry1, mock_entry2, mock_entry3]
+    mock_delivery_data.requested_date = datetime(2025, 10, 24).date()
+    mock_delivery_data.currency = 'EUR'
+
+    # Mock the pynordpool NordPoolClient
+    mock_client_instance = MagicMock()
+    mock_client_instance.async_get_delivery_period = AsyncMock(return_value=mock_delivery_data)
+
+    # Create mock session that works as async context manager
+    mock_session = create_mock_session()
+
+    with patch('collectors.elspot.NordPoolClient', return_value=mock_client_instance):
+        with patch('collectors.elspot.aiohttp.ClientSession', return_value=mock_session):
+            collector = ElspotCollector()
+            amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+            start_time = datetime(2025, 10, 24, 0, 0, 0, tzinfo=amsterdam_tz)
+            end_time = datetime(2025, 10, 25, 0, 0, 0, tzinfo=amsterdam_tz)
+
+            result = await collector.collect(start_time, end_time, country_code='NL')
 
     # Verify the result
-    assert result is not None
-    assert hasattr(result, 'data')
-    assert result.data is not None
+    assert result is not None, "Result should not be None"
+    assert hasattr(result, 'data'), "Result should have data attribute"
+    assert result.data is not None, "Result.data should not be None"
+    assert len(result.data) > 0, "Result.data should have entries"
 
     # Check that all timestamps have correct format
     for timestamp_str in result.data.keys():
@@ -74,38 +92,43 @@ async def test_nordpool_fetcher_produces_correct_timestamps():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_nordpool_fetcher_winter_timestamps():
-    """Test nordpool fetcher with winter CET timestamps"""
-    from legacy.fetchers.energy_data_fetchers.nordpool_data_fetcher import get_Elspot_data
+async def test_elspot_collector_winter_timestamps():
+    """Test ElspotCollector with winter CET timestamps"""
+    from collectors.elspot import ElspotCollector
 
-    # Mock the nordpool API response
-    mock_prices = MagicMock()
-    mock_response = {
-        'areas': {
-            'NL': {
-                'values': [
-                    {
-                        'start': datetime(2025, 1, 15, 0, 0, 0),  # January = winter
-                        'value': 110.5
-                    },
-                    {
-                        'start': datetime(2025, 1, 15, 1, 0, 0),
-                        'value': 105.3
-                    }
-                ]
-            }
-        }
-    }
+    # Create mock delivery data for winter (January)
+    mock_entry1 = MagicMock()
+    mock_entry1.start = datetime(2025, 1, 15, 0, 0, 0, tzinfo=ZoneInfo('UTC'))
+    mock_entry1.entry = {'NL': 110.5}
 
-    mock_prices.hourly.return_value = mock_response
+    mock_entry2 = MagicMock()
+    mock_entry2.start = datetime(2025, 1, 15, 1, 0, 0, tzinfo=ZoneInfo('UTC'))
+    mock_entry2.entry = {'NL': 105.3}
 
-    # Test during winter (CET)
-    with patch('legacy.fetchers.energy_data_fetchers.nordpool_data_fetcher.elspot.Prices', return_value=mock_prices):
-        amsterdam_tz = pytz.timezone('Europe/Amsterdam')
-        start_time = datetime(2025, 1, 15, 0, 0, 0, tzinfo=amsterdam_tz)
-        end_time = datetime(2025, 1, 16, 0, 0, 0, tzinfo=amsterdam_tz)
+    mock_delivery_data = MagicMock()
+    mock_delivery_data.entries = [mock_entry1, mock_entry2]
+    mock_delivery_data.requested_date = datetime(2025, 1, 15).date()
+    mock_delivery_data.currency = 'EUR'
 
-        result = await get_Elspot_data('NL', start_time, end_time)
+    # Mock the pynordpool NordPoolClient
+    mock_client_instance = MagicMock()
+    mock_client_instance.async_get_delivery_period = AsyncMock(return_value=mock_delivery_data)
+
+    # Create mock session that works as async context manager
+    mock_session = create_mock_session()
+
+    with patch('collectors.elspot.NordPoolClient', return_value=mock_client_instance):
+        with patch('collectors.elspot.aiohttp.ClientSession', return_value=mock_session):
+            collector = ElspotCollector()
+            amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+            start_time = datetime(2025, 1, 15, 0, 0, 0, tzinfo=amsterdam_tz)
+            end_time = datetime(2025, 1, 16, 0, 0, 0, tzinfo=amsterdam_tz)
+
+            result = await collector.collect(start_time, end_time, country_code='NL')
+
+    # Verify result exists
+    assert result is not None, "Result should not be None"
+    assert result.data is not None, "Result.data should not be None"
 
     # Verify winter timestamps have CET offset
     for timestamp_str in result.data.keys():
