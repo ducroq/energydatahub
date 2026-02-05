@@ -57,20 +57,31 @@ rolling monthly to maintain exposure to the carbon price curve.
 
 | Ticker | Name | What It Tracks | Best For |
 |--------|------|----------------|----------|
-| **UNG** | United States Natural Gas Fund | US Henry Hub gas | **Primary proxy** (Alpha Vantage) |
-| **BOIL** | ProShares Ultra Bloomberg Natural Gas | 2x leveraged US gas | Fallback proxy |
-| **TTF=F** | Dutch TTF Gas Futures (Generic) | Front-month TTF futures | Direct TTF (yfinance only) |
+| **TTF=F** | Dutch TTF Gas Futures (Generic) | Front-month TTF futures | **Primary choice** (yfinance) |
+| **UNG** | United States Natural Gas Fund | US Henry Hub gas | Fallback/correlation (Alpha Vantage) |
+| **BOIL** | ProShares Ultra Bloomberg Natural Gas | 2x leveraged US gas | Alternative proxy |
 | **NG=F** | US Natural Gas Futures | Henry Hub benchmark | US gas comparison |
 
-#### UNG - Recommended Gas Proxy (Alpha Vantage)
+#### TTF=F - Primary Gas Source (yfinance)
 
-**Why UNG is our primary choice:**
-- **API availability**: Available on Alpha Vantage (TTF=F is not)
-- **High correlation**: US and EU gas prices are increasingly correlated due to LNG trade
-- **Liquid ETF**: High daily volume ensures reliable data
-- **Free access**: Available through free Alpha Vantage API
+**Why TTF=F is our primary choice:**
+- **Actual European benchmark**: TTF is THE price reference for European natural gas
+- **EUR/MWh units**: No currency conversion needed for EU electricity price models
+- **Direct correlation**: Directly reflects European gas market conditions
+- **Reliable via yfinance**: Works consistently for futures data
 
-**Note**: TTF is the European benchmark, but TTF=F is only available via yfinance (which is unreliable). UNG tracks US gas prices which correlate with EU prices due to global LNG market integration.
+```
+TTF (Title Transfer Facility) is the main European natural gas hub,
+located in the Netherlands. It's the benchmark for European gas pricing,
+similar to how Henry Hub is the US benchmark.
+```
+
+#### UNG - Secondary/Fallback Proxy (Alpha Vantage)
+
+**Why UNG is included:**
+- **API availability**: Available on Alpha Vantage with API key
+- **Correlation analysis**: US and EU gas prices correlate due to LNG trade
+- **Fallback option**: If yfinance is unavailable, UNG provides gas price signals
 
 ```
 Why gas prices (even US) matter for EU electricity prediction:
@@ -183,25 +194,32 @@ When gas plants are marginal (setting the price):
 ┌─────────────────────────────────────────────────────────────┐
 │                    MarketProxyCollector                      │
 ├─────────────────────────────────────────────────────────────┤
-│  Primary Source: Alpha Vantage API (25 requests/day free)   │
-│  - KEUA (EU Carbon ETF)                                     │
-│  - UNG (US Natural Gas ETF - correlates with EU)            │
+│  Carbon (KEUA):                                              │
+│  - Primary: Alpha Vantage API (25 requests/day free)        │
+│  - Fallback: yfinance                                        │
 ├─────────────────────────────────────────────────────────────┤
-│  Fallback Source (if Alpha Vantage fails): yfinance         │
-│  - Same tickers, but API is often blocked                   │
+│  European Gas (TTF=F):                                       │
+│  - Primary: yfinance (actual TTF futures, EUR/MWh)          │
+│  - This is the key European gas benchmark!                   │
+├─────────────────────────────────────────────────────────────┤
+│  US Gas Proxy (UNG):                                         │
+│  - Primary: Alpha Vantage API                                │
+│  - Included for correlation analysis and as fallback         │
 ├─────────────────────────────────────────────────────────────┤
 │  Last Resort: Cache                                         │
 │  - Use previous day's data (up to 48 hours old)             │
 ├─────────────────────────────────────────────────────────────┤
 │  Output: market_proxies.json                                │
 │  - carbon (KEUA price + lag features)                       │
-│  - gas (UNG price + lag features)                           │
+│  - gas_ttf (TTF futures price + lag features) ← PRIMARY GAS │
+│  - gas (UNG price + lag features) ← US proxy                │
 │  - metadata with source, timestamp, ticker info             │
 └─────────────────────────────────────────────────────────────┘
 
 API Key Setup:
 1. Get free key from https://www.alphavantage.co/support/#api-key
 2. Set ALPHA_VANTAGE_API_KEY in secrets.ini or environment
+   (Only needed for carbon data; TTF works without API key)
 ```
 
 ### Python Implementation
@@ -529,23 +547,48 @@ The output includes **lagged values** and **rolling statistics** to enable prope
       "...": "..."
     }
   },
-  "gas": {
+  "gas_ttf": {
     "ticker": "TTF=F",
-    "description": "Dutch TTF Natural Gas proxy",
+    "name": "Dutch TTF Natural Gas Futures",
+    "description": "European gas benchmark (Title Transfer Facility)",
     "units": "EUR/MWh",
+    "currency": "EUR",
+    "note": "Primary European natural gas price benchmark, traded on ICE",
 
-    "price": 45.20,
-    "date": "2025-12-01T00:00:00+00:00",
-    "change_pct": -2.0,
+    "price": 34.60,
+    "date": "2026-02-05",
+    "change_pct": 3.28,
 
-    "price_lag1": 46.10,
-    "price_lag2": 45.80,
-    "price_lag7": 48.50,
+    "price_lag1": 33.50,
+    "price_lag2": 33.20,
+    "price_lag7": 36.00,
 
-    "volatility_7d": 2.15,
-    "mean_7d": 46.30,
-    "mean_30d": 44.80,
+    "volatility_7d": 1.85,
+    "mean_7d": 36.16,
+    "mean_30d": 35.80,
     "trend_7d": "down",
+
+    "history": {"...": "..."}
+  },
+  "gas": {
+    "ticker": "UNG",
+    "name": "United States Natural Gas Fund",
+    "description": "Natural Gas proxy (US benchmark, correlates with EU)",
+    "units": "USD/share",
+    "note": "US gas ETF used as fallback when TTF unavailable",
+
+    "price": 15.20,
+    "date": "2026-02-05",
+    "change_pct": -1.5,
+
+    "price_lag1": 15.43,
+    "price_lag2": 15.10,
+    "price_lag7": 14.80,
+
+    "volatility_7d": 0.65,
+    "mean_7d": 15.10,
+    "mean_30d": 14.90,
+    "trend_7d": "up",
 
     "history": {"...": "..."}
   }
@@ -562,11 +605,14 @@ with open('data/market_proxies.json') as f:
 
 # CORRECT: Use lagged values for prediction features
 features = {
-    # Gas features (no data leakage)
-    'gas_price_lag1': proxies['gas']['price_lag1'],
-    'gas_price_lag7': proxies['gas']['price_lag7'],
-    'gas_volatility_7d': proxies['gas']['volatility_7d'],
-    'gas_trend': 1 if proxies['gas']['trend_7d'] == 'up' else 0,
+    # TTF Gas features (PRIMARY - no data leakage)
+    'ttf_price_lag1': proxies['gas_ttf']['price_lag1'],
+    'ttf_price_lag7': proxies['gas_ttf']['price_lag7'],
+    'ttf_volatility_7d': proxies['gas_ttf']['volatility_7d'],
+    'ttf_trend': 1 if proxies['gas_ttf']['trend_7d'] == 'up' else 0,
+
+    # US Gas proxy (optional - for correlation analysis)
+    'us_gas_price_lag1': proxies['gas']['price_lag1'],
 
     # Carbon features (no data leakage)
     'carbon_price_lag1': proxies['carbon']['price_lag1'],
@@ -624,4 +670,4 @@ yfinance depends on Yahoo Finance:
 ---
 
 *Document created: 2025-12-01*
-*Last updated: 2025-12-02 (Pivoted to Alpha Vantage as primary source, UNG for gas proxy)*
+*Last updated: 2026-02-05 (Added TTF=F as primary European gas source via yfinance)*

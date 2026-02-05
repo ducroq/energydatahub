@@ -1,32 +1,35 @@
 """
 Market Proxy Collector for Carbon and Gas Prices
 -------------------------------------------------
-Uses ETF/futures tickers as free proxies for commodity prices.
+Uses ETF/futures tickers for commodity prices relevant to electricity pricing.
 
 File: collectors/market_proxies.py
 Created: 2025-12-01
 Updated: 2025-12-02 - Pivoted to Alpha Vantage as primary source
+Updated: 2026-02-05 - Added TTF (Dutch gas) via yfinance
 
 Description:
-    Fetches carbon and gas prices using publicly traded ETF/futures proxies.
+    Fetches carbon and gas prices using publicly traded ETF/futures.
 
-    Data Source Priority:
-    1. Alpha Vantage (primary) - Reliable, 25 requests/day free tier
-    2. yfinance (fallback) - Free but unreliable, often blocked
-    3. Cache (last resort) - Use previous day's data
+    Data Sources:
+    - Carbon (KEUA): Alpha Vantage (primary), yfinance (fallback)
+    - TTF gas (TTF=F): yfinance (European gas benchmark, EUR/MWh)
+    - US gas proxy (UNG): Alpha Vantage (for correlation analysis)
 
     Primary tickers:
     - KEUA: KraneShares European Carbon Allowance ETF (tracks EUA)
-    - TTF is not directly available, use gas-related ETFs as proxy
+    - TTF=F: Dutch TTF Natural Gas Futures (European benchmark)
+    - UNG: US Natural Gas Fund (fallback/correlation)
 
     See docs/CARBON_GAS_PRICE_PROXIES.md for detailed documentation.
 
 Usage:
     from collectors.market_proxies import MarketProxyCollector
 
-    # Requires ALPHA_VANTAGE_API_KEY in environment or secrets.ini
+    # Requires ALPHA_VANTAGE_API_KEY for carbon data
     collector = MarketProxyCollector(api_key="your_key")
     data = await collector.collect()
+    # data contains: carbon, gas_ttf, gas (US proxy)
 """
 
 import asyncio
@@ -36,15 +39,18 @@ import json
 import os
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Any, List
+from zoneinfo import ZoneInfo
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
 
 # Try importing yfinance as fallback
 try:
     import yfinance as yf
+    import pandas as pd
     YFINANCE_AVAILABLE = True
 except ImportError:
     YFINANCE_AVAILABLE = False
+    pd = None  # pandas not available without yfinance
 
 
 class MarketProxyCollector(BaseCollector):
@@ -68,12 +74,23 @@ class MarketProxyCollector(BaseCollector):
     }
 
     GAS_CONFIG = {
-        'symbol': 'UNG',  # US Natural Gas Fund - more reliable than TTF=F
+        'symbol': 'UNG',  # US Natural Gas Fund - fallback proxy
         'name': 'United States Natural Gas Fund',
         'description': 'Natural Gas proxy (US benchmark, correlates with EU)',
         'units': 'USD/share',
         'fallback_symbols': ['BOIL', 'FCG'],
-        'note': 'TTF futures not available via Alpha Vantage; UNG tracks US gas which correlates with EU prices'
+        'note': 'US gas ETF used as fallback when TTF unavailable'
+    }
+
+    # TTF (Title Transfer Facility) - Dutch/European gas benchmark
+    TTF_CONFIG = {
+        'symbol': 'TTF=F',  # TTF futures on Yahoo Finance
+        'name': 'Dutch TTF Natural Gas Futures',
+        'description': 'European gas benchmark (Title Transfer Facility)',
+        'units': 'EUR/MWh',
+        'fallback_symbols': [],  # No direct fallbacks, will use GAS_CONFIG as proxy
+        'note': 'Primary European natural gas price benchmark, traded on ICE',
+        'source_priority': 'yfinance'  # yfinance is primary for TTF (not on Alpha Vantage)
     }
 
     def __init__(
@@ -248,32 +265,178 @@ class MarketProxyCollector(BaseCollector):
             hist = t.history(period=period)
 
             if hist.empty:
+                self.logger.debug(f"yfinance {symbol}: Empty history returned")
+                return None
+
+            # Validate we have required columns
+            required_cols = ['Open', 'High', 'Low', 'Close']
+            missing_cols = [c for c in required_cols if c not in hist.columns]
+            if missing_cols:
+                self.logger.warning(f"yfinance {symbol}: Missing columns {missing_cols}")
                 return None
 
             latest = hist.iloc[-1]
+
+            # Validate Close price is not NaN
+            if pd.isna(latest['Close']):
+                self.logger.warning(f"yfinance {symbol}: Latest Close price is NaN")
+                return None
+
             prev_close = hist.iloc[-2]['Close'] if len(hist) > 1 else latest['Close']
 
-            # Build history dict
-            history = {
-                d.strftime('%Y-%m-%d'): round(float(p), 2)
-                for d, p in zip(hist.index, hist['Close'])
-            }
+            # Handle NaN in previous close
+            if pd.isna(prev_close):
+                prev_close = latest['Close']
+
+            # Build history dict, filtering out NaN values
+            history = {}
+            for d, row in hist.iterrows():
+                close_price = row['Close']
+                if not pd.isna(close_price):
+                    history[d.strftime('%Y-%m-%d')] = round(float(close_price), 2)
+
+            if not history:
+                self.logger.warning(f"yfinance {symbol}: All history values are NaN")
+                return None
+
+            # Handle volume (can be NaN for some tickers)
+            volume = None
+            if 'Volume' in hist.columns and not pd.isna(latest['Volume']):
+                volume = int(latest['Volume']) if latest['Volume'] > 0 else None
 
             return {
                 'ticker': symbol,
                 'price': round(float(latest['Close']), 2),
                 'date': hist.index[-1].strftime('%Y-%m-%d'),
-                'open': round(float(latest['Open']), 2),
-                'high': round(float(latest['High']), 2),
-                'low': round(float(latest['Low']), 2),
-                'volume': int(latest['Volume']) if latest['Volume'] > 0 else None,
+                'open': round(float(latest['Open']), 2) if not pd.isna(latest['Open']) else None,
+                'high': round(float(latest['High']), 2) if not pd.isna(latest['High']) else None,
+                'low': round(float(latest['Low']), 2) if not pd.isna(latest['Low']) else None,
+                'volume': volume,
                 'prev_close': round(float(prev_close), 2),
                 'change_pct': round((latest['Close'] - prev_close) / prev_close * 100, 2) if prev_close > 0 else 0,
                 'history': history,
                 'source': 'yfinance'
             }
+        except KeyError as e:
+            self.logger.debug(f"yfinance {symbol}: Missing data key - {e}")
+            return None
+        except (ValueError, TypeError) as e:
+            self.logger.debug(f"yfinance {symbol}: Data conversion error - {e}")
+            return None
         except Exception as e:
-            self.logger.debug(f"yfinance {symbol}: Error - {e}")
+            error_type = type(e).__name__
+            self.logger.debug(f"yfinance {symbol}: {error_type} - {e}")
+            return None
+
+    async def _fetch_ttf_yfinance(self, period: str = '30d', timeout: float = 30.0) -> Optional[Dict[str, Any]]:
+        """
+        Fetch TTF (Dutch gas) prices via yfinance.
+
+        TTF is the European benchmark for natural gas, traded on ICE.
+        yfinance provides this data via the TTF=F ticker.
+
+        Args:
+            period: History period to fetch (default 30d)
+            timeout: Maximum time to wait for yfinance (default 30s)
+
+        Returns:
+            Dict with TTF price data or None if failed
+        """
+        if not YFINANCE_AVAILABLE:
+            self.logger.warning("yfinance not available for TTF data")
+            return None
+
+        config = self.TTF_CONFIG
+        symbol = config['symbol']
+
+        try:
+            loop = asyncio.get_running_loop()
+
+            # Wrap yfinance call with timeout to prevent hanging
+            try:
+                result = await asyncio.wait_for(
+                    loop.run_in_executor(None, self._fetch_yfinance_sync, symbol, period),
+                    timeout=timeout
+                )
+            except asyncio.TimeoutError:
+                self.logger.warning(f"TTF ({symbol}): Timeout after {timeout}s")
+                return None
+
+            if not result:
+                self.logger.debug(f"TTF ({symbol}): No data from yfinance")
+                return None
+
+            # Validate price is reasonable (TTF typically 5-500 EUR/MWh)
+            price = result.get('price', 0)
+            if price < 0:
+                self.logger.error(f"TTF ({symbol}): Negative price {price} EUR/MWh (rejected)")
+                return None
+            if price <= 0:
+                self.logger.warning(f"TTF ({symbol}): Zero price {price} (must be positive)")
+                return None
+            if price > 1000:
+                self.logger.error(f"TTF ({symbol}): Price {price} EUR/MWh exceeds sanity threshold")
+                return None
+            if price > 300:
+                self.logger.warning(f"TTF ({symbol}): Extremely high price {price} EUR/MWh - crisis level")
+
+            # Check data freshness (warn if older than expected)
+            # Use Amsterdam timezone for consistent comparison
+            date_str = result.get('date', '')
+            if date_str:
+                try:
+                    data_date = datetime.strptime(date_str, '%Y-%m-%d').replace(
+                        tzinfo=ZoneInfo('Europe/Amsterdam')
+                    )
+                    today = datetime.now(ZoneInfo('Europe/Amsterdam'))
+                    days_old = (today - data_date).days
+
+                    # Allow stale data on weekends/Monday (markets closed)
+                    is_weekend_or_monday = today.weekday() in [0, 5, 6]
+                    threshold = 5 if is_weekend_or_monday else 3
+
+                    if days_old > threshold:
+                        self.logger.warning(f"TTF ({symbol}): Data is {days_old} days old (from {date_str})")
+                    elif days_old > 1:
+                        self.logger.debug(f"TTF ({symbol}): Data is {days_old} days old (weekend/holiday expected)")
+                except ValueError as e:
+                    self.logger.debug(f"TTF ({symbol}): Could not parse date: {date_str} - {e}")
+
+            # Extract history before adding metadata
+            history = result.pop('history', None)
+
+            # Validate history has enough data for lag features
+            if history:
+                history_count = len(history)
+                if history_count < 7:
+                    self.logger.warning(f"TTF ({symbol}): Only {history_count} days of history (need 7 for lag features)")
+                elif history_count < 30:
+                    self.logger.debug(f"TTF ({symbol}): {history_count} days of history (30 preferred)")
+
+            # Add TTF-specific metadata
+            result['description'] = config['description']
+            result['units'] = config['units']
+            result['name'] = config['name']
+            result['note'] = config['note']
+            result['currency'] = 'EUR'
+
+            # Calculate lag features
+            if history:
+                lag_features = self._calculate_lag_features(history, result['price'])
+                result.update(lag_features)
+                result['history'] = history
+
+            return result
+
+        except asyncio.CancelledError:
+            raise  # Re-raise cancellation (framework handles logging)
+        except ValueError as e:
+            self.logger.warning(f"TTF ({symbol}): ValueError: {e}")
+            return None
+        except Exception as e:
+            error_type = type(e).__name__
+            error_msg = str(e) if str(e) else repr(e)
+            self.logger.warning(f"TTF ({symbol}): {error_type}: {error_msg}")
             return None
 
     def _calculate_lag_features(self, history: Dict[str, float], current_price: float) -> Dict[str, Any]:
@@ -402,12 +565,17 @@ class MarketProxyCollector(BaseCollector):
         results = {}
 
         async with aiohttp.ClientSession() as session:
-            # Fetch carbon and gas
+            # Fetch carbon via Alpha Vantage
             carbon_data = await self._fetch_commodity(session, 'carbon', self.CARBON_CONFIG)
 
             # Small delay to respect rate limits
             await asyncio.sleep(0.5)
 
+            # Fetch TTF gas prices via yfinance (primary source for European gas)
+            ttf_data = await self._fetch_ttf_yfinance()
+
+            # Fetch US gas proxy as fallback
+            await asyncio.sleep(0.5)
             gas_data = await self._fetch_commodity(session, 'gas', self.GAS_CONFIG)
 
         if carbon_data:
@@ -415,6 +583,12 @@ class MarketProxyCollector(BaseCollector):
             self.logger.info(f"Carbon proxy: {carbon_data['ticker']} = ${carbon_data['price']} ({carbon_data.get('source', 'unknown')})")
         else:
             self.logger.warning("Carbon proxy: No data available")
+
+        if ttf_data:
+            results['gas_ttf'] = ttf_data
+            self.logger.info(f"TTF gas: {ttf_data['ticker']} = €{ttf_data['price']}/MWh ({ttf_data.get('source', 'unknown')})")
+        else:
+            self.logger.warning("TTF gas: No data available")
 
         if gas_data:
             results['gas'] = gas_data
@@ -467,10 +641,41 @@ class MarketProxyCollector(BaseCollector):
         if 'carbon' not in data:
             warnings.append("Carbon price proxy unavailable")
 
-        if 'gas' not in data:
-            warnings.append("Gas price proxy unavailable")
+        if 'gas_ttf' not in data:
+            warnings.append("TTF gas price unavailable")
+        else:
+            ttf = data['gas_ttf']
 
-        return len([w for w in warnings if 'unavailable' in w]) == 0, warnings
+            # Validate TTF price range (aligned with fetch thresholds)
+            ttf_price = ttf.get('price', 0)
+            if ttf_price < 0:
+                warnings.append(f"Invalid TTF price: {ttf_price} (negative)")
+            elif ttf_price <= 0:
+                warnings.append(f"Invalid TTF price: {ttf_price} (must be positive)")
+            elif ttf_price > 1000:
+                warnings.append(f"TTF price {ttf_price} EUR/MWh exceeds sanity threshold")
+            elif ttf_price > 300:
+                warnings.append(f"TTF price unusually high: {ttf_price} EUR/MWh (crisis level)")
+
+            # Validate currency
+            if ttf.get('currency') != 'EUR':
+                warnings.append(f"TTF currency should be EUR, got {ttf.get('currency')}")
+
+            # Check for required lag features
+            if 'price_lag1' not in ttf:
+                warnings.append("TTF missing lag features (insufficient history)")
+
+        if 'gas' not in data:
+            warnings.append("US gas proxy unavailable")
+
+        # Consider valid if we have at least TTF or US gas proxy
+        has_gas = 'gas_ttf' in data or 'gas' in data
+        has_carbon = 'carbon' in data
+
+        # Check for critical validation failures
+        critical_failures = [w for w in warnings if 'Invalid' in w or 'No market proxy' in w]
+
+        return has_gas and has_carbon and len(critical_failures) == 0, warnings
 
     def _get_metadata(self, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
         """Get metadata for market proxy dataset."""
@@ -478,14 +683,16 @@ class MarketProxyCollector(BaseCollector):
 
         metadata.update({
             'carbon_symbol': self.CARBON_CONFIG['symbol'],
-            'gas_symbol': self.GAS_CONFIG['symbol'],
-            'primary_source': 'Alpha Vantage API',
+            'gas_ttf_symbol': self.TTF_CONFIG['symbol'],
+            'gas_proxy_symbol': self.GAS_CONFIG['symbol'],
+            'primary_source': 'Alpha Vantage API (carbon), yfinance (TTF)',
             'fallback_source': 'yfinance' if YFINANCE_AVAILABLE else None,
             'api_key_configured': bool(self.api_key),
-            'description': 'Market proxy prices for EU carbon (EUA) and natural gas',
+            'description': 'Market prices for EU carbon (EUA) and natural gas (TTF + US proxy)',
             'usage_notes': [
                 'KEUA tracks EU ETS carbon allowance prices',
-                'UNG tracks US natural gas (correlates with EU gas)',
+                'TTF=F is the Dutch/European natural gas benchmark (EUR/MWh)',
+                'UNG is a US gas proxy, included as fallback and for correlation analysis',
                 'Use lagged values (price_lag1, price_lag7) to avoid data leakage',
                 'Prices update daily on market trading days',
                 'See docs/CARBON_GAS_PRICE_PROXIES.md for details'
@@ -552,16 +759,17 @@ async def main():
         print("\nMarket Proxy Data:")
         print("=" * 60)
 
-        for commodity in ['carbon', 'gas']:
+        for commodity in ['carbon', 'gas_ttf', 'gas']:
             if commodity in dataset.data:
                 d = dataset.data[commodity]
+                currency = '€' if d.get('currency') == 'EUR' else '$'
                 print(f"\n{commodity.upper()} ({d.get('name', 'Unknown')}):")
                 print(f"  Ticker: {d.get('ticker')}")
-                print(f"  Price: ${d.get('price')}")
+                print(f"  Price: {currency}{d.get('price')} {d.get('units', '')}")
                 print(f"  Change: {d.get('change_pct', 0):+.2f}%")
                 print(f"  Source: {d.get('source', 'unknown')}")
                 if 'price_lag1' in d:
-                    print(f"  Lag-1: ${d.get('price_lag1')}")
+                    print(f"  Lag-1: {currency}{d.get('price_lag1')}")
                 if 'trend_7d' in d:
                     print(f"  7d Trend: {d.get('trend_7d')}")
             else:
@@ -575,4 +783,8 @@ async def main():
 
 
 if __name__ == "__main__":
+    import platform
+    # Fix Windows event loop for aiodns compatibility
+    if platform.system() == "Windows":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(main())
