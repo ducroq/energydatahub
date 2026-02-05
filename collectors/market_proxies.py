@@ -34,9 +34,12 @@ Usage:
 
 import asyncio
 import aiohttp
+import hashlib
+import hmac
 import logging
 import json
 import os
+import stat
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Any, List
 from zoneinfo import ZoneInfo
@@ -102,6 +105,10 @@ class MarketProxyCollector(BaseCollector):
 
     # Cache settings
     CACHE_EXPIRATION_SECONDS = 48 * 3600  # 48 hours
+    # Cache integrity key (derived from machine-specific data for portability)
+    _CACHE_HMAC_KEY = hashlib.sha256(
+        f"market_proxy_cache_{os.getenv('COMPUTERNAME', os.getenv('HOSTNAME', 'default'))}".encode()
+    ).digest()
 
     # TTF price validation thresholds (EUR/MWh)
     TTF_CRISIS_THRESHOLD = 300  # Warn above this (crisis-level pricing)
@@ -110,6 +117,64 @@ class MarketProxyCollector(BaseCollector):
     # Market holidays cache (Netherlands + common EU market holidays)
     _market_holidays = holidays.Netherlands()
 
+    # Expected API response schemas for validation
+    ALPHA_VANTAGE_QUOTE_SCHEMA = {
+        'Global Quote': {
+            '05. price': (str, float, int),  # Required: price value
+        }
+    }
+
+    def _validate_api_response(self, data: Any, schema: Dict[str, Any], path: str = '') -> tuple[bool, List[str]]:
+        """
+        Validate API response matches expected schema structure.
+
+        Args:
+            data: The data to validate
+            schema: Expected schema (dict with type tuples as values)
+            path: Current path in nested structure (for error messages)
+
+        Returns:
+            (is_valid, list of error messages)
+        """
+        errors = []
+
+        if not isinstance(data, dict):
+            errors.append(f"{path or 'root'}: Expected dict, got {type(data).__name__}")
+            return False, errors
+
+        for key, expected in schema.items():
+            full_path = f"{path}.{key}" if path else key
+
+            if key not in data:
+                # Check if this is a required field (no default available)
+                if isinstance(expected, dict):
+                    errors.append(f"{full_path}: Required key missing")
+                # Optional fields with type tuples are not flagged as missing
+                continue
+
+            value = data[key]
+
+            # Nested dict validation
+            if isinstance(expected, dict):
+                if not isinstance(value, dict):
+                    errors.append(f"{full_path}: Expected dict, got {type(value).__name__}")
+                else:
+                    _, nested_errors = self._validate_api_response(value, expected, full_path)
+                    errors.extend(nested_errors)
+            # Type validation (tuple of acceptable types)
+            elif isinstance(expected, tuple):
+                if not isinstance(value, expected) and value is not None:
+                    # Try type coercion for str->float
+                    if str in expected and float in expected:
+                        try:
+                            float(value)
+                        except (ValueError, TypeError):
+                            errors.append(f"{full_path}: Cannot convert {type(value).__name__} to expected types")
+                    else:
+                        errors.append(f"{full_path}: Got {type(value).__name__}, expected {expected}")
+
+        return len(errors) == 0, errors
+
     def _is_near_market_holiday(self, check_date: datetime) -> bool:
         """Check if date is near a market holiday (within 2 days)."""
         for offset in range(1, 3):
@@ -117,6 +182,33 @@ class MarketProxyCollector(BaseCollector):
             if past_date in self._market_holidays:
                 return True
         return False
+
+    def _check_data_freshness(self, date_str: str, symbol: str) -> None:
+        """
+        Check and log data freshness warnings.
+
+        Args:
+            date_str: Date string in YYYY-MM-DD format
+            symbol: Ticker symbol for logging
+        """
+        if not date_str:
+            return
+
+        try:
+            data_date = datetime.strptime(date_str, '%Y-%m-%d').replace(
+                tzinfo=ZoneInfo('Europe/Amsterdam')
+            )
+            today = datetime.now(ZoneInfo('Europe/Amsterdam'))
+            days_old = (today - data_date).days
+
+            threshold = self._get_staleness_threshold(today)
+
+            if days_old > threshold:
+                self.logger.warning(f"{symbol}: Data is {days_old} days old (from {date_str})")
+            elif days_old > 1:
+                self.logger.debug(f"{symbol}: Data is {days_old} days old (weekend/holiday expected)")
+        except ValueError as e:
+            self.logger.debug(f"{symbol}: Could not parse date: {date_str} - {e}")
 
     def _get_staleness_threshold(self, today: datetime) -> int:
         """
@@ -256,6 +348,12 @@ class MarketProxyCollector(BaseCollector):
 
                 if 'Note' in data:  # Rate limit warning
                     self.logger.warning(f"Alpha Vantage rate limit: {data['Note']}")
+                    return None
+
+                # Validate response structure
+                is_valid, errors = self._validate_api_response(data, self.ALPHA_VANTAGE_QUOTE_SCHEMA)
+                if not is_valid:
+                    self.logger.debug(f"Alpha Vantage {symbol}: Invalid response structure - {errors}")
                     return None
 
                 quote = data.get('Global Quote', {})
@@ -473,25 +571,7 @@ class MarketProxyCollector(BaseCollector):
                 return None
 
             # Check data freshness (warn if older than expected)
-            # Use Amsterdam timezone for consistent comparison
-            date_str = result.get('date', '')
-            if date_str:
-                try:
-                    data_date = datetime.strptime(date_str, '%Y-%m-%d').replace(
-                        tzinfo=ZoneInfo('Europe/Amsterdam')
-                    )
-                    today = datetime.now(ZoneInfo('Europe/Amsterdam'))
-                    days_old = (today - data_date).days
-
-                    # Allow stale data on weekends/Monday/holidays (markets closed)
-                    threshold = self._get_staleness_threshold(today)
-
-                    if days_old > threshold:
-                        self.logger.warning(f"TTF ({symbol}): Data is {days_old} days old (from {date_str})")
-                    elif days_old > 1:
-                        self.logger.debug(f"TTF ({symbol}): Data is {days_old} days old (weekend/holiday expected)")
-                except ValueError as e:
-                    self.logger.debug(f"TTF ({symbol}): Could not parse date: {date_str} - {e}")
+            self._check_data_freshness(result.get('date', ''), f"TTF ({symbol})")
 
             # Extract history before adding metadata
             history = result.pop('history', None)
@@ -793,14 +873,34 @@ class MarketProxyCollector(BaseCollector):
 
         return metadata
 
+    def _compute_cache_signature(self, data_json: str) -> str:
+        """Compute HMAC signature for cache data integrity."""
+        return hmac.new(
+            self._CACHE_HMAC_KEY,
+            data_json.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+
     def _load_cache(self) -> Optional[Dict[str, Any]]:
-        """Load cached data if available and recent."""
+        """Load cached data if available, recent, and integrity verified."""
         if not self._cache_file or not os.path.exists(self._cache_file):
             return None
 
         try:
             with open(self._cache_file) as f:
                 cached = json.load(f)
+
+            # Verify integrity signature if present
+            stored_sig = cached.get('signature')
+            if stored_sig:
+                # Reconstruct the signed data (without the signature itself)
+                verify_data = {k: v for k, v in cached.items() if k != 'signature'}
+                verify_json = json.dumps(verify_data, sort_keys=True)
+                expected_sig = self._compute_cache_signature(verify_json)
+
+                if not hmac.compare_digest(stored_sig, expected_sig):
+                    self.logger.warning("Cache integrity check failed - ignoring cache")
+                    return None
 
             # Parse timezone-aware timestamp (fallback to epoch for old caches)
             cached_at_str = cached.get('cached_at', '2000-01-01T00:00:00+00:00')
@@ -819,19 +919,46 @@ class MarketProxyCollector(BaseCollector):
         return None
 
     def _save_cache(self, data: Dict[str, Any]) -> None:
-        """Save data to cache with timezone-aware timestamp."""
+        """Save data to cache with timezone-aware timestamp and integrity signature."""
         if not self._cache_file:
             return
 
         try:
             os.makedirs(os.path.dirname(self._cache_file), exist_ok=True)
-            with open(self._cache_file, 'w') as f:
-                json.dump({
-                    'cached_at': datetime.now(ZoneInfo('Europe/Amsterdam')).isoformat(),
-                    'data': data
-                }, f, indent=2)
+
+            # Build cache data (without signature for signing)
+            cache_data = {
+                'cached_at': datetime.now(ZoneInfo('Europe/Amsterdam')).isoformat(),
+                'data': data
+            }
+
+            # Compute integrity signature
+            data_json = json.dumps(cache_data, sort_keys=True)
+            cache_data['signature'] = self._compute_cache_signature(data_json)
+
+            # Write atomically via temp file to prevent corruption
+            temp_file = self._cache_file + '.tmp'
+            with open(temp_file, 'w') as f:
+                json.dump(cache_data, f, indent=2)
+
+            # Set restrictive permissions (owner read/write only)
+            try:
+                os.chmod(temp_file, stat.S_IRUSR | stat.S_IWUSR)
+            except OSError:
+                pass  # Permissions may not be supported on all platforms
+
+            # Atomic rename
+            os.replace(temp_file, self._cache_file)
+
         except Exception as e:
             self.logger.debug(f"Cache save error: {e}")
+            # Clean up temp file if it exists
+            try:
+                temp_file = self._cache_file + '.tmp'
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+            except OSError:
+                pass
 
 
 # Example usage
