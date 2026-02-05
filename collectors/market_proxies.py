@@ -41,6 +41,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional, Any, List
 from zoneinfo import ZoneInfo
 
+import holidays
+
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
 
 # Try importing yfinance as fallback
@@ -104,6 +106,74 @@ class MarketProxyCollector(BaseCollector):
     # TTF price validation thresholds (EUR/MWh)
     TTF_CRISIS_THRESHOLD = 300  # Warn above this (crisis-level pricing)
     TTF_SANITY_THRESHOLD = 1000  # Reject above this (data error)
+
+    # Market holidays cache (Netherlands + common EU market holidays)
+    _market_holidays = holidays.Netherlands()
+
+    def _is_near_market_holiday(self, check_date: datetime) -> bool:
+        """Check if date is near a market holiday (within 2 days)."""
+        for offset in range(1, 3):
+            past_date = (check_date - timedelta(days=offset)).date()
+            if past_date in self._market_holidays:
+                return True
+        return False
+
+    def _get_staleness_threshold(self, today: datetime) -> int:
+        """
+        Get appropriate staleness threshold based on day of week and holidays.
+
+        Returns number of days before data is considered stale.
+        """
+        is_weekend_or_monday = today.weekday() in [0, 5, 6]
+        is_near_holiday = self._is_near_market_holiday(today)
+
+        if is_near_holiday:
+            return 7  # Allow up to 7 days around holidays
+        elif is_weekend_or_monday:
+            return 5  # Allow up to 5 days for weekends
+        else:
+            return 3  # Normal weekday threshold
+
+    def _log_fetch_error(
+        self,
+        source: str,
+        symbol: str,
+        error: Exception,
+        level: str = 'debug'
+    ) -> None:
+        """Log fetch errors consistently across all methods."""
+        error_type = type(error).__name__
+        error_msg = str(error) if str(error) else repr(error)
+        log_func = getattr(self.logger, level)
+        log_func(f"{source} ({symbol}): {error_type}: {error_msg}")
+
+    def _validate_ttf_price(self, price: float) -> tuple[bool, List[str]]:
+        """
+        Validate TTF price is within reasonable bounds.
+
+        Args:
+            price: Price in EUR/MWh
+
+        Returns:
+            (is_valid, list of warning/error messages)
+        """
+        messages = []
+        is_valid = True
+
+        if price < 0:
+            messages.append(f"Negative price {price} EUR/MWh (rejected)")
+            is_valid = False
+        elif price <= 0:
+            messages.append(f"Zero price {price} (must be positive)")
+            is_valid = False
+        elif price > self.TTF_SANITY_THRESHOLD:
+            messages.append(f"Price {price} EUR/MWh exceeds sanity threshold")
+            is_valid = False
+        elif price > self.TTF_CRISIS_THRESHOLD:
+            messages.append(f"Extremely high price {price} EUR/MWh (crisis level)")
+            # Still valid, just a warning
+
+        return is_valid, messages
 
     def __init__(
         self,
@@ -216,7 +286,7 @@ class MarketProxyCollector(BaseCollector):
                 }
 
         except Exception as e:
-            self.logger.debug(f"Alpha Vantage {symbol}: Error - {e}")
+            self._log_fetch_error('Alpha Vantage', symbol, e, level='debug')
             return None
 
     async def _fetch_alpha_vantage_history(
@@ -272,7 +342,7 @@ class MarketProxyCollector(BaseCollector):
                 return history
 
         except Exception as e:
-            self.logger.debug(f"Alpha Vantage history {symbol}: Error - {e}")
+            self._log_fetch_error('Alpha Vantage history', symbol, e, level='debug')
             return None
 
     def _fetch_yfinance_sync(self, symbol: str, period: str = '30d') -> Optional[Dict[str, Any]]:
@@ -344,14 +414,13 @@ class MarketProxyCollector(BaseCollector):
                 'source': 'yfinance'
             }
         except KeyError as e:
-            self.logger.debug(f"yfinance {symbol}: Missing data key - {e}")
+            self._log_fetch_error('yfinance', symbol, e, level='debug')
             return None
         except (ValueError, TypeError) as e:
-            self.logger.debug(f"yfinance {symbol}: Data conversion error - {e}")
+            self._log_fetch_error('yfinance', symbol, e, level='debug')
             return None
         except Exception as e:
-            error_type = type(e).__name__
-            self.logger.debug(f"yfinance {symbol}: {error_type} - {e}")
+            self._log_fetch_error('yfinance', symbol, e, level='debug')
             return None
 
     async def _fetch_ttf_yfinance(self, period: str = '30d', timeout: float = 30.0) -> Optional[Dict[str, Any]]:
@@ -394,17 +463,14 @@ class MarketProxyCollector(BaseCollector):
 
             # Validate price is reasonable (TTF typically 5-500 EUR/MWh)
             price = result.get('price', 0)
-            if price < 0:
-                self.logger.error(f"TTF ({symbol}): Negative price {price} EUR/MWh (rejected)")
+            is_valid, messages = self._validate_ttf_price(price)
+            for msg in messages:
+                if 'rejected' in msg or 'exceeds' in msg:
+                    self.logger.error(f"TTF ({symbol}): {msg}")
+                else:
+                    self.logger.warning(f"TTF ({symbol}): {msg}")
+            if not is_valid:
                 return None
-            if price <= 0:
-                self.logger.warning(f"TTF ({symbol}): Zero price {price} (must be positive)")
-                return None
-            if price > self.TTF_SANITY_THRESHOLD:
-                self.logger.error(f"TTF ({symbol}): Price {price} EUR/MWh exceeds sanity threshold")
-                return None
-            if price > self.TTF_CRISIS_THRESHOLD:
-                self.logger.warning(f"TTF ({symbol}): Extremely high price {price} EUR/MWh - crisis level")
 
             # Check data freshness (warn if older than expected)
             # Use Amsterdam timezone for consistent comparison
@@ -417,9 +483,8 @@ class MarketProxyCollector(BaseCollector):
                     today = datetime.now(ZoneInfo('Europe/Amsterdam'))
                     days_old = (today - data_date).days
 
-                    # Allow stale data on weekends/Monday (markets closed)
-                    is_weekend_or_monday = today.weekday() in [0, 5, 6]
-                    threshold = 5 if is_weekend_or_monday else 3
+                    # Allow stale data on weekends/Monday/holidays (markets closed)
+                    threshold = self._get_staleness_threshold(today)
 
                     if days_old > threshold:
                         self.logger.warning(f"TTF ({symbol}): Data is {days_old} days old (from {date_str})")
@@ -457,12 +522,10 @@ class MarketProxyCollector(BaseCollector):
         except asyncio.CancelledError:
             raise  # Re-raise cancellation (framework handles logging)
         except ValueError as e:
-            self.logger.warning(f"TTF ({symbol}): ValueError: {e}")
+            self._log_fetch_error('TTF', symbol, e, level='warning')
             return None
         except Exception as e:
-            error_type = type(e).__name__
-            error_msg = str(e) if str(e) else repr(e)
-            self.logger.warning(f"TTF ({symbol}): {error_type}: {error_msg}")
+            self._log_fetch_error('TTF', symbol, e, level='warning')
             return None
 
     def _calculate_lag_features(self, history: Dict[str, float], current_price: float) -> Dict[str, Any]:
@@ -681,16 +744,10 @@ class MarketProxyCollector(BaseCollector):
         else:
             ttf = data['gas_ttf']
 
-            # Validate TTF price range (aligned with fetch thresholds)
+            # Validate TTF price range using shared validation
             ttf_price = ttf.get('price', 0)
-            if ttf_price < 0:
-                warnings.append(f"Invalid TTF price: {ttf_price} (negative)")
-            elif ttf_price <= 0:
-                warnings.append(f"Invalid TTF price: {ttf_price} (must be positive)")
-            elif ttf_price > self.TTF_SANITY_THRESHOLD:
-                warnings.append(f"TTF price {ttf_price} EUR/MWh exceeds sanity threshold")
-            elif ttf_price > self.TTF_CRISIS_THRESHOLD:
-                warnings.append(f"TTF price unusually high: {ttf_price} EUR/MWh (crisis level)")
+            _, price_messages = self._validate_ttf_price(ttf_price)
+            warnings.extend([f"TTF: {msg}" for msg in price_messages])
 
             # Validate currency
             if ttf.get('currency') != 'EUR':
