@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-02-05T12:59:16.401673+01:00",
+  "cached_at": "2026-02-05T17:39:40.502779+01:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -19,14 +19,14 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 34.65,
+      "price": 34.01,
       "date": "2026-02-05",
       "open": 34.17,
       "high": 35.05,
-      "low": 34.17,
-      "volume": 86,
+      "low": 34.01,
+      "volume": 147,
       "prev_close": 33.5,
-      "change_pct": 3.43,
+      "change_pct": 1.5,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
@@ -36,8 +36,8 @@
       "price_lag1": 33.5,
       "price_lag2": 32.86,
       "price_lag7": 38.76,
-      "mean_7d": 36.17,
-      "volatility_7d": 2.87,
+      "mean_7d": 36.08,
+      "volatility_7d": 2.93,
       "trend_7d": "down",
       "history": {
         "2025-12-31": 28.16,
@@ -64,7 +64,7 @@
         "2026-02-02": 33.94,
         "2026-02-03": 32.86,
         "2026-02-04": 33.5,
-        "2026-02-05": 34.65
+        "2026-02-05": 34.01
       }
     },
     "gas": {
@@ -85,5 +85,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "43e150af06ff33cd63c4181af99c3e8497f88715a55567dec839feac78b889e3"
+  "signature": "5c068b77c694523502f0e3c4815fa5cb318085075e95f404d0b13442cdce5cb9"
 }
