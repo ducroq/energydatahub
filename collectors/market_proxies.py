@@ -161,7 +161,11 @@ class MarketProxyCollector(BaseCollector):
                     self.logger.debug(f"Alpha Vantage {symbol}: HTTP {response.status}")
                     return None
 
-                data = await response.json()
+                try:
+                    data = await response.json()
+                except (aiohttp.ContentTypeError, json.JSONDecodeError) as e:
+                    self.logger.debug(f"Alpha Vantage {symbol}: JSON decode error - {e}")
+                    return None
 
                 # Check for API errors
                 if 'Error Message' in data:
@@ -235,7 +239,11 @@ class MarketProxyCollector(BaseCollector):
                 if response.status != 200:
                     return None
 
-                data = await response.json()
+                try:
+                    data = await response.json()
+                except (aiohttp.ContentTypeError, json.JSONDecodeError) as e:
+                    self.logger.debug(f"Alpha Vantage history {symbol}: JSON decode error - {e}")
+                    return None
 
                 if 'Error Message' in data or 'Note' in data:
                     return None
@@ -284,9 +292,15 @@ class MarketProxyCollector(BaseCollector):
 
             prev_close = hist.iloc[-2]['Close'] if len(hist) > 1 else latest['Close']
 
-            # Handle NaN in previous close
+            # Handle NaN in previous close - fall back to latest (which we know is valid)
             if pd.isna(prev_close):
+                self.logger.debug(f"yfinance {symbol}: prev_close is NaN, using latest Close")
                 prev_close = latest['Close']
+
+            # Final safety check - both values must be valid for change calculation
+            if pd.isna(prev_close) or prev_close <= 0:
+                self.logger.warning(f"yfinance {symbol}: Cannot calculate change (prev_close={prev_close})")
+                prev_close = latest['Close']  # Use current price, change will be 0%
 
             # Build history dict, filtering out NaN values
             history = {}
@@ -519,11 +533,18 @@ class MarketProxyCollector(BaseCollector):
                     history = await self._fetch_alpha_vantage_history(session, fallback)
                     break
 
-        # Try yfinance as last resort
+        # Try yfinance as last resort (with timeout)
         if not quote and YFINANCE_AVAILABLE:
             self.logger.info(f"{name}: Trying yfinance fallback")
             loop = asyncio.get_running_loop()
-            quote = await loop.run_in_executor(None, self._fetch_yfinance_sync, symbol)
+            try:
+                quote = await asyncio.wait_for(
+                    loop.run_in_executor(None, self._fetch_yfinance_sync, symbol),
+                    timeout=30.0
+                )
+            except asyncio.TimeoutError:
+                self.logger.warning(f"{name}: yfinance timeout after 30s")
+                quote = None
             if quote:
                 history = quote.pop('history', None)
 
@@ -564,7 +585,9 @@ class MarketProxyCollector(BaseCollector):
 
         results = {}
 
-        async with aiohttp.ClientSession() as session:
+        # Set timeout for all HTTP requests (30s total, 10s connect)
+        timeout = aiohttp.ClientTimeout(total=30, connect=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             # Fetch carbon via Alpha Vantage
             carbon_data = await self._fetch_commodity(session, 'carbon', self.CARBON_CONFIG)
 
