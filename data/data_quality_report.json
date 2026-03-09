@@ -1,0 +1,220 @@
+{
+  "timestamp": "2026-03-09T16:57:05.669564+00:00",
+  "overall_status": "critical",
+  "total_issues": 11,
+  "datasets_collected": 12,
+  "datasets_missing": [
+    "entsoe",
+    "entsoe_de"
+  ],
+  "dataset_reports": [
+    {
+      "dataset_name": "energy_zero",
+      "data_type": "energy_price",
+      "source": "EnergyZero API v5.0",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "epex",
+      "data_type": "energy_price",
+      "source": "Awattar API (EPEX SPOT)",
+      "status": "info",
+      "data_points": 47,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "elspot",
+      "data_type": "energy_price",
+      "source": "Nord Pool Elspot API v2",
+      "status": "info",
+      "data_points": 24,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "weather_forecast_multi_location",
+      "data_type": "weather",
+      "source": "Google Weather API v1",
+      "status": "warning",
+      "data_points": 1440,
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "grid_imbalance",
+      "data_type": "grid_imbalance",
+      "source": "TenneT TSO (tennet.eu API)",
+      "status": "error",
+      "data_points": 4320,
+      "checks_passed": 3,
+      "checks_failed": 2,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "error",
+          "message": "11 values outside range [-500.0, 10000.0] EUR/MWh",
+          "details": {
+            "count": 11,
+            "examples": [
+              "balance_delta/2026-03-08T10:58:00+01:00: -564.4",
+              "balance_delta/2026-03-08T12:17:00+01:00: -559.8",
+              "balance_delta/2026-03-08T12:19:00+01:00: -514.3",
+              "balance_delta/2026-03-08T12:35:00+01:00: -500.6",
+              "balance_delta/2026-03-08T12:36:00+01:00: -565.8"
+            ]
+          }
+        },
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "solar_forecast",
+      "data_type": "solar_irradiance",
+      "source": "Open-Meteo API (free)",
+      "status": "warning",
+      "data_points": 1008,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "demand_weather_forecast",
+      "data_type": "demand_weather",
+      "source": "Open-Meteo API (free)",
+      "status": "warning",
+      "data_points": 1848,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "offshore_wind",
+      "data_type": "offshore_wind",
+      "source": "Open-Meteo API (free) - ICON/GFS global models",
+      "status": "warning",
+      "data_points": 2160,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "ned_production",
+      "data_type": "energy_production",
+      "source": "NED.nl (Nationaal Energie Dashboard)",
+      "status": "error",
+      "data_points": 6,
+      "checks_passed": 2,
+      "checks_failed": 2,
+      "issues": [
+        {
+          "check_name": "completeness",
+          "severity": "error",
+          "message": "Only 6 data points (expected >= 24, 25% complete)",
+          "details": {
+            "actual": 6,
+            "expected_min": 24,
+            "completeness_ratio": 0.25
+          }
+        },
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "market_proxies",
+      "data_type": "market_proxies",
+      "source": "Alpha Vantage API",
+      "status": "warning",
+      "data_points": 51,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "gas_storage",
+      "data_type": "gas_storage",
+      "source": "GIE AGSI+",
+      "status": "error",
+      "data_points": 48,
+      "checks_passed": 3,
+      "checks_failed": 2,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "error",
+          "message": "25 values outside range [0.0, 100.0] %",
+          "details": {
+            "count": 25,
+            "examples": [
+              "0/injection_gwh: 239.26",
+              "0/withdrawal_gwh: 445.0",
+              "0/net_change_gwh: -205.74",
+              "0/working_gas_volume_twh: 144.2965",
+              "1/withdrawal_gwh: 131.2"
+            ]
+          }
+        },
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "gas_flows",
+      "data_type": "gas_flows",
+      "source": "ENTSOG Transparency Platform",
+      "status": "info",
+      "data_points": 10,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
+    }
+  ]
+}
