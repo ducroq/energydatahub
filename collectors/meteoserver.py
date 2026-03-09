@@ -142,6 +142,11 @@ class MeteoServerWeatherCollector(BaseCollector):
         # Fields to exclude from output
         exclude_fields = ['tijd', 'tijd_nl', 'loc', 'offset', 'samenv']
 
+        # Fields where negative values are sentinel "no data" values
+        # MeteoServer uses -1, -3 etc. instead of null for some fields
+        non_negative_fields = {'gr', 'gr_w', 'snd', 'snv', 'neersl', 'vis',
+                               'hw', 'mw', 'lw', 'tw', 'clouds_all', 'rv'}
+
         data = {}
 
         for item in raw_data['data']:
@@ -169,8 +174,14 @@ class MeteoServerWeatherCollector(BaseCollector):
                         for sub_key, sub_value in value.items():
                             if sub_key in exclude_fields:
                                 continue
+                            # Convert negative sentinels to None for non-negative fields
+                            if sub_key in non_negative_fields and isinstance(sub_value, (int, float)) and sub_value < 0:
+                                sub_value = None
                             data[timestamp_key][f"{key}_{sub_key}"] = sub_value
                     else:
+                        # Convert negative sentinels to None for non-negative fields
+                        if key in non_negative_fields and isinstance(value, (int, float)) and value < 0:
+                            value = None
                         data[timestamp_key][key] = value
 
         self.logger.debug(f"Parsed {len(data)} data points from MeteoServer weather response")

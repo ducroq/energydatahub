@@ -57,6 +57,7 @@ Notes:
     - All timestamps handled in UTC and converted to local timezone
 """
 import os
+import json
 import shutil
 from datetime import datetime, timedelta
 import asyncio
@@ -65,6 +66,7 @@ import base64
 import platform
 
 from utils.helpers import ensure_output_directory, load_settings, load_secrets, save_data_file
+from utils.data_quality import validate_pipeline
 from utils.data_types import CombinedDataSet, EnhancedDataSet
 from utils.timezone_helpers import get_timezone_and_country
 from utils.secure_data_handler import SecureDataHandler
@@ -615,6 +617,36 @@ async def main() -> None:
                 latest_ts = max(entsog_flows_data.data.keys())
                 latest_net = entsog_flows_data.data[latest_ts].get('net_flow_gwh', 'N/A')
             logging.info(f"Saved gas flows data: {len(entsog_flows_data.data)} days, latest net flow: {latest_net} GWh")
+
+        # --- Data Quality Report ---
+        # Run FMEA-based quality checks on all collected datasets
+        quality_datasets = {
+            'entsoe': entsoe_data,
+            'entsoe_de': entsoe_de_data,
+            'energy_zero': energy_zero_data,
+            'epex': epex_data,
+            'elspot': elspot_data,
+            'weather_forecast_multi_location': google_weather_data,
+            'grid_imbalance': tennet_data,
+            'wind_forecast': entsoe_wind_data,
+            'solar_forecast': solar_data,
+            'demand_weather_forecast': demand_weather_data,
+            'offshore_wind': offshore_wind_data,
+            'cross_border_flows': flows_data,
+            'load_forecast': load_data,
+            'generation_forecast': generation_data,
+            'ned_production': ned_data,
+            'market_proxies': market_proxy_data,
+            'gas_storage': gie_storage_data,
+            'gas_flows': entsog_flows_data,
+        }
+        quality_report = validate_pipeline(quality_datasets)
+        quality_report_path = os.path.join(output_path, "data_quality_report.json")
+        with open(quality_report_path, 'w') as f:
+            json.dump(quality_report.to_dict(), f, indent=2)
+        logging.info(f"Data quality report: status={quality_report.status}, "
+                     f"issues={quality_report.total_issues}, "
+                     f"saved to {quality_report_path}")
 
     except Exception as e:
         logging.error(e)

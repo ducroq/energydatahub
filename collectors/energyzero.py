@@ -95,9 +95,16 @@ class EnergyZeroCollector(BaseCollector):
         end_date = end_time.date()
 
         all_prices = {}
+        from datetime import timedelta
 
         async with EnergyZero() as client:
-            current_date = start_date
+            # EnergyZero sometimes excludes hour 00:00 of start_date because
+            # it considers it the last hour of the previous day. Include the
+            # previous day in our fetch range to capture it.
+            # The _parse_response filter ensures only in-range data is kept.
+            fetch_start = start_date - timedelta(days=1)
+
+            current_date = fetch_start
             while current_date <= end_date:
                 try:
                     data = await client.get_electricity_prices(
@@ -111,7 +118,6 @@ class EnergyZeroCollector(BaseCollector):
                 except Exception as e:
                     self.logger.warning(f"Failed to fetch {current_date}: {e}")
 
-                from datetime import timedelta
                 current_date += timedelta(days=1)
 
         if not all_prices:

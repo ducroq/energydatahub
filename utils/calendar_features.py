@@ -28,10 +28,13 @@ Usage:
 """
 
 from dataclasses import dataclass, asdict
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Dict, Any, Optional, List
 import holidays
 from zoneinfo import ZoneInfo
+
+# Amsterdam timezone for DST calculations
+AMSTERDAM_TZ = ZoneInfo('Europe/Amsterdam')
 
 
 # Initialize holiday calendars for relevant countries
@@ -82,6 +85,11 @@ class CalendarFeatures:
     is_working_day: bool         # Not weekend and not NL holiday
     is_working_day_regional: bool  # Not weekend, not holiday in any country
 
+    # DST features (affect energy delivery volumes and scheduling)
+    is_dst: bool                 # True during summer time (CEST, UTC+2)
+    is_dst_transition_day: bool  # True on days clocks change (23 or 25 hours)
+    dst_utc_offset_hours: int    # Current UTC offset (1=CET, 2=CEST)
+
     # Season features (for demand patterns)
     is_winter: bool              # Dec, Jan, Feb (high heating demand)
     is_summer: bool              # Jun, Jul, Aug (potential cooling)
@@ -122,18 +130,55 @@ def is_bridge_day(dt: datetime) -> bool:
     # Check if it's a potential bridge day (Thursday or Tuesday)
     if day_of_week == 3:  # Thursday
         # Check if Friday is a holiday
-        from datetime import timedelta
         friday = d + timedelta(days=1)
         if friday in NL_HOLIDAYS or friday in DE_HOLIDAYS:
             return True
     elif day_of_week == 1:  # Tuesday
         # Check if Monday was a holiday
-        from datetime import timedelta
         monday = d - timedelta(days=1)
         if monday in NL_HOLIDAYS or monday in DE_HOLIDAYS:
             return True
 
     return False
+
+
+def get_dst_info(dt: datetime) -> tuple[bool, bool, int]:
+    """
+    Calculate DST-related features for a given datetime.
+
+    DST transitions matter for electricity markets because:
+    - Spring forward: day has 23 hours (less energy delivered)
+    - Fall back: day has 25 hours (more energy delivered)
+    - UTC offset affects scheduling of cross-border trades
+
+    Args:
+        dt: Timezone-aware datetime (should be in Europe/Amsterdam)
+
+    Returns:
+        (is_dst, is_dst_transition_day, utc_offset_hours)
+    """
+    # Ensure we have a timezone-aware datetime in Amsterdam
+    if dt.tzinfo is None:
+        dt_ams = dt.replace(tzinfo=AMSTERDAM_TZ)
+    else:
+        dt_ams = dt.astimezone(AMSTERDAM_TZ)
+
+    # Check if DST is active (CEST = UTC+2, CET = UTC+1)
+    utc_offset = dt_ams.utcoffset()
+    utc_offset_hours = int(utc_offset.total_seconds() // 3600)
+    is_dst = utc_offset_hours == 2  # CEST
+
+    # Check if today is a DST transition day
+    # Compare UTC offset at start of today vs start of tomorrow
+    d = dt_ams.date()
+    day_start = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=AMSTERDAM_TZ)
+    next_day_start = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=AMSTERDAM_TZ) + timedelta(days=1)
+
+    today_offset = day_start.utcoffset().total_seconds()
+    tomorrow_offset = next_day_start.utcoffset().total_seconds()
+    is_transition = today_offset != tomorrow_offset
+
+    return is_dst, is_transition, utc_offset_hours
 
 
 def get_calendar_features(dt: datetime) -> CalendarFeatures:
@@ -186,6 +231,9 @@ def get_calendar_features(dt: datetime) -> CalendarFeatures:
     month = d.month if isinstance(d, date) else dt.month
     season = get_season(month)
 
+    # DST features
+    is_dst, is_dst_transition, utc_offset_hours = get_dst_info(dt)
+
     return CalendarFeatures(
         # Basic time
         year=d.year,
@@ -215,6 +263,11 @@ def get_calendar_features(dt: datetime) -> CalendarFeatures:
         # Working day
         is_working_day=is_working_day,
         is_working_day_regional=is_working_day_regional,
+
+        # DST
+        is_dst=is_dst,
+        is_dst_transition_day=is_dst_transition,
+        dst_utc_offset_hours=utc_offset_hours,
 
         # Season
         is_winter=season == 'winter',
@@ -258,8 +311,6 @@ def get_calendar_features_for_range(
     Returns:
         Dict mapping ISO timestamps to feature dicts
     """
-    from datetime import timedelta
-
     result = {}
     current = start
     delta = timedelta(hours=1) if hourly else timedelta(days=1)
@@ -287,8 +338,6 @@ def get_upcoming_holidays(
     Returns:
         List of dicts with date, country, and holiday name
     """
-    from datetime import timedelta
-
     if countries is None:
         countries = ['NL', 'DE', 'BE', 'FR']
 

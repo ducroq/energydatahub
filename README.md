@@ -7,6 +7,9 @@ A robust Python-based system for collecting, processing, and publishing energy p
 - **Multi-Source Data Collection**: Automated collection from 16+ energy, weather, and grid APIs
 - **Robust Architecture**: BaseCollector pattern with retry logic and circuit breakers
 - **Data Validation**: Comprehensive timezone normalization and data type validation
+- **Data Quality Framework**: FMEA-based quality checks (value ranges, completeness, staleness, null ratios) with per-run reports
+- **Schema Registry**: Versioned data schemas (v1.0→v2.0→v2.1) with automatic migration for backward-compatible reading
+- **Calendar Features**: DST-aware holiday/working-day features for NL/DE/BE/FR (electricity demand prediction)
 - **Secure Publishing**: AES-CBC encryption with HMAC-SHA256 for all published data
 - **Automated Workflows**: GitHub Actions for scheduled data collection and publishing (daily at 16:00 UTC)
 - **High Test Coverage**: 49% code coverage with comprehensive unit and integration tests
@@ -39,6 +42,9 @@ A robust Python-based system for collecting, processing, and publishing energy p
 │  │  Data Processing Pipeline                             │ │
 │  │  ├── Timezone Normalization (Europe/Amsterdam)        │ │
 │  │  ├── Data Validation & Type Conversion                │ │
+│  │  ├── Schema Registry (versioned, auto-migration)      │ │
+│  │  ├── Data Quality Checks (FMEA-based)                 │ │
+│  │  ├── Calendar Features (holidays, DST, seasons)       │ │
 │  │  ├── CombinedDataSet Creation                         │ │
 │  │  └── Encryption (AES-CBC + HMAC-SHA256)               │ │
 │  └───────────────────────────────────────────────────────┘ │
@@ -85,13 +91,14 @@ Encrypted data is automatically published to GitHub Pages daily:
 
 ```json
 {
-  "version": "2.0",
+  "version": "2.1",
   "entsoe": {
     "metadata": {
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform",
       "units": "EUR/MWh",
       "country": "NL",
+      "schema_version": "2.1",
       "start_time": "2025-10-25T00:00:00+02:00",
       "end_time": "2025-10-26T00:00:00+02:00"
     },
@@ -385,6 +392,10 @@ python -c "from collectors import EpexCollector; c = EpexCollector(); print(c.ge
 ✅ **Production Ready** - Active development and maintenance
 
 **Latest Updates:**
+- ✅ Data Quality: FMEA-based validation framework with per-run quality reports (Mar 2026)
+- ✅ Schema Registry: Versioned schemas (v2.1) with backward-compatible migration (Mar 2026)
+- ✅ Calendar Features: DST-aware holiday/season features for NL/DE/BE/FR (Mar 2026)
+- ✅ Collector Fixes: EnergyZero hour-00 fix, MeteoServer sentinel value handling (Mar 2026)
 - ✅ Offshore Wind: Open-Meteo collector for actual offshore coordinates (Dec 2025)
 - ✅ Phase 6: Performance optimizations and test coverage (61%)
 - ✅ Phase 5: 16+ collectors with ENTSO-E, Open-Meteo, NED.nl integration

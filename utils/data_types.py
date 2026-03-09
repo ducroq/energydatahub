@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 import math
 
+from utils.schema_registry import stamp_metadata
+
 def convert_value(value):
     none_strings = ['', '-', 'n/a', 'nan', 'null', 'none', 'inf', '-inf', 'infinity', '-infinity']
     
@@ -42,7 +44,7 @@ def convert_value(value):
 
 class EnhancedDataSet:
     def __init__(self, metadata: Dict[str, Any], data: Dict[str, Any]):
-        self.metadata = metadata
+        self.metadata = stamp_metadata(metadata)
         data_type = metadata.get('data_type', 'unknown')
         if data_type == 'energy_price':
              self.data = self.validate_energy_prices(data)
