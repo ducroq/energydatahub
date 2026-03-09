@@ -334,7 +334,8 @@ async def main() -> None:
                 api_key=ned_api_key,
                 energy_types=['solar', 'wind_onshore', 'wind_offshore'],
                 include_forecast=True,
-                include_actual=True
+                include_actual=True,
+                granularity='15min'  # Match ENTSO-E 15-min resolution (since Oct 2025)
             )
 
         # Open-Meteo Solar collector for multi-location solar irradiance (FREE - no API key)

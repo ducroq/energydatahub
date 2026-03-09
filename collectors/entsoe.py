@@ -196,11 +196,13 @@ class EntsoeCollector(BaseCollector):
         metadata = super()._get_metadata(start_time, end_time)
 
         # Add ENTSO-E-specific metadata
+        # Resolution is detected from actual data: NL switched from hourly
+        # to 15-min on 1 Oct 2025. We store whatever the API returns.
         metadata.update({
             'country_code': 'NL',  # Could be made configurable
             'market': 'day-ahead',
             'currency': 'EUR',
-            'resolution': 'hourly',
+            'resolution': 'as-returned',
             'api_version': 'v1.3'
         })
 
