@@ -1,13 +1,30 @@
 {
-  "timestamp": "2026-03-09T16:57:05.669564+00:00",
-  "overall_status": "critical",
-  "total_issues": 11,
-  "datasets_collected": 12,
-  "datasets_missing": [
-    "entsoe",
-    "entsoe_de"
-  ],
+  "timestamp": "2026-03-10T16:51:58.746533+00:00",
+  "overall_status": "error",
+  "total_issues": 15,
+  "datasets_collected": 18,
+  "datasets_missing": [],
   "dataset_reports": [
+    {
+      "dataset_name": "entsoe",
+      "data_type": "energy_price",
+      "source": "ENTSO-E Transparency Platform API v1.3",
+      "status": "info",
+      "data_points": 96,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "entsoe_de",
+      "data_type": "energy_price",
+      "source": "ENTSO-E Transparency Platform API v1.3",
+      "status": "info",
+      "data_points": 96,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
     {
       "dataset_name": "energy_zero",
       "data_type": "energy_price",
@@ -58,26 +75,38 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "error",
+      "status": "warning",
       "data_points": 4320,
       "checks_passed": 3,
       "checks_failed": 2,
       "issues": [
         {
           "check_name": "value_range",
-          "severity": "error",
-          "message": "11 values outside range [-500.0, 10000.0] EUR/MWh",
+          "severity": "warning",
+          "message": "1 values outside range [-500.0, 10000.0] EUR/MWh",
           "details": {
-            "count": 11,
+            "count": 1,
             "examples": [
-              "balance_delta/2026-03-08T10:58:00+01:00: -564.4",
-              "balance_delta/2026-03-08T12:17:00+01:00: -559.8",
-              "balance_delta/2026-03-08T12:19:00+01:00: -514.3",
-              "balance_delta/2026-03-08T12:35:00+01:00: -500.6",
-              "balance_delta/2026-03-08T12:36:00+01:00: -565.8"
+              "balance_delta/2026-03-09T09:03:00+01:00: -503.0"
             ]
           }
         },
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "wind_forecast",
+      "data_type": "wind_generation",
+      "source": "ENTSO-E Transparency Platform API v1.3",
+      "status": "warning",
+      "data_points": 528,
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
         {
           "check_name": "staleness",
           "severity": "warning",
@@ -90,7 +119,7 @@
       "data_type": "solar_irradiance",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1008,
+      "data_points": 1176,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -106,7 +135,7 @@
       "data_type": "demand_weather",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1848,
+      "data_points": 1512,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -123,6 +152,54 @@
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
       "data_points": 2160,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "cross_border_flows",
+      "data_type": "cross_border_flows",
+      "source": "ENTSO-E Transparency Platform API v1.3",
+      "status": "warning",
+      "data_points": 99,
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "load_forecast",
+      "data_type": "load_forecast",
+      "source": "ENTSO-E Transparency Platform API v1.3",
+      "status": "warning",
+      "data_points": 384,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "warning",
+          "message": "Could not parse any timestamps to check staleness"
+        }
+      ]
+    },
+    {
+      "dataset_name": "generation_forecast",
+      "data_type": "generation_by_type",
+      "source": "ENTSO-E Transparency Platform API v1.3",
+      "status": "warning",
+      "data_points": 68,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -187,15 +264,15 @@
         {
           "check_name": "value_range",
           "severity": "error",
-          "message": "25 values outside range [0.0, 100.0] %",
+          "message": "24 values outside range [0.0, 100.0] %",
           "details": {
-            "count": 25,
+            "count": 24,
             "examples": [
-              "0/injection_gwh: 239.26",
-              "0/withdrawal_gwh: 445.0",
-              "0/net_change_gwh: -205.74",
+              "0/withdrawal_gwh: 131.2",
+              "0/net_change_gwh: -70.57",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 131.2"
+              "1/withdrawal_gwh: 201.1",
+              "1/net_change_gwh: -142.28"
             ]
           }
         },
