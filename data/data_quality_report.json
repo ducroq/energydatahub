@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-10T16:51:58.746533+00:00",
+  "timestamp": "2026-03-11T16:43:33.358937+00:00",
   "overall_status": "error",
-  "total_issues": 15,
+  "total_issues": 14,
   "datasets_collected": 18,
   "datasets_missing": [],
   "dataset_reports": [
@@ -10,7 +10,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -77,20 +77,9 @@
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
       "data_points": 4320,
-      "checks_passed": 3,
-      "checks_failed": 2,
+      "checks_passed": 4,
+      "checks_failed": 1,
       "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "warning",
-          "message": "1 values outside range [-500.0, 10000.0] EUR/MWh",
-          "details": {
-            "count": 1,
-            "examples": [
-              "balance_delta/2026-03-09T09:03:00+01:00: -503.0"
-            ]
-          }
-        },
         {
           "check_name": "staleness",
           "severity": "warning",
@@ -135,7 +124,7 @@
       "data_type": "demand_weather",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1512,
+      "data_points": 1344,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -151,7 +140,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
-      "data_points": 2160,
+      "data_points": 1440,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -268,11 +257,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "0/withdrawal_gwh: 131.2",
-              "0/net_change_gwh: -70.57",
+              "0/withdrawal_gwh: 201.1",
+              "0/net_change_gwh: -142.28",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 201.1",
-              "1/net_change_gwh: -142.28"
+              "1/withdrawal_gwh: 258.5",
+              "1/net_change_gwh: -205.14"
             ]
           }
         },
