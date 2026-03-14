@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-13T16:33:17.683005+00:00",
+  "timestamp": "2026-03-14T16:24:10.052417+00:00",
   "overall_status": "error",
   "total_issues": 15,
   "datasets_collected": 18,
@@ -83,15 +83,15 @@
         {
           "check_name": "value_range",
           "severity": "error",
-          "message": "34 values outside range [-500.0, 10000.0] EUR/MWh",
+          "message": "8 values outside range [-500.0, 10000.0] EUR/MWh",
           "details": {
-            "count": 34,
+            "count": 8,
             "examples": [
-              "balance_delta/2026-03-12T10:00:00+01:00: -533.0",
-              "balance_delta/2026-03-12T15:30:00+01:00: -670.0",
-              "balance_delta/2026-03-12T16:15:00+01:00: -668.0",
-              "balance_delta/2026-03-12T09:55:00+01:00: -509.0",
-              "balance_delta/2026-03-12T09:57:00+01:00: -506.0"
+              "balance_delta/2026-03-13T16:04:00+01:00: -570.0",
+              "balance_delta/2026-03-13T16:05:00+01:00: -611.0",
+              "balance_delta/2026-03-13T16:06:00+01:00: -588.0",
+              "balance_delta/2026-03-13T16:07:00+01:00: -615.0",
+              "balance_delta/2026-03-13T16:08:00+01:00: -636.0"
             ]
           }
         },
@@ -139,7 +139,7 @@
       "data_type": "demand_weather",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1680,
+      "data_points": 1848,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -155,7 +155,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
-      "data_points": 1440,
+      "data_points": 2160,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -272,11 +272,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "0/withdrawal_gwh: 341.5",
-              "0/net_change_gwh: -301.55",
+              "0/withdrawal_gwh: 345.0",
+              "0/net_change_gwh: -298.19",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 345.0",
-              "1/net_change_gwh: -298.19"
+              "1/withdrawal_gwh: 359.4",
+              "1/net_change_gwh: -318.7"
             ]
           }
         },
