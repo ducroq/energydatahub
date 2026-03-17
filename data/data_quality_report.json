@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-16T16:56:33.497038+00:00",
+  "timestamp": "2026-03-17T16:59:17.727003+00:00",
   "overall_status": "error",
-  "total_issues": 15,
+  "total_issues": 14,
   "datasets_collected": 18,
   "datasets_missing": [],
   "dataset_reports": [
@@ -77,21 +77,9 @@
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
       "data_points": 4320,
-      "checks_passed": 3,
-      "checks_failed": 2,
+      "checks_passed": 4,
+      "checks_failed": 1,
       "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "warning",
-          "message": "2 values outside range [-500.0, 10000.0] EUR/MWh",
-          "details": {
-            "count": 2,
-            "examples": [
-              "balance_delta/2026-03-15T17:04:00+01:00: -544.0",
-              "balance_delta/2026-03-15T17:05:00+01:00: -574.0"
-            ]
-          }
-        },
         {
           "check_name": "staleness",
           "severity": "warning",
@@ -120,7 +108,7 @@
       "data_type": "solar_irradiance",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1176,
+      "data_points": 1008,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -136,7 +124,7 @@
       "data_type": "demand_weather",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1848,
+      "data_points": 1512,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -269,11 +257,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "0/withdrawal_gwh: 369.1",
-              "0/net_change_gwh: -337.31",
+              "0/withdrawal_gwh: 329.0",
+              "0/net_change_gwh: -279.28",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 329.0",
-              "1/net_change_gwh: -279.28"
+              "1/withdrawal_gwh: 416.3",
+              "1/net_change_gwh: -382.69"
             ]
           }
         },
