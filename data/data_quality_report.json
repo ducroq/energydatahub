@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T16:59:17.727003+00:00",
+  "timestamp": "2026-03-18T16:55:50.338253+00:00",
   "overall_status": "error",
   "total_issues": 14,
   "datasets_collected": 18,
@@ -124,7 +124,7 @@
       "data_type": "demand_weather",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1512,
+      "data_points": 1848,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -140,7 +140,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
-      "data_points": 1920,
+      "data_points": 2160,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -257,11 +257,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "0/withdrawal_gwh: 329.0",
-              "0/net_change_gwh: -279.28",
+              "0/withdrawal_gwh: 416.3",
+              "0/net_change_gwh: -382.69",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 416.3",
-              "1/net_change_gwh: -382.69"
+              "1/withdrawal_gwh: 398.1",
+              "1/net_change_gwh: -365.13"
             ]
           }
         },
