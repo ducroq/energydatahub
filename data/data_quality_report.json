@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-22T16:23:16.120453+00:00",
+  "timestamp": "2026-03-23T16:52:35.232413+00:00",
   "overall_status": "error",
   "total_issues": 14,
   "datasets_collected": 18,
@@ -108,7 +108,7 @@
       "data_type": "solar_irradiance",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 840,
+      "data_points": 1008,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -140,7 +140,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
-      "data_points": 1680,
+      "data_points": 1920,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -188,7 +188,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 68,
+      "data_points": 64,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -257,11 +257,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "0/withdrawal_gwh: 461.2",
-              "0/net_change_gwh: -444.91999999999996",
+              "0/withdrawal_gwh: 475.2",
+              "0/net_change_gwh: -453.78999999999996",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 475.2",
-              "1/net_change_gwh: -453.78999999999996"
+              "1/withdrawal_gwh: 415.7",
+              "1/net_change_gwh: -365.83"
             ]
           }
         },
