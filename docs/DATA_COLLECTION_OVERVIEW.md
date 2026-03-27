@@ -120,19 +120,22 @@ Google Weather API doesn't support open-sea coordinates (returns 404 errors). Op
 
 ---
 
-### 7. Generation by Type (Nuclear)
+### 7. Generation by Type
 
 | Source | File | Variables | Coverage |
 |--------|------|-----------|----------|
 | ENTSO-E | `generation_forecast.json` | Nuclear generation (MW), availability % | France |
+| ENTSO-E | `generation_mix.json` | Actual generation per fuel type (MW) | NL, DE_LU, BE |
 
-**Key Metrics**:
-- **Nuclear Actual/Forecast**: MW output from French nuclear fleet
-- **Nuclear Availability**: % of 61 GW installed capacity online
+**French Nuclear** (`generation_forecast.json`):
+- Nuclear actual/forecast MW output from French nuclear fleet
+- Nuclear availability: % of 61 GW installed capacity online
+- French nuclear is the largest single source in Europe; outages cause continent-wide price spikes
 
-French nuclear (~61 GW installed) is the largest single source in Europe. Outages cause price spikes across the continent.
-
-**Historical Records**: ~1 day (new)
+**Generation Mix** (`generation_mix.json`):
+- Hourly actual generation by fuel type: nuclear, fossil gas, hard coal, wind onshore/offshore, solar, hydro (run-of-river + reservoir)
+- Gas plants are the marginal price setter in NL — knowing how much gas is running directly predicts price
+- Uses ENTSO-E document type A75 (Actual Generation per Type)
 
 ---
 
@@ -192,26 +195,29 @@ French nuclear (~61 GW installed) is the largest single source in Europe. Outage
 | Source | File | Variables | Coverage |
 |--------|------|-----------|----------|
 | Alpha Vantage | `market_proxies.json` | Carbon price (KEUA ETF) | EU ETS proxy |
-| Alpha Vantage | `market_proxies.json` | Gas price (UNG ETF) | US gas (correlates with EU) |
-
-**Why ETF Proxies?**
-Direct access to EU carbon (EUA) and TTF gas prices requires expensive exchange subscriptions. ETFs that track these commodities provide free, daily, market-reflective prices via Alpha Vantage API.
+| yfinance | `market_proxies.json` | TTF gas price (EUR/MWh) | European gas benchmark |
+| Alpha Vantage | `market_proxies.json` | Gas price (UNG ETF) | US gas (fallback/correlation) |
+| Accumulated | `market_history.json` | Rolling 180-day daily TTF + carbon time series | For ML lag features |
 
 **Tickers Used**:
-- **KEUA**: KraneShares European Carbon Allowance ETF (tracks EUA futures)
-- **UNG**: United States Natural Gas Fund (correlates with EU gas prices)
+- **TTF=F**: Dutch TTF Natural Gas Futures — European gas benchmark (EUR/MWh, via yfinance)
+- **KEUA**: KraneShares European Carbon Allowance ETF (tracks EUA futures, via Alpha Vantage)
+- **UNG**: United States Natural Gas Fund (fallback proxy, via Alpha Vantage)
 
-**Collected Variables**:
+**Collected Variables** (`market_proxies.json`):
 - Current price, open, high, low, volume
 - Lagged values (T-1, T-2, T-7) for ML features
 - Rolling statistics (7d/30d mean, volatility, trend)
-- 30-day price history
+- ~30-day price history per ticker
+
+**Market History** (`market_history.json`):
+- Rolling 180-day daily closing prices for gas TTF and carbon EUA
+- Accumulated across daily runs — grows over time, trimmed to window
+- Enables Augur's ML model to build multi-week lag features and trend signals
 
 **Data Leakage Prevention**: Use lagged values (`price_lag1`, `price_lag7`) instead of current price for prediction models.
 
 See [CARBON_GAS_PRICE_PROXIES.md](CARBON_GAS_PRICE_PROXIES.md) for detailed documentation.
-
-**Historical Records**: ~1 day (new)
 
 ---
 
@@ -304,9 +310,9 @@ Why: French nuclear outages cause price spikes across Europe
 - French nuclear availability tracking
 
 ### ⚠️ Weaknesses
-- No fuel prices (gas, coal, carbon)
-- Short historical record for new data types
+- Short historical record for newer data types (market history will accumulate over time)
 - Google Weather limited to 24h history (no backfill)
+- Coal prices not collected (would require paid exchange subscription)
 
 ### 🔄 Backfill Capability
 
@@ -375,13 +381,15 @@ data/
 ├── cross_border_flows.json             # ENTSO-E physical flows (10 NL borders)
 ├── load_forecast.json                  # ENTSO-E load forecasts (NL, DE_LU)
 ├── generation_forecast.json            # ENTSO-E generation by type (FR nuclear)
+├── generation_mix.json                # ENTSO-E full generation mix (NL, DE, BE)
 ├── weather_forecast_multi_location.json # Google Weather (15 locations)
 ├── wind_forecast.json                  # ENTSO-E wind + offshore weather
 ├── ned_production.json                 # NED.nl solar/wind production
 ├── solar_forecast.json                 # Open-Meteo solar irradiance (7 locations)
 ├── demand_weather_forecast.json        # Open-Meteo demand weather (11 locations)
 ├── calendar_features.json              # Calendar features (holidays, day type, season)
-├── market_proxies.json                 # Carbon/gas prices via Alpha Vantage (KEUA, UNG)
+├── market_proxies.json                 # Carbon/gas prices (KEUA, TTF, UNG)
+├── market_history.json                # Rolling 180-day TTF + carbon time series
 ├── gas_storage.json                    # GIE AGSI+ gas storage levels (NL)
 ├── gas_flows.json                      # ENTSOG gas entry/exit flows (NL)
 └── YYMMDD_HHMMSS_*.json               # Timestamped historical copies
@@ -403,4 +411,4 @@ data/
 ---
 
 *Document created: 2025-12-01*
-*Last updated: 2026-01-21 (Added gas storage and gas flows collectors)*
+*Last updated: 2026-03-27 (Added generation mix, market history accumulation, TTF gas)*
