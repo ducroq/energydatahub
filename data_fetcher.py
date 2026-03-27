@@ -383,6 +383,20 @@ async def main() -> None:
             include_actual=True
         )
 
+        # ENTSO-E Generation Mix collector for full fuel type breakdown (FREE - uses existing API key)
+        # Knowing which plants are running determines the merit order and predicts electricity prices
+        entsoe_genmix_collector = EntsoeGenerationCollector(
+            api_key=entsoe_api_key,
+            country_codes=['NL', 'DE_LU', 'BE'],
+            generation_types=[
+                'nuclear', 'fossil_gas', 'fossil_hard_coal',
+                'wind_onshore', 'wind_offshore', 'solar',
+                'hydro_run_of_river', 'hydro_reservoir',
+            ],
+            include_forecast=False,  # A75 actual generation per type
+            include_actual=True
+        )
+
         # Market Proxy collector for carbon and gas prices (requires Alpha Vantage API key)
         # Carbon and gas prices are key drivers of electricity prices
         market_proxy_collector = None
@@ -420,7 +434,8 @@ async def main() -> None:
             openmeteo_offshore_wind_collector.collect(today, ten_days_ahead),  # Offshore wind at actual locations
             entsoe_flows_collector.collect(yesterday, today),  # Cross-border flows (historical)
             entsoe_load_collector.collect(today, tomorrow),  # Load forecasts
-            entsoe_generation_collector.collect(today, tomorrow)  # French nuclear generation
+            entsoe_generation_collector.collect(today, tomorrow),  # French nuclear generation
+            entsoe_genmix_collector.collect(yesterday, today)  # Full generation mix (NL, DE, BE)
         ]
 
         # Add NED.nl collection if API key is configured
@@ -444,10 +459,11 @@ async def main() -> None:
         # Unpack results - NED.nl, market proxies, and gas collectors are optional at the end
         (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, google_weather_data, elspot_data,
          tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
-         offshore_wind_data, flows_data, load_data, generation_data) = results[:14]
+         offshore_wind_data, flows_data, load_data, generation_data,
+         genmix_data) = results[:15]
 
         # Handle optional collectors (NED.nl, market proxies, and gas data)
-        optional_idx = 14
+        optional_idx = 15
         ned_data = None
         market_proxy_data = None
         gie_storage_data = None
@@ -563,6 +579,14 @@ async def main() -> None:
             shutil.copy(full_path, os.path.join(output_path, "generation_forecast.json"))
             logging.info(f"Saved generation data for {len(generation_data.data)} countries (nuclear availability)")
 
+        # Save generation mix data (NL, DE, BE - all fuel types)
+        if genmix_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_generation_mix.json")
+            save_data_file(data=genmix_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "generation_mix.json"))
+            countries = list(genmix_data.data.keys()) if genmix_data.data else []
+            logging.info(f"Saved generation mix for {len(countries)} countries: {countries}")
+
         # Generate calendar features for the forecast period
         # Calendar features affect electricity demand (holidays, weekends, season)
         calendar_data = get_calendar_features_for_range(today, ten_days_ahead, hourly=True)
@@ -594,6 +618,94 @@ async def main() -> None:
             carbon_price = market_proxy_data.data.get('carbon', {}).get('price', 'N/A')
             gas_price = market_proxy_data.data.get('gas', {}).get('price', 'N/A')
             logging.info(f"Saved market proxies: carbon=${carbon_price}, gas=${gas_price}")
+
+        # --- Accumulate market history time series ---
+        market_history_dataset = None
+        # Build a rolling 180-day time series of daily gas TTF and carbon EUA prices
+        # so Augur's ML model can extract lag features and trends.
+        market_history_file = os.path.join(output_path, "market_history.json")
+        MARKET_HISTORY_DAYS = 180
+
+        # Load existing accumulated history
+        existing_history = {}
+        if os.path.exists(market_history_file):
+            try:
+                with open(market_history_file) as f:
+                    raw = json.load(f)
+                # Handle both encrypted (string) and plain (dict) formats
+                if isinstance(raw, dict):
+                    existing_history = raw.get('data', raw)
+            except Exception as e:
+                logging.warning(f"Could not load existing market history: {e}")
+
+        # Merge new data from today's market proxy collection
+        if market_proxy_data:
+            mp = market_proxy_data.data
+
+            # Accumulate gas TTF history
+            if 'gas_ttf' in mp:
+                if 'gas_ttf' not in existing_history:
+                    existing_history['gas_ttf'] = {'metadata': {}, 'data': {}}
+                ttf = mp['gas_ttf']
+                existing_history['gas_ttf']['metadata'] = {
+                    'units': ttf.get('units', 'EUR/MWh'),
+                    'source': ttf.get('source', 'yfinance'),
+                    'ticker': ttf.get('ticker', 'TTF=F'),
+                }
+                # Merge history from yfinance (~30 days) into accumulated data
+                if 'history' in ttf:
+                    existing_history['gas_ttf']['data'].update(ttf['history'])
+                # Also add today's price by date
+                if ttf.get('date') and ttf.get('price'):
+                    existing_history['gas_ttf']['data'][ttf['date']] = ttf['price']
+
+            # Accumulate carbon EUA history
+            if 'carbon' in mp:
+                if 'carbon_eua' not in existing_history:
+                    existing_history['carbon_eua'] = {'metadata': {}, 'data': {}}
+                carbon = mp['carbon']
+                existing_history['carbon_eua']['metadata'] = {
+                    'units': carbon.get('units', 'USD/share'),
+                    'source': carbon.get('source', 'Alpha Vantage'),
+                    'ticker': carbon.get('ticker', 'KEUA'),
+                }
+                # Merge history if available
+                if 'history' in carbon:
+                    existing_history['carbon_eua']['data'].update(carbon['history'])
+                # Add today's price
+                if carbon.get('date') and carbon.get('price'):
+                    existing_history['carbon_eua']['data'][carbon['date']] = carbon['price']
+
+        # Trim each series to rolling window
+        cutoff_date = (today - timedelta(days=MARKET_HISTORY_DAYS)).strftime('%Y-%m-%d')
+        for series_key in ['gas_ttf', 'carbon_eua']:
+            if series_key in existing_history and 'data' in existing_history[series_key]:
+                existing_history[series_key]['data'] = {
+                    d: v for d, v in sorted(existing_history[series_key]['data'].items())
+                    if d >= cutoff_date
+                }
+
+        # Save accumulated history
+        if existing_history and any(
+            existing_history.get(k, {}).get('data') for k in ['gas_ttf', 'carbon_eua']
+        ):
+            market_history_dataset = EnhancedDataSet(
+                metadata={
+                    'data_type': 'market_history',
+                    'source': 'Alpha Vantage / yfinance (accumulated)',
+                    'description': 'Rolling daily time series of gas TTF and carbon EUA prices',
+                    'rolling_window_days': MARKET_HISTORY_DAYS,
+                    'start_time': today.isoformat(),
+                    'end_time': today.isoformat(),
+                },
+                data=existing_history
+            )
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_market_history.json")
+            save_data_file(data=market_history_dataset, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, market_history_file)
+            ttf_points = len(existing_history.get('gas_ttf', {}).get('data', {}))
+            carbon_points = len(existing_history.get('carbon_eua', {}).get('data', {}))
+            logging.info(f"Saved market history: TTF={ttf_points} days, carbon={carbon_points} days")
 
         # Save GIE gas storage data (fill levels, injection/withdrawal)
         if gie_storage_data:
@@ -636,8 +748,10 @@ async def main() -> None:
             'cross_border_flows': flows_data,
             'load_forecast': load_data,
             'generation_forecast': generation_data,
+            'generation_mix': genmix_data,
             'ned_production': ned_data,
             'market_proxies': market_proxy_data,
+            'market_history': market_history_dataset,
             'gas_storage': gie_storage_data,
             'gas_flows': entsog_flows_data,
         }

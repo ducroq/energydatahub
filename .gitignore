@@ -4,9 +4,8 @@
 secrets.ini
 secrets.local.ini
 
-# Claude Code configuration
+# Claude Code local configuration (not project docs)
 .claude/
-CLAUDE.md
 tmpclaude-*
 
 # Log files
