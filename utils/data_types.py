@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
 import math
@@ -103,6 +104,7 @@ class CombinedDataSet:
         if name in self.datasets:
             raise ValueError(f"Dataset with name {name} already exists")
         if dataset is None:
+            logging.warning(f"Dataset '{name}' is None — skipping (collector may have failed)")
             return
         self.datasets[name] = dataset.to_dict()
 

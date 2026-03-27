@@ -100,6 +100,13 @@ SECRETS_FILE_NAME = 'secrets.ini'
 OUTPUT_FOLDER_NAME = 'data'
 output_path = os.path.join(os.getcwd(), OUTPUT_FOLDER_NAME)
 
+# Retry settings for critical collectors
+RETRY_DELAY_SECONDS = 300  # 5 minutes between retry rounds
+MAX_RETRY_ROUNDS = 3       # Up to 3 retry rounds for failed critical collectors
+
+# Critical datasets — if these are missing, Augur's forecast breaks
+CRITICAL_DATASETS = {'entsoe', 'entsoe_de'}
+
 # Setup logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -477,6 +484,44 @@ async def main() -> None:
         if gie_collector:
             gie_storage_data = results[optional_idx] if len(results) > optional_idx else None
             optional_idx += 1
+
+        # --- Retry failed critical collectors ---
+        # ENTSO-E price data is critical for Augur's forecast. If the API was
+        # temporarily unavailable (503), a delayed retry often succeeds.
+        for retry_round in range(1, MAX_RETRY_ROUNDS + 1):
+            failed_critical = []
+            if entsoe_data is None:
+                failed_critical.append('entsoe')
+            if entsoe_de_data is None:
+                failed_critical.append('entsoe_de')
+
+            if not failed_critical:
+                break
+
+            logging.warning(
+                f"Critical datasets missing: {failed_critical}. "
+                f"Retry round {retry_round}/{MAX_RETRY_ROUNDS} in {RETRY_DELAY_SECONDS}s..."
+            )
+            await asyncio.sleep(RETRY_DELAY_SECONDS)
+
+            retry_tasks = {}
+            if entsoe_data is None:
+                retry_tasks['entsoe'] = entsoe_collector.collect(
+                    today, tomorrow, country_code=country_code
+                )
+            if entsoe_de_data is None:
+                retry_tasks['entsoe_de'] = entsoe_collector.collect(
+                    today, tomorrow, country_code='DE_LU'
+                )
+
+            retry_results = await asyncio.gather(*retry_tasks.values())
+            for key, result in zip(retry_tasks.keys(), retry_results):
+                if result is not None:
+                    logging.info(f"Retry succeeded for '{key}' on round {retry_round}")
+                    if key == 'entsoe':
+                        entsoe_data = result
+                    elif key == 'entsoe_de':
+                        entsoe_de_data = result
         # ENTSOG flows is always collected (no API key required)
         entsog_flows_data = results[optional_idx] if len(results) > optional_idx else None
 
@@ -763,6 +808,20 @@ async def main() -> None:
                      f"issues={quality_report.total_issues}, "
                      f"saved to {quality_report_path}")
 
+        # --- Final validation: fail the workflow if critical data is still missing ---
+        missing_critical = [
+            name for name in CRITICAL_DATASETS
+            if quality_datasets.get(name) is None
+        ]
+        if missing_critical:
+            logging.error(
+                f"CRITICAL DATA MISSING after {MAX_RETRY_ROUNDS} retry rounds: "
+                f"{missing_critical}. Downstream forecasts (Augur) will be degraded."
+            )
+            raise SystemExit(1)
+
+    except SystemExit:
+        raise  # Let the exit code propagate
     except Exception as e:
         logging.error(e)
 

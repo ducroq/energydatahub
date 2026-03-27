@@ -16,10 +16,11 @@
 
 ## Current State
 
-- **Issues completed (2026-03-27)**: #5 market history accumulation, #6 NED publish (already done), #7 generation mix collector
+- **Issues completed (2026-03-27)**: #5 market history, #6 NED publish, #7 generation mix, #8 ENTSO-E collector resilience
 - **Open issues**: #2 JAO interconnector, #3 Nordic hydro, #4 gap detection/backfill
 - **Active collectors**: 15+ sources, daily automated via GitHub Actions at 16:00 UTC
 - **Schema version**: 2.1 (v1.0 -> v2.0 -> v2.1 migration supported)
+- **Resilience**: Critical collectors (entsoe, entsoe_de) retry up to 3 rounds × 5 min on failure; workflow exits non-zero if still missing
 
 ## Recently Promoted
 
