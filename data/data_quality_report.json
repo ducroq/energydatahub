@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-27T16:47:46.234819+00:00",
+  "timestamp": "2026-03-28T16:27:41.573782+00:00",
   "overall_status": "error",
   "total_issues": 18,
   "datasets_collected": 20,
@@ -10,7 +10,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 188,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 188,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -30,7 +30,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 48,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -40,7 +40,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 47,
+      "data_points": 46,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -83,15 +83,15 @@
         {
           "check_name": "value_range",
           "severity": "error",
-          "message": "44 values outside range [-500.0, 10000.0] EUR/MWh",
+          "message": "141 values outside range [-500.0, 10000.0] EUR/MWh",
           "details": {
-            "count": 44,
+            "count": 141,
             "examples": [
-              "balance_delta/2026-03-26T18:00:00+01:00: -524.0",
-              "balance_delta/2026-03-26T18:30:00+01:00: -511.0",
-              "balance_delta/2026-03-26T14:34:00+01:00: -519.0",
-              "balance_delta/2026-03-26T14:35:00+01:00: -508.0",
-              "balance_delta/2026-03-26T14:37:00+01:00: -504.0"
+              "balance_delta/2026-03-27T06:30:00+01:00: -511.5",
+              "balance_delta/2026-03-27T07:30:00+01:00: -562.2",
+              "balance_delta/2026-03-27T07:45:00+01:00: -670.0",
+              "balance_delta/2026-03-27T08:00:00+01:00: -835.4",
+              "balance_delta/2026-03-27T08:30:00+01:00: -659.9"
             ]
           }
         },
@@ -107,7 +107,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 312,
+      "data_points": 335,
       "checks_passed": 4,
       "checks_failed": 1,
       "issues": [
@@ -123,7 +123,7 @@
       "data_type": "solar_irradiance",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1176,
+      "data_points": 1008,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -155,7 +155,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
-      "data_points": 2160,
+      "data_points": 1200,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -187,7 +187,7 @@
       "data_type": "load_forecast",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 114,
+      "data_points": 284,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -203,7 +203,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 24,
+      "data_points": 68,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -314,11 +314,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "0/withdrawal_gwh: 296.3",
-              "0/net_change_gwh: -245.12",
+              "0/withdrawal_gwh: 354.5",
+              "0/net_change_gwh: -315.17",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 354.5",
-              "1/net_change_gwh: -315.17"
+              "1/withdrawal_gwh: 335.8",
+              "1/net_change_gwh: -290.48"
             ]
           }
         },
