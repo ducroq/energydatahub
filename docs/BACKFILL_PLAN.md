@@ -71,7 +71,19 @@ Implemented via `OpenMeteoWeatherCollector` (FREE API):
 - HDD = max(0, 18°C - temperature) → Higher when colder (heating demand)
 - CDD = max(0, temperature - 24°C) → Higher when hotter (cooling demand)
 
+### ENTSO-E Price Backfill
+**Status**: DONE (2026-03-28)
+
+Backfilled missing `entsoe` (NL) and `entsoe_de` (DE) day-ahead prices into existing encrypted data files using `scripts/backfill_entsoe.py`.
+
+**Results**:
+- 100 of 123 degraded files patched (Oct 2025 - Mar 2026)
+- 26 early files (Sep-Oct 2025) skipped due to pre-existing malformed timestamps
+- 5 files skipped where ENTSO-E API had no data
+
+**Script**: `scripts/backfill_entsoe.py` — idempotent, supports `--dry-run`, reuses existing collectors and encryption.
+
 ---
 *Created: 2025-12-01*
-*Updated: 2025-12-01*
-*Status: Solar and Demand weather DONE - Historical backfill TODO when ready for ML training*
+*Updated: 2026-03-28*
+*Status: Solar and Demand weather DONE - ENTSO-E price backfill DONE*

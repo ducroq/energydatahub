@@ -19,10 +19,11 @@
 -->
 
 ### ENTSO-E API 503 caused silent data degradation (2026-03-27) [RESOLVED]
-**Problem**: ENTSO-E API returned 503 on 2026-03-26. Price files lost `entsoe` and `entsoe_de` keys (27KB → 7.8KB). Augur's consumer price forecast broke completely.
+**Problem**: ENTSO-E API returned 503 on 2026-03-26. Price files lost `entsoe` and `entsoe_de` keys (27KB → 7.8KB). Augur's consumer price forecast broke completely. Scan revealed 123 degraded files (43% of all price data) going back to Sep 2025.
 **Root cause**: `CombinedDataSet.add_dataset()` silently returned on `None` datasets. `data_fetcher.py` saved degraded files without warning. Workflow reported success.
-**Fix**: (1) `add_dataset()` now logs WARNING on None datasets. (2) Critical collectors (`entsoe`, `entsoe_de`) retry up to 3 rounds × 5 min delay. (3) Workflow exits non-zero if critical data still missing after retries.
+**Fix**: (1) `add_dataset()` now logs WARNING on None datasets. (2) Critical collectors (`entsoe`, `entsoe_de`) retry up to 3 rounds × 5 min delay. (3) Workflow exits non-zero if critical data still missing after retries. (4) Backfilled 100 files with `scripts/backfill_entsoe.py` (2026-03-28).
 **Negative result**: The BaseCollector's built-in retry (3 attempts, 1-60s backoff) is too fast for API-wide outages — the API was down for the entire collection window. Longer delays between retry rounds were needed.
+**Remaining**: 26 early files (Sep-Oct 2025) have malformed timestamps in non-ENTSO-E datasets, preventing re-save.
 
 ### Encrypted data files can't be read back for accumulation (2026-03-27)
 **Problem**: Market history accumulation needs to read the previous `market_history.json`, but published files are encrypted.
