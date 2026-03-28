@@ -67,6 +67,7 @@ docs/                        # GitHub Pages: encrypted JSON + project documentat
 | `settings.ini` | Public config (location, encryption flag) |
 | `secrets.ini` | API keys (gitignored) |
 | `.github/workflows/collect-data.yml` | Daily CI/CD pipeline |
+| `scripts/backfill_entsoe.py` | Backfill missing ENTSO-E prices into historical files |
 | `tests/` | Unit + integration tests (398 tests, ~67% coverage) |
 
 ## How to Work Here
@@ -80,6 +81,10 @@ python -m pytest tests/unit/test_base_collector.py -v
 
 # Run data collection locally (needs secrets.ini)
 python data_fetcher.py
+
+# Backfill missing ENTSO-E data (idempotent, safe to re-run)
+python scripts/backfill_entsoe.py --dry-run  # report only
+python scripts/backfill_entsoe.py            # patch files
 
 # Check GitHub Actions status
 gh run list --limit 5
