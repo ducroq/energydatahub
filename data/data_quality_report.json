@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-28T16:27:41.573782+00:00",
+  "timestamp": "2026-03-29T16:29:16.583061+00:00",
   "overall_status": "error",
   "total_issues": 18,
   "datasets_collected": 20,
@@ -50,7 +50,7 @@
       "data_type": "energy_price",
       "source": "Nord Pool Elspot API v2",
       "status": "info",
-      "data_points": 24,
+      "data_points": 23,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -83,15 +83,15 @@
         {
           "check_name": "value_range",
           "severity": "error",
-          "message": "141 values outside range [-500.0, 10000.0] EUR/MWh",
+          "message": "27 values outside range [-500.0, 10000.0] EUR/MWh",
           "details": {
-            "count": 141,
+            "count": 27,
             "examples": [
-              "balance_delta/2026-03-27T06:30:00+01:00: -511.5",
-              "balance_delta/2026-03-27T07:30:00+01:00: -562.2",
-              "balance_delta/2026-03-27T07:45:00+01:00: -670.0",
-              "balance_delta/2026-03-27T08:00:00+01:00: -835.4",
-              "balance_delta/2026-03-27T08:30:00+01:00: -659.9"
+              "imbalance_price/2026-03-28T21:00:00+01:00: -548.05",
+              "balance_delta/2026-03-28T20:45:00+01:00: -552.0",
+              "balance_delta/2026-03-28T21:00:00+01:00: -535.0",
+              "balance_delta/2026-03-28T21:45:00+01:00: -534.2",
+              "balance_delta/2026-03-28T17:05:00+01:00: -505.0"
             ]
           }
         },
@@ -107,7 +107,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 335,
+      "data_points": 423,
       "checks_passed": 4,
       "checks_failed": 1,
       "issues": [
@@ -139,7 +139,7 @@
       "data_type": "demand_weather",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1848,
+      "data_points": 1680,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -155,7 +155,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
-      "data_points": 1200,
+      "data_points": 1920,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -187,7 +187,7 @@
       "data_type": "load_forecast",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 284,
+      "data_points": 188,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -219,7 +219,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 216,
+      "data_points": 24,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -314,11 +314,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "0/withdrawal_gwh: 354.5",
-              "0/net_change_gwh: -315.17",
+              "0/withdrawal_gwh: 335.8",
+              "0/net_change_gwh: -290.48",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 335.8",
-              "1/net_change_gwh: -290.48"
+              "1/withdrawal_gwh: 348.8",
+              "1/net_change_gwh: -332.57"
             ]
           }
         },
