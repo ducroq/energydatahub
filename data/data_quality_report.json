@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-30T18:21:50.587348+02:00",
+  "timestamp": "2026-03-30T16:51:26.718039+00:00",
   "overall_status": "error",
   "total_issues": 17,
   "datasets_collected": 20,
@@ -92,7 +92,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 288,
+      "data_points": 432,
       "checks_passed": 4,
       "checks_failed": 1,
       "issues": [
@@ -124,7 +124,7 @@
       "data_type": "demand_weather",
       "source": "Open-Meteo API (free)",
       "status": "warning",
-      "data_points": 1680,
+      "data_points": 1848,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -140,7 +140,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
-      "data_points": 1680,
+      "data_points": 2160,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -172,7 +172,7 @@
       "data_type": "load_forecast",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 192,
+      "data_points": 384,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -204,7 +204,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 184,
+      "data_points": 207,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
