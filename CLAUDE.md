@@ -5,7 +5,7 @@ Automated energy market data collection platform for electricity price predictio
 - **Stack**: Python 3.12, asyncio/aiohttp, pandas, GitHub Actions CI/CD
 - **Status**: Production (daily automated collection since Oct 2024)
 - **Repo**: github.com/ducroq/energydatahub
-- **agent-ready-projects**: v1.3.2
+- **agent-ready-projects**: v1.3.4
 
 ## Before You Start
 
@@ -51,7 +51,7 @@ data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + curre
 docs/                        # GitHub Pages: encrypted JSON + project documentation
 .github/workflows/
   collect-data.yml           # Daily 16:00 UTC collection + publish
-  test.yml                   # PR/push test pipeline
+  test.yml                   # PR/push test pipeline (path-filtered, Python 3.12 only)
 ```
 
 ## Key Paths
