@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-29T16:29:16.583061+00:00",
+  "timestamp": "2026-03-30T18:21:50.587348+02:00",
   "overall_status": "error",
-  "total_issues": 18,
+  "total_issues": 17,
   "datasets_collected": 20,
   "datasets_missing": [],
   "dataset_reports": [
@@ -10,7 +10,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 188,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 188,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -30,7 +30,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 47,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -40,7 +40,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 46,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -50,7 +50,7 @@
       "data_type": "energy_price",
       "source": "Nord Pool Elspot API v2",
       "status": "info",
-      "data_points": 23,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -75,26 +75,11 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "error",
-      "data_points": 4320,
-      "checks_passed": 3,
-      "checks_failed": 2,
+      "status": "warning",
+      "data_points": 4140,
+      "checks_passed": 4,
+      "checks_failed": 1,
       "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "error",
-          "message": "27 values outside range [-500.0, 10000.0] EUR/MWh",
-          "details": {
-            "count": 27,
-            "examples": [
-              "imbalance_price/2026-03-28T21:00:00+01:00: -548.05",
-              "balance_delta/2026-03-28T20:45:00+01:00: -552.0",
-              "balance_delta/2026-03-28T21:00:00+01:00: -535.0",
-              "balance_delta/2026-03-28T21:45:00+01:00: -534.2",
-              "balance_delta/2026-03-28T17:05:00+01:00: -505.0"
-            ]
-          }
-        },
         {
           "check_name": "staleness",
           "severity": "warning",
@@ -107,7 +92,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 423,
+      "data_points": 288,
       "checks_passed": 4,
       "checks_failed": 1,
       "issues": [
@@ -155,7 +140,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "warning",
-      "data_points": 1920,
+      "data_points": 1680,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -171,7 +156,7 @@
       "data_type": "cross_border_flows",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 99,
+      "data_points": 95,
       "checks_passed": 4,
       "checks_failed": 1,
       "issues": [
@@ -187,7 +172,7 @@
       "data_type": "load_forecast",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 188,
+      "data_points": 192,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -203,7 +188,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 68,
+      "data_points": 56,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -219,7 +204,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "warning",
-      "data_points": 24,
+      "data_points": 184,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -314,11 +299,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "0/withdrawal_gwh: 335.8",
-              "0/net_change_gwh: -290.48",
+              "0/withdrawal_gwh: 350.6",
+              "0/net_change_gwh: -334.37",
               "0/working_gas_volume_twh: 144.2965",
-              "1/withdrawal_gwh: 348.8",
-              "1/net_change_gwh: -332.57"
+              "1/withdrawal_gwh: 321.9",
+              "1/net_change_gwh: -280.2"
             ]
           }
         },

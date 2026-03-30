@@ -1,0 +1,178 @@
+{
+  "timestamp": "2026-03-09T14:28:50.393932",
+  "files_scanned": 1692,
+  "parse_errors": 0,
+  "total_issues": 19,
+  "schema_versions": {
+    "2.0": 1692
+  },
+  "by_file_type": {
+    "air_history": {
+      "total": 85,
+      "clean": 85,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "energy_price_forecast": {
+      "total": 189,
+      "clean": 172,
+      "with_issues": 17,
+      "errors": 0,
+      "issues_by_check": {
+        "completeness": 18
+      },
+      "issues_by_severity": {
+        "warning": 17,
+        "critical": 1
+      }
+    },
+    "sun_forecast": {
+      "total": 85,
+      "clean": 85,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "weather_forecast": {
+      "total": 85,
+      "clean": 84,
+      "with_issues": 1,
+      "errors": 0,
+      "issues_by_check": {
+        "value_range": 1
+      },
+      "issues_by_severity": {
+        "warning": 1
+      }
+    },
+    "weather_forecast_multi_location": {
+      "total": 143,
+      "clean": 143,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "grid_imbalance": {
+      "total": 120,
+      "clean": 120,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "wind_forecast": {
+      "total": 107,
+      "clean": 107,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "ned_production": {
+      "total": 106,
+      "clean": 106,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "solar_forecast": {
+      "total": 104,
+      "clean": 104,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "demand_weather_forecast": {
+      "total": 102,
+      "clean": 102,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "cross_border_flows": {
+      "total": 97,
+      "clean": 97,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "generation_forecast": {
+      "total": 95,
+      "clean": 95,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "load_forecast": {
+      "total": 96,
+      "clean": 96,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "calendar_features": {
+      "total": 100,
+      "clean": 100,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "market_proxies": {
+      "total": 98,
+      "clean": 98,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "gas_flows": {
+      "total": 41,
+      "clean": 41,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    },
+    "gas_storage": {
+      "total": 39,
+      "clean": 39,
+      "with_issues": 0,
+      "errors": 0,
+      "issues_by_check": {},
+      "issues_by_severity": {}
+    }
+  },
+  "issue_examples": {
+    "completeness:energy_price_forecast.json": [
+      [
+        "251020_161819_energy_price_forecast.json",
+        "Only 22 data points (expected >= 24, 92% complete)"
+      ],
+      [
+        "251026_061250_energy_price_forecast.json",
+        "Only 16 data points (expected >= 22, 73% complete)"
+      ],
+      [
+        "251026_064316_energy_price_forecast.json",
+        "Only 16 data points (expected >= 22, 73% complete)"
+      ]
+    ],
+    "value_range:weather_forecast.json": [
+      [
+        "251102_072757_weather_forecast.json",
+        "2 weather field values outside their specific ranges"
+      ]
+    ]
+  }
+}
