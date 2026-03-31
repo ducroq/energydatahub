@@ -35,6 +35,11 @@
 **Root cause**: The `entsoe-py` library normalizes differently depending on what the ENTSO-E API returns per country.
 **Fix**: The existing collector handles both Series and DataFrame with `isinstance` checks. When adding generation mix for NL/DE/BE, same logic applies — no code change needed, just awareness.
 
+### GIE gas storage timestamps were integer indices (2026-03-31) [RESOLVED]
+**Problem**: 75 of 90 historical gas_storage files had integer keys ('0', '1', '2') instead of ISO timestamps. Data values were intact but unusable without proper time alignment.
+**Root cause**: `pd.concat(ignore_index=True)` in `_fetch_raw_data` dropped the `gasDayStart` index. `_parse_response` fell back to `str(_)` which gave integer indices.
+**Fix**: (1) Collector fix: preserve `gasDayStart` index in concat. (2) Backfill: `scripts/backfill_gas_storage.py` reconstructed timestamps from metadata `start_time` + daily offset. 75 files patched, 0 errors. Script is idempotent.
+
 ### Per-item ENTSO-E retries were missing (2026-03-30) [RESOLVED]
 **Problem**: ENTSO-E 503 errors on individual borders/countries were not retried. BaseCollector's `_retry_with_backoff` wraps the entire `_fetch_raw_data`, but inside the loop, individual failures were caught and swallowed.
 **Root cause**: Collectors loop over borders/countries and catch exceptions per-item to continue with others, bypassing the outer retry mechanism.
