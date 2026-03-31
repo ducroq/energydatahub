@@ -57,16 +57,16 @@ class EntsoeFlowsCollector(BaseCollector):
     # Border definitions: (from_zone, to_zone, display_name)
     # Flows are bidirectional - we fetch both directions
     NL_BORDERS = [
-        ('NL', 'DE_LU', 'NL->DE'),
-        ('DE_LU', 'NL', 'DE->NL'),
-        ('NL', 'BE', 'NL->BE'),
-        ('BE', 'NL', 'BE->NL'),
-        ('NL', 'NO_2', 'NL->NO'),  # NorNed cable
-        ('NO_2', 'NL', 'NO->NL'),
-        ('NL', 'GB', 'NL->GB'),    # BritNed cable
-        ('GB', 'NL', 'GB->NL'),
-        ('NL', 'DK_1', 'NL->DK'),  # COBRAcable
-        ('DK_1', 'NL', 'DK->NL'),
+        ('NL', 'DE_LU', 'NL→DE'),
+        ('DE_LU', 'NL', 'DE→NL'),
+        ('NL', 'BE', 'NL→BE'),
+        ('BE', 'NL', 'BE→NL'),
+        ('NL', 'NO_2', 'NL→NO'),  # NorNed cable
+        ('NO_2', 'NL', 'NO→NL'),
+        ('NL', 'GB', 'NL→GB'),    # BritNed cable
+        ('GB', 'NL', 'GB→NL'),
+        ('NL', 'DK_1', 'NL→DK'),  # COBRAcable
+        ('DK_1', 'NL', 'DK→NL'),
     ]
 
     # Zone names for metadata
@@ -187,8 +187,8 @@ class EntsoeFlowsCollector(BaseCollector):
             {
                 'flows': {
                     '2025-12-01T00:00:00+01:00': {
-                        'NL->DE': 500.0,
-                        'DE->NL': 800.0,
+                        'NL→DE': 500.0,
+                        'DE→NL': 800.0,
                         'NL_DE_net': 300.0,  # positive = import to NL
                         ...
                         'total_net_position': 450.0  # total net import
@@ -196,7 +196,7 @@ class EntsoeFlowsCollector(BaseCollector):
                     ...
                 },
                 'summary': {
-                    'borders': ['NL->DE', 'DE->NL', ...],
+                    'borders': ['NL→DE', 'DE→NL', ...],
                     'avg_net_position': 380.5
                 }
             }
@@ -237,8 +237,8 @@ class EntsoeFlowsCollector(BaseCollector):
             total_net = 0.0
 
             for short_name, zone_code in pairs:
-                export_key = f'NL->{short_name}'
-                import_key = f'{short_name}->NL'
+                export_key = f'NL\u2192{short_name}'
+                import_key = f'{short_name}\u2192NL'
 
                 export_val = flows.get(export_key, 0.0)
                 import_val = flows.get(import_key, 0.0)

@@ -57,6 +57,7 @@ Notes:
     - All timestamps handled in UTC and converted to local timezone
 """
 import os
+import sys
 import json
 import shutil
 from datetime import datetime, timedelta
@@ -107,13 +108,15 @@ MAX_RETRY_ROUNDS = 3       # Up to 3 retry rounds for failed critical collectors
 # Critical datasets — if these are missing, Augur's forecast breaks
 CRITICAL_DATASETS = {'entsoe', 'entsoe_de'}
 
-# Setup logging
+# Setup logging with UTF-8 encoding (Windows console defaults to cp1252)
+_stream_handler = logging.StreamHandler()
+_stream_handler.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False)
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
     handlers=[
-        logging.StreamHandler(), 
-        logging.FileHandler(os.path.join(output_path, LOGGING_FILE_NAME))]
+        _stream_handler,
+        logging.FileHandler(os.path.join(output_path, LOGGING_FILE_NAME), encoding='utf-8')]
     )
 
 def _extract_wind_from_weather(google_weather_data, offshore_locations):

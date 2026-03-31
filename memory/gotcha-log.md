@@ -41,8 +41,9 @@
 **Fix**: Added `BaseCollector._retry_single()` — retries individual sub-requests (3 attempts, 2s initial backoff). Applied to entsoe_flows, entsoe_wind, entsoe_load, entsoe_generation. Result: cross-border flows went from 4/10 borders to 10/10 on a run with ENTSO-E instability.
 
 ### Unicode arrow broke Windows console logging (2026-03-30) [RESOLVED]
-**Problem**: `entsoe_flows.py` used `→` (U+2192) in border names. Windows cp1252 console can't encode it, causing every flow log line to throw `UnicodeEncodeError`. Data collection still worked, but logs were unreadable.
-**Fix**: Replaced all `→` with `->` in border name definitions.
+**Problem**: `entsoe_flows.py` uses `→` (U+2192) in border names (data keys). Windows cp1252 console can't encode it, causing every flow log line to throw `UnicodeEncodeError`. Data collection still worked, but logs were unreadable.
+**Fix**: Configured logging StreamHandler with UTF-8 encoding in `data_fetcher.py`. Border names kept as `→` to preserve backward compatibility with historical data files.
+**Negative result**: Initially replaced `→` with `->` in data keys, which would have broken schema compatibility with 145+ historical cross-border flow files. Reverted.
 
 ### Optional result unpacking uses fragile index counting (2026-03-27)
 **Problem**: Adding a new fixed task to `asyncio.gather()` requires updating the slice index (e.g., `results[:14]` -> `results[:15]`) and `optional_idx`. Easy to miscount.
