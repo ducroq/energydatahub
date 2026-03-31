@@ -164,7 +164,9 @@ class GieStorageCollector(BaseCollector):
 
         # Combine all DataFrames
         if all_dfs:
-            combined_df = pd.concat(all_dfs, ignore_index=True)
+            combined_df = pd.concat(all_dfs)
+            if combined_df.index.name != 'gasDayStart':
+                combined_df = combined_df.reset_index(drop=True)
             self.logger.info(
                 f"GIE storage: Retrieved {len(combined_df)} total records for {self.country_code}"
             )

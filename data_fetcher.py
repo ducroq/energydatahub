@@ -65,7 +65,7 @@ import logging
 import base64
 import platform
 
-from utils.helpers import ensure_output_directory, load_settings, load_secrets, save_data_file
+from utils.helpers import ensure_output_directory, load_settings, load_secrets, save_data_file, load_data_file
 from utils.data_quality import validate_pipeline
 from utils.data_types import CombinedDataSet, EnhancedDataSet
 from utils.timezone_helpers import get_timezone_and_country
@@ -675,9 +675,7 @@ async def main() -> None:
         existing_history = {}
         if os.path.exists(market_history_file):
             try:
-                with open(market_history_file) as f:
-                    raw = json.load(f)
-                # Handle both encrypted (string) and plain (dict) formats
+                raw = load_data_file(market_history_file, handler=handler)
                 if isinstance(raw, dict):
                     existing_history = raw.get('data', raw)
             except Exception as e:

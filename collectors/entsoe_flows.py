@@ -57,16 +57,16 @@ class EntsoeFlowsCollector(BaseCollector):
     # Border definitions: (from_zone, to_zone, display_name)
     # Flows are bidirectional - we fetch both directions
     NL_BORDERS = [
-        ('NL', 'DE_LU', 'NL→DE'),
-        ('DE_LU', 'NL', 'DE→NL'),
-        ('NL', 'BE', 'NL→BE'),
-        ('BE', 'NL', 'BE→NL'),
-        ('NL', 'NO_2', 'NL→NO'),  # NorNed cable
-        ('NO_2', 'NL', 'NO→NL'),
-        ('NL', 'GB', 'NL→GB'),    # BritNed cable
-        ('GB', 'NL', 'GB→NL'),
-        ('NL', 'DK_1', 'NL→DK'),  # COBRAcable
-        ('DK_1', 'NL', 'DK→NL'),
+        ('NL', 'DE_LU', 'NL->DE'),
+        ('DE_LU', 'NL', 'DE->NL'),
+        ('NL', 'BE', 'NL->BE'),
+        ('BE', 'NL', 'BE->NL'),
+        ('NL', 'NO_2', 'NL->NO'),  # NorNed cable
+        ('NO_2', 'NL', 'NO->NL'),
+        ('NL', 'GB', 'NL->GB'),    # BritNed cable
+        ('GB', 'NL', 'GB->NL'),
+        ('NL', 'DK_1', 'NL->DK'),  # COBRAcable
+        ('DK_1', 'NL', 'DK->NL'),
     ]
 
     # Zone names for metadata
@@ -139,36 +139,27 @@ class EntsoeFlowsCollector(BaseCollector):
         # Create client
         client = EntsoePandasClient(api_key=self.api_key)
 
-        # Fetch data for each border
+        # Fetch data for each border with per-border retry
         results = {}
-        loop = asyncio.get_running_loop()
 
         for from_zone, to_zone, border_name in self.borders:
-            try:
-                self.logger.debug(f"Fetching flow {border_name}")
+            self.logger.debug(f"Fetching flow {border_name}")
 
-                # query_crossborder_flows returns physical flows
-                query_func = partial(
-                    client.query_crossborder_flows,
-                    country_code_from=from_zone,
-                    country_code_to=to_zone,
-                    start=start_timestamp,
-                    end=end_timestamp
-                )
+            query_func = partial(
+                client.query_crossborder_flows,
+                country_code_from=from_zone,
+                country_code_to=to_zone,
+                start=start_timestamp,
+                end=end_timestamp
+            )
 
-                # Execute in thread pool to not block event loop
-                data = await loop.run_in_executor(None, query_func)
+            data = await self._retry_single(query_func)
 
-                if data is not None and not data.empty:
-                    results[border_name] = data
-                    self.logger.debug(f"{border_name}: Got {len(data)} data points")
-                else:
-                    self.logger.warning(f"{border_name}: No flow data returned")
-
-            except Exception as e:
-                self.logger.warning(f"{border_name}: Failed to fetch - {e}")
-                # Continue with other borders
-                continue
+            if data is not None and not data.empty:
+                results[border_name] = data
+                self.logger.debug(f"{border_name}: Got {len(data)} data points")
+            elif data is not None:
+                self.logger.warning(f"{border_name}: No flow data returned")
 
         if not results:
             raise ValueError("No cross-border flow data returned from any border")
@@ -196,8 +187,8 @@ class EntsoeFlowsCollector(BaseCollector):
             {
                 'flows': {
                     '2025-12-01T00:00:00+01:00': {
-                        'NL→DE': 500.0,
-                        'DE→NL': 800.0,
+                        'NL->DE': 500.0,
+                        'DE->NL': 800.0,
                         'NL_DE_net': 300.0,  # positive = import to NL
                         ...
                         'total_net_position': 450.0  # total net import
@@ -205,7 +196,7 @@ class EntsoeFlowsCollector(BaseCollector):
                     ...
                 },
                 'summary': {
-                    'borders': ['NL→DE', 'DE→NL', ...],
+                    'borders': ['NL->DE', 'DE->NL', ...],
                     'avg_net_position': 380.5
                 }
             }
@@ -246,8 +237,8 @@ class EntsoeFlowsCollector(BaseCollector):
             total_net = 0.0
 
             for short_name, zone_code in pairs:
-                export_key = f'NL→{short_name}'
-                import_key = f'{short_name}→NL'
+                export_key = f'NL->{short_name}'
+                import_key = f'{short_name}->NL'
 
                 export_val = flows.get(export_key, 0.0)
                 import_val = flows.get(import_key, 0.0)

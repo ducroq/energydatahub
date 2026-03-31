@@ -168,7 +168,7 @@ class OpenMeteoOffshoreWindCollector(BaseCollector):
 
         results = {}
         # Use semaphore to limit concurrent requests and avoid rate limiting
-        semaphore = asyncio.Semaphore(3)  # Max 3 concurrent requests
+        semaphore = asyncio.Semaphore(2)  # Max 2 concurrent (3 collectors share Open-Meteo)
 
         async def fetch_with_rate_limit(session: aiohttp.ClientSession, location: Dict[str, Any]):
             async with semaphore:

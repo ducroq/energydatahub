@@ -137,49 +137,41 @@ class EntsoeLoadCollector(BaseCollector):
             country_data = {}
 
             # Fetch day-ahead forecast
-            try:
-                self.logger.debug(f"Fetching load forecast for {code}")
+            self.logger.debug(f"Fetching load forecast for {code}")
+
+            query_func = partial(
+                client.query_load_forecast,
+                country_code=code,
+                start=start_timestamp,
+                end=end_timestamp
+            )
+
+            forecast = await self._retry_single(query_func)
+
+            if forecast is not None and not forecast.empty:
+                country_data['forecast'] = forecast
+                self.logger.debug(f"{code} forecast: {len(forecast)} points")
+            elif forecast is not None:
+                self.logger.warning(f"{code}: No forecast data")
+
+            # Fetch actual load if requested
+            if self.include_actual:
+                self.logger.debug(f"Fetching actual load for {code}")
 
                 query_func = partial(
-                    client.query_load_forecast,
+                    client.query_load,
                     country_code=code,
                     start=start_timestamp,
                     end=end_timestamp
                 )
 
-                forecast = await loop.run_in_executor(None, query_func)
+                actual = await self._retry_single(query_func)
 
-                if forecast is not None and not forecast.empty:
-                    country_data['forecast'] = forecast
-                    self.logger.debug(f"{code} forecast: {len(forecast)} points")
-                else:
-                    self.logger.warning(f"{code}: No forecast data")
-
-            except Exception as e:
-                self.logger.warning(f"{code} forecast failed: {e}")
-
-            # Fetch actual load if requested
-            if self.include_actual:
-                try:
-                    self.logger.debug(f"Fetching actual load for {code}")
-
-                    query_func = partial(
-                        client.query_load,
-                        country_code=code,
-                        start=start_timestamp,
-                        end=end_timestamp
-                    )
-
-                    actual = await loop.run_in_executor(None, query_func)
-
-                    if actual is not None and not actual.empty:
-                        country_data['actual'] = actual
-                        self.logger.debug(f"{code} actual: {len(actual)} points")
-                    else:
-                        self.logger.warning(f"{code}: No actual data")
-
-                except Exception as e:
-                    self.logger.warning(f"{code} actual failed: {e}")
+                if actual is not None and not actual.empty:
+                    country_data['actual'] = actual
+                    self.logger.debug(f"{code} actual: {len(actual)} points")
+                elif actual is not None:
+                    self.logger.warning(f"{code}: No actual data")
 
             if country_data:
                 results[code] = country_data

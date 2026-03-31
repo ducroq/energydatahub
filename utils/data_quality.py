@@ -520,6 +520,41 @@ def validate_null_ratio(
     return issues
 
 
+def _extract_timestamp_keys(data: Dict[str, Any]) -> List[str]:
+    """
+    Extract timestamp-like keys from data, searching one level deep if needed.
+
+    Many datasets nest timestamps under country/location keys, e.g.:
+    {'NL': {'2026-03-30T00:00:00+02:00': {...}}, 'DE_LU': {...}}
+
+    Returns:
+        List of string keys that look like ISO timestamps
+    """
+    keys = []
+    # First try top-level keys
+    for key in data.keys():
+        try:
+            datetime.fromisoformat(str(key).replace('Z', '+00:00'))
+            keys.append(key)
+        except (ValueError, TypeError):
+            continue
+
+    # If no timestamps at top level, check one level deeper
+    if not keys:
+        for value in data.values():
+            if isinstance(value, dict):
+                for key in value.keys():
+                    try:
+                        datetime.fromisoformat(str(key).replace('Z', '+00:00'))
+                        keys.append(key)
+                    except (ValueError, TypeError):
+                        continue
+                if keys:
+                    break  # Found timestamps, no need to check more sub-dicts
+
+    return keys
+
+
 def validate_staleness(
     data: Dict[str, Any],
     max_age_hours: int = 48,
@@ -542,9 +577,9 @@ def validate_staleness(
     now = datetime.now().astimezone()
     newest_ts = None
 
-    for key in data.keys():
+    for key in _extract_timestamp_keys(data):
         try:
-            dt = datetime.fromisoformat(key.replace('Z', '+00:00'))
+            dt = datetime.fromisoformat(str(key).replace('Z', '+00:00'))
             if newest_ts is None or dt > newest_ts:
                 newest_ts = dt
         except (ValueError, TypeError):
@@ -598,9 +633,9 @@ def validate_duplicate_timestamps(
     # false-flagging 15-min resolution data)
     minutes_seen = set()
     parseable = 0
-    for key in data.keys():
+    for key in _extract_timestamp_keys(data):
         try:
-            dt = datetime.fromisoformat(key.replace('Z', '+00:00'))
+            dt = datetime.fromisoformat(str(key).replace('Z', '+00:00'))
             minute_key = dt.strftime('%Y-%m-%d %H:%M')
             minutes_seen.add(minute_key)
             parseable += 1

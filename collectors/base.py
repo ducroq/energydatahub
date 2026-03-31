@@ -363,6 +363,59 @@ class BaseCollector(ABC):
         )
         raise last_exception
 
+    async def _retry_single(
+        self,
+        func,
+        *args,
+        max_attempts: int = 3,
+        initial_delay: float = 2.0,
+        **kwargs
+    ) -> Any:
+        """
+        Retry a single sub-request (e.g. one border, one country) with backoff.
+
+        Unlike _retry_with_backoff which wraps the entire _fetch_raw_data call,
+        this is for retrying individual API calls within a loop. Returns None
+        instead of raising on final failure, so the caller can continue with
+        other items.
+
+        Args:
+            func: Callable to execute (sync or async)
+            *args: Positional arguments for func
+            max_attempts: Number of retry attempts
+            initial_delay: Initial backoff delay in seconds
+            **kwargs: Keyword arguments for func
+
+        Returns:
+            Result from func, or None if all attempts fail
+        """
+        import random
+
+        last_exception = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                if asyncio.iscoroutinefunction(func):
+                    return await func(*args, **kwargs)
+                else:
+                    loop = asyncio.get_running_loop()
+                    return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
+            except Exception as e:
+                last_exception = e
+                if attempt < max_attempts:
+                    delay = min(initial_delay * (2 ** (attempt - 1)), 30.0)
+                    delay *= (0.5 + random.random() * 0.5)
+                    self.logger.info(
+                        f"Retry {attempt}/{max_attempts} after {type(e).__name__}, "
+                        f"waiting {delay:.1f}s..."
+                    )
+                    await asyncio.sleep(delay)
+
+        self.logger.warning(
+            f"All {max_attempts} attempts failed: {type(last_exception).__name__}: "
+            f"{last_exception}"
+        )
+        return None
+
     def _check_circuit_breaker(self) -> bool:
         """
         Check if circuit breaker allows requests.

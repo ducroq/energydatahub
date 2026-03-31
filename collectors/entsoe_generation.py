@@ -176,74 +176,66 @@ class EntsoeGenerationCollector(BaseCollector):
 
             # Fetch actual generation per type (includes all types in one call)
             if self.include_actual:
-                try:
-                    self.logger.debug(f"Fetching actual generation for {code}")
+                self.logger.debug(f"Fetching actual generation for {code}")
 
-                    query_func = partial(
-                        client.query_generation,
-                        country_code=code,
-                        start=start_timestamp,
-                        end=end_timestamp,
-                        psr_type=None  # Get all types
-                    )
+                query_func = partial(
+                    client.query_generation,
+                    country_code=code,
+                    start=start_timestamp,
+                    end=end_timestamp,
+                    psr_type=None  # Get all types
+                )
 
-                    actual_df = await loop.run_in_executor(None, query_func)
+                actual_df = await self._retry_single(query_func)
 
-                    if actual_df is not None and not actual_df.empty:
-                        # ENTSO-E may return Series or DataFrame depending on query
-                        if isinstance(actual_df, pd.Series):
-                            actual_df = actual_df.to_frame()
+                if actual_df is not None and not actual_df.empty:
+                    # ENTSO-E may return Series or DataFrame depending on query
+                    if isinstance(actual_df, pd.Series):
+                        actual_df = actual_df.to_frame()
 
-                        # Filter to requested types
-                        for gen_type in self.generation_types:
-                            type_name = self.TYPE_NAMES.get(gen_type, gen_type)
-                            # ENTSO-E returns columns like 'Nuclear' or 'Fossil Gas'
-                            matching_cols = [
-                                c for c in actual_df.columns
-                                if type_name.lower() in str(c).lower()
-                            ]
-                            if matching_cols:
-                                if gen_type not in country_results:
-                                    country_results[gen_type] = {}
-                                country_results[gen_type]['actual'] = actual_df[matching_cols[0]]
-                                self.logger.debug(f"{code} {gen_type} actual: {len(actual_df)} points")
-
-                except Exception as e:
-                    self.logger.warning(f"{code} actual generation failed: {e}")
+                    # Filter to requested types
+                    for gen_type in self.generation_types:
+                        type_name = self.TYPE_NAMES.get(gen_type, gen_type)
+                        # ENTSO-E returns columns like 'Nuclear' or 'Fossil Gas'
+                        matching_cols = [
+                            c for c in actual_df.columns
+                            if type_name.lower() in str(c).lower()
+                        ]
+                        if matching_cols:
+                            if gen_type not in country_results:
+                                country_results[gen_type] = {}
+                            country_results[gen_type]['actual'] = actual_df[matching_cols[0]]
+                            self.logger.debug(f"{code} {gen_type} actual: {len(actual_df)} points")
 
             # Fetch generation forecast
             if self.include_forecast:
-                try:
-                    self.logger.debug(f"Fetching generation forecast for {code}")
+                self.logger.debug(f"Fetching generation forecast for {code}")
 
-                    query_func = partial(
-                        client.query_generation_forecast,
-                        country_code=code,
-                        start=start_timestamp,
-                        end=end_timestamp
-                    )
+                query_func = partial(
+                    client.query_generation_forecast,
+                    country_code=code,
+                    start=start_timestamp,
+                    end=end_timestamp
+                )
 
-                    forecast_df = await loop.run_in_executor(None, query_func)
+                forecast_df = await self._retry_single(query_func)
 
-                    if forecast_df is not None and not forecast_df.empty:
-                        # ENTSO-E may return Series or DataFrame depending on country/query
-                        if isinstance(forecast_df, pd.Series):
-                            forecast_df = forecast_df.to_frame()
+                if forecast_df is not None and not forecast_df.empty:
+                    # ENTSO-E may return Series or DataFrame depending on country/query
+                    if isinstance(forecast_df, pd.Series):
+                        forecast_df = forecast_df.to_frame()
 
-                        for gen_type in self.generation_types:
-                            type_name = self.TYPE_NAMES.get(gen_type, gen_type)
-                            matching_cols = [
-                                c for c in forecast_df.columns
-                                if type_name.lower() in str(c).lower()
-                            ]
-                            if matching_cols:
-                                if gen_type not in country_results:
-                                    country_results[gen_type] = {}
-                                country_results[gen_type]['forecast'] = forecast_df[matching_cols[0]]
-                                self.logger.debug(f"{code} {gen_type} forecast: {len(forecast_df)} points")
-
-                except Exception as e:
-                    self.logger.warning(f"{code} generation forecast failed: {e}")
+                    for gen_type in self.generation_types:
+                        type_name = self.TYPE_NAMES.get(gen_type, gen_type)
+                        matching_cols = [
+                            c for c in forecast_df.columns
+                            if type_name.lower() in str(c).lower()
+                        ]
+                        if matching_cols:
+                            if gen_type not in country_results:
+                                country_results[gen_type] = {}
+                            country_results[gen_type]['forecast'] = forecast_df[matching_cols[0]]
+                            self.logger.debug(f"{code} {gen_type} forecast: {len(forecast_df)} points")
 
             if country_results:
                 results[code] = country_results

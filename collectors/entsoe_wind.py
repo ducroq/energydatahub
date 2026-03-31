@@ -138,38 +138,29 @@ class EntsoeWindCollector(BaseCollector):
         # Create client
         client = EntsoePandasClient(api_key=self.api_key)
 
-        # Fetch data for each country
+        # Fetch data for each country with per-country retry
         results = {}
-        loop = asyncio.get_running_loop()
 
         for code in countries:
-            try:
-                self.logger.debug(f"Fetching wind forecast for {code}")
+            self.logger.debug(f"Fetching wind forecast for {code}")
 
-                # query_wind_and_solar_forecast returns wind and solar forecasts
-                query_func = partial(
-                    client.query_wind_and_solar_forecast,
-                    country_code=code,
-                    start=start_timestamp,
-                    end=end_timestamp,
-                    psr_type=None  # Get all types (wind onshore, wind offshore, solar)
+            query_func = partial(
+                client.query_wind_and_solar_forecast,
+                country_code=code,
+                start=start_timestamp,
+                end=end_timestamp,
+                psr_type=None  # Get all types (wind onshore, wind offshore, solar)
+            )
+
+            data = await self._retry_single(query_func)
+
+            if data is not None and not data.empty:
+                results[code] = data
+                self.logger.debug(
+                    f"{code}: Got {len(data)} data points, columns: {list(data.columns)}"
                 )
-
-                # Execute in thread pool to not block event loop
-                data = await loop.run_in_executor(None, query_func)
-
-                if data is not None and not data.empty:
-                    results[code] = data
-                    self.logger.debug(
-                        f"{code}: Got {len(data)} data points, columns: {list(data.columns)}"
-                    )
-                else:
-                    self.logger.warning(f"{code}: No wind forecast data returned")
-
-            except Exception as e:
-                self.logger.warning(f"{code}: Failed to fetch wind data: {e}")
-                # Continue with other countries
-                continue
+            elif data is not None:
+                self.logger.warning(f"{code}: No wind forecast data returned")
 
         if not results:
             raise ValueError("No wind forecast data returned from any country")
