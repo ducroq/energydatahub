@@ -25,15 +25,24 @@
 **Negative result**: The BaseCollector's built-in retry (3 attempts, 1-60s backoff) is too fast for API-wide outages — the API was down for the entire collection window. Longer delays between retry rounds were needed.
 **Remaining**: 26 early files (Sep-Oct 2025) have malformed timestamps in non-ENTSO-E datasets, preventing re-save.
 
-### Encrypted data files can't be read back for accumulation (2026-03-27)
+### Encrypted data files can't be read back for accumulation (2026-03-27) [RESOLVED]
 **Problem**: Market history accumulation needs to read the previous `market_history.json`, but published files are encrypted.
-**Root cause**: `save_data_file()` encrypts when `encryption=True`. The non-timestamped copy in `data/` is also encrypted.
-**Fix**: The accumulation step reads from `data/market_history.json` before it's overwritten. On first run it starts empty. In CI, the `data/` dir is checked out from git, so previous encrypted files are present — but they're encrypted strings, not dicts. The code handles this by checking `isinstance(raw, dict)` and falling back to empty history if encrypted.
+**Root cause**: `save_data_file()` encrypts when `encryption=True`. The code used raw `json.load()` on the encrypted file.
+**Fix**: (2026-03-30) Replaced raw `json.load()` with `load_data_file(handler=handler)` which auto-detects encrypted vs plain JSON and decrypts as needed. Market history now accumulates correctly across runs.
 
 ### ENTSO-E API returns different column formats per country (2026-03-27)
 **Problem**: `EntsoeGenerationCollector._parse_response()` matches columns by lowercase name (e.g., "nuclear" in column name). Some countries return MultiIndex DataFrames, others return flat columns.
 **Root cause**: The `entsoe-py` library normalizes differently depending on what the ENTSO-E API returns per country.
 **Fix**: The existing collector handles both Series and DataFrame with `isinstance` checks. When adding generation mix for NL/DE/BE, same logic applies — no code change needed, just awareness.
+
+### Per-item ENTSO-E retries were missing (2026-03-30) [RESOLVED]
+**Problem**: ENTSO-E 503 errors on individual borders/countries were not retried. BaseCollector's `_retry_with_backoff` wraps the entire `_fetch_raw_data`, but inside the loop, individual failures were caught and swallowed.
+**Root cause**: Collectors loop over borders/countries and catch exceptions per-item to continue with others, bypassing the outer retry mechanism.
+**Fix**: Added `BaseCollector._retry_single()` — retries individual sub-requests (3 attempts, 2s initial backoff). Applied to entsoe_flows, entsoe_wind, entsoe_load, entsoe_generation. Result: cross-border flows went from 4/10 borders to 10/10 on a run with ENTSO-E instability.
+
+### Unicode arrow broke Windows console logging (2026-03-30) [RESOLVED]
+**Problem**: `entsoe_flows.py` used `→` (U+2192) in border names. Windows cp1252 console can't encode it, causing every flow log line to throw `UnicodeEncodeError`. Data collection still worked, but logs were unreadable.
+**Fix**: Replaced all `→` with `->` in border name definitions.
 
 ### Optional result unpacking uses fragile index counting (2026-03-27)
 **Problem**: Adding a new fixed task to `asyncio.gather()` requires updating the slice index (e.g., `results[:14]` -> `results[:15]`) and `optional_idx`. Easy to miscount.
