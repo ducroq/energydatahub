@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-04-02T17:06:44.772776+00:00",
+  "timestamp": "2026-04-03T16:33:41.008182+00:00",
   "overall_status": "error",
-  "total_issues": 8,
+  "total_issues": 7,
   "datasets_collected": 20,
   "datasets_missing": [],
   "dataset_reports": [
@@ -69,34 +69,18 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "error",
+      "status": "info",
       "data_points": 4320,
-      "checks_passed": 4,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "error",
-          "message": "34 values outside range [-500.0, 10000.0] EUR/MWh",
-          "details": {
-            "count": 34,
-            "examples": [
-              "balance_delta/2026-04-01T09:15:00+02:00: -923.0",
-              "balance_delta/2026-04-01T09:30:00+02:00: -571.5",
-              "balance_delta/2026-04-01T09:45:00+02:00: -578.0",
-              "balance_delta/2026-04-01T10:00:00+02:00: -563.0",
-              "balance_delta/2026-04-01T12:30:00+02:00: -539.0"
-            ]
-          }
-        }
-      ]
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "wind_forecast",
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 48,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -146,7 +130,7 @@
       "data_type": "load_forecast",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 61,
+      "data_points": 384,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -156,7 +140,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 64,
+      "data_points": 72,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -166,7 +150,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 24,
+      "data_points": 216,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -255,21 +239,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-03-24T00:00:00+01:00/withdrawal_gwh: 156.9",
-              "2026-03-24T00:00:00+01:00/net_change_gwh: -139.11",
-              "2026-03-24T00:00:00+01:00/working_gas_volume_twh: 144.2965",
               "2026-03-25T00:00:00+01:00/withdrawal_gwh: 244.1",
-              "2026-03-25T00:00:00+01:00/net_change_gwh: -233.66"
+              "2026-03-25T00:00:00+01:00/net_change_gwh: -233.66",
+              "2026-03-25T00:00:00+01:00/working_gas_volume_twh: 144.2965",
+              "2026-03-26T00:00:00+01:00/withdrawal_gwh: 340.8",
+              "2026-03-26T00:00:00+01:00/net_change_gwh: -329.41"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 67.1h old (threshold: 48h)",
+          "message": "Newest data is 66.6h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-03-31T00:00:00+02:00",
-            "age_hours": 67.1,
+            "newest_timestamp": "2026-04-01T00:00:00+02:00",
+            "age_hours": 66.6,
             "threshold_hours": 48
           }
         }
