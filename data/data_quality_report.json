@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-04-03T16:33:41.008182+00:00",
+  "timestamp": "2026-04-04T16:28:50.586850+00:00",
   "overall_status": "error",
-  "total_issues": 7,
+  "total_issues": 8,
   "datasets_collected": 20,
   "datasets_missing": [],
   "dataset_reports": [
@@ -69,11 +69,27 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "info",
+      "status": "error",
       "data_points": 4320,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "error",
+          "message": "60 values outside range [-500.0, 10000.0] EUR/MWh",
+          "details": {
+            "count": 60,
+            "examples": [
+              "balance_delta/2026-04-03T10:45:00+02:00: -526.0",
+              "balance_delta/2026-04-03T11:00:00+02:00: -562.0",
+              "balance_delta/2026-04-03T11:45:00+02:00: -704.0",
+              "balance_delta/2026-04-03T13:00:00+02:00: -620.0",
+              "balance_delta/2026-04-03T13:30:00+02:00: -618.0"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "wind_forecast",
@@ -239,21 +255,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-03-25T00:00:00+01:00/withdrawal_gwh: 244.1",
-              "2026-03-25T00:00:00+01:00/net_change_gwh: -233.66",
-              "2026-03-25T00:00:00+01:00/working_gas_volume_twh: 144.2965",
               "2026-03-26T00:00:00+01:00/withdrawal_gwh: 340.8",
-              "2026-03-26T00:00:00+01:00/net_change_gwh: -329.41"
+              "2026-03-26T00:00:00+01:00/net_change_gwh: -329.41",
+              "2026-03-26T00:00:00+01:00/working_gas_volume_twh: 144.2965",
+              "2026-03-27T00:00:00+01:00/withdrawal_gwh: 348.2",
+              "2026-03-27T00:00:00+01:00/net_change_gwh: -316.86"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 66.6h old (threshold: 48h)",
+          "message": "Newest data is 66.5h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-01T00:00:00+02:00",
-            "age_hours": 66.6,
+            "newest_timestamp": "2026-04-02T00:00:00+02:00",
+            "age_hours": 66.5,
             "threshold_hours": 48
           }
         }
