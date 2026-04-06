@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-05T16:30:35.546875+00:00",
+  "timestamp": "2026-04-06T16:39:32.769032+00:00",
   "overall_status": "error",
   "total_issues": 8,
   "datasets_collected": 20,
@@ -69,21 +69,23 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "warning",
+      "status": "error",
       "data_points": 4320,
       "checks_passed": 4,
       "checks_failed": 1,
       "issues": [
         {
           "check_name": "value_range",
-          "severity": "warning",
-          "message": "3 values outside range [-500.0, 10000.0] EUR/MWh",
+          "severity": "error",
+          "message": "70 values outside range [-500.0, 10000.0] EUR/MWh",
           "details": {
-            "count": 3,
+            "count": 70,
             "examples": [
-              "balance_delta/2026-04-04T16:35:00+02:00: -506.8",
-              "balance_delta/2026-04-04T16:36:00+02:00: -532.6",
-              "balance_delta/2026-04-04T16:37:00+02:00: -543.8"
+              "imbalance_price/2026-04-05T13:45:00+02:00: -576.52",
+              "imbalance_price/2026-04-05T14:30:00+02:00: -577.12",
+              "balance_delta/2026-04-05T11:00:00+02:00: -501.0",
+              "balance_delta/2026-04-05T12:00:00+02:00: -543.0",
+              "balance_delta/2026-04-05T13:30:00+02:00: -520.9"
             ]
           }
         }
@@ -104,7 +106,7 @@
       "data_type": "solar_irradiance",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 672,
+      "data_points": 1176,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -124,7 +126,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 240,
+      "data_points": 2160,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -253,21 +255,21 @@
           "details": {
             "count": 25,
             "examples": [
-              "2026-03-27T00:00:00+01:00/withdrawal_gwh: 348.2",
-              "2026-03-27T00:00:00+01:00/net_change_gwh: -316.86",
-              "2026-03-27T00:00:00+01:00/working_gas_volume_twh: 144.2965",
               "2026-03-28T00:00:00+01:00/withdrawal_gwh: 198.4",
-              "2026-03-28T00:00:00+01:00/net_change_gwh: -190.01"
+              "2026-03-28T00:00:00+01:00/net_change_gwh: -190.01",
+              "2026-03-28T00:00:00+01:00/working_gas_volume_twh: 144.2965",
+              "2026-03-29T00:00:00+01:00/withdrawal_gwh: 194.0",
+              "2026-03-29T00:00:00+01:00/net_change_gwh: -178.29"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 66.5h old (threshold: 48h)",
+          "message": "Newest data is 66.7h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-03T00:00:00+02:00",
-            "age_hours": 66.5,
+            "newest_timestamp": "2026-04-04T00:00:00+02:00",
+            "age_hours": 66.7,
             "threshold_hours": 48
           }
         }
