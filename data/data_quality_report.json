@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-09T17:06:23.035275+00:00",
+  "timestamp": "2026-04-10T16:43:15.481138+00:00",
   "overall_status": "error",
   "total_issues": 7,
   "datasets_collected": 20,
@@ -80,7 +80,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 432,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -130,7 +130,7 @@
       "data_type": "load_forecast",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 266,
+      "data_points": 384,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -150,7 +150,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 120,
+      "data_points": 216,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -239,21 +239,21 @@
           "details": {
             "count": 25,
             "examples": [
-              "2026-03-31T00:00:00+02:00/withdrawal_gwh: 353.7",
-              "2026-03-31T00:00:00+02:00/net_change_gwh: -345.84",
-              "2026-03-31T00:00:00+02:00/working_gas_volume_twh: 144.2965",
               "2026-04-01T00:00:00+02:00/withdrawal_gwh: 140.6",
-              "2026-04-01T00:00:00+02:00/net_change_gwh: -105.66999999999999"
+              "2026-04-01T00:00:00+02:00/net_change_gwh: -105.66999999999999",
+              "2026-04-01T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-04-02T00:00:00+02:00/injection_gwh: 248.89",
+              "2026-04-02T00:00:00+02:00/withdrawal_gwh: 248.8"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 67.1h old (threshold: 48h)",
+          "message": "Newest data is 66.7h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-07T00:00:00+02:00",
-            "age_hours": 67.1,
+            "newest_timestamp": "2026-04-08T00:00:00+02:00",
+            "age_hours": 66.7,
             "threshold_hours": 48
           }
         }
