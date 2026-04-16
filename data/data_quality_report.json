@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-04-15T16:56:34.534442+00:00",
+  "timestamp": "2026-04-16T17:07:43.735898+00:00",
   "overall_status": "error",
-  "total_issues": 7,
+  "total_issues": 8,
   "datasets_collected": 20,
   "datasets_missing": [],
   "dataset_reports": [
@@ -69,11 +69,26 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "info",
+      "status": "error",
       "data_points": 4320,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "error",
+          "message": "4 values outside range [-500.0, 10000.0] EUR/MWh",
+          "details": {
+            "count": 4,
+            "examples": [
+              "balance_delta/2026-04-15T10:00:00+02:00: -574.0",
+              "balance_delta/2026-04-15T09:58:00+02:00: -522.0",
+              "balance_delta/2026-04-15T09:59:00+02:00: -524.0",
+              "balance_delta/2026-04-15T10:01:00+02:00: -514.0"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "wind_forecast",
@@ -239,21 +254,21 @@
           "details": {
             "count": 25,
             "examples": [
-              "2026-04-06T00:00:00+02:00/injection_gwh: 264.77",
-              "2026-04-06T00:00:00+02:00/net_change_gwh: 191.07",
-              "2026-04-06T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-04-07T00:00:00+02:00/injection_gwh: 255.84",
-              "2026-04-07T00:00:00+02:00/net_change_gwh: 166.94"
+              "2026-04-07T00:00:00+02:00/net_change_gwh: 166.94",
+              "2026-04-07T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-04-08T00:00:00+02:00/injection_gwh: 197.22",
+              "2026-04-08T00:00:00+02:00/net_change_gwh: 181.82"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 66.9h old (threshold: 48h)",
+          "message": "Newest data is 67.1h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-13T00:00:00+02:00",
-            "age_hours": 66.9,
+            "newest_timestamp": "2026-04-14T00:00:00+02:00",
+            "age_hours": 67.1,
             "threshold_hours": 48
           }
         }
