@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-04-21T16:53:43.811364+00:00",
+  "timestamp": "2026-04-22T16:53:09.730930+00:00",
   "overall_status": "error",
-  "total_issues": 8,
+  "total_issues": 7,
   "datasets_collected": 20,
   "datasets_missing": [],
   "dataset_reports": [
@@ -69,34 +69,18 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "error",
+      "status": "info",
       "data_points": 4320,
-      "checks_passed": 4,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "error",
-          "message": "17 values outside range [-500.0, 10000.0] EUR/MWh",
-          "details": {
-            "count": 17,
-            "examples": [
-              "balance_delta/2026-04-20T08:15:00+02:00: -571.2",
-              "balance_delta/2026-04-20T08:45:00+02:00: -509.8",
-              "balance_delta/2026-04-20T09:00:00+02:00: -558.7",
-              "balance_delta/2026-04-20T08:46:00+02:00: -519.1",
-              "balance_delta/2026-04-20T08:48:00+02:00: -512.5"
-            ]
-          }
-        }
-      ]
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "wind_forecast",
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 600,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -146,7 +130,7 @@
       "data_type": "load_forecast",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 384,
+      "data_points": 288,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -202,7 +186,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "warning",
-      "data_points": 51,
+      "data_points": 64,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -255,11 +239,11 @@
           "details": {
             "count": 25,
             "examples": [
-              "2026-04-12T00:00:00+02:00/injection_gwh: 334.24",
-              "2026-04-12T00:00:00+02:00/net_change_gwh: 261.54",
-              "2026-04-12T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-04-13T00:00:00+02:00/injection_gwh: 342.68",
-              "2026-04-13T00:00:00+02:00/withdrawal_gwh: 240.9"
+              "2026-04-13T00:00:00+02:00/withdrawal_gwh: 240.9",
+              "2026-04-13T00:00:00+02:00/net_change_gwh: 101.78",
+              "2026-04-13T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-04-14T00:00:00+02:00/injection_gwh: 244.89"
             ]
           }
         },
@@ -268,7 +252,7 @@
           "severity": "error",
           "message": "Newest data is 66.9h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-19T00:00:00+02:00",
+            "newest_timestamp": "2026-04-20T00:00:00+02:00",
             "age_hours": 66.9,
             "threshold_hours": 48
           }
