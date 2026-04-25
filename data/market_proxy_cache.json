@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-04-24T18:49:16.498646+02:00",
+  "cached_at": "2026-04-25T18:34:59.698987+02:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -19,14 +19,14 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 45.1,
+      "price": 44.86,
       "date": "2026-04-24",
-      "open": 41.16,
-      "high": 45.22,
-      "low": 43.69,
-      "volume": 17,
+      "open": 44.86,
+      "high": 44.86,
+      "low": 44.86,
+      "volume": 18,
       "prev_close": 44.5,
-      "change_pct": 1.36,
+      "change_pct": 0.82,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
@@ -36,8 +36,8 @@
       "price_lag1": 44.5,
       "price_lag2": 43.55,
       "price_lag7": 41.4,
-      "mean_7d": 42.37,
-      "volatility_7d": 2.1,
+      "mean_7d": 42.33,
+      "volatility_7d": 2.06,
       "trend_7d": "up",
       "history": {
         "2026-03-20": 59.26,
@@ -64,20 +64,20 @@
         "2026-04-21": 41.93,
         "2026-04-22": 43.55,
         "2026-04-23": 44.5,
-        "2026-04-24": 45.1
+        "2026-04-24": 44.86
       }
     },
     "gas": {
       "ticker": "UNG",
-      "price": 10.52,
-      "date": "2026-04-23",
-      "open": 10.72,
-      "high": 10.73,
-      "low": 10.41,
-      "volume": 9074122,
-      "prev_close": 10.95,
-      "change": -0.43,
-      "change_pct": -3.93,
+      "price": 10.31,
+      "date": "2026-04-24",
+      "open": 10.34,
+      "high": 10.36,
+      "low": 10.18,
+      "volume": 11511193,
+      "prev_close": 10.52,
+      "change": -0.21,
+      "change_pct": -2.0,
       "source": "alpha_vantage",
       "description": "Natural Gas proxy (US benchmark, correlates with EU)",
       "units": "USD/share",
@@ -85,5 +85,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "3f6d300b7492d21dbdce08909618c50f2470836590e677656cb0e83adddd8d08"
+  "signature": "ebdab647a09345b8e4c1712cb6426bc9747aa1c2caf38f871e5521a82f8850ee"
 }
