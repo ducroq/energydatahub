@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-04-26T16:36:22.570401+00:00",
+  "timestamp": "2026-04-27T17:16:55.184772+00:00",
   "overall_status": "error",
-  "total_issues": 7,
+  "total_issues": 8,
   "datasets_collected": 20,
   "datasets_missing": [],
   "dataset_reports": [
@@ -69,11 +69,25 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "info",
+      "status": "warning",
       "data_points": 4320,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "warning",
+          "message": "3 values outside range [-500.0, 10000.0] EUR/MWh",
+          "details": {
+            "count": 3,
+            "examples": [
+              "imbalance_price/2026-04-26T13:00:00+02:00: -1000.0",
+              "imbalance_price/2026-04-26T14:00:00+02:00: -1000.0",
+              "imbalance_price/2026-04-26T14:45:00+02:00: -507.6"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "wind_forecast",
@@ -90,7 +104,7 @@
       "data_type": "solar_irradiance",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 672,
+      "data_points": 1176,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -140,7 +154,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 72,
+      "data_points": 76,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -239,21 +253,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-04-17T00:00:00+02:00/injection_gwh: 409.46",
-              "2026-04-17T00:00:00+02:00/net_change_gwh: 371.85999999999996",
-              "2026-04-17T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-04-18T00:00:00+02:00/injection_gwh: 420.46",
-              "2026-04-18T00:00:00+02:00/net_change_gwh: 379.06"
+              "2026-04-18T00:00:00+02:00/net_change_gwh: 379.06",
+              "2026-04-18T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-04-19T00:00:00+02:00/injection_gwh: 414.6",
+              "2026-04-19T00:00:00+02:00/net_change_gwh: 379.20000000000005"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 66.6h old (threshold: 48h)",
+          "message": "Newest data is 67.3h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-24T00:00:00+02:00",
-            "age_hours": 66.6,
+            "newest_timestamp": "2026-04-25T00:00:00+02:00",
+            "age_hours": 67.3,
             "threshold_hours": 48
           }
         }
