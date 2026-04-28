@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-27T17:16:55.184772+00:00",
+  "timestamp": "2026-04-28T17:42:59.037541+00:00",
   "overall_status": "error",
   "total_issues": 8,
   "datasets_collected": 20,
@@ -69,21 +69,23 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "warning",
+      "status": "error",
       "data_points": 4320,
       "checks_passed": 4,
       "checks_failed": 1,
       "issues": [
         {
           "check_name": "value_range",
-          "severity": "warning",
-          "message": "3 values outside range [-500.0, 10000.0] EUR/MWh",
+          "severity": "error",
+          "message": "95 values outside range [-500.0, 10000.0] EUR/MWh",
           "details": {
-            "count": 3,
+            "count": 95,
             "examples": [
-              "imbalance_price/2026-04-26T13:00:00+02:00: -1000.0",
-              "imbalance_price/2026-04-26T14:00:00+02:00: -1000.0",
-              "imbalance_price/2026-04-26T14:45:00+02:00: -507.6"
+              "balance_delta/2026-04-27T07:30:00+02:00: -566.2",
+              "balance_delta/2026-04-27T07:45:00+02:00: -555.1",
+              "balance_delta/2026-04-27T08:00:00+02:00: -509.5",
+              "balance_delta/2026-04-27T08:15:00+02:00: -798.2",
+              "balance_delta/2026-04-27T08:30:00+02:00: -583.5"
             ]
           }
         }
@@ -253,21 +255,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-04-18T00:00:00+02:00/injection_gwh: 420.46",
-              "2026-04-18T00:00:00+02:00/net_change_gwh: 379.06",
-              "2026-04-18T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-04-19T00:00:00+02:00/injection_gwh: 414.6",
-              "2026-04-19T00:00:00+02:00/net_change_gwh: 379.20000000000005"
+              "2026-04-19T00:00:00+02:00/net_change_gwh: 379.20000000000005",
+              "2026-04-19T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-04-20T00:00:00+02:00/injection_gwh: 343.3",
+              "2026-04-20T00:00:00+02:00/net_change_gwh: 311.6"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 67.3h old (threshold: 48h)",
+          "message": "Newest data is 67.7h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-25T00:00:00+02:00",
-            "age_hours": 67.3,
+            "newest_timestamp": "2026-04-26T00:00:00+02:00",
+            "age_hours": 67.7,
             "threshold_hours": 48
           }
         }
