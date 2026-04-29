@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-28T17:42:59.037541+00:00",
+  "timestamp": "2026-04-29T17:22:08.638476+00:00",
   "overall_status": "error",
   "total_issues": 8,
   "datasets_collected": 20,
@@ -77,15 +77,15 @@
         {
           "check_name": "value_range",
           "severity": "error",
-          "message": "95 values outside range [-500.0, 10000.0] EUR/MWh",
+          "message": "16 values outside range [-500.0, 10000.0] EUR/MWh",
           "details": {
-            "count": 95,
+            "count": 16,
             "examples": [
-              "balance_delta/2026-04-27T07:30:00+02:00: -566.2",
-              "balance_delta/2026-04-27T07:45:00+02:00: -555.1",
-              "balance_delta/2026-04-27T08:00:00+02:00: -509.5",
-              "balance_delta/2026-04-27T08:15:00+02:00: -798.2",
-              "balance_delta/2026-04-27T08:30:00+02:00: -583.5"
+              "imbalance_price/2026-04-28T13:00:00+02:00: -1944.205",
+              "balance_delta/2026-04-28T09:30:00+02:00: -563.0",
+              "balance_delta/2026-04-28T10:00:00+02:00: -528.0",
+              "balance_delta/2026-04-28T09:26:00+02:00: -516.0",
+              "balance_delta/2026-04-28T09:27:00+02:00: -539.6"
             ]
           }
         }
@@ -255,21 +255,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-04-19T00:00:00+02:00/injection_gwh: 414.6",
-              "2026-04-19T00:00:00+02:00/net_change_gwh: 379.20000000000005",
-              "2026-04-19T00:00:00+02:00/working_gas_volume_twh: 143.7945",
-              "2026-04-20T00:00:00+02:00/injection_gwh: 343.3",
-              "2026-04-20T00:00:00+02:00/net_change_gwh: 311.6"
+              "2026-04-20T00:00:00+02:00/injection_gwh: 344.7",
+              "2026-04-20T00:00:00+02:00/net_change_gwh: 313.0",
+              "2026-04-20T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-04-21T00:00:00+02:00/injection_gwh: 354.95",
+              "2026-04-21T00:00:00+02:00/net_change_gwh: 291.84999999999997"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 67.7h old (threshold: 48h)",
+          "message": "Newest data is 67.4h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-26T00:00:00+02:00",
-            "age_hours": 67.7,
+            "newest_timestamp": "2026-04-27T00:00:00+02:00",
+            "age_hours": 67.4,
             "threshold_hours": 48
           }
         }
