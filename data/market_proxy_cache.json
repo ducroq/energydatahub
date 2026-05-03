@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-05-02T18:39:54.171308+02:00",
+  "cached_at": "2026-05-03T18:41:10.440673+02:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -24,7 +24,7 @@
       "open": 46.47,
       "high": 46.6,
       "low": 45.0,
-      "volume": 14,
+      "volume": 44,
       "prev_close": 45.99,
       "change_pct": -0.48,
       "source": "yfinance",
@@ -40,7 +40,6 @@
       "volatility_7d": 1.01,
       "trend_7d": "up",
       "history": {
-        "2026-03-27": 54.18,
         "2026-03-30": 54.81,
         "2026-03-31": 50.76,
         "2026-04-01": 47.51,
@@ -85,5 +84,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "516b8797dcd8f3e919de1a339da6252247a2b8bf9601c0cd0b1553186797d43c"
+  "signature": "5a235c59c1fb03e9836d34aa40d3f0cb1f18f5f0b4e0318f2e3b97fd0de7a5c4"
 }

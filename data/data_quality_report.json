@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-05-02T16:40:27.230024+00:00",
+  "timestamp": "2026-05-03T16:41:13.243487+00:00",
   "overall_status": "error",
-  "total_issues": 7,
+  "total_issues": 8,
   "datasets_collected": 20,
   "datasets_missing": [],
   "dataset_reports": [
@@ -69,11 +69,24 @@
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
-      "status": "info",
+      "status": "warning",
       "data_points": 4320,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "warning",
+          "message": "2 values outside range [-500.0, 10000.0] EUR/MWh",
+          "details": {
+            "count": 2,
+            "examples": [
+              "imbalance_price/2026-05-02T16:30:00+02:00: -1949.395",
+              "balance_delta/2026-05-02T16:33:00+02:00: -512.0"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "wind_forecast",
@@ -110,7 +123,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 2160,
+      "data_points": 1920,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -239,11 +252,11 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-04-23T00:00:00+02:00/injection_gwh: 360.95",
-              "2026-04-23T00:00:00+02:00/net_change_gwh: 306.15",
-              "2026-04-23T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-04-24T00:00:00+02:00/injection_gwh: 330.99",
-              "2026-04-24T00:00:00+02:00/net_change_gwh: 312.19"
+              "2026-04-24T00:00:00+02:00/net_change_gwh: 312.19",
+              "2026-04-24T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-04-25T00:00:00+02:00/injection_gwh: 292.73",
+              "2026-04-25T00:00:00+02:00/net_change_gwh: 277.43"
             ]
           }
         },
@@ -252,7 +265,7 @@
           "severity": "error",
           "message": "Newest data is 66.7h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-04-30T00:00:00+02:00",
+            "newest_timestamp": "2026-05-01T00:00:00+02:00",
             "age_hours": 66.7,
             "threshold_hours": 48
           }
