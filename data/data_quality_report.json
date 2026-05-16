@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-15T17:23:27.076446+00:00",
+  "timestamp": "2026-05-16T16:52:30.607624+00:00",
   "overall_status": "critical",
   "total_issues": 9,
   "datasets_collected": 19,
@@ -115,7 +115,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 1920,
+      "data_points": 2160,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -145,7 +145,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 72,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -244,21 +244,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-05-06T00:00:00+02:00/injection_gwh: 155.73",
-              "2026-05-06T00:00:00+02:00/withdrawal_gwh: 103.1",
-              "2026-05-06T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-05-07T00:00:00+02:00/injection_gwh: 148.91",
-              "2026-05-07T00:00:00+02:00/withdrawal_gwh: 126.9"
+              "2026-05-07T00:00:00+02:00/withdrawal_gwh: 126.9",
+              "2026-05-07T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-05-08T00:00:00+02:00/injection_gwh: 199.88",
+              "2026-05-08T00:00:00+02:00/net_change_gwh: 182.57999999999998"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 67.4h old (threshold: 48h)",
+          "message": "Newest data is 66.9h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-05-13T00:00:00+02:00",
-            "age_hours": 67.4,
+            "newest_timestamp": "2026-05-14T00:00:00+02:00",
+            "age_hours": 66.9,
             "threshold_hours": 48
           }
         }
