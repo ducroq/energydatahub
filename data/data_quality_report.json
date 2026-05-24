@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-23T16:54:07.696475+00:00",
+  "timestamp": "2026-05-24T16:54:56.829594+00:00",
   "overall_status": "critical",
   "total_issues": 9,
   "datasets_collected": 19,
@@ -244,11 +244,11 @@
           "details": {
             "count": 23,
             "examples": [
-              "2026-05-14T00:00:00+02:00/injection_gwh: 232.65",
-              "2026-05-14T00:00:00+02:00/net_change_gwh: 164.15",
-              "2026-05-14T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-05-15T00:00:00+02:00/injection_gwh: 282.98",
-              "2026-05-15T00:00:00+02:00/net_change_gwh: 246.08"
+              "2026-05-15T00:00:00+02:00/net_change_gwh: 246.08",
+              "2026-05-15T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-05-16T00:00:00+02:00/injection_gwh: 277.47",
+              "2026-05-16T00:00:00+02:00/net_change_gwh: 239.07000000000002"
             ]
           }
         },
@@ -257,7 +257,7 @@
           "severity": "error",
           "message": "Newest data is 66.9h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-05-21T00:00:00+02:00",
+            "newest_timestamp": "2026-05-22T00:00:00+02:00",
             "age_hours": 66.9,
             "threshold_hours": 48
           }
