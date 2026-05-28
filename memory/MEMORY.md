@@ -16,11 +16,13 @@
 
 ## Current State
 
-- **Issues completed (2026-03-27)**: #5 market history, #6 NED publish, #7 generation mix, #8 ENTSO-E collector resilience
-- **Open issues**: #2 JAO interconnector, #3 Nordic hydro, #4 gap detection/backfill
+<!-- verify: git log -1 --format=%ci data_fetcher.py — confirms last code change date -->
+
+- **Pipeline**: Stable since 2026-03-31 (no code changes; daily GitHub Action runs only)
 - **Active collectors**: 15+ sources, daily automated via GitHub Actions at 16:00 UTC
-- **Schema version**: 2.1 (v1.0 -> v2.0 -> v2.1 migration supported)
-- **Resilience**: Critical collectors (entsoe, entsoe_de) retry up to 3 rounds × 5 min on failure; workflow exits non-zero if still missing
+- **Schema version**: 2.1 (v1.0 → v2.0 → v2.1 migration supported)
+- **Resilience**: Critical collectors (entsoe, entsoe_de) retry up to 3 rounds × 5 min on failure; per-item retries via `BaseCollector._retry_single()` for sub-requests; workflow exits non-zero if still missing
+- **Open issues**: check `gh issue list` — last refresh of this state line was 2026-05-28
 
 ## Recently Promoted
 
@@ -31,9 +33,12 @@
 - `data_fetcher.py` — all collector wiring, save logic, quality reporting
 - `collectors/market_proxies.py` — carbon/gas with yfinance fallback and history
 - `collectors/entsoe_generation.py` — reusable for both nuclear-only and full generation mix
+- `scripts/archive_to_monthly.py` — decrypt + organize into `05. Data/YYYY-MM/`
+- `tests/backtest_data_quality.py` — FMEA quality validation across all historical files
 
 ## Active Decisions
 
 - Market history stored as separate `market_history.json` (not in `market_proxies.json`) to avoid breaking existing consumers
 - Generation mix uses same `EntsoeGenerationCollector` class with expanded params, separate from French nuclear `generation_forecast.json`
+- Time resolution: store each source at native resolution, defer alignment to consumers — see [ADR-001](../docs/decisions/ADR-001-time-resolution-strategy.md)
 - In-repo memory (this file) over auto-memory, per agent-ready-projects ADR-001

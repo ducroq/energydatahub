@@ -54,3 +54,13 @@
 **Problem**: Adding a new fixed task to `asyncio.gather()` requires updating the slice index (e.g., `results[:14]` -> `results[:15]`) and `optional_idx`. Easy to miscount.
 **Root cause**: Results are unpacked positionally from a flat list. Optional collectors are appended conditionally, making the index depend on which optionals are enabled.
 **Fix**: Bumped index from 14 to 15 when adding generation mix. Future improvement: consider using a dict-based result collection pattern instead of positional unpacking.
+
+### Blanket `.claude/` gitignore hides project-shared skills (2026-05-28) [RESOLVED]
+**Problem**: `.gitignore` had `.claude/` which silently excluded `.claude/skills/curate/SKILL.md` from version control. The skill is project-shared infrastructure (every contributor and future session needs it), not local config — but it was treated the same as `.claude/settings.local.json`.
+**Root cause**: When the framework was first adopted (v1.3.4), the gitignore convention from generic Claude Code project setups was copied verbatim. The distinction between `.claude/skills/` (shared) and `.claude/settings.local.json` (per-user) wasn't made explicit.
+**Fix**: Replaced `.claude/` with `.claude/*` + `!.claude/skills/`. The skills directory is now tracked; local settings remain ignored.
+
+### agent-ready-projects framework drift went undetected for 2 months (2026-05-28) [RESOLVED]
+**Problem**: Project was pinned to `agent-ready-projects: v1.3.4` (adopted 2026-03-29). Framework had advanced to v1.10.0 (2026-05-11) with 7 minor releases adding doc sync, freshness checks, audit-context skill, ADR template, frontmatter, self-verifying memory, etc. None of this was adopted because nothing prompted a check.
+**Root cause**: The version line in CLAUDE.md was inert metadata — no instruction told any agent to check it against the changelog. The framework's `adopt.md` "Update" prompt required manual paste, which doesn't happen on its own.
+**Fix**: (1) Upgraded to v1.10.0 — frontmatter, both skills (curate refreshed + audit-context new), ADR restructure, MEMORY.md refresh. (2) Added "Starting any session → compare framework version against CHANGELOG" row to CLAUDE.md's *Before You Start* table — this is the v1.10.0 fix for exactly this kind of drift.

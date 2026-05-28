@@ -4,8 +4,9 @@
 secrets.ini
 secrets.local.ini
 
-# Claude Code local configuration (not project docs)
-.claude/
+# Claude Code: ignore local config, but track project-shared skills
+.claude/*
+!.claude/skills/
 tmpclaude-*
 
 # Log files
