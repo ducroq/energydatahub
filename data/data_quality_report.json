@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-29T18:28:33.182995+00:00",
+  "timestamp": "2026-05-30T16:55:47.632143+00:00",
   "overall_status": "critical",
   "total_issues": 9,
   "datasets_collected": 19,
@@ -145,7 +145,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 80,
+      "data_points": 72,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -240,25 +240,25 @@
         {
           "check_name": "value_range",
           "severity": "error",
-          "message": "23 values outside range [0.0, 100.0] %",
+          "message": "24 values outside range [0.0, 100.0] %",
           "details": {
-            "count": 23,
+            "count": 24,
             "examples": [
-              "2026-05-20T00:00:00+02:00/injection_gwh: 129.48",
-              "2026-05-20T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-05-21T00:00:00+02:00/injection_gwh: 327.68",
               "2026-05-21T00:00:00+02:00/net_change_gwh: 313.08",
-              "2026-05-21T00:00:00+02:00/working_gas_volume_twh: 143.7945"
+              "2026-05-21T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-05-22T00:00:00+02:00/injection_gwh: 407.29",
+              "2026-05-22T00:00:00+02:00/net_change_gwh: 400.59000000000003"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 68.5h old (threshold: 48h)",
+          "message": "Newest data is 66.9h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-05-27T00:00:00+02:00",
-            "age_hours": 68.5,
+            "newest_timestamp": "2026-05-28T00:00:00+02:00",
+            "age_hours": 66.9,
             "threshold_hours": 48
           }
         }
