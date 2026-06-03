@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-02T19:37:51.157243+00:00",
+  "timestamp": "2026-06-03T19:43:50.641166+00:00",
   "overall_status": "critical",
   "total_issues": 9,
   "datasets_collected": 19,
@@ -191,7 +191,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "warning",
-      "data_points": 51,
+      "data_points": 44,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -244,21 +244,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-05-24T00:00:00+02:00/injection_gwh: 422.22",
-              "2026-05-24T00:00:00+02:00/net_change_gwh: 409.12",
-              "2026-05-24T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-05-25T00:00:00+02:00/injection_gwh: 357.74",
-              "2026-05-25T00:00:00+02:00/net_change_gwh: 327.54"
+              "2026-05-25T00:00:00+02:00/net_change_gwh: 327.54",
+              "2026-05-25T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-05-26T00:00:00+02:00/injection_gwh: 432.58",
+              "2026-05-26T00:00:00+02:00/net_change_gwh: 397.47999999999996"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 69.6h old (threshold: 48h)",
+          "message": "Newest data is 69.7h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-05-31T00:00:00+02:00",
-            "age_hours": 69.6,
+            "newest_timestamp": "2026-06-01T00:00:00+02:00",
+            "age_hours": 69.7,
             "threshold_hours": 48
           }
         }
