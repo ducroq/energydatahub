@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-03T19:43:50.641166+00:00",
+  "timestamp": "2026-06-04T18:11:05.525532+00:00",
   "overall_status": "critical",
   "total_issues": 9,
   "datasets_collected": 19,
@@ -145,7 +145,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 84,
+      "data_points": 76,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -191,7 +191,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "warning",
-      "data_points": 44,
+      "data_points": 51,
       "checks_passed": 3,
       "checks_failed": 1,
       "issues": [
@@ -244,21 +244,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-05-25T00:00:00+02:00/injection_gwh: 357.74",
-              "2026-05-25T00:00:00+02:00/net_change_gwh: 327.54",
-              "2026-05-25T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-05-26T00:00:00+02:00/injection_gwh: 432.58",
-              "2026-05-26T00:00:00+02:00/net_change_gwh: 397.47999999999996"
+              "2026-05-26T00:00:00+02:00/net_change_gwh: 397.47999999999996",
+              "2026-05-26T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-05-27T00:00:00+02:00/injection_gwh: 458.66",
+              "2026-05-27T00:00:00+02:00/net_change_gwh: 441.66"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 69.7h old (threshold: 48h)",
+          "message": "Newest data is 68.2h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-06-01T00:00:00+02:00",
-            "age_hours": 69.7,
+            "newest_timestamp": "2026-06-02T00:00:00+02:00",
+            "age_hours": 68.2,
             "threshold_hours": 48
           }
         }
