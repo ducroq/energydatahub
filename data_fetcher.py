@@ -364,6 +364,16 @@ async def main() -> None:
             forecast_days=16
         )
 
+        # Open-Meteo Solar collector for buurt-level neighbourhoods (FyE B1).
+        # Provides GHI/DNI/DHI at Elsweide + Elderveld for buurt-PV supply
+        # forecasting — `cloud_cover` alone (in weather feed) is a first-order
+        # PV proxy, but proper PV models consume the W/m^2 irradiance signals.
+        # 16-day horizon to match the weather feed. Output: solar_forecast_buurt.json.
+        openmeteo_solar_buurt_collector = OpenMeteoSolarCollector(
+            locations=buurt_locations,
+            forecast_days=16
+        )
+
         # ENTSO-E Cross-border flows collector (FREE - uses existing API key)
         # Import/export flows directly impact local electricity prices
         # Use longer retry delays (30s initial, up to 120s) to handle temporary 503 errors
@@ -449,6 +459,7 @@ async def main() -> None:
             entsoe_generation_collector.collect(today, tomorrow),  # French nuclear generation
             entsoe_genmix_collector.collect(yesterday, today),  # Full generation mix (NL, DE, BE)
             openmeteo_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt weather (FyE B1, 16-day)
+            openmeteo_solar_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt solar irradiance (FyE B1, 16-day)
         ]
 
         # Add NED.nl collection if API key is configured
@@ -473,10 +484,10 @@ async def main() -> None:
         (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, strategic_weather_data, elspot_data,
          tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
          offshore_wind_data, flows_data, load_data, generation_data,
-         genmix_data, buurt_weather_data) = results[:16]
+         genmix_data, buurt_weather_data, buurt_solar_data) = results[:17]
 
         # Handle optional collectors (NED.nl, market proxies, and gas data)
-        optional_idx = 16
+        optional_idx = 17
         ned_data = None
         market_proxy_data = None
         gie_storage_data = None
@@ -618,6 +629,14 @@ async def main() -> None:
             save_data_file(data=buurt_weather_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "weather_forecast_buurt.json"))
             logging.info(f"Saved buurt weather forecast for {len(buurt_locations)} neighbourhoods (FyE B1)")
+
+        # Save buurt-level solar irradiance forecast (FyE B1 buurt-PV use case).
+        # GHI/DNI/DHI per timestamp at Elsweide + Elderveld; 16-day horizon.
+        if buurt_solar_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_solar_forecast_buurt.json")
+            save_data_file(data=buurt_solar_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "solar_forecast_buurt.json"))
+            logging.info(f"Saved buurt solar irradiance forecast for {len(buurt_locations)} neighbourhoods (FyE B1)")
 
         # Save cross-border flows data (import/export between NL and neighbors)
         if flows_data:
@@ -801,6 +820,7 @@ async def main() -> None:
             'elspot': elspot_data,
             'weather_forecast_multi_location': strategic_weather_data,
             'weather_forecast_buurt': buurt_weather_data,
+            'solar_forecast_buurt': buurt_solar_data,
             'grid_imbalance': tennet_data,
             'wind_forecast': entsoe_wind_data,
             'solar_forecast': solar_data,
