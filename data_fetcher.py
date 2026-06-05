@@ -97,6 +97,7 @@ from collectors import (
     RetryConfig
 )
 from collectors.openmeteo_offshore_wind import OpenMeteoOffshoreWindCollector
+from collectors.luchtmeetnet import LuchtmeetnetCollector
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
@@ -374,6 +375,16 @@ async def main() -> None:
             forecast_days=16
         )
 
+        # Luchtmeetnet air-quality collectors per buurt (FyE B1 transdisciplinary
+        # signal — energy-health nexus, EV/heat-pump co-benefits framing). Single-
+        # location collector, so one instance per buurt; both snap to nearest
+        # RIVM monitoring station. Outputs combined into air_quality_buurt.json.
+        # Last-24h historical readings (not a forecast).
+        luchtmeetnet_buurt_collectors = [
+            LuchtmeetnetCollector(latitude=loc['lat'], longitude=loc['lon'])
+            for loc in buurt_locations
+        ]
+
         # ENTSO-E Cross-border flows collector (FREE - uses existing API key)
         # Import/export flows directly impact local electricity prices
         # Use longer retry delays (30s initial, up to 120s) to handle temporary 503 errors
@@ -460,6 +471,8 @@ async def main() -> None:
             entsoe_genmix_collector.collect(yesterday, today),  # Full generation mix (NL, DE, BE)
             openmeteo_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt weather (FyE B1, 16-day)
             openmeteo_solar_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt solar irradiance (FyE B1, 16-day)
+            # Buurt air quality — one collector per location, historical 24h window
+            *[c.collect(yesterday, today) for c in luchtmeetnet_buurt_collectors],
         ]
 
         # Add NED.nl collection if API key is configured
@@ -480,14 +493,18 @@ async def main() -> None:
 
         results = await asyncio.gather(*tasks)
 
-        # Unpack results - NED.nl, market proxies, and gas collectors are optional at the end
+        # Unpack results - NED.nl, market proxies, and gas collectors are optional at the end.
+        # Buurt air-quality tail: one slot per buurt location (currently 2).
+        n_buurt_aq = len(luchtmeetnet_buurt_collectors)
+        fixed_count = 17 + n_buurt_aq
         (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, strategic_weather_data, elspot_data,
          tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
          offshore_wind_data, flows_data, load_data, generation_data,
          genmix_data, buurt_weather_data, buurt_solar_data) = results[:17]
+        buurt_aq_data = list(results[17:fixed_count])  # parallel to buurt_locations order
 
         # Handle optional collectors (NED.nl, market proxies, and gas data)
-        optional_idx = 17
+        optional_idx = fixed_count
         ned_data = None
         market_proxy_data = None
         gie_storage_data = None
@@ -637,6 +654,19 @@ async def main() -> None:
             save_data_file(data=buurt_solar_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "solar_forecast_buurt.json"))
             logging.info(f"Saved buurt solar irradiance forecast for {len(buurt_locations)} neighbourhoods (FyE B1)")
+
+        # Save buurt-level air quality (FyE B1 transdisciplinary signal).
+        # Combines per-buurt Luchtmeetnet datasets into one envelope, keyed by
+        # location name. Historical 24h window, snaps to nearest RIVM station.
+        buurt_air_combined = CombinedDataSet()
+        for loc, aq_ds in zip(buurt_locations, buurt_aq_data):
+            if aq_ds:
+                buurt_air_combined.add_dataset(loc['name'], aq_ds)
+        if buurt_air_combined.datasets:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_air_quality_buurt.json")
+            save_data_file(data=buurt_air_combined, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "air_quality_buurt.json"))
+            logging.info(f"Saved buurt air quality (Luchtmeetnet) for {len(buurt_air_combined.datasets)} neighbourhoods (FyE B1)")
 
         # Save cross-border flows data (import/export between NL and neighbors)
         if flows_data:
@@ -821,6 +851,7 @@ async def main() -> None:
             'weather_forecast_multi_location': strategic_weather_data,
             'weather_forecast_buurt': buurt_weather_data,
             'solar_forecast_buurt': buurt_solar_data,
+            'air_quality_buurt': buurt_air_combined if buurt_air_combined.datasets else None,
             'grid_imbalance': tennet_data,
             'wind_forecast': entsoe_wind_data,
             'solar_forecast': solar_data,
