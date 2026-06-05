@@ -60,6 +60,7 @@ import os
 import sys
 import json
 import shutil
+import configparser
 from datetime import datetime, timedelta
 import asyncio
 import logging
@@ -82,7 +83,10 @@ from collectors import (
     EnergyZeroCollector,
     EpexCollector,
     ElspotCollector,
-    GoogleWeatherCollector,
+    # GoogleWeatherCollector removed from active imports 2026-06-05 — replaced
+    # by Open-Meteo. Class file at collectors/googleweather.py is retained for
+    # cold revert; re-add this import alongside uncommenting the instantiation
+    # in main() to restore.
     TennetCollector,
     NedCollector,
     OpenMeteoSolarCollector,
@@ -119,55 +123,6 @@ logging.basicConfig(
         logging.FileHandler(os.path.join(output_path, LOGGING_FILE_NAME), encoding='utf-8')]
     )
 
-def _extract_wind_from_weather(google_weather_data, offshore_locations):
-    """
-    Extract wind-specific data from Google Weather multi-location forecasts.
-
-    Filters to offshore wind locations and extracts only wind-relevant fields
-    (wind_speed, wind_direction) for use in price prediction models.
-
-    Args:
-        google_weather_data: EnhancedDataSet from GoogleWeatherCollector
-        offshore_locations: List of offshore location dicts with 'name' key
-
-    Returns:
-        Dict mapping location names to timestamp -> wind data
-    """
-    if not google_weather_data or not google_weather_data.data:
-        return None
-
-    offshore_names = {loc['name'] for loc in offshore_locations}
-    wind_data = {}
-
-    for location_name, location_data in google_weather_data.data.items():
-        # Only include offshore wind locations
-        if location_name not in offshore_names:
-            continue
-
-        if not isinstance(location_data, dict):
-            continue
-
-        location_wind = {}
-        for timestamp, weather_values in location_data.items():
-            if not isinstance(weather_values, dict):
-                continue
-
-            # Extract wind fields
-            wind_entry = {}
-            if 'wind_speed' in weather_values:
-                wind_entry['wind_speed'] = weather_values['wind_speed']
-            if 'wind_direction' in weather_values:
-                wind_entry['wind_direction'] = weather_values['wind_direction']
-
-            if wind_entry:
-                location_wind[timestamp] = wind_entry
-
-        if location_wind:
-            wind_data[location_name] = location_wind
-
-    return wind_data if wind_data else None
-
-
 async def main() -> None:
     """Main function to orchestrate the data fetching and writing process."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -184,29 +139,32 @@ async def main() -> None:
         entsoe_api_key = config.get('api_keys', 'entsoe')
         # Google Weather API key — now optional (collector disabled 2026-06-05,
         # replaced by Open-Meteo). Kept in secrets for potential revival.
+        # All four optional-key blocks below catch only the specific
+        # missing-key errors so genuine config-loading failures (missing file,
+        # parse error) propagate as crashes instead of being silently swallowed.
         try:
             google_weather_api_key = config.get('api_keys', 'google_weather')
-        except Exception:
+        except (configparser.NoSectionError, configparser.NoOptionError):
             google_weather_api_key = None
         tennet_api_key = config.get('api_keys', 'tennet')
         # NED.nl API key (optional - only available after registration approval)
         try:
             ned_api_key = config.get('api_keys', 'ned')
-        except Exception:
+        except (configparser.NoSectionError, configparser.NoOptionError):
             ned_api_key = None
             logging.info("NED.nl API key not configured - skipping NED.nl collection")
 
         # Alpha Vantage API key (optional - for carbon/gas price proxies)
         try:
             alpha_vantage_api_key = config.get('api_keys', 'alpha_vantage')
-        except Exception:
+        except (configparser.NoSectionError, configparser.NoOptionError):
             alpha_vantage_api_key = None
             logging.info("Alpha Vantage API key not configured - skipping market proxies")
 
         # GIE API key (optional - for gas storage data)
         try:
             gie_api_key = config.get('api_keys', 'gie')
-        except Exception:
+        except (configparser.NoSectionError, configparser.NoOptionError):
             gie_api_key = None
             logging.info("GIE API key not configured - skipping gas storage collection")
         encryption_key = base64.b64decode(config.get('security_keys', 'encryption'))

@@ -310,10 +310,16 @@ class OpenMeteoWeatherCollector(BaseCollector):
             for i, time_str in enumerate(times):
                 # Parse timestamp
                 try:
-                    # Open-Meteo returns ISO format without timezone
+                    # Open-Meteo normally returns naive ISO strings (because we
+                    # request timezone=Europe/Amsterdam), but defend against
+                    # response-format drift: if a timestamp is naive, attach
+                    # Amsterdam tz; if it's aware (offset-suffixed), convert it
+                    # to Amsterdam so downstream filter comparisons stay correct.
                     dt = datetime.fromisoformat(time_str)
                     if dt.tzinfo is None:
                         dt = dt.replace(tzinfo=amsterdam_tz)
+                    else:
+                        dt = dt.astimezone(amsterdam_tz)
                 except ValueError:
                     continue
 

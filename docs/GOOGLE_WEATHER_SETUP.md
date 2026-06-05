@@ -10,9 +10,15 @@ The Google Weather API collector has been implemented with **separate API key** 
 
 ```ini
 [api_keys]
-google = AIzaSyB_zfr11b74KMsFzmOdR87MTZgyn2uf2EQ  # Original key (Drive, etc.)
-google_weather = YOUR_WEATHER_API_KEY_HERE          # New key for Weather API
+google = YOUR_DRIVE_API_KEY_HERE                    # Original key (Drive, etc.) — rotate per docs below
+google_weather = YOUR_WEATHER_API_KEY_HERE          # Key for Weather API (rotated 2026-06-05 GA migration)
 ```
+
+> **Security note** — a plaintext Drive API key was previously committed in this
+> doc and was scrubbed 2026-06-05. The rotated value is dead in git history once
+> rotation lands in Google Cloud Console (no force-push needed). Status of
+> `google_weather`: rotated; GoogleWeatherCollector is currently disabled and
+> replaced by Open-Meteo (see `collectors/openmeteo_weather.py`).
 
 **Two separate keys:**
 - **`google`**: Original key for Google Drive (used in legacy tests) - preserved
