@@ -182,7 +182,12 @@ async def main() -> None:
 
         config = load_secrets(script_dir, SECRETS_FILE_NAME)
         entsoe_api_key = config.get('api_keys', 'entsoe')
-        google_weather_api_key = config.get('api_keys', 'google_weather')
+        # Google Weather API key — now optional (collector disabled 2026-06-05,
+        # replaced by Open-Meteo). Kept in secrets for potential revival.
+        try:
+            google_weather_api_key = config.get('api_keys', 'google_weather')
+        except Exception:
+            google_weather_api_key = None
         tennet_api_key = config.get('api_keys', 'tennet')
         # NED.nl API key (optional - only available after registration approval)
         try:
@@ -291,6 +296,18 @@ async def main() -> None:
             {"name": "Antwerp_BE", "lat": 51.2194, "lon": 4.4025, "population": 530630},
         ]
 
+        # Buurt-level (Dutch neighbourhood) centroids for FyE B1 short-horizon
+        # supply/demand forecasting at Lifeport Arnhem-Velp scale. Added
+        # 2026-06-05; centroids computed from CBS Wijken en Buurten polygons
+        # in FyE/data/external/{buurt}/2026-XX-XX/-wijkenbuurten.geojson.
+        # Elderveld is the average of CBS-classified Elderveld-Noord and
+        # Elderveld-Zuid (both Arnhem-Zuid); Open-Meteo's ~9 km ECMWF grid
+        # cannot distinguish them anyway.
+        buurt_locations = [
+            {"name": "Elsweide_Arnhem_NL",  "lat": 51.98955, "lon": 5.95470},
+            {"name": "Elderveld_Arnhem_NL", "lat": 51.96069, "lon": 5.86010},
+        ]
+
         # Calculate day boundaries for proper day-ahead forecasting
         current_time = datetime.now(timezone)
 
@@ -302,6 +319,10 @@ async def main() -> None:
 
         # Extended horizon for Google Weather (10 days) - for Model A price prediction
         ten_days_ahead = today + timedelta(days=10)
+
+        # Extended horizon for buurt-level forecasting (16 days, Open-Meteo cap) —
+        # serves FyE B1 "hours, days, weeks" short-horizon use case.
+        sixteen_days_ahead = today + timedelta(days=16)
 
         # Yesterday for historical data (previous 24 hours)
         yesterday = today - timedelta(days=1)
@@ -315,11 +336,25 @@ async def main() -> None:
         energy_zero_collector = EnergyZeroCollector()
         epex_collector = EpexCollector()
         elspot_collector = ElspotCollector()
-        googleweather_collector = GoogleWeatherCollector(
-            api_key=google_weather_api_key,
-            locations=all_weather_locations,  # Strategic onshore locations only
-            hours=240  # 10 days hourly forecast
+        # GoogleWeatherCollector disabled 2026-06-05 — replaced by a second
+        # OpenMeteoWeatherCollector instance (`openmeteo_strategic_collector`)
+        # writing to the same `weather_forecast_multi_location.json` output.
+        # Class file `collectors/googleweather.py` is intentionally retained so
+        # this is a 1-block uncomment to revert.
+        # googleweather_collector = GoogleWeatherCollector(
+        #     api_key=google_weather_api_key,
+        #     locations=all_weather_locations,  # Strategic onshore locations only
+        #     hours=240  # 10 days hourly forecast
+        # )
+
+        # Open-Meteo Weather collector for strategic CWE+DK price-coupling
+        # locations (replaces GoogleWeatherCollector). 10-day horizon to match
+        # the previous Google output and downstream dashboard chart titles.
+        openmeteo_strategic_collector = OpenMeteoWeatherCollector(
+            locations=all_weather_locations,
+            forecast_days=10
         )
+
         tennet_collector = TennetCollector(api_key=tennet_api_key)
 
         # Open-Meteo Offshore Wind collector (FREE - no API key needed)
@@ -360,6 +395,15 @@ async def main() -> None:
         openmeteo_weather_collector = OpenMeteoWeatherCollector(
             locations=population_centers,
             forecast_days=7  # 7-day weather forecast
+        )
+
+        # Open-Meteo Weather collector for buurt-level neighbourhoods (FyE B1).
+        # 16-day horizon (Open-Meteo cap) to serve "hours / days / weeks"
+        # short-horizon supply-and-demand forecasting at neighbourhood scale.
+        # Output file: weather_forecast_buurt.json (not consumed by augur).
+        openmeteo_buurt_collector = OpenMeteoWeatherCollector(
+            locations=buurt_locations,
+            forecast_days=16
         )
 
         # ENTSO-E Cross-border flows collector (FREE - uses existing API key)
@@ -435,7 +479,7 @@ async def main() -> None:
             entsoe_collector.collect(today, tomorrow, country_code='DE_LU'),  # German prices (coupled market)
             energy_zero_collector.collect(today, tomorrow),
             epex_collector.collect(today, tomorrow),
-            googleweather_collector.collect(today, ten_days_ahead),  # 10-day forecast for price prediction
+            openmeteo_strategic_collector.collect(today, ten_days_ahead),  # 10-day forecast, strategic CWE+DK locations
             elspot_collector.collect(today, tomorrow, country_code=country_code),
             tennet_collector.collect(yesterday, today),  # TenneT data has a delay, use historical data
             entsoe_wind_collector.collect(today, tomorrow),  # Wind generation forecasts
@@ -445,7 +489,8 @@ async def main() -> None:
             entsoe_flows_collector.collect(yesterday, today),  # Cross-border flows (historical)
             entsoe_load_collector.collect(today, tomorrow),  # Load forecasts
             entsoe_generation_collector.collect(today, tomorrow),  # French nuclear generation
-            entsoe_genmix_collector.collect(yesterday, today)  # Full generation mix (NL, DE, BE)
+            entsoe_genmix_collector.collect(yesterday, today),  # Full generation mix (NL, DE, BE)
+            openmeteo_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt weather (FyE B1, 16-day)
         ]
 
         # Add NED.nl collection if API key is configured
@@ -467,13 +512,13 @@ async def main() -> None:
         results = await asyncio.gather(*tasks)
 
         # Unpack results - NED.nl, market proxies, and gas collectors are optional at the end
-        (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, google_weather_data, elspot_data,
+        (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, strategic_weather_data, elspot_data,
          tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
          offshore_wind_data, flows_data, load_data, generation_data,
-         genmix_data) = results[:15]
+         genmix_data, buurt_weather_data) = results[:16]
 
         # Handle optional collectors (NED.nl, market proxies, and gas data)
-        optional_idx = 15
+        optional_idx = 16
         ned_data = None
         market_proxy_data = None
         gie_storage_data = None
@@ -547,12 +592,15 @@ async def main() -> None:
             de_points = len(entsoe_de_data.data) if entsoe_de_data else 0
             logging.info(f"Saved energy prices: NL + DE ({de_points} German price points)")
 
-        # Save Google Weather multi-location data for price prediction (supply/demand factors)
-        if google_weather_data:
+        # Save strategic multi-location weather forecast (used by augur dashboard
+        # weather charts). Source switched from Google Weather to Open-Meteo on
+        # 2026-06-05; same filename + schema-compatible field names so augur sees
+        # no change beyond previously-dead charts populating.
+        if strategic_weather_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast_multi_location.json")
-            save_data_file(data=google_weather_data, file_path=full_path, handler=handler, encrypt=encryption)
+            save_data_file(data=strategic_weather_data, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "weather_forecast_multi_location.json"))
-            logging.info(f"Saved multi-location weather forecast for {len(all_weather_locations)} strategic onshore locations")
+            logging.info(f"Saved multi-location weather forecast (Open-Meteo) for {len(all_weather_locations)} strategic CWE+DK locations")
 
         if tennet_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_grid_imbalance.json")
@@ -604,6 +652,14 @@ async def main() -> None:
             shutil.copy(full_path, os.path.join(output_path, "demand_weather_forecast.json"))
             total_pop = sum(loc.get('population', 0) for loc in population_centers)
             logging.info(f"Saved demand weather forecast for {len(population_centers)} population centers ({total_pop:,} total population)")
+
+        # Save buurt-level weather forecast (FyE B1 short-horizon use case).
+        # 16-day horizon, ~17 fields per timestamp; not consumed by augur.
+        if buurt_weather_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_weather_forecast_buurt.json")
+            save_data_file(data=buurt_weather_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "weather_forecast_buurt.json"))
+            logging.info(f"Saved buurt weather forecast for {len(buurt_locations)} neighbourhoods (FyE B1)")
 
         # Save cross-border flows data (import/export between NL and neighbors)
         if flows_data:
@@ -785,7 +841,8 @@ async def main() -> None:
             'energy_zero': energy_zero_data,
             'epex': epex_data,
             'elspot': elspot_data,
-            'weather_forecast_multi_location': google_weather_data,
+            'weather_forecast_multi_location': strategic_weather_data,
+            'weather_forecast_buurt': buurt_weather_data,
             'grid_imbalance': tennet_data,
             'wind_forecast': entsoe_wind_data,
             'solar_forecast': solar_data,

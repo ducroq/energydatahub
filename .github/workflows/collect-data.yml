@@ -32,6 +32,10 @@ jobs:
         ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
         HMAC_KEY: ${{ secrets.HMAC_KEY }}
         ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
+        # GoogleWeatherCollector was disabled 2026-06-05 (replaced by
+        # Open-Meteo). The secret is retained as a cold-revert option;
+        # if Google Weather will not be revived, delete the secret from
+        # the GH Actions secret store and this env line.
         GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
         TENNET_API_KEY: ${{ secrets.TENNET_API_KEY }}
         NED_API_KEY: ${{ secrets.NED_API_KEY }}
@@ -40,11 +44,30 @@ jobs:
 
       run: python data_fetcher.py
 
+    # Defensive: fail the workflow loudly if data_quality_report flags any
+    # dataset as `critical`. Added 2026-06-05 after the GoogleWeatherCollector
+    # silent-failure incident (7 months of `API_KEY_INVALID` while the
+    # workflow happily exited 0). Gate placed *before* the docs/commit/push
+    # steps so degraded data is never published downstream.
+    - name: Assert data quality (no silent failures)
+      run: |
+        if [ ! -f data/data_quality_report.json ]; then
+          echo "::error::data/data_quality_report.json is missing — data_fetcher.py did not produce a quality report"
+          exit 1
+        fi
+        status=$(jq -r '.overall_status // "missing"' data/data_quality_report.json)
+        echo "data_quality_report.overall_status = $status"
+        if [ "$status" = "critical" ]; then
+          echo "::error::Aborting publish — overall_status is critical. Failing datasets:"
+          jq '.dataset_reports[] | select(.status == "critical") | {dataset_name, status, issues}' data/data_quality_report.json
+          exit 1
+        fi
+
     - name: Prepare docs folder with only current data
       run: |
         mkdir -p docs
         # Copy files that exist, skip missing ones
-        for file in energy_price_forecast.json weather_forecast_multi_location.json grid_imbalance.json wind_forecast.json ned_production.json solar_forecast.json demand_weather_forecast.json cross_border_flows.json load_forecast.json generation_forecast.json generation_mix.json calendar_features.json market_proxies.json market_history.json gas_storage.json gas_flows.json; do
+        for file in energy_price_forecast.json weather_forecast_multi_location.json weather_forecast_buurt.json grid_imbalance.json wind_forecast.json ned_production.json solar_forecast.json demand_weather_forecast.json cross_border_flows.json load_forecast.json generation_forecast.json generation_mix.json calendar_features.json market_proxies.json market_history.json gas_storage.json gas_flows.json; do
           if [ -f "data/$file" ]; then
             cp "data/$file" docs/
             echo "Copied $file"

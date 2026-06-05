@@ -51,24 +51,81 @@ from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 
+# WMO weather interpretation codes — translates Open-Meteo's `weather_code`
+# integer into short English text so consumers can render a "condition" string
+# without a separate code-to-text lookup.
+# Reference: https://open-meteo.com/en/docs (Weather variable documentation)
+WMO_CODE_MAP: Dict[int, str] = {
+    0:  "Clear sky",
+    1:  "Mainly clear",
+    2:  "Partly cloudy",
+    3:  "Overcast",
+    45: "Fog",
+    48: "Depositing rime fog",
+    51: "Light drizzle",
+    53: "Moderate drizzle",
+    55: "Dense drizzle",
+    56: "Light freezing drizzle",
+    57: "Dense freezing drizzle",
+    61: "Slight rain",
+    63: "Moderate rain",
+    65: "Heavy rain",
+    66: "Light freezing rain",
+    67: "Heavy freezing rain",
+    71: "Slight snow fall",
+    73: "Moderate snow fall",
+    75: "Heavy snow fall",
+    77: "Snow grains",
+    80: "Slight rain showers",
+    81: "Moderate rain showers",
+    82: "Violent rain showers",
+    85: "Slight snow showers",
+    86: "Heavy snow showers",
+    95: "Thunderstorm",
+    96: "Thunderstorm with slight hail",
+    99: "Thunderstorm with heavy hail",
+}
+
+
 class OpenMeteoWeatherCollector(BaseCollector):
     """
-    Collector for Open-Meteo weather forecasts for demand prediction.
+    Collector for Open-Meteo weather forecasts (demand + general atmospheric).
 
-    Fetches temperature and related weather data for multiple population centers
-    to support electricity price prediction (demand side - heating/cooling).
+    Originally scoped to demand prediction (heating/cooling demand drivers at
+    population centers). Field set extended 2026-06-05 — `dew_point`, `pressure`,
+    `visibility`, `wind_direction`, `uv_index`, `precipitation_probability`,
+    `cape`, `weather_code`, `condition` — to give parity with the (retired)
+    GoogleWeatherCollector. The collector is now the single weather source
+    used for:
+      - strategic price-coupling locations (CWE+DK)
+      - population centers (demand side)
+      - buurt-level locations (FyE B1 short-horizon forecasting)
+
+    Instantiate once per location pool / forecast horizon. The class is
+    location-list agnostic — distinct pools become distinct collector
+    instances in the orchestrator.
     """
 
     BASE_URL = "https://api.open-meteo.com/v1/forecast"
 
-    # Weather variables for demand prediction
+    # Weather variables for demand prediction + general atmospheric context.
+    # Extended 2026-06-05 to give field parity with the (retired) Google
+    # Weather collector so downstream consumers see the same field names.
     WEATHER_VARIABLES = [
-        "temperature_2m",           # Air temperature at 2m (°C)
-        "apparent_temperature",     # Feels-like temperature (°C)
-        "relative_humidity_2m",     # Relative humidity (%)
-        "precipitation",            # Precipitation (mm)
-        "wind_speed_10m",          # Wind speed at 10m (km/h) - affects perceived temperature
-        "cloud_cover",             # Cloud cover (%) - affects solar heating
+        "temperature_2m",            # Air temperature at 2m (°C)
+        "apparent_temperature",      # Feels-like temperature (°C)
+        "dew_point_2m",              # Dew point at 2m (°C)
+        "relative_humidity_2m",      # Relative humidity (%)
+        "precipitation",             # Precipitation (mm)
+        "precipitation_probability", # Probability of precipitation (%)
+        "wind_speed_10m",            # Wind speed at 10m (km/h)
+        "wind_direction_10m",        # Wind direction at 10m (degrees)
+        "surface_pressure",          # Surface pressure (hPa)
+        "visibility",                # Visibility (m)
+        "cloud_cover",               # Cloud cover (%)
+        "uv_index",                  # UV index (0-11+, daytime only)
+        "cape",                      # Convective Available Potential Energy (J/kg)
+        "weather_code",              # WMO weather interpretation code (int)
     ]
 
     # Base temperature for degree day calculations (°C)
@@ -305,6 +362,62 @@ class OpenMeteoWeatherCollector(BaseCollector):
                     if val is not None:
                         values["cloud_cover"] = float(val)
 
+                # --- Extended fields (2026-06-05) — field parity with retired
+                #     Google Weather collector. Output names match Google's
+                #     where they exist so downstream consumers see no schema
+                #     change between providers.
+
+                # Dew point
+                if "dew_point_2m" in hourly and i < len(hourly["dew_point_2m"]):
+                    val = hourly["dew_point_2m"][i]
+                    if val is not None:
+                        values["dew_point"] = float(val)
+
+                # Surface pressure
+                if "surface_pressure" in hourly and i < len(hourly["surface_pressure"]):
+                    val = hourly["surface_pressure"][i]
+                    if val is not None:
+                        values["pressure"] = float(val)
+
+                # Visibility (metres)
+                if "visibility" in hourly and i < len(hourly["visibility"]):
+                    val = hourly["visibility"][i]
+                    if val is not None:
+                        values["visibility"] = float(val)
+
+                # Wind direction (degrees)
+                if "wind_direction_10m" in hourly and i < len(hourly["wind_direction_10m"]):
+                    val = hourly["wind_direction_10m"][i]
+                    if val is not None:
+                        values["wind_direction"] = float(val)
+
+                # UV index
+                if "uv_index" in hourly and i < len(hourly["uv_index"]):
+                    val = hourly["uv_index"][i]
+                    if val is not None:
+                        values["uv_index"] = float(val)
+
+                # Precipitation probability (%)
+                if "precipitation_probability" in hourly and i < len(hourly["precipitation_probability"]):
+                    val = hourly["precipitation_probability"][i]
+                    if val is not None:
+                        values["precipitation_probability"] = float(val)
+
+                # CAPE — convective available potential energy (J/kg).
+                # Proxy for thunderstorm activity; high CAPE + moisture = unstable.
+                if "cape" in hourly and i < len(hourly["cape"]):
+                    val = hourly["cape"][i]
+                    if val is not None:
+                        values["cape"] = float(val)
+
+                # Weather code (int) + derived English condition string
+                if "weather_code" in hourly and i < len(hourly["weather_code"]):
+                    val = hourly["weather_code"][i]
+                    if val is not None:
+                        wmo = int(val)
+                        values["weather_code"] = wmo
+                        values["condition"] = WMO_CODE_MAP.get(wmo, "Unknown")
+
                 # Calculate degree days if temperature available
                 if temp is not None:
                     degree_days = self._calculate_degree_days(temp)
@@ -394,10 +507,19 @@ class OpenMeteoWeatherCollector(BaseCollector):
             'variables': {
                 'temperature': 'Air temperature at 2m (°C)',
                 'apparent_temperature': 'Feels-like temperature (°C)',
+                'dew_point': 'Dew point at 2m (°C)',
                 'humidity': 'Relative humidity (%)',
                 'precipitation': 'Precipitation (mm)',
+                'precipitation_probability': 'Probability of precipitation (%)',
                 'wind_speed': 'Wind speed at 10m (km/h)',
+                'wind_direction': 'Wind direction at 10m (degrees)',
+                'pressure': 'Surface pressure (hPa)',
+                'visibility': 'Visibility (m)',
                 'cloud_cover': 'Cloud cover (%)',
+                'uv_index': 'UV index (0-11+, daytime only)',
+                'cape': 'Convective Available Potential Energy (J/kg) — thunderstorm proxy',
+                'weather_code': 'WMO weather interpretation code (int)',
+                'condition': 'WMO code mapped to short English text (see WMO_CODE_MAP)',
                 'hdd': f'Heating Degree Days (base {self.HEATING_BASE_TEMP}°C)',
                 'cdd': f'Cooling Degree Days (base {self.COOLING_BASE_TEMP}°C)'
             },
@@ -406,7 +528,12 @@ class OpenMeteoWeatherCollector(BaseCollector):
                 'cooling_base_temp': self.COOLING_BASE_TEMP
             },
             'api_rate_limit': '10,000 requests/day (free tier)',
-            'description': 'Weather forecasts for electricity demand prediction (heating/cooling)'
+            'description': (
+                'Weather forecasts from Open-Meteo (ECMWF + DWD ICON). '
+                'Originally scoped for demand-side prediction; field set '
+                'extended 2026-06-05 to also serve the strategic-price-coupling '
+                'and buurt-level use cases that previously used Google Weather.'
+            )
         })
 
         return metadata
