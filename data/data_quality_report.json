@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-06-04T18:11:05.525532+00:00",
-  "overall_status": "critical",
-  "total_issues": 9,
-  "datasets_collected": 19,
+  "timestamp": "2026-06-05T17:31:34.969179+00:00",
+  "overall_status": "error",
+  "total_issues": 7,
+  "datasets_collected": 20,
   "datasets_missing": [],
   "dataset_reports": [
     {
@@ -57,28 +57,23 @@
     },
     {
       "dataset_name": "weather_forecast_multi_location",
-      "data_type": "weather",
-      "source": "Google Weather API v1",
-      "status": "critical",
-      "data_points": 0,
-      "checks_passed": 3,
-      "checks_failed": 2,
-      "issues": [
-        {
-          "check_name": "completeness",
-          "severity": "critical",
-          "message": "No data points collected (expected >= 24)",
-          "details": {
-            "actual": 0,
-            "expected_min": 24
-          }
-        },
-        {
-          "check_name": "staleness",
-          "severity": "warning",
-          "message": "Could not parse any timestamps to check staleness"
-        }
-      ]
+      "data_type": "demand_weather",
+      "source": "Open-Meteo API (free)",
+      "status": "info",
+      "data_points": 1440,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "weather_forecast_buurt",
+      "data_type": "demand_weather",
+      "source": "Open-Meteo API (free)",
+      "status": "info",
+      "data_points": 768,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "wind_forecast",
@@ -244,21 +239,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-05-26T00:00:00+02:00/injection_gwh: 432.58",
-              "2026-05-26T00:00:00+02:00/net_change_gwh: 397.47999999999996",
-              "2026-05-26T00:00:00+02:00/working_gas_volume_twh: 143.7945",
               "2026-05-27T00:00:00+02:00/injection_gwh: 458.66",
-              "2026-05-27T00:00:00+02:00/net_change_gwh: 441.66"
+              "2026-05-27T00:00:00+02:00/net_change_gwh: 441.66",
+              "2026-05-27T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-05-28T00:00:00+02:00/injection_gwh: 412.49",
+              "2026-05-28T00:00:00+02:00/net_change_gwh: 380.59000000000003"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 68.2h old (threshold: 48h)",
+          "message": "Newest data is 67.5h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-06-02T00:00:00+02:00",
-            "age_hours": 68.2,
+            "newest_timestamp": "2026-06-03T00:00:00+02:00",
+            "age_hours": 67.5,
             "threshold_hours": 48
           }
         }
