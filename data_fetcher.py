@@ -87,6 +87,7 @@ from collectors import (
     # by Open-Meteo. Class file at collectors/googleweather.py is retained for
     # cold revert; re-add this import alongside uncommenting the instantiation
     # in main() to restore.
+    LuchtmeetnetCollector,
     TennetCollector,
     NedCollector,
     OpenMeteoSolarCollector,
@@ -97,7 +98,6 @@ from collectors import (
     RetryConfig
 )
 from collectors.openmeteo_offshore_wind import OpenMeteoOffshoreWindCollector
-from collectors.luchtmeetnet import LuchtmeetnetCollector
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
@@ -491,6 +491,13 @@ async def main() -> None:
         # Add ENTSOG gas flows collection (no API key required)
         tasks.append(entsog_flows_collector.collect(yesterday, today))
 
+        # NOTE: deliberately NOT using return_exceptions=True.
+        # BaseCollector.collect() traps internally and returns None on failure
+        # (see collectors/base.py). The downstream `if X_data:` truthiness
+        # checks rely on this — they would falsely pass for a non-None
+        # exception object if gather started surfacing exceptions. Don't
+        # change this flag without also adding explicit isinstance(_, BaseException)
+        # checks before the per-collector save blocks.
         results = await asyncio.gather(*tasks)
 
         # Unpack results - NED.nl, market proxies, and gas collectors are optional at the end.
@@ -658,6 +665,11 @@ async def main() -> None:
         # Save buurt-level air quality (FyE B1 transdisciplinary signal).
         # Combines per-buurt Luchtmeetnet datasets into one envelope, keyed by
         # location name. Historical 24h window, snaps to nearest RIVM station.
+        # NOTE schema divergence: wind_forecast.json keys its CombinedDataSet
+        # datasets by SOURCE type ('entsoe_wind_generation', 'offshore_wind');
+        # air_quality_buurt.json keys by LOCATION name ('Elsweide_Arnhem_NL',
+        # 'Elderveld_Arnhem_NL'). Both are intentional but mean any consumer
+        # iterating .datasets must understand the key semantics per-file.
         buurt_air_combined = CombinedDataSet()
         for loc, aq_ds in zip(buurt_locations, buurt_aq_data):
             if aq_ds:

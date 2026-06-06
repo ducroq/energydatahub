@@ -289,6 +289,26 @@ class LuchtmeetnetCollector(BaseCollector):
                 timestamp_key = amsterdam_dt.isoformat()
                 data.setdefault(timestamp_key, {})['AQI'] = item['value']
 
+        # Allowlist of RIVM measurement formulas we accept into the output.
+        # Defensive against an upstream schema change or a MITM-altered response
+        # injecting unexpected `formula` keys with arbitrary content.
+        # Source: https://api.luchtmeetnet.nl/open_api/components
+        ALLOWED_FORMULAS = {
+            'NO',    # Nitric oxide
+            'NO2',   # Nitrogen dioxide
+            'NOX',   # Sum of nitrogen oxides
+            'O3',    # Ozone
+            'SO2',   # Sulfur dioxide
+            'CO',    # Carbon monoxide
+            'PM10',  # Particulate matter < 10 µm
+            'PM25',  # Particulate matter < 2.5 µm
+            'PM1',   # Particulate matter < 1 µm (some stations only)
+            'BC',    # Black carbon
+            'C6H6',  # Benzene
+            'NH3',   # Ammonia
+            'H2S',   # Hydrogen sulfide
+        }
+
         # Process measurement data
         for item in raw_data['measurements']:
             # Parse timestamp
@@ -301,8 +321,12 @@ class LuchtmeetnetCollector(BaseCollector):
             # Filter to requested time range
             if start_time <= amsterdam_dt < end_time:
                 timestamp_key = amsterdam_dt.isoformat()
-                # Store measurement by formula (e.g., NO2, PM10, etc.)
-                data.setdefault(timestamp_key, {})[item['formula']] = item['value']
+                # Store measurement by formula (e.g., NO2, PM10, etc.) — allowlist-guarded
+                formula = item.get('formula')
+                if formula in ALLOWED_FORMULAS:
+                    data.setdefault(timestamp_key, {})[formula] = item['value']
+                elif formula:
+                    self.logger.debug(f"Skipping unknown formula key from API: {formula!r}")
 
         self.logger.debug(f"Parsed {len(data)} data points from Luchtmeetnet response")
 

@@ -51,7 +51,7 @@ google_weather = YOUR_WEATHER_API_KEY_HERE          # Key for Weather API (rotat
 Edit `secrets.ini` and replace `YOUR_WEATHER_API_KEY_HERE` with your actual key:
 
 ```ini
-google_weather = AIzaSyC_your_actual_key_here
+google_weather = YOUR_WEATHER_API_KEY_HERE
 ```
 
 ### 4. Update GitHub Secrets (for CI/CD)
