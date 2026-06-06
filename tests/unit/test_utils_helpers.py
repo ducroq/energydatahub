@@ -259,6 +259,74 @@ class TestClosest:
         assert result["name"] == "Only Station"
 
 
+class TestClosestDefenseInDepth:
+    """Issue #15: `closest()` must reject malformed input loudly instead of
+    crashing mid-iteration with a bare KeyError.
+
+    Background: CI run 27068482501 (2026-06-06) cached a Luchtmeetnet station
+    list where one detail-fetch had failed silently, leaving an entry without
+    `latitude`/`longitude`. The min(... key=lambda) crashed for 24h until the
+    cache TTL expired. PR #10 fixed the one feeder; this guards the function
+    itself against the bug class via any future feeder.
+    """
+
+    def test_raises_on_entry_missing_latitude(self):
+        stations = [
+            {"latitude": 52.0, "longitude": 4.0, "name": "ok"},
+            {"longitude": 5.0, "number": "BAD"},  # missing latitude
+        ]
+        target = {"latitude": 52.1, "longitude": 4.1}
+        import pytest
+        with pytest.raises(ValueError, match="missing latitude"):
+            closest(stations, target)
+
+    def test_raises_on_entry_missing_longitude(self):
+        stations = [
+            {"latitude": 52.0, "longitude": 4.0, "name": "ok"},
+            {"latitude": 53.0, "name": "BAD"},  # missing longitude
+        ]
+        target = {"latitude": 52.1, "longitude": 4.1}
+        import pytest
+        with pytest.raises(ValueError, match="missing latitude"):
+            closest(stations, target)
+
+    def test_raises_on_empty_data(self):
+        target = {"latitude": 52.1, "longitude": 4.1}
+        import pytest
+        with pytest.raises(ValueError, match="empty"):
+            closest([], target)
+
+    def test_raises_on_target_missing_latitude(self):
+        stations = [{"latitude": 52.0, "longitude": 4.0, "name": "ok"}]
+        import pytest
+        with pytest.raises(ValueError, match="missing latitude"):
+            closest(stations, {"longitude": 4.0})
+
+    def test_error_message_identifies_offending_entry(self):
+        """The raised ValueError should make the offending entry identifiable
+        so the operator can trace the source quickly (rather than wading
+        through stack frames to figure out *which* dict was malformed)."""
+        stations = [
+            {"latitude": 52.0, "longitude": 4.0, "name": "ok"},
+            {"number": "NL_OFFENDER"},  # identifiable by `number`
+        ]
+        target = {"latitude": 52.1, "longitude": 4.1}
+        import pytest
+        with pytest.raises(ValueError, match="NL_OFFENDER"):
+            closest(stations, target)
+
+    def test_all_valid_entries_returns_nearest_unchanged(self):
+        """Regression: the guard must not change happy-path behavior."""
+        stations = [
+            {"latitude": 52.0, "longitude": 4.0, "name": "A"},
+            {"latitude": 52.5, "longitude": 4.5, "name": "B"},
+            {"latitude": 53.0, "longitude": 5.0, "name": "C"},
+        ]
+        target = {"latitude": 52.4, "longitude": 4.4}
+        result = closest(stations, target)
+        assert result["name"] == "B"
+
+
 class TestDetectFileType:
     """Test file type detection function."""
 

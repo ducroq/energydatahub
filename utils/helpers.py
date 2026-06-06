@@ -138,6 +138,23 @@ def distance(lat1, lon1, lat2, lon2):
     return distance
 
 def closest(data, v):
+    # Defense in depth (issue #15): validate inputs before iterating so a
+    # caller that hands us a coord-less entry fails fast at the call site
+    # rather than crashing mid-min() with a bare KeyError. The original
+    # incident (CI run 27068482501, 2026-06-06) cached a station-list with
+    # one missing-coord entry and silently broke air-quality collection
+    # for 24h. PR #10 fixed the one feeder; this guards the function
+    # itself against the same bug class via any future feeder.
+    if not data:
+        raise ValueError("closest(): data is empty — no candidates to choose from")
+    if "latitude" not in v or "longitude" not in v:
+        raise ValueError(f"closest(): target {v!r} missing latitude/longitude")
+    for p in data:
+        if "latitude" not in p or "longitude" not in p:
+            raise ValueError(
+                f"closest(): entry missing latitude/longitude: "
+                f"{p.get('number') or p.get('name') or p}"
+            )
     return min(
         data,
         key=lambda p: distance(
