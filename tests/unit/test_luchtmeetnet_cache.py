@@ -405,5 +405,149 @@ class TestLuchtmeetnetCacheIntegration:
                     mock_meas.assert_called_once()
 
 
+class TestLuchtmeetnetStationFilter:
+    """Regression: stations missing lat/lon must not poison the cache.
+
+    Before 2026-06-06 a failing per-station detail-fetch (HTTP non-200 or
+    network error) left the station in `_fetch_all_stations`'s result
+    *without* `latitude`/`longitude`. `closest()` then iterated
+    `p['latitude']` over the cached list and raised `KeyError: 'latitude'`
+    for 24h — see CI run 27068482501.
+
+    These tests assert the post-fetch filter drops incomplete entries.
+    """
+
+    @pytest.mark.asyncio
+    async def test_filter_drops_stations_without_coordinates(self):
+        """Stations without lat/lon (e.g. detail-fetch HTTP 500) are dropped."""
+        LuchtmeetnetCollector._station_cache = None
+        LuchtmeetnetCollector._cache_timestamp = None
+
+        collector = LuchtmeetnetCollector(52.37, 4.89)
+
+        # First page: three stations
+        page_response = AsyncMock()
+        page_response.status = 200
+        page_response.json = AsyncMock(return_value={
+            "pagination": {"page_list": [1]},
+            "data": [
+                {"number": "NL_OK1"},
+                {"number": "NL_BAD"},
+                {"number": "NL_OK2"},
+            ],
+        })
+
+        # Per-station detail responses: NL_OK1 + NL_OK2 succeed, NL_BAD HTTP 500
+        ok1_response = AsyncMock()
+        ok1_response.status = 200
+        ok1_response.json = AsyncMock(return_value={"data": {
+            "geometry": {"type": "point", "coordinates": [4.0, 52.0]},
+            "components": [], "location": "OK1", "municipality": "Foo",
+        }})
+        bad_response = AsyncMock()
+        bad_response.status = 500
+        ok2_response = AsyncMock()
+        ok2_response.status = 200
+        ok2_response.json = AsyncMock(return_value={"data": {
+            "geometry": {"type": "Point", "coordinates": [5.0, 53.0]},  # capital P also OK
+            "components": [], "location": "OK2", "municipality": "Bar",
+        }})
+
+        responses = iter([page_response, page_response, ok1_response, bad_response, ok2_response])
+
+        def get_side_effect(url):
+            cm = AsyncMock()
+            cm.__aenter__ = AsyncMock(return_value=next(responses))
+            cm.__aexit__ = AsyncMock(return_value=None)
+            return cm
+
+        mock_session = Mock()
+        mock_session.get = Mock(side_effect=get_side_effect)
+
+        result = await collector._fetch_all_stations(mock_session)
+
+        # NL_BAD must be filtered out; only stations with coords survive.
+        numbers = [s["number"] for s in result]
+        assert "NL_BAD" not in numbers
+        assert set(numbers) == {"NL_OK1", "NL_OK2"}
+        for s in result:
+            assert "latitude" in s and "longitude" in s
+
+    @pytest.mark.asyncio
+    async def test_closest_does_not_raise_on_filtered_list(self):
+        """`closest()` over the filtered list never raises KeyError."""
+        from utils.helpers import closest
+        stations = [
+            {"number": "A", "latitude": 52.0, "longitude": 4.0},
+            {"number": "B", "latitude": 53.0, "longitude": 5.0},
+        ]
+        # Should pick A (closer to query)
+        result = closest(stations, {"latitude": 52.1, "longitude": 4.1})
+        assert result["number"] == "A"
+
+    @pytest.mark.asyncio
+    async def test_filter_drops_station_on_network_exception(self):
+        """A per-station detail-fetch that raises (e.g. ClientError, timeout) is dropped, not propagated.
+
+        This exercises the broad `try: ... except Exception` branch added 2026-06-06.
+        Before the guard, an aiohttp transient on one station's detail-fetch killed
+        the whole collection — that path was the *reason* for the try/except, but
+        the original regression test only covered the HTTP-non-200 path (which goes
+        through `continue`, not `except`).
+        """
+        from aiohttp import ClientConnectionError
+
+        LuchtmeetnetCollector._station_cache = None
+        LuchtmeetnetCollector._cache_timestamp = None
+
+        collector = LuchtmeetnetCollector(52.37, 4.89)
+
+        # First page response (used for both pagination discovery + page-1 fetch)
+        page_response = AsyncMock()
+        page_response.status = 200
+        page_response.json = AsyncMock(return_value={
+            "pagination": {"page_list": [1]},
+            "data": [
+                {"number": "NL_OK"},
+                {"number": "NL_NETERR"},
+            ],
+        })
+
+        ok_response = AsyncMock()
+        ok_response.status = 200
+        ok_response.json = AsyncMock(return_value={"data": {
+            "geometry": {"type": "point", "coordinates": [4.0, 52.0]},
+            "components": [], "location": "OK", "municipality": "Foo",
+        }})
+
+        call_count = [0]
+
+        def get_side_effect(url):
+            call_count[0] += 1
+            cm = AsyncMock()
+            cm.__aexit__ = AsyncMock(return_value=None)
+            if call_count[0] in (1, 2):
+                # Page-list discovery + page-1 fetch
+                cm.__aenter__ = AsyncMock(return_value=page_response)
+            elif call_count[0] == 3:
+                # NL_OK detail
+                cm.__aenter__ = AsyncMock(return_value=ok_response)
+            else:
+                # NL_NETERR detail — network error on context-manager entry
+                cm.__aenter__ = AsyncMock(side_effect=ClientConnectionError("connection reset"))
+            return cm
+
+        mock_session = Mock()
+        mock_session.get = Mock(side_effect=get_side_effect)
+
+        # Must NOT raise — the try/except in _fetch_all_stations catches it,
+        # the filter drops the un-coord'd station, and the good station comes back.
+        result = await collector._fetch_all_stations(mock_session)
+
+        numbers = [s["number"] for s in result]
+        assert "NL_NETERR" not in numbers
+        assert numbers == ["NL_OK"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

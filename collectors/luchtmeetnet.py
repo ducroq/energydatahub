@@ -202,23 +202,45 @@ class LuchtmeetnetCollector(BaseCollector):
         # Fetch details for each station
         for station in station_list:
             url = f"{self.base_url}/stations/{station['number']}/"
-            async with session.get(url) as response:
-                if response.status != 200:
-                    continue  # Skip stations with errors
+            try:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        continue  # Skip stations with errors
 
-                data = await response.json()
-                station_data = data['data']
+                    data = await response.json()
+                    station_data = data['data']
 
-                # Extract coordinates and metadata
-                if (station_data['geometry']['type'] == 'point' and
-                    station_data['geometry']['coordinates']):
-                    station['latitude'] = station_data['geometry']['coordinates'][1]
-                    station['longitude'] = station_data['geometry']['coordinates'][0]
-                    station['components'] = station_data.get('components', [])
-                    station['location'] = station_data.get('location', '')
-                    station['municipality'] = station_data.get('municipality', '')
+                    # Extract coordinates and metadata. Accept both 'point' (current
+                    # Luchtmeetnet behavior) and 'Point' (GeoJSON RFC 7946 standard)
+                    # so an upstream-spec correction doesn't silently break us.
+                    geom = (station_data or {}).get('geometry') or {}
+                    if (geom.get('type') in ('point', 'Point')
+                            and geom.get('coordinates')):
+                        station['latitude'] = geom['coordinates'][1]
+                        station['longitude'] = geom['coordinates'][0]
+                        station['components'] = station_data.get('components', [])
+                        station['location'] = station_data.get('location', '')
+                        station['municipality'] = station_data.get('municipality', '')
+            except Exception as e:
+                # Single-station network/parse failures must not poison the cache.
+                # Before this guard a single bad detail-fetch left the station in
+                # the list without lat/lon, causing the cached list to crash
+                # `closest()` with KeyError: 'latitude' for 24h (see CI run
+                # 27068482501, 2026-06-06).
+                self.logger.warning(
+                    f"Skipping station {station.get('number', '?')}: detail-fetch failed ({e})"
+                )
 
-        return station_list
+        # Drop any station that didn't get coordinates assigned. `closest()`
+        # iterates p['latitude'] over every member; a single missing entry
+        # raises KeyError and kills the whole collection.
+        clean = [s for s in station_list if 'latitude' in s and 'longitude' in s]
+        if len(clean) < len(station_list):
+            self.logger.info(
+                f"Filtered {len(station_list) - len(clean)} stations without coordinates "
+                f"({len(clean)}/{len(station_list)} usable)"
+            )
+        return clean
 
     async def _fetch_aqi(
         self,
