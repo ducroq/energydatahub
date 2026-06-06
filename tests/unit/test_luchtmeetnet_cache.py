@@ -485,6 +485,69 @@ class TestLuchtmeetnetStationFilter:
         result = closest(stations, {"latitude": 52.1, "longitude": 4.1})
         assert result["number"] == "A"
 
+    @pytest.mark.asyncio
+    async def test_filter_drops_station_on_network_exception(self):
+        """A per-station detail-fetch that raises (e.g. ClientError, timeout) is dropped, not propagated.
+
+        This exercises the broad `try: ... except Exception` branch added 2026-06-06.
+        Before the guard, an aiohttp transient on one station's detail-fetch killed
+        the whole collection — that path was the *reason* for the try/except, but
+        the original regression test only covered the HTTP-non-200 path (which goes
+        through `continue`, not `except`).
+        """
+        from aiohttp import ClientConnectionError
+
+        LuchtmeetnetCollector._station_cache = None
+        LuchtmeetnetCollector._cache_timestamp = None
+
+        collector = LuchtmeetnetCollector(52.37, 4.89)
+
+        # First page response (used for both pagination discovery + page-1 fetch)
+        page_response = AsyncMock()
+        page_response.status = 200
+        page_response.json = AsyncMock(return_value={
+            "pagination": {"page_list": [1]},
+            "data": [
+                {"number": "NL_OK"},
+                {"number": "NL_NETERR"},
+            ],
+        })
+
+        ok_response = AsyncMock()
+        ok_response.status = 200
+        ok_response.json = AsyncMock(return_value={"data": {
+            "geometry": {"type": "point", "coordinates": [4.0, 52.0]},
+            "components": [], "location": "OK", "municipality": "Foo",
+        }})
+
+        call_count = [0]
+
+        def get_side_effect(url):
+            call_count[0] += 1
+            cm = AsyncMock()
+            cm.__aexit__ = AsyncMock(return_value=None)
+            if call_count[0] in (1, 2):
+                # Page-list discovery + page-1 fetch
+                cm.__aenter__ = AsyncMock(return_value=page_response)
+            elif call_count[0] == 3:
+                # NL_OK detail
+                cm.__aenter__ = AsyncMock(return_value=ok_response)
+            else:
+                # NL_NETERR detail — network error on context-manager entry
+                cm.__aenter__ = AsyncMock(side_effect=ClientConnectionError("connection reset"))
+            return cm
+
+        mock_session = Mock()
+        mock_session.get = Mock(side_effect=get_side_effect)
+
+        # Must NOT raise — the try/except in _fetch_all_stations catches it,
+        # the filter drops the un-coord'd station, and the good station comes back.
+        result = await collector._fetch_all_stations(mock_session)
+
+        numbers = [s["number"] for s in result]
+        assert "NL_NETERR" not in numbers
+        assert numbers == ["NL_OK"]
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

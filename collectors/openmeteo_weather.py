@@ -230,16 +230,25 @@ class OpenMeteoWeatherCollector(BaseCollector):
         # 2026-06-05). At Semaphore(2) per collector that's up to 10 concurrent
         # requests, which crossed Open-Meteo's free-tier limit on 2026-06-06
         # (CI run 27068482501: every buurt + offshore location HTTP 429). Tightened
-        # to Semaphore(1) + 500 ms gap: peak ~5 concurrent, ~10 req/s headroom.
+        # to Semaphore(1) + 500 ms gap *between* requests (no gap before the first,
+        # since there's nothing to space from): peak ~5 concurrent, ~10 req/s headroom.
         semaphore = asyncio.Semaphore(1)
 
-        async def fetch_with_rate_limit(session: aiohttp.ClientSession, location: Dict[str, Any]):
+        async def fetch_with_rate_limit(
+            session: aiohttp.ClientSession,
+            location: Dict[str, Any],
+            delay: bool,
+        ):
             async with semaphore:
-                await asyncio.sleep(0.5)  # Inter-request gap (was 0.1, raised 2026-06-06)
+                if delay:
+                    await asyncio.sleep(0.5)  # Inter-request gap (was 0.1, raised 2026-06-06)
                 return await self._fetch_location_data(session, location)
 
         async with aiohttp.ClientSession() as session:
-            tasks = [fetch_with_rate_limit(session, loc) for loc in self.locations]
+            tasks = [
+                fetch_with_rate_limit(session, loc, delay=(i > 0))
+                for i, loc in enumerate(self.locations)
+            ]
             responses = await asyncio.gather(*tasks)
 
             for response in responses:

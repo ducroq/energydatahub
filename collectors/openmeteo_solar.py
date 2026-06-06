@@ -166,16 +166,25 @@ class OpenMeteoSolarCollector(BaseCollector):
         # Five Open-Meteo collectors share the API in data_fetcher.py (strategic
         # weather + solar, offshore wind, buurt weather + solar). Tightened from
         # Semaphore(2)+0.1s to Semaphore(1)+0.5s on 2026-06-06 after CI run
-        # 27068482501 saw all buurt + offshore locations hit HTTP 429.
+        # 27068482501 saw all buurt + offshore locations hit HTTP 429. The 0.5s
+        # gap is between requests only — no pre-first-request delay.
         semaphore = asyncio.Semaphore(1)
 
-        async def fetch_with_rate_limit(session: aiohttp.ClientSession, location: Dict[str, Any]):
+        async def fetch_with_rate_limit(
+            session: aiohttp.ClientSession,
+            location: Dict[str, Any],
+            delay: bool,
+        ):
             async with semaphore:
-                await asyncio.sleep(0.5)  # Inter-request gap (was 0.1, raised 2026-06-06)
+                if delay:
+                    await asyncio.sleep(0.5)  # Inter-request gap (was 0.1, raised 2026-06-06)
                 return await self._fetch_location_data(session, location)
 
         async with aiohttp.ClientSession() as session:
-            tasks = [fetch_with_rate_limit(session, loc) for loc in self.locations]
+            tasks = [
+                fetch_with_rate_limit(session, loc, delay=(i > 0))
+                for i, loc in enumerate(self.locations)
+            ]
             responses = await asyncio.gather(*tasks)
 
             for response in responses:
