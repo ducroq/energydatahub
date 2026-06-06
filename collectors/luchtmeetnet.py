@@ -26,6 +26,7 @@ Usage:
 """
 
 import asyncio
+import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 import aiohttp
@@ -33,6 +34,15 @@ import aiohttp
 from collectors.base import BaseCollector, RetryConfig
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 from utils.helpers import closest
+
+
+# Station-completeness thresholds for the data-quality signal emitted in
+# `_get_metadata`. 0–25% filtered = transient upstream noise (no issue);
+# 25–50% = warning (broad degradation); >50% = critical (the bbox may no
+# longer have a sane closest station — the workflow gate will block publish).
+# See issue #12.
+STATION_FILTER_WARN_THRESHOLD = 0.25
+STATION_FILTER_CRITICAL_THRESHOLD = 0.50
 
 
 class LuchtmeetnetCollector(BaseCollector):
@@ -50,6 +60,10 @@ class LuchtmeetnetCollector(BaseCollector):
     _station_cache: Optional[List[Dict]] = None
     _cache_timestamp: Optional[datetime] = None
     _cache_duration = timedelta(hours=24)  # Cache for 24 hours
+    # Filter stats from the most recent `_fetch_all_stations` call, kept on
+    # the class so cache hits inherit the snapshot they were taken from.
+    # Shape: {'total': int, 'filtered': int}
+    _cache_filter_stats: Optional[Dict[str, int]] = None
 
     def __init__(
         self,
@@ -166,10 +180,19 @@ class LuchtmeetnetCollector(BaseCollector):
         self.logger.info("Station cache miss or expired, fetching fresh data")
         stations = await self._fetch_all_stations(session)
 
-        # Update cache
-        LuchtmeetnetCollector._station_cache = stations
-        LuchtmeetnetCollector._cache_timestamp = now
-        self.logger.info(f"Cached {len(stations)} stations")
+        # Refuse to cache empty results — a one-off upstream outage would
+        # otherwise lock collection out for 24h (issue #13). The caller's
+        # existing `if not stations` check will fail this run; the next run
+        # gets a fresh retry instead of inheriting a poisoned cache.
+        if stations:
+            LuchtmeetnetCollector._station_cache = stations
+            LuchtmeetnetCollector._cache_timestamp = now
+            self.logger.info(f"Cached {len(stations)} stations")
+        else:
+            self.logger.warning(
+                "Refusing to cache empty station list — upstream likely "
+                "degraded; next run will retry"
+            )
 
         return stations
 
@@ -221,12 +244,21 @@ class LuchtmeetnetCollector(BaseCollector):
                         station['components'] = station_data.get('components', [])
                         station['location'] = station_data.get('location', '')
                         station['municipality'] = station_data.get('municipality', '')
-            except Exception as e:
+            except (
+                aiohttp.ClientError,
+                asyncio.TimeoutError,
+                json.JSONDecodeError,
+                ValueError,
+                KeyError,
+                TypeError,
+            ) as e:
                 # Single-station network/parse failures must not poison the cache.
                 # Before this guard a single bad detail-fetch left the station in
                 # the list without lat/lon, causing the cached list to crash
                 # `closest()` with KeyError: 'latitude' for 24h (see CI run
-                # 27068482501, 2026-06-06).
+                # 27068482501, 2026-06-06). The except list is narrow on purpose:
+                # AttributeError / NameError from a future refactor mistake should
+                # propagate so the bug surfaces immediately (issue #14).
                 self.logger.warning(
                     f"Skipping station {station.get('number', '?')}: detail-fetch failed ({e})"
                 )
@@ -235,11 +267,17 @@ class LuchtmeetnetCollector(BaseCollector):
         # iterates p['latitude'] over every member; a single missing entry
         # raises KeyError and kills the whole collection.
         clean = [s for s in station_list if 'latitude' in s and 'longitude' in s]
-        if len(clean) < len(station_list):
+        filtered = len(station_list) - len(clean)
+        if filtered:
             self.logger.info(
-                f"Filtered {len(station_list) - len(clean)} stations without coordinates "
+                f"Filtered {filtered} stations without coordinates "
                 f"({len(clean)}/{len(station_list)} usable)"
             )
+        # Snapshot for the data-quality signal emitted in _get_metadata (#12).
+        LuchtmeetnetCollector._cache_filter_stats = {
+            'total': len(station_list),
+            'filtered': filtered,
+        }
         return clean
 
     async def _fetch_aqi(
@@ -384,6 +422,35 @@ class LuchtmeetnetCollector(BaseCollector):
             'requested_longitude': self.longitude,
             'units': {'all': 'µg/m³'}
         })
+
+        # Surface station-completeness as a data-quality signal so the
+        # workflow's `data_quality_report.overall_status == critical` gate
+        # can block publish when station selection is broadly degraded
+        # (issue #12). Stats are taken from the most recent _fetch_all_stations
+        # call; on cache hits the same snapshot is reused.
+        stats = LuchtmeetnetCollector._cache_filter_stats
+        if stats and stats['total'] > 0:
+            filtered = stats['filtered']
+            total = stats['total']
+            ratio = filtered / total
+            metadata['stations_total'] = total
+            metadata['stations_filtered'] = filtered
+            metadata['stations_filtered_pct'] = round(ratio * 100, 1)
+            if ratio > STATION_FILTER_WARN_THRESHOLD:
+                severity = (
+                    'critical' if ratio > STATION_FILTER_CRITICAL_THRESHOLD
+                    else 'warning'
+                )
+                metadata.setdefault('collector_quality_issues', []).append({
+                    'check_name': 'station_completeness',
+                    'severity': severity,
+                    'message': (
+                        f"{filtered}/{total} Luchtmeetnet stations filtered "
+                        f"({ratio * 100:.0f}%) — selection may have shifted "
+                        f"to a less-representative station"
+                    ),
+                    'details': {'filtered': filtered, 'total': total},
+                })
 
         return metadata
 

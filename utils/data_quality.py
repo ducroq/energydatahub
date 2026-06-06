@@ -739,6 +739,24 @@ def validate_dataset(
         checks_failed += 1
         report.issues.extend(dup_issues)
 
+    # 6. Collector-emitted quality issues — surface anything the collector
+    # itself flagged in metadata['collector_quality_issues'] so domain-specific
+    # signals (e.g. Luchtmeetnet station_completeness, issue #12) flow into the
+    # same pipeline-level gate as the generic checks above.
+    for issue_dict in dataset.metadata.get('collector_quality_issues', []) or []:
+        checks_run += 1
+        checks_failed += 1
+        try:
+            severity = Severity(issue_dict['severity'])
+        except (KeyError, ValueError):
+            severity = Severity.WARNING
+        report.issues.append(QualityIssue(
+            check_name=issue_dict.get('check_name', 'collector_issue'),
+            severity=severity,
+            message=issue_dict.get('message', ''),
+            details=issue_dict.get('details'),
+        ))
+
     report.checks_passed = checks_run - checks_failed
     report.checks_failed = checks_failed
 
