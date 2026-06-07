@@ -19,7 +19,7 @@ Automated energy market data collection platform for electricity price predictio
 | Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (currently --warn-only). |
 | Working with encryption/publish | `utils/secure_data_handler.py`, `docs/CI_CD_SETUP.md` |
 | Debugging data quality issues | `utils/data_quality.py` — FMEA validation. Per-dataset config via `get_dataset_validation_config()`. Missing-dataset severity via `DATASET_MISSING_SEVERITY` dict (single source of truth). |
-| Adding a published dataset | Update `EXPECTED_DATA_TYPE` (defends against MITM-spoofed data_type, CWE-20) AND the published_feeds block in `data_fetcher.py` AND `quality_datasets` dict — `test_published_feeds_all_pinned` will fail if you skip the first one. |
+| Adding a published dataset | 8-touchpoint checklist (BLOCKER on c40a53b — missing one silently breaks publishing). In `data_fetcher.py`: (1) collector import, (2) instantiate, (3) `tasks.append`, (4) unpack tuple + `fixed_count`, (5) save block, (6) `published_feeds` sidecar, (7) `quality_datasets`. In `utils/data_quality.py`: (8) `EXPECTED_DATA_TYPE` MITM defense, plus `EXPECTED_MIN_POINTS` / `STALENESS_OVERRIDES` / `DATASET_MISSING_SEVERITY` / `FIELD_RANGES_BY_TYPE` as cadence + validation needs dictate. In `.github/workflows/collect-data.yml`: **both** the completeness tripwire list (~line 54) AND the docs-prepare copy list (~line 118) — they're parallel hard-coded lists with no test asserting they match. `test_published_feeds_all_pinned` catches a missing `EXPECTED_DATA_TYPE` entry only. |
 | Stuck or debugging something weird | `memory/gotcha-log.md` — problem-fix archive |
 | Ending a session | Run `/curate` — reviews gotcha log, promotes patterns, syncs docs, surfaces stale memory |
 | Monthly or after major restructuring | Run `/audit-context` — structural audit (duplication, wrong-layer placement, broken refs) |
@@ -46,7 +46,7 @@ collectors/
                              # available for adoption by any collector that hits 4xx cascades.
   _openmeteo_shared.py       # Shared Semaphore + per-location retry/backoff for OpenMeteo*
   entsoe*.py                 # ENTSO-E family (prices, wind, flows, load, generation, hydro)
-  entsoe_hydro.py            # Nordic hydro reservoirs (A72) — code shipped, awaits wire-in
+  entsoe_hydro.py            # Nordic hydro reservoirs (A72, weekly cadence, NO+SE) — #3 closed c40a53b
   energyzero.py / epex.py / elspot.py  # Day-ahead price collectors (NL/EU)
   tennet.py                  # TenneT TSO (imbalance prices, grid balance) — uses _http_classifier
   ned.py                     # NED.nl Dutch production
