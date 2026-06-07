@@ -38,7 +38,7 @@
   - `ned_production`, `market_history` — completeness < 50%
   - `market_proxies` — staleness timestamp format issue
   - `grid_imbalance` (TenneT) — 422→429 cascade (#25)
-- **Open issues**: 5 total. Closed 2026-06-07: #4 (quick-win), #13, #14, #24, #26 (tier-1 sweep), #27 (schema-drift tripwire — Layer A + B shipped). Still open: #2, #3 (ML-feature collectors — tier 2), #9 (storage migration — defer), #21 (Liander watcher — low ROI), #25 (TenneT cascade — needs investigation).
+- **Open issues**: 4 total. Closed 2026-06-07: #4 (quick-win), #13, #14, #24, #26 (tier-1 sweep), #27 (schema-drift tripwire — Layer A + B). Structural fix shipped for #25 (TenneT 422 classifier + grid_imbalance soft-gate in 7673750); root-cause investigation of WHY 422 fires remains. #3 collector code + mocks shipped in 935c483 — awaiting one-shot smoke test against live ENTSO-E API before wire-in. Still open: #2 (JAO — needs API research), #3 (Nordic hydro — awaiting smoke test + wire-in), #9 (storage migration — defer), #21 (Liander watcher — low ROI), #25 (TenneT 422 root cause).
 
 ## Active Decisions
 
