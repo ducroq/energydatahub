@@ -38,13 +38,17 @@ Automated energy market data collection platform for electricity price predictio
 data_fetcher.py              # Main orchestrator — initializes collectors, runs async gather
 collectors/
   base.py                    # BaseCollector ABC: retry, circuit breaker, validation
+  _openmeteo_shared.py       # Shared Semaphore + per-location retry/backoff for OpenMeteo*
   entsoe*.py                 # ENTSO-E family (prices, wind, flows, load, generation)
   ned.py                     # NED.nl Dutch production
   market_proxies.py          # Carbon EUA + gas TTF prices
-  googleweather.py           # Multi-location weather (10-day)
-  openmeteo_*.py             # Solar, offshore wind, demand weather
+  openmeteo_weather.py       # Strategic + demand + buurt weather (replaces Google Weather)
+  openmeteo_solar.py         # Strategic + buurt solar irradiance
+  openmeteo_offshore_wind.py # Offshore wind farm forecasts (open-sea coords)
+  luchtmeetnet.py            # Air quality (RIVM stations), buurt-level
   gie_storage.py             # Gas storage levels
   entsog_flows.py            # Gas pipeline flows
+  googleweather.py           # RETIRED 2026-06-05 — kept for cold revert only
 utils/
   data_types.py              # EnhancedDataSet, CombinedDataSet
   data_quality.py            # FMEA validation framework
@@ -74,7 +78,7 @@ docs/                        # GitHub Pages: encrypted JSON + project documentat
 | `scripts/backfill_entsoe.py` | Backfill missing ENTSO-E prices into historical files |
 | `scripts/archive_to_monthly.py` | Decrypt `data/` files into `05. Data/YYYY-MM/` monthly archive (idempotent) |
 | `tests/backtest_data_quality.py` | Run FMEA quality framework against all historical files |
-| `tests/` | Unit + integration tests (398 tests, ~67% coverage) |
+| `tests/` | Unit + integration tests <!-- verify: python -m pytest tests/ --collect-only -q \| tail -1 --> |
 
 ## How to Work Here
 
