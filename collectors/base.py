@@ -56,6 +56,29 @@ class CollectorStatus(Enum):
     SKIPPED = "skipped"
 
 
+class NonRetryableError(Exception):
+    """
+    Raised by a collector to signal that the failure is permanent for the
+    current request (issue #25). `BaseCollector._retry_with_backoff`
+    recognises this and re-raises immediately instead of burning further
+    retry attempts.
+
+    Use for:
+      - HTTP 4xx-class errors that won't change on retry (422 Unprocessable
+        Entity, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not
+        Found) — these usually mean "data not available for this window"
+        or "you're not allowed to ask".
+      - Validation errors discovered before the API call where retrying
+        the same input is pointless.
+
+    Do NOT use for:
+      - 5xx (server errors), 429 (rate-limited), timeouts, connection
+        resets — these are transient and may succeed on retry. Let them
+        propagate as their native exception types.
+    """
+    pass
+
+
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior."""
@@ -333,6 +356,16 @@ class BaseCollector(ABC):
             try:
                 self.logger.debug(f"Attempt {attempt}/{self.retry_config.max_attempts}")
                 return await func(*args, **kwargs)
+
+            except NonRetryableError as e:
+                # Permanent failure for this request — don't burn further
+                # attempts. Subclasses raise this when they classify an
+                # error (e.g. HTTP 422) as non-transient (issue #25).
+                self.logger.error(
+                    f"Attempt {attempt} failed with permanent error: "
+                    f"{type(e).__name__}: {e}. Not retrying."
+                )
+                raise
 
             except Exception as e:
                 last_exception = e

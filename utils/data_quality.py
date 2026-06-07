@@ -100,19 +100,22 @@ class PipelineQualityReport:
 
     @property
     def status(self) -> str:
-        if self.missing_datasets:
-            has_critical_missing = any(
-                name in ('entsoe', 'energy_zero')
-                for name in self.missing_datasets
-            )
-            if has_critical_missing:
-                return "critical"
         statuses = [r.status for r in self.dataset_reports]
-        if "critical" in statuses:
+        has_critical_missing = any(
+            name in REQUIRED_DATASETS for name in self.missing_datasets
+        )
+        has_warning_missing = any(
+            name in WARNING_IF_MISSING_DATASETS for name in self.missing_datasets
+        )
+
+        # Worst-case wins. Required missing or any critical dataset wins
+        # over everything; then error; then warning (covers both warning-
+        # severity reports AND known-operational missing datasets per #25).
+        if has_critical_missing or "critical" in statuses:
             return "critical"
         if "error" in statuses:
             return "error"
-        if "warning" in statuses:
+        if has_warning_missing or "warning" in statuses:
             return "warning"
         return "info"
 
@@ -318,6 +321,16 @@ EXPECTED_MIN_POINTS = {
 REQUIRED_DATASETS = ['entsoe', 'energy_zero']
 EXPECTED_DATASETS = [
     'entsoe', 'entsoe_de', 'energy_zero', 'epex', 'elspot',
+]
+
+# Datasets that should normally be present but whose absence is a known
+# operational issue (not a "stop everything" event). Missing items here
+# promote pipeline status to "warning" — visible in data_quality_report
+# and the CI summary, but doesn't block publish. Issue #25 (TenneT 422→429
+# cascade) puts grid_imbalance silently absent for weeks at a time; this
+# soft-gate makes that visible to anyone reading overall_status.
+WARNING_IF_MISSING_DATASETS = [
+    'grid_imbalance',  # TenneT — known 422 cascade per #25
 ]
 
 
@@ -930,6 +943,18 @@ def validate_pipeline(
             if name not in report.missing_datasets:
                 report.missing_datasets.append(name)
                 logger.info(f"[DQ:pipeline] Expected dataset '{name}' is missing")
+
+    # Check for known-operational-issue datasets — these are soft-gated
+    # (warning, not critical) so the absence surfaces in overall_status
+    # without blocking publish (#25).
+    for name in WARNING_IF_MISSING_DATASETS:
+        if name not in datasets or datasets[name] is None:
+            if name not in report.missing_datasets:
+                report.missing_datasets.append(name)
+                logger.warning(
+                    f"[DQ:pipeline] Soft-gated dataset '{name}' is missing — "
+                    "pipeline status will be 'warning' (publish not blocked)"
+                )
 
     # Validate each collected dataset
     for name, dataset in datasets.items():

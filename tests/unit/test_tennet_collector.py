@@ -407,5 +407,133 @@ class TestTennetCollector:
         assert metadata['api_version'] == 'tennet.eu v1'
 
 
+class TestTennetHttpClassifier:
+    """Issue #25: HTTP-status classification so a 422→422→429 cascade
+    doesn't burn the retry budget on a permanent error."""
+
+    def _http_error_with_status(self, status: int) -> Exception:
+        """Build an exception with .response.status_code (mirrors requests)."""
+        exc = Exception(f"{status} Client Error: Unknown for url: ...")
+        exc.response = MagicMock(status_code=status)
+        return exc
+
+    @pytest.mark.unit
+    def test_extract_http_status_from_response_attr(self):
+        from collectors.tennet import _extract_http_status
+        assert _extract_http_status(self._http_error_with_status(422)) == 422
+        assert _extract_http_status(self._http_error_with_status(500)) == 500
+
+    @pytest.mark.unit
+    def test_extract_http_status_returns_none_when_unknown(self):
+        from collectors.tennet import _extract_http_status
+        # Plain exception with no status info
+        assert _extract_http_status(ValueError("nothing here")) is None
+
+    @pytest.mark.unit
+    def test_extract_http_status_from_status_attr(self):
+        """Some libraries set .status directly (aiohttp.ClientResponseError)."""
+        from collectors.tennet import _extract_http_status
+        exc = Exception("xxx")
+        exc.status = 422
+        assert _extract_http_status(exc) == 422
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_422_raises_non_retryable(self):
+        """HTTP 422 from TenneT → NonRetryableError (bypasses retry loop)."""
+        from collectors.base import NonRetryableError
+        collector = TennetCollector(api_key="test_api_key")
+
+        with patch.object(
+            collector.client, 'query_settlement_prices',
+            side_effect=self._http_error_with_status(422),
+        ):
+            amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+            start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+            end = start + timedelta(days=1)
+
+            with pytest.raises(NonRetryableError, match="HTTP 422"):
+                await collector._fetch_raw_data(start, end)
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_429_does_not_raise_non_retryable(self):
+        """HTTP 429 (rate-limit) is transient — must propagate as-is so
+        BaseCollector retries with backoff."""
+        from collectors.base import NonRetryableError
+        collector = TennetCollector(api_key="test_api_key")
+
+        raised = self._http_error_with_status(429)
+        with patch.object(
+            collector.client, 'query_settlement_prices',
+            side_effect=raised,
+        ):
+            amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+            start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+            end = start + timedelta(days=1)
+
+            # The original exception propagates — not wrapped in NonRetryableError.
+            with pytest.raises(Exception) as exc_info:
+                await collector._fetch_raw_data(start, end)
+            assert not isinstance(exc_info.value, NonRetryableError)
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_5xx_does_not_raise_non_retryable(self):
+        """HTTP 500/502/503 are transient server errors → still retried."""
+        from collectors.base import NonRetryableError
+        collector = TennetCollector(api_key="test_api_key")
+
+        for status in (500, 502, 503, 504):
+            with patch.object(
+                collector.client, 'query_settlement_prices',
+                side_effect=self._http_error_with_status(status),
+            ):
+                amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+                start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+                end = start + timedelta(days=1)
+                with pytest.raises(Exception) as exc_info:
+                    await collector._fetch_raw_data(start, end)
+                assert not isinstance(exc_info.value, NonRetryableError), (
+                    f"HTTP {status} should NOT be classified as non-retryable"
+                )
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_422_via_collect_skips_retry_loop(self):
+        """End-to-end: collect() with a 422 makes ONE API call, not three.
+
+        Before this fix the 422→422→429 cascade burned all three attempts
+        in ~5 seconds. After: bail out on the first 422.
+        """
+        collector = TennetCollector(
+            api_key="test_api_key",
+            retry_config=RetryConfig(max_attempts=3, initial_delay=0.01),
+        )
+
+        call_count = 0
+
+        def counting_422(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            raise self._http_error_with_status(422)
+
+        with patch.object(
+            collector.client, 'query_settlement_prices',
+            side_effect=counting_422,
+        ):
+            amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+            start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+            end = start + timedelta(days=1)
+
+            result = await collector.collect(start, end)
+
+            assert result is None  # Collection failed
+            assert call_count == 1, (
+                f"Expected exactly 1 call (bail out on 422), got {call_count}. "
+                "The retry loop is still burning attempts on a permanent error."
+            )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

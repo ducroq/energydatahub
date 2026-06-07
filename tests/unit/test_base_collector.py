@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from collectors.base import (
     BaseCollector,
+    NonRetryableError,
     RetryConfig,
     CollectorStatus,
     CollectionMetrics
@@ -121,6 +122,70 @@ class TestBaseCollector:
         result = await collector.collect(start, end)
 
         assert result is None  # Should fail
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_non_retryable_error_skips_retries(self):
+        """Issue #25: NonRetryableError must bypass the retry loop.
+
+        Before this fix, retrying a permanent error (e.g. HTTP 422 "data
+        not yet published") burned 3 attempts in ~5 seconds and tripped
+        the upstream's per-IP rate-limiter (429) on the third try.
+        """
+
+        class PermanentlyFailingCollector(MockCollector):
+            def __init__(self):
+                super().__init__(retry_config=RetryConfig(
+                    max_attempts=5,
+                    initial_delay=0.01,
+                ))
+                self.attempts = 0
+
+            async def _fetch_raw_data(self, start_time, end_time, **kwargs):
+                self.attempts += 1
+                raise NonRetryableError("HTTP 422 simulated")
+
+        collector = PermanentlyFailingCollector()
+        start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        end = start + timedelta(hours=24)
+
+        result = await collector.collect(start, end)
+
+        assert result is None
+        # Only ONE attempt — the retry loop bailed out immediately.
+        assert collector.attempts == 1, (
+            f"Expected 1 attempt for NonRetryableError, got {collector.attempts}. "
+            "The retry loop is not honouring the bail-out signal."
+        )
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_transient_error_still_retries(self):
+        """Sanity check: ordinary errors still get the full retry budget."""
+
+        class FlakyCollector(MockCollector):
+            def __init__(self):
+                super().__init__(retry_config=RetryConfig(
+                    max_attempts=3,
+                    initial_delay=0.01,
+                ))
+                self.attempts = 0
+
+            async def _fetch_raw_data(self, start_time, end_time, **kwargs):
+                self.attempts += 1
+                # Succeeds on the 3rd attempt
+                if self.attempts < 3:
+                    raise ConnectionError("transient")
+                return {"test": "data"}
+
+        collector = FlakyCollector()
+        start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        end = start + timedelta(hours=24)
+
+        result = await collector.collect(start, end)
+
+        assert result is not None  # Recovered after retries
+        assert collector.attempts == 3
 
     @pytest.mark.unit
     @pytest.mark.asyncio

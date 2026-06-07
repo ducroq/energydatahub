@@ -716,6 +716,65 @@ class TestValidatePipeline:
         assert report.total_issues > 0
 
 
+class TestSoftGateForGridImbalance:
+    """Issue #25: missing grid_imbalance promotes status to 'warning',
+    not 'critical' — TenneT failure is operational, not stop-everything.
+    """
+
+    def test_missing_grid_imbalance_is_tracked(self):
+        """grid_imbalance absence is recorded in missing_datasets."""
+        datasets = {
+            'entsoe': _make_dataset(_make_price_data(24)),
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'grid_imbalance': None,  # TenneT 422 cascade
+        }
+        report = validate_pipeline(datasets)
+        assert 'grid_imbalance' in report.missing_datasets
+
+    def test_missing_grid_imbalance_promotes_to_warning(self):
+        """grid_imbalance missing → overall_status='warning' (not critical)."""
+        datasets = {
+            'entsoe': _make_dataset(_make_price_data(24)),
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'grid_imbalance': None,
+        }
+        report = validate_pipeline(datasets)
+        # Not critical — TenneT failure doesn't block publish
+        assert report.status != 'critical'
+        # But visible as warning so anyone reading overall_status sees it
+        assert report.status == 'warning'
+
+    def test_grid_imbalance_present_no_warning(self):
+        """When grid_imbalance is present, no soft-gate warning is added."""
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+        ams = ZoneInfo('Europe/Amsterdam')
+        now = datetime.now(ams)
+        grid_data = {
+            (now - timedelta(hours=i)).isoformat(): 50.0 for i in range(24)
+        }
+        datasets = {
+            'entsoe': _make_dataset(_make_price_data(24)),
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'grid_imbalance': _make_dataset(grid_data, data_type='grid_imbalance'),
+        }
+        report = validate_pipeline(datasets)
+        assert 'grid_imbalance' not in report.missing_datasets
+        # No soft-gate-driven warning; status reflects only dataset reports
+        assert report.status in ('info', 'warning')  # warning possible from other checks
+
+    def test_missing_required_still_wins_over_soft_gate(self):
+        """A required-missing dataset → critical, even when grid_imbalance
+        is also missing. Critical wins over warning."""
+        datasets = {
+            'entsoe': None,             # REQUIRED missing → critical
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'grid_imbalance': None,     # Soft-gated → would be warning alone
+        }
+        report = validate_pipeline(datasets)
+        assert report.status == 'critical'
+
+
 class TestQualityIssue:
     """Tests for QualityIssue dataclass."""
 
