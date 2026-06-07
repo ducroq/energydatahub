@@ -2,7 +2,7 @@
 stack: Python 3.12, asyncio/aiohttp, pandas, GitHub Actions CI/CD
 status: Production (daily automated collection since Oct 2024)
 repo: github.com/ducroq/energydatahub
-framework: agent-ready-projects v1.10.0
+framework: agent-ready-projects v1.10.1
 ---
 
 # energyDataHub
