@@ -48,6 +48,10 @@ from zoneinfo import ZoneInfo
 import aiohttp
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
+from collectors._openmeteo_shared import (
+    OPENMETEO_SEMAPHORE,
+    OPENMETEO_GAP_SECONDS,
+)
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 
@@ -224,24 +228,17 @@ class OpenMeteoWeatherCollector(BaseCollector):
         self.logger.debug(f"Fetching demand weather for {len(self.locations)} locations")
 
         results = {}
-        # Use semaphore to limit concurrent requests and avoid rate limiting (HTTP 429).
-        # Five Open-Meteo collectors run concurrently in data_fetcher.py (strategic
-        # weather + solar, offshore wind, buurt weather + solar — last two added
-        # 2026-06-05). At Semaphore(2) per collector that's up to 10 concurrent
-        # requests, which crossed Open-Meteo's free-tier limit on 2026-06-06
-        # (CI run 27068482501: every buurt + offshore location HTTP 429). Tightened
-        # to Semaphore(1) + 500 ms gap *between* requests (no gap before the first,
-        # since there's nothing to space from): peak ~5 concurrent, ~10 req/s headroom.
-        semaphore = asyncio.Semaphore(1)
-
+        # Rate-limit budget is shared across ALL OpenMeteo* collectors via
+        # collectors/_openmeteo_shared.py (issue #11). Adding a 6th collector
+        # no longer requires retuning this file.
         async def fetch_with_rate_limit(
             session: aiohttp.ClientSession,
             location: Dict[str, Any],
             delay: bool,
         ):
-            async with semaphore:
+            async with OPENMETEO_SEMAPHORE:
                 if delay:
-                    await asyncio.sleep(0.5)  # Inter-request gap (was 0.1, raised 2026-06-06)
+                    await asyncio.sleep(OPENMETEO_GAP_SECONDS)
                 return await self._fetch_location_data(session, location)
 
         async with aiohttp.ClientSession() as session:
