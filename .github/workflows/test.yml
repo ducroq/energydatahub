@@ -59,7 +59,12 @@ jobs:
 
     - name: Run critical timezone tests only
       run: |
-        python -m pytest tests/ -v -m critical
+        # --no-cov: the 20% --cov-fail-under gate in pytest.ini applies to
+        # the FULL suite (run by the previous step). This filtered slice
+        # runs ~19 timezone-marked tests; measuring global coverage off
+        # those would always be near-zero and brittle to any small
+        # uncovered addition. See email-noise incident after PR #16 merge.
+        python -m pytest tests/ -v -m critical --no-cov
 
   code-quality:
     name: Code Quality Checks
