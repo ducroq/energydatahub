@@ -24,6 +24,7 @@ from collectors.entsoe_wind import EntsoeWindCollector
 from collectors.entsoe_flows import EntsoeFlowsCollector
 from collectors.entsoe_load import EntsoeLoadCollector
 from collectors.entsoe_generation import EntsoeGenerationCollector
+from collectors.entsoe_hydro import EntsoeHydroCollector
 from collectors.energyzero import EnergyZeroCollector
 from collectors.epex import EpexCollector
 from collectors.openweather import OpenWeatherCollector
@@ -53,6 +54,7 @@ __all__ = [
     'EntsoeFlowsCollector',      # ENTSO-E Cross-border flows
     'EntsoeLoadCollector',       # ENTSO-E Load forecasts
     'EntsoeGenerationCollector', # ENTSO-E Generation by type (nuclear, gas)
+    'EntsoeHydroCollector',      # ENTSO-E Nordic hydro reservoirs (A72)
     'EnergyZeroCollector',       # EnergyZero (NL)
     'EpexCollector',             # EPEX SPOT (via Awattar)
 
