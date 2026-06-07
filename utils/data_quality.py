@@ -745,11 +745,17 @@ def validate_dataset(
     # same pipeline-level gate as the generic checks above.
     for issue_dict in dataset.metadata.get('collector_quality_issues', []) or []:
         checks_run += 1
-        checks_failed += 1
         try:
             severity = Severity(issue_dict['severity'])
         except (KeyError, ValueError):
+            # Unknown / missing severity → conservative downgrade to WARNING
+            # so a malformed collector emission doesn't silently look benign.
             severity = Severity.WARNING
+        # Only count toward checks_failed when severity warrants attention.
+        # INFO-severity collector signals are informational only and must
+        # not inflate the failed-checks count (PR #16 review MEDIUM-1).
+        if severity in (Severity.WARNING, Severity.ERROR, Severity.CRITICAL):
+            checks_failed += 1
         report.issues.append(QualityIssue(
             check_name=issue_dict.get('check_name', 'collector_issue'),
             severity=severity,

@@ -644,9 +644,9 @@ class TestLuchtmeetnetStationCompletenessQuality:
     def test_no_issue_when_no_stations_filtered(self):
         """0% filtered → no quality issue (clean upstream)."""
         self._reset_class_state()
-        LuchtmeetnetCollector._cache_filter_stats = {'total': 100, 'filtered': 0}
 
         collector = LuchtmeetnetCollector(52.37, 4.89)
+        collector._last_filter_stats = {'total': 100, 'filtered': 0}
         start = datetime.now()
         end = start + timedelta(hours=1)
         metadata = collector._get_metadata(start, end)
@@ -658,9 +658,9 @@ class TestLuchtmeetnetStationCompletenessQuality:
     def test_no_issue_below_warning_threshold(self):
         """20% filtered → still below 25% threshold → no issue."""
         self._reset_class_state()
-        LuchtmeetnetCollector._cache_filter_stats = {'total': 100, 'filtered': 20}
 
         collector = LuchtmeetnetCollector(52.37, 4.89)
+        collector._last_filter_stats = {'total': 100, 'filtered': 20}
         start = datetime.now()
         end = start + timedelta(hours=1)
         metadata = collector._get_metadata(start, end)
@@ -671,9 +671,9 @@ class TestLuchtmeetnetStationCompletenessQuality:
     def test_warning_issue_above_warning_threshold(self):
         """30% filtered → warning severity."""
         self._reset_class_state()
-        LuchtmeetnetCollector._cache_filter_stats = {'total': 100, 'filtered': 30}
 
         collector = LuchtmeetnetCollector(52.37, 4.89)
+        collector._last_filter_stats = {'total': 100, 'filtered': 30}
         start = datetime.now()
         end = start + timedelta(hours=1)
         metadata = collector._get_metadata(start, end)
@@ -687,9 +687,9 @@ class TestLuchtmeetnetStationCompletenessQuality:
     def test_critical_issue_above_critical_threshold(self):
         """60% filtered → critical severity (workflow gate aborts publish)."""
         self._reset_class_state()
-        LuchtmeetnetCollector._cache_filter_stats = {'total': 100, 'filtered': 60}
 
         collector = LuchtmeetnetCollector(52.37, 4.89)
+        collector._last_filter_stats = {'total': 100, 'filtered': 60}
         start = datetime.now()
         end = start + timedelta(hours=1)
         metadata = collector._get_metadata(start, end)
@@ -699,8 +699,9 @@ class TestLuchtmeetnetStationCompletenessQuality:
         assert issues[0]['severity'] == 'critical'
 
     @pytest.mark.asyncio
-    async def test_filter_stats_populated_after_fetch(self):
-        """_fetch_all_stations must populate _cache_filter_stats."""
+    async def test_filter_stats_populated_on_instance_after_fetch(self):
+        """_fetch_all_stations must populate self._last_filter_stats (INSTANCE-
+        scoped per the PR #16 review HIGH-1 fix)."""
         self._reset_class_state()
 
         collector = LuchtmeetnetCollector(52.37, 4.89)
@@ -736,9 +737,31 @@ class TestLuchtmeetnetStationCompletenessQuality:
 
         await collector._fetch_all_stations(mock_session)
 
-        assert LuchtmeetnetCollector._cache_filter_stats == {
-            'total': 3, 'filtered': 1
-        }
+        assert collector._last_filter_stats == {'total': 3, 'filtered': 1}
+
+    def test_concurrent_collectors_do_not_share_filter_stats(self):
+        """HIGH-1 regression: two concurrent buurt collectors must have
+        independent `_last_filter_stats`. Before the fix this was a
+        class-level slot — one buurt's stats could overwrite another's
+        between fetch and `_get_metadata`, misattributing the
+        station_completeness signal to the wrong buurt.
+        """
+        self._reset_class_state()
+
+        c1 = LuchtmeetnetCollector(52.37, 4.89)
+        c2 = LuchtmeetnetCollector(51.99, 5.90)
+
+        c1._last_filter_stats = {'total': 100, 'filtered': 60}  # critical
+        c2._last_filter_stats = {'total': 100, 'filtered': 5}   # clean
+
+        m1 = c1._get_metadata(datetime.now(), datetime.now() + timedelta(hours=1))
+        m2 = c2._get_metadata(datetime.now(), datetime.now() + timedelta(hours=1))
+
+        # c1 emits critical, c2 emits no issue — neither sees the other's stats.
+        assert m1['collector_quality_issues'][0]['severity'] == 'critical'
+        assert 'collector_quality_issues' not in m2
+        assert m1['stations_filtered'] == 60
+        assert m2['stations_filtered'] == 5
 
 
 class TestDataQualityCollectorIssuesIntegration:
@@ -787,6 +810,134 @@ class TestDataQualityCollectorIssuesIntegration:
         assert station_issues[0].severity == Severity.CRITICAL
         # Status should be critical (this is what the workflow gate checks)
         assert report.status == 'critical'
+
+    def test_info_severity_does_not_inflate_checks_failed(self):
+        """PR #16 review MEDIUM-1: INFO-severity collector issues are
+        informational only and must NOT increment `checks_failed`.
+        """
+        from utils.data_quality import validate_dataset
+        from utils.data_types import EnhancedDataSet
+        from zoneinfo import ZoneInfo
+
+        now = datetime.now(ZoneInfo('Europe/Amsterdam'))
+        dataset = EnhancedDataSet(
+            metadata={
+                'data_type': 'air',
+                'source': 'Luchtmeetnet API',
+                'units': 'µg/m³',
+                'collector': 'LuchtmeetnetCollector',
+                'collector_quality_issues': [{
+                    'check_name': 'station_completeness',
+                    'severity': 'info',
+                    'message': 'station selection nominal',
+                    'details': {'filtered': 1, 'total': 100},
+                }],
+            },
+            data={
+                (now - timedelta(hours=i)).isoformat(): {'NO2': 20.0}
+                for i in range(24)
+            },
+        )
+
+        report = validate_dataset(dataset, 'air_quality_buurt')
+
+        # The info issue is recorded but not counted as a failed check.
+        info_issues = [i for i in report.issues if i.severity.value == 'info']
+        assert len(info_issues) == 1
+        # checks_failed should reflect only ≥WARNING issues. Generic checks
+        # all pass on this dataset, so checks_failed must be 0.
+        assert report.checks_failed == 0
+        # Status stays at the lowest severity (info → 'info').
+        assert report.status == 'info'
+
+    def test_unknown_severity_downgrades_to_warning_and_counts(self):
+        """Malformed severity string → conservative WARNING + counted as
+        failed (so the bad emission doesn't silently look benign)."""
+        from utils.data_quality import validate_dataset, Severity
+        from utils.data_types import EnhancedDataSet
+        from zoneinfo import ZoneInfo
+
+        now = datetime.now(ZoneInfo('Europe/Amsterdam'))
+        dataset = EnhancedDataSet(
+            metadata={
+                'data_type': 'air',
+                'source': 'Luchtmeetnet API',
+                'units': 'µg/m³',
+                'collector': 'LuchtmeetnetCollector',
+                'collector_quality_issues': [{
+                    'check_name': 'mystery',
+                    'severity': 'NOT_A_REAL_LEVEL',
+                    'message': 'malformed emission',
+                }],
+            },
+            data={
+                (now - timedelta(hours=i)).isoformat(): {'NO2': 20.0}
+                for i in range(24)
+            },
+        )
+
+        report = validate_dataset(dataset, 'air_quality_buurt')
+
+        mystery = [i for i in report.issues if i.check_name == 'mystery']
+        assert len(mystery) == 1
+        assert mystery[0].severity == Severity.WARNING
+        assert report.checks_failed >= 1
+
+
+class TestLuchtmeetnetStationNumberValidation:
+    """PR #16 security audit MEDIUM-2: station['number'] from upstream is
+    interpolated into URLs and log messages. Without validation, an attacker
+    controlling the upstream API can inject newlines (log injection) or
+    path-traversal segments.
+    """
+
+    @pytest.mark.asyncio
+    async def test_malformed_station_number_with_newline_is_skipped(self):
+        """A station number containing a newline (log injection) is skipped
+        without ever appearing in a log or URL."""
+        LuchtmeetnetCollector._station_cache = None
+        LuchtmeetnetCollector._cache_timestamp = None
+
+        collector = LuchtmeetnetCollector(52.37, 4.89)
+
+        page_response = AsyncMock()
+        page_response.status = 200
+        page_response.json = AsyncMock(return_value={
+            "pagination": {"page_list": [1]},
+            "data": [
+                {"number": "NL001"},                           # valid
+                {"number": "NL\n[ERROR] injected fake log"},   # log-injection
+                {"number": "../etc/passwd"},                   # path-traversal
+                {"number": ""},                                # empty
+                {"number": 12345},                             # wrong type
+            ],
+        })
+        ok_response = AsyncMock()
+        ok_response.status = 200
+        ok_response.json = AsyncMock(return_value={"data": {
+            "geometry": {"type": "point", "coordinates": [4.0, 52.0]},
+            "components": [], "location": "ok", "municipality": "x",
+        }})
+
+        # Only valid NL001 should reach the detail-fetch.
+        responses = iter([page_response, page_response, ok_response])
+
+        def get_side_effect(url):
+            # URL must never contain raw injected content.
+            assert '\n' not in url
+            assert '..' not in url
+            cm = AsyncMock()
+            cm.__aenter__ = AsyncMock(return_value=next(responses))
+            cm.__aexit__ = AsyncMock(return_value=None)
+            return cm
+
+        mock_session = Mock()
+        mock_session.get = Mock(side_effect=get_side_effect)
+
+        result = await collector._fetch_all_stations(mock_session)
+
+        numbers = [s.get("number") for s in result]
+        assert numbers == ["NL001"]
 
 
 if __name__ == "__main__":
