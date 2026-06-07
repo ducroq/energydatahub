@@ -44,7 +44,7 @@ def compute_shape_signature(data: Any, _depth: int = 0) -> Union[Dict[str, Any],
     Recursive shape descriptor for any JSON-serialisable value.
 
     For dicts:
-      - If keys are all timestamp-like → returned as `{"_kind": "timestamp_map",
+      - If keys are ALL timestamp-like → returned as `{"_kind": "timestamp_map",
         "value_shape": <signature of one representative value>}`. This
         collapses the day-over-day timestamp churn so the fingerprint
         only changes when the per-record value shape changes.
@@ -55,6 +55,23 @@ def compute_shape_signature(data: Any, _depth: int = 0) -> Union[Dict[str, Any],
       - Non-empty → `{"_kind": "list", "value_shape": <signature of first element>}`
 
     For scalars: the type tag (`"bool"`, `"int"`, `"float"`, `"str"`, `"null"`).
+
+    KNOWN DESIGN CONSTRAINT — mixed-key dicts lose churn-collapse:
+
+      The timestamp-map collapse fires only when EVERY key matches the
+      timestamp pattern. A dict mixing timestamp keys with one or two
+      non-timestamp keys (e.g. `{'2026-01-01T...': {...}, 'metadata':
+      {...}}`) falls through to the plain `_kind: "dict"` branch and
+      records EVERY timestamp key individually. The hash then churns
+      day-over-day for that feed even though the structure is stable.
+
+      In practice this is fine because the published feeds use the
+      canonical `{metadata, data}` envelope: `data` is a pure
+      timestamp-keyed map (collapses), `metadata` is a plain key
+      dict (stable). Any future feed that mixes shapes at the same
+      nesting level will pay the daily-churn cost.
+
+      Code-reviewer LOW finding on 7c0de64.
 
     Args:
         data: Any JSON-serialisable value
@@ -114,9 +131,15 @@ def signature_hash(signature: Union[Dict[str, Any], str]) -> str:
     Used as the compact comparison key for CI drift detection. Two
     structurally identical signatures produce the same hash regardless
     of dict insertion order (we canonicalise via sort_keys).
+
+    Truncated to 32 hex chars (128 bits). 64 bits would already be
+    sufficient against a realistic second-preimage MITM attack on the
+    tripwire (~2^64 SHA-256 evaluations ≈ centuries on commodity
+    hardware), but 128 bits is zero-cost future-proofing — security
+    audit on 7c0de64 recommended the extension.
     """
     canonical = json.dumps(signature, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:32]
 
 
 def signatures_for_published_feeds(

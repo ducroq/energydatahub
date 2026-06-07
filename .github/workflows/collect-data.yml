@@ -94,6 +94,13 @@ jobs:
     # CURRENT_SCHEMA_VERSION did not move, the next class of bug behind
     # PR #20 and #26 is happening — fail the workflow loudly.
     #
+    # IMPORTANT: `--previous-ref HEAD` is intentional, not a typo for
+    # HEAD~1. This step runs BEFORE the "Commit and push if changed" step
+    # below, so HEAD at this point is still yesterday's daily commit.
+    # The freshly-written sidecar in the working tree is "current". If
+    # you move this step to run AFTER the commit (where HEAD becomes
+    # today's commit), switch the flag to `--previous-ref HEAD~1`.
+    #
     # Initially shipped in --warn-only mode for the bedding-in period so
     # any false positives surface before flipping to fail mode. Remove
     # --warn-only when the signal is trusted.

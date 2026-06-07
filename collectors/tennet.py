@@ -36,47 +36,19 @@ from collectors.base import (
     NonRetryableError,
     RetryConfig,
 )
+from collectors._http_classifier import (
+    PERMANENT_HTTP_STATUSES as _PERMANENT_HTTP_STATUSES,
+    extract_http_status as _extract_http_status,
+    raise_if_permanent,
+)
 from utils.data_types import EnhancedDataSet
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 logger = logging.getLogger(__name__)
 
-# HTTP statuses we treat as permanent for the requested time window:
-#   422 — Unprocessable Entity. TenneT returns this when balance-delta
-#         data hasn't been published yet (window crosses TSO publication
-#         boundary, or the requested resolution isn't supported).
-#   400 — Bad Request, malformed parameter.
-#   401 — Unauthorized, API key invalid.
-#   403 — Forbidden, key lacks permission for that endpoint/window.
-#   404 — Not Found, the resource doesn't exist at this URL.
-# Anything else (429 rate-limit, 5xx server error, network timeout) is
-# treated as transient and goes through the normal retry path.
-_PERMANENT_HTTP_STATUSES = frozenset({400, 401, 403, 404, 422})
-
-
-def _extract_http_status(exc: Exception) -> Optional[int]:
-    """
-    Extract an HTTP status code from an exception, if available.
-
-    `tenneteu-py` raises `requests.exceptions.HTTPError`. Other libraries
-    wrap their own HTTPError types but most expose a `.response` with a
-    `.status_code` attribute, or carry the status code in the message.
-
-    Returns None when the status can't be determined — the caller should
-    treat that as "retryable" (don't suppress an unknown error).
-    """
-    # The canonical requests path
-    response = getattr(exc, 'response', None)
-    if response is not None:
-        status = getattr(response, 'status_code', None)
-        if isinstance(status, int):
-            return status
-    # Some libraries set .status / .code directly
-    for attr in ('status', 'code', 'status_code'):
-        val = getattr(exc, attr, None)
-        if isinstance(val, int):
-            return val
-    return None
+# Aliases preserved for backward compatibility — the actual implementations
+# live in `collectors/_http_classifier.py` so they can be shared with the
+# ENTSO-E / NED / GIE collectors next time one of them hits a 422 cascade.
 
 
 class TennetCollector(BaseCollector):
@@ -166,21 +138,19 @@ class TennetCollector(BaseCollector):
             }
 
         except Exception as e:
-            # Classify the failure so BaseCollector's retry loop doesn't
-            # burn three attempts on a permanent error (issue #25).
-            # A 422→422→429 cascade is the textbook example: the original
-            # 422 means "data not published yet", retrying hammers the
-            # endpoint and trips the per-IP rate-limiter. Bypass that.
+            # Classify so BaseCollector's retry loop doesn't burn three
+            # attempts on a permanent error (issue #25). A 422→422→429
+            # cascade is the textbook example: the original 422 means
+            # "data not published yet", retrying hammers the endpoint
+            # and trips the per-IP rate-limiter. `raise_if_permanent`
+            # extracts the HTTP status and re-raises as NonRetryableError
+            # for the permanent set (422/400/401/403/404).
             status = _extract_http_status(e)
             self.logger.error(
                 f"Failed to fetch TenneT data: {e}"
                 + (f" (HTTP {status})" if status else "")
             )
-            if status is not None and status in _PERMANENT_HTTP_STATUSES:
-                raise NonRetryableError(
-                    f"TenneT API returned HTTP {status} — permanent for this "
-                    f"request window. Original error: {e}"
-                ) from e
+            raise_if_permanent(e, context="TenneT")
             raise
 
     def _parse_response(

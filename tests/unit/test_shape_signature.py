@@ -83,6 +83,31 @@ class TestComputeShapeSignature:
         b = {"2026-06-01T00:00:00+02:00": {"price": 50.0, "volume": 1000}}
         assert compute_shape_signature(a) != compute_shape_signature(b)
 
+    def test_mixed_keys_do_not_collapse(self):
+        """Documented design constraint: a dict mixing timestamp keys with
+        a non-timestamp key (e.g. `{ts1: v1, ts2: v2, 'metadata': m}`)
+        falls through to the plain dict branch and does NOT collapse to
+        a timestamp_map. The fingerprint will include every timestamp
+        key. This is OK for the canonical envelope (where timestamps and
+        metadata live at separate nesting levels) but will churn
+        day-over-day for any feed that mixes them — reviewer LOW finding
+        on 7c0de64.
+        """
+        day1 = {
+            "2026-06-01T00:00:00+02:00": 50.0,
+            "metadata": {"source": "X"},
+        }
+        day7 = {
+            "2026-06-07T00:00:00+02:00": 100.0,  # different timestamp
+            "metadata": {"source": "X"},
+        }
+        # Different fingerprints — the timestamps churn.
+        sig1 = compute_shape_signature(day1)
+        sig7 = compute_shape_signature(day7)
+        assert sig1["_kind"] == "dict"
+        assert sig7["_kind"] == "dict"
+        assert sig1 != sig7
+
     def test_nested_dict_signature(self):
         """Nested envelope-shaped payload."""
         payload = {
@@ -137,7 +162,10 @@ class TestSignatureHash:
         sig = compute_shape_signature({"x": 1})
         h = signature_hash(sig)
         assert isinstance(h, str)
-        assert len(h) == 16
+        # 32 hex chars = 128 bits after security review extended from 64
+        # (reviewer recommendation on 7c0de64). At 16 hex chars (the old
+        # length) the test must NOT pass — that's the regression guard.
+        assert len(h) == 32
         # Hex chars only
         assert all(c in "0123456789abcdef" for c in h)
 
@@ -164,7 +192,7 @@ class TestSignaturesForPublishedFeeds:
         entry = sidecar["feeds"]["gas_storage.json"]
         assert entry["data_type"] == "gas_storage"
         assert entry["sources"] is None  # standalone, not combined
-        assert len(entry["shape_hash"]) == 16
+        assert len(entry["shape_hash"]) == 32  # 128-bit (extended from 64)
         assert entry["shape_signature"]["_kind"] == "dict"
 
     def test_combined_wrap_extracts_sources(self):
