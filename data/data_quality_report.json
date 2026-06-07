@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-06-07T17:00:29.746714+00:00",
+  "timestamp": "2026-06-07T17:09:34.785253+00:00",
   "overall_status": "error",
   "total_issues": 5,
-  "datasets_collected": 21,
+  "datasets_collected": 22,
   "datasets_missing": [
     "grid_imbalance"
   ],
@@ -84,6 +84,16 @@
       "status": "info",
       "data_points": 768,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
