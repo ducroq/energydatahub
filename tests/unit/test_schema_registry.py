@@ -117,6 +117,69 @@ class TestStampMetadata:
         assert meta['schema_version'] == CURRENT_SCHEMA_VERSION
 
 
+class TestStampMetadataChangelogEmbed:
+    """#27 Layer B: stamp_metadata embeds the changelog slice for the
+    current schema version so consumers see what changed without fetching
+    the repo CHANGELOG separately."""
+
+    def test_embeds_current_changelog_entry(self):
+        """Newly-stamped metadata carries the current version's changelog slice."""
+        meta = {'data_type': 'energy_price'}
+        result = stamp_metadata(meta)
+        assert result['schema_version'] == CURRENT_SCHEMA_VERSION
+        # Embedded changelog entry has the expected keys
+        entry = result['schema_changelog_entry']
+        assert 'date' in entry
+        assert 'description' in entry
+        assert 'changes' in entry
+        assert isinstance(entry['changes'], list)
+
+    def test_embed_matches_authoritative_changelog(self):
+        """The embedded entry equals the SCHEMA_CHANGELOG entry for the version."""
+        from utils.schema_registry import SCHEMA_CHANGELOG
+        meta = {}
+        stamp_metadata(meta)
+        assert meta['schema_changelog_entry'] == \
+            SCHEMA_CHANGELOG[CURRENT_SCHEMA_VERSION]
+
+    def test_embed_is_a_copy_not_a_reference(self):
+        """Mutating the stamped slice must not poison module-level state."""
+        from utils.schema_registry import SCHEMA_CHANGELOG
+        original_changes = list(SCHEMA_CHANGELOG[CURRENT_SCHEMA_VERSION]['changes'])
+
+        meta = {}
+        stamp_metadata(meta)
+        meta['schema_changelog_entry']['changes'].append('rogue insertion')
+
+        # SCHEMA_CHANGELOG untouched
+        assert SCHEMA_CHANGELOG[CURRENT_SCHEMA_VERSION]['changes'] == original_changes
+
+    def test_pre_existing_changelog_entry_preserved(self):
+        """If a caller pre-supplied schema_changelog_entry, don't overwrite."""
+        sentinel = {'date': 'custom', 'description': 'custom', 'changes': []}
+        meta = {'schema_changelog_entry': sentinel}
+        stamp_metadata(meta)
+        assert meta['schema_changelog_entry'] is sentinel
+
+    def test_embed_tracks_explicit_schema_version(self):
+        """If caller supplies a pre-stamped schema_version, the embedded
+        changelog matches THAT version (not CURRENT). This preserves the
+        lineage for migrated records: a v2.1 record carries v2.1's changelog
+        even when CURRENT is v2.3.
+        """
+        meta = {'schema_version': '2.1'}
+        stamp_metadata(meta)
+        from utils.schema_registry import SCHEMA_CHANGELOG
+        assert meta['schema_changelog_entry'] == SCHEMA_CHANGELOG['2.1']
+
+    def test_unknown_schema_version_no_embed(self):
+        """If the schema_version isn't in SCHEMA_CHANGELOG, don't embed
+        a fictional entry — just leave the field absent."""
+        meta = {'schema_version': '99.99'}
+        stamp_metadata(meta)
+        assert 'schema_changelog_entry' not in meta
+
+
 class TestMigrate1To2:
     """Tests for v1.0 -> v2.0 migration."""
 

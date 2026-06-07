@@ -111,19 +111,36 @@ def get_changelog() -> Dict[str, Any]:
 
 def stamp_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Add schema_version to metadata dict.
+    Add schema_version + the corresponding changelog entry to a metadata dict.
 
-    This should be called when creating any EnhancedDataSet to ensure
-    the version is recorded. Idempotent — won't overwrite existing version.
+    Layer B of the schema-drift defense (#27): every published file carries
+    not just the version string but the human-readable changelog slice for
+    that version. Downstream consumers can compare `metadata.schema_version`
+    against their last-seen version and, when it bumps, read
+    `metadata.schema_changelog_entry` for guidance — no need to fetch the
+    repo CHANGELOG separately.
+
+    Idempotent: won't overwrite existing fields. If a caller supplies a
+    pre-stamped `schema_version`, the changelog entry is looked up for
+    *that* version (not CURRENT) so migrations preserve the lineage.
 
     Args:
         metadata: The metadata dict to stamp
 
     Returns:
-        The metadata dict with schema_version added
+        The same dict, mutated in place, with `schema_version` and (when
+        a changelog entry exists for that version) `schema_changelog_entry`.
     """
     if 'schema_version' not in metadata:
         metadata['schema_version'] = CURRENT_SCHEMA_VERSION
+    if 'schema_changelog_entry' not in metadata:
+        version = metadata['schema_version']
+        entry = SCHEMA_CHANGELOG.get(version)
+        if entry is not None:
+            # Deep copy so a downstream mutation of the metadata's slice
+            # (e.g. appending to the inner `changes` list) can't poison
+            # the module-level changelog.
+            metadata['schema_changelog_entry'] = copy.deepcopy(entry)
     return metadata
 
 

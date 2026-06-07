@@ -87,6 +87,23 @@ jobs:
           exit 1
         fi
 
+    # Schema-drift tripwire (#27 Layer A). Compares the new
+    # data/_shape_signatures.json against the last committed version (HEAD,
+    # which at this point is still the previous successful publish — we
+    # haven't committed today's run yet). If a feed's shape changed but
+    # CURRENT_SCHEMA_VERSION did not move, the next class of bug behind
+    # PR #20 and #26 is happening — fail the workflow loudly.
+    #
+    # Initially shipped in --warn-only mode for the bedding-in period so
+    # any false positives surface before flipping to fail mode. Remove
+    # --warn-only when the signal is trusted.
+    - name: Schema-drift tripwire
+      if: always()
+      run: |
+        python scripts/detect_schema_drift.py \
+          --previous-ref HEAD \
+          --warn-only
+
     - name: Prepare docs folder with only current data
       run: |
         mkdir -p docs

@@ -62,6 +62,7 @@ import json
 import copy
 import shutil
 import configparser
+from typing import Any, Dict
 from datetime import datetime, timedelta
 import asyncio
 import logging
@@ -74,6 +75,8 @@ from utils.data_types import CombinedDataSet, EnhancedDataSet
 from utils.timezone_helpers import get_timezone_and_country
 from utils.secure_data_handler import SecureDataHandler
 from utils.calendar_features import get_calendar_features_for_range, get_upcoming_holidays
+from utils.schema_registry import CURRENT_SCHEMA_VERSION
+from utils.shape_signature import signatures_for_published_feeds
 # New collector architecture imports
 from collectors import (
     EntsoeCollector,
@@ -940,6 +943,53 @@ async def main() -> None:
                 latest_ts = max(entsog_flows_data.data.keys())
                 latest_net = entsog_flows_data.data[latest_ts].get('net_flow_gwh', 'N/A')
             logging.info(f"Saved gas flows data: {len(entsog_flows_data.data)} days, latest net flow: {latest_net} GWh")
+
+        # --- Shape-drift sidecar (#27 Layer A) ---
+        # Capture a structural fingerprint of every published feed BEFORE
+        # encryption. CI step `scripts/detect_schema_drift.py` diffs this
+        # sidecar against the previous commit's version and surfaces any
+        # shape change that wasn't accompanied by a CURRENT_SCHEMA_VERSION
+        # bump — preventing the silent failure mode behind PR #20 and #26.
+        # Keys mirror the canonical filenames published to docs/.
+        published_feeds: Dict[str, Any] = {}
+        if combined_data and combined_data.datasets:
+            published_feeds['energy_price_forecast.json'] = combined_data.to_dict()
+        if wind_combined_data and wind_combined_data.datasets:
+            published_feeds['wind_forecast.json'] = wind_combined_data.to_dict()
+        if buurt_air_combined is not None:
+            published_feeds['air_quality_buurt.json'] = buurt_air_combined.to_dict()
+        # Single-dataset feeds: each is an EnhancedDataSet (or None if collection failed).
+        for filename, ds in [
+            ('weather_forecast_multi_location.json', strategic_weather_data),
+            ('grid_imbalance.json',                  tennet_data),
+            ('ned_production.json',                  ned_data),
+            ('solar_forecast.json',                  solar_data),
+            ('demand_weather_forecast.json',         demand_weather_data),
+            ('weather_forecast_buurt.json',          buurt_weather_data),
+            ('solar_forecast_buurt.json',            buurt_solar_data),
+            ('cross_border_flows.json',              flows_data),
+            ('load_forecast.json',                   load_data),
+            ('generation_forecast.json',             generation_data),
+            ('generation_mix.json',                  genmix_data),
+            ('calendar_features.json',               calendar_dataset),
+            ('market_proxies.json',                  market_proxy_data),
+            ('market_history.json',                  market_history_dataset),
+            ('gas_storage.json',                     gie_storage_data),
+            ('gas_flows.json',                       entsog_flows_data),
+        ]:
+            if ds is not None:
+                published_feeds[filename] = ds.to_dict()
+
+        sidecar = signatures_for_published_feeds(
+            published_feeds, schema_version=CURRENT_SCHEMA_VERSION
+        )
+        sidecar_path = os.path.join(output_path, "_shape_signatures.json")
+        with open(sidecar_path, 'w') as f:
+            json.dump(sidecar, f, indent=2)
+        logging.info(
+            f"Shape-signature sidecar written: {len(sidecar['feeds'])} feeds, "
+            f"schema_version={CURRENT_SCHEMA_VERSION} → {sidecar_path}"
+        )
 
         # --- Data Quality Report ---
         # Run FMEA-based quality checks on all collected datasets
