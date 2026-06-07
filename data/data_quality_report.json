@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-07T08:46:16.879139+00:00",
+  "timestamp": "2026-06-07T09:22:42.201966+00:00",
   "overall_status": "error",
   "total_issues": 7,
   "datasets_collected": 22,
@@ -160,7 +160,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 40,
+      "data_points": 44,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -270,10 +270,10 @@
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 58.8h old (threshold: 48h)",
+          "message": "Newest data is 59.4h old (threshold: 48h)",
           "details": {
             "newest_timestamp": "2026-06-05T00:00:00+02:00",
-            "age_hours": 58.8,
+            "age_hours": 59.4,
             "threshold_hours": 48
           }
         }
