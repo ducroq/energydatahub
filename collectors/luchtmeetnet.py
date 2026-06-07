@@ -26,6 +26,8 @@ Usage:
 """
 
 import asyncio
+import json
+import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 import aiohttp
@@ -33,6 +35,22 @@ import aiohttp
 from collectors.base import BaseCollector, RetryConfig
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 from utils.helpers import closest
+
+
+# Station-completeness thresholds for the data-quality signal emitted in
+# `_get_metadata`. 0–25% filtered = transient upstream noise (no issue);
+# 25–50% = warning (broad degradation); >50% = critical (the bbox may no
+# longer have a sane closest station — the workflow gate will block publish).
+# See issue #12.
+STATION_FILTER_WARN_THRESHOLD = 0.25
+STATION_FILTER_CRITICAL_THRESHOLD = 0.50
+
+# Strict allowlist for station identifiers before they're interpolated into
+# URLs or log messages. RIVM IDs are short alphanumerics (e.g. "NL10497");
+# underscores/hyphens accepted because they're URL-safe and used in some
+# legacy/test identifiers. Rejects newlines (log-injection vector), path-
+# traversal segments, and quoting characters. See security audit on PR #16.
+_STATION_NUMBER_PATTERN = re.compile(r'^[A-Za-z0-9_-]{1,32}$')
 
 
 class LuchtmeetnetCollector(BaseCollector):
@@ -50,6 +68,12 @@ class LuchtmeetnetCollector(BaseCollector):
     _station_cache: Optional[List[Dict]] = None
     _cache_timestamp: Optional[datetime] = None
     _cache_duration = timedelta(hours=24)  # Cache for 24 hours
+    # Most-recent filter-stats snapshot taken when the cache was written.
+    # Used only to seed `self._last_filter_stats` on cache hits — the
+    # per-fetch stats themselves live on the INSTANCE so concurrent buurt
+    # collectors can never see each other's stats misattributed (security
+    # audit HIGH-1 on PR #16).
+    _cache_filter_stats: Optional[Dict[str, int]] = None
 
     def __init__(
         self,
@@ -76,6 +100,10 @@ class LuchtmeetnetCollector(BaseCollector):
         self.longitude = longitude
         self.base_url = 'https://api.luchtmeetnet.nl/open_api'
         self.closest_station = None  # Cache closest station
+        # Per-instance filter stats from this collector's most recent station
+        # fetch (or copied from class snapshot on cache hit). Instance-scoped
+        # so concurrent buurt collectors can't overwrite each other.
+        self._last_filter_stats: Optional[Dict[str, int]] = None
 
     async def _fetch_raw_data(
         self,
@@ -160,16 +188,29 @@ class LuchtmeetnetCollector(BaseCollector):
                 self.logger.info(
                     f"Using cached station list (age: {cache_age.total_seconds()/3600:.1f}h)"
                 )
+                # Inherit the snapshot's stats so _get_metadata can emit
+                # the station_completeness signal even on cache hits.
+                self._last_filter_stats = LuchtmeetnetCollector._cache_filter_stats
                 return LuchtmeetnetCollector._station_cache
 
         # Cache miss or expired - fetch new data
         self.logger.info("Station cache miss or expired, fetching fresh data")
         stations = await self._fetch_all_stations(session)
 
-        # Update cache
-        LuchtmeetnetCollector._station_cache = stations
-        LuchtmeetnetCollector._cache_timestamp = now
-        self.logger.info(f"Cached {len(stations)} stations")
+        # Refuse to cache empty results — a one-off upstream outage would
+        # otherwise lock collection out for 24h (issue #13). The caller's
+        # existing `if not stations` check will fail this run; the next run
+        # gets a fresh retry instead of inheriting a poisoned cache.
+        if stations:
+            LuchtmeetnetCollector._station_cache = stations
+            LuchtmeetnetCollector._cache_filter_stats = self._last_filter_stats
+            LuchtmeetnetCollector._cache_timestamp = now
+            self.logger.info(f"Cached {len(stations)} stations")
+        else:
+            self.logger.warning(
+                "Refusing to cache empty station list — upstream likely "
+                "degraded; next run will retry"
+            )
 
         return stations
 
@@ -201,7 +242,17 @@ class LuchtmeetnetCollector(BaseCollector):
 
         # Fetch details for each station
         for station in station_list:
-            url = f"{self.base_url}/stations/{station['number']}/"
+            # Reject station numbers that don't match the expected pattern
+            # before interpolating them into URLs or log messages — defends
+            # against log-injection (newlines in number) and path-traversal
+            # in the URL segment (security audit MEDIUM-2 on PR #16).
+            raw_number = station.get('number')
+            if not isinstance(raw_number, str) or not _STATION_NUMBER_PATTERN.match(raw_number):
+                self.logger.warning(
+                    f"Skipping station with malformed number (len={len(raw_number) if isinstance(raw_number, str) else 'n/a'})"
+                )
+                continue
+            url = f"{self.base_url}/stations/{raw_number}/"
             try:
                 async with session.get(url) as response:
                     if response.status != 200:
@@ -221,25 +272,43 @@ class LuchtmeetnetCollector(BaseCollector):
                         station['components'] = station_data.get('components', [])
                         station['location'] = station_data.get('location', '')
                         station['municipality'] = station_data.get('municipality', '')
-            except Exception as e:
+            except (
+                aiohttp.ClientError,
+                asyncio.TimeoutError,
+                json.JSONDecodeError,
+                ValueError,
+                KeyError,
+                TypeError,
+            ) as e:
                 # Single-station network/parse failures must not poison the cache.
                 # Before this guard a single bad detail-fetch left the station in
                 # the list without lat/lon, causing the cached list to crash
-                # `closest()` with KeyError: 'latitude' for 24h (see CI run
-                # 27068482501, 2026-06-06).
+                # `closest()` for 24h (issue #14). Except list is narrow on
+                # purpose: AttributeError/NameError from a future refactor
+                # mistake should propagate. `raw_number` is pre-validated above
+                # so it's safe to interpolate into the log.
                 self.logger.warning(
-                    f"Skipping station {station.get('number', '?')}: detail-fetch failed ({e})"
+                    f"Skipping station {raw_number}: detail-fetch failed ({type(e).__name__})"
                 )
 
         # Drop any station that didn't get coordinates assigned. `closest()`
         # iterates p['latitude'] over every member; a single missing entry
         # raises KeyError and kills the whole collection.
         clean = [s for s in station_list if 'latitude' in s and 'longitude' in s]
-        if len(clean) < len(station_list):
+        filtered = len(station_list) - len(clean)
+        if filtered:
             self.logger.info(
-                f"Filtered {len(station_list) - len(clean)} stations without coordinates "
+                f"Filtered {filtered} stations without coordinates "
                 f"({len(clean)}/{len(station_list)} usable)"
             )
+        # INSTANCE-scoped stats — concurrent buurt collectors cannot overwrite
+        # each other's snapshot (security audit HIGH-1 on PR #16). The class-
+        # level _cache_filter_stats slot is updated in _get_stations_cached
+        # alongside _station_cache so cache hits can inherit.
+        self._last_filter_stats = {
+            'total': len(station_list),
+            'filtered': filtered,
+        }
         return clean
 
     async def _fetch_aqi(
@@ -384,6 +453,37 @@ class LuchtmeetnetCollector(BaseCollector):
             'requested_longitude': self.longitude,
             'units': {'all': 'µg/m³'}
         })
+
+        # Surface station-completeness as a data-quality signal so the
+        # workflow's `data_quality_report.overall_status == critical` gate
+        # can block publish when station selection is broadly degraded
+        # (issue #12). Stats come from this instance's most recent fetch,
+        # or were copied from the class snapshot on a cache hit. Reading
+        # from instance state means concurrent buurt collectors cannot
+        # misattribute each other's stats (security audit HIGH-1).
+        stats = self._last_filter_stats
+        if stats and stats['total'] > 0:
+            filtered = stats['filtered']
+            total = stats['total']
+            ratio = filtered / total
+            metadata['stations_total'] = total
+            metadata['stations_filtered'] = filtered
+            metadata['stations_filtered_pct'] = round(ratio * 100, 1)
+            if ratio > STATION_FILTER_WARN_THRESHOLD:
+                severity = (
+                    'critical' if ratio > STATION_FILTER_CRITICAL_THRESHOLD
+                    else 'warning'
+                )
+                metadata.setdefault('collector_quality_issues', []).append({
+                    'check_name': 'station_completeness',
+                    'severity': severity,
+                    'message': (
+                        f"{filtered}/{total} Luchtmeetnet stations filtered "
+                        f"({ratio * 100:.0f}%) — selection may have shifted "
+                        f"to a less-representative station"
+                    ),
+                    'details': {'filtered': filtered, 'total': total},
+                })
 
         return metadata
 
