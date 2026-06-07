@@ -263,11 +263,10 @@ class TestClosestDefenseInDepth:
     """Issue #15: `closest()` must reject malformed input loudly instead of
     crashing mid-iteration with a bare KeyError.
 
-    Background: CI run 27068482501 (2026-06-06) cached a Luchtmeetnet station
-    list where one detail-fetch had failed silently, leaving an entry without
-    `latitude`/`longitude`. The min(... key=lambda) crashed for 24h until the
-    cache TTL expired. PR #10 fixed the one feeder; this guards the function
-    itself against the bug class via any future feeder.
+    PR #10 fixed the one current feeder (Luchtmeetnet `_fetch_all_stations`);
+    this guards the function itself against the same bug class via any
+    future feeder. Each missing-key case has its own error message so test
+    assertions can't pass for the wrong reason.
     """
 
     def test_raises_on_entry_missing_latitude(self):
@@ -276,44 +275,75 @@ class TestClosestDefenseInDepth:
             {"longitude": 5.0, "number": "BAD"},  # missing latitude
         ]
         target = {"latitude": 52.1, "longitude": 4.1}
-        import pytest
-        with pytest.raises(ValueError, match="missing latitude"):
+        with pytest.raises(ValueError, match="entry missing latitude: BAD"):
             closest(stations, target)
 
     def test_raises_on_entry_missing_longitude(self):
         stations = [
             {"latitude": 52.0, "longitude": 4.0, "name": "ok"},
-            {"latitude": 53.0, "name": "BAD"},  # missing longitude
+            {"latitude": 53.0, "number": "BAD"},  # missing longitude
         ]
         target = {"latitude": 52.1, "longitude": 4.1}
-        import pytest
-        with pytest.raises(ValueError, match="missing latitude"):
+        with pytest.raises(ValueError, match="entry missing longitude: BAD"):
             closest(stations, target)
 
     def test_raises_on_empty_data(self):
         target = {"latitude": 52.1, "longitude": 4.1}
-        import pytest
         with pytest.raises(ValueError, match="empty"):
             closest([], target)
 
     def test_raises_on_target_missing_latitude(self):
         stations = [{"latitude": 52.0, "longitude": 4.0, "name": "ok"}]
-        import pytest
-        with pytest.raises(ValueError, match="missing latitude"):
+        with pytest.raises(ValueError, match="target missing latitude"):
             closest(stations, {"longitude": 4.0})
 
-    def test_error_message_identifies_offending_entry(self):
-        """The raised ValueError should make the offending entry identifiable
-        so the operator can trace the source quickly (rather than wading
-        through stack frames to figure out *which* dict was malformed)."""
+    def test_raises_on_target_missing_longitude(self):
+        stations = [{"latitude": 52.0, "longitude": 4.0, "name": "ok"}]
+        with pytest.raises(ValueError, match="target missing longitude"):
+            closest(stations, {"latitude": 52.0})
+
+    def test_error_message_identifies_offending_entry_by_number(self):
+        """Entries with a `number` field are identified by it."""
         stations = [
             {"latitude": 52.0, "longitude": 4.0, "name": "ok"},
-            {"number": "NL_OFFENDER"},  # identifiable by `number`
+            {"number": "NL_OFFENDER"},
         ]
         target = {"latitude": 52.1, "longitude": 4.1}
-        import pytest
         with pytest.raises(ValueError, match="NL_OFFENDER"):
             closest(stations, target)
+
+    def test_error_message_falls_back_to_name_then_index(self):
+        """Entries without `number` use `name`; without either, use index."""
+        stations_named = [
+            {"latitude": 52.0, "longitude": 4.0},
+            {"name": "Anonymous"},
+        ]
+        target = {"latitude": 52.1, "longitude": 4.1}
+        with pytest.raises(ValueError, match="Anonymous"):
+            closest(stations_named, target)
+
+        stations_neither = [
+            {"latitude": 52.0, "longitude": 4.0},
+            {"unknown_field": "x"},  # no number, no name
+        ]
+        with pytest.raises(ValueError, match="<entry at index 1>"):
+            closest(stations_neither, target)
+
+    def test_error_does_not_interpolate_full_entry_dict(self):
+        """Regression for security review: the fallback must NOT echo the
+        entire entry dict (which could leak fields a future caller adds —
+        auth headers, internal IDs, PII). Stays at the safe `<entry at
+        index N>` placeholder.
+        """
+        stations = [
+            {"latitude": 52.0, "longitude": 4.0},
+            {"super_secret_field": "DO_NOT_LEAK_ME"},
+        ]
+        target = {"latitude": 52.1, "longitude": 4.1}
+        with pytest.raises(ValueError) as exc_info:
+            closest(stations, target)
+        assert "DO_NOT_LEAK_ME" not in str(exc_info.value)
+        assert "super_secret_field" not in str(exc_info.value)
 
     def test_all_valid_entries_returns_nearest_unchanged(self):
         """Regression: the guard must not change happy-path behavior."""

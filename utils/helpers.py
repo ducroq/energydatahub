@@ -138,23 +138,44 @@ def distance(lat1, lon1, lat2, lon2):
     return distance
 
 def closest(data, v):
-    # Defense in depth (issue #15): validate inputs before iterating so a
-    # caller that hands us a coord-less entry fails fast at the call site
-    # rather than crashing mid-min() with a bare KeyError. The original
-    # incident (CI run 27068482501, 2026-06-06) cached a station-list with
-    # one missing-coord entry and silently broke air-quality collection
-    # for 24h. PR #10 fixed the one feeder; this guards the function
-    # itself against the same bug class via any future feeder.
+    """Return the entry in ``data`` closest (Haversine) to target ``v``.
+
+    Each entry in ``data`` must have ``latitude`` and ``longitude`` keys;
+    so must ``v``. Raises ``ValueError`` with the offending entry's index
+    plus its ``number`` / ``name`` (if present) when the contract is
+    violated, so a malformed feeder crashes loudly at the call site
+    instead of mid-``min()`` with a bare ``KeyError``. See issue #15.
+
+    Args:
+        data: non-empty iterable of dicts with ``latitude``/``longitude``.
+        v: dict with ``latitude``/``longitude`` (the target point).
+
+    Returns:
+        The dict in ``data`` minimising Haversine distance to ``v``.
+
+    Raises:
+        ValueError: empty ``data``, missing keys on ``v``, or any entry
+            in ``data`` missing required keys.
+    """
     if not data:
         raise ValueError("closest(): data is empty — no candidates to choose from")
-    if "latitude" not in v or "longitude" not in v:
-        raise ValueError(f"closest(): target {v!r} missing latitude/longitude")
-    for p in data:
-        if "latitude" not in p or "longitude" not in p:
-            raise ValueError(
-                f"closest(): entry missing latitude/longitude: "
-                f"{p.get('number') or p.get('name') or p}"
-            )
+    if "latitude" not in v:
+        raise ValueError(f"closest(): target missing latitude: {v!r}")
+    if "longitude" not in v:
+        raise ValueError(f"closest(): target missing longitude: {v!r}")
+    for i, p in enumerate(data):
+        # Identify the offending entry by index + its `number` or `name` if
+        # present. Falls back to "<index N>" rather than echoing the full
+        # dict so future callers passing richer objects can't leak fields
+        # into error logs.
+        identifier = (
+            p['number'] if 'number' in p
+            else p.get('name', f'<entry at index {i}>')
+        )
+        if "latitude" not in p:
+            raise ValueError(f"closest(): entry missing latitude: {identifier}")
+        if "longitude" not in p:
+            raise ValueError(f"closest(): entry missing longitude: {identifier}")
     return min(
         data,
         key=lambda p: distance(
