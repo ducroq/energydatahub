@@ -18,8 +18,13 @@ from data_fetcher import assemble_buurt_air_envelope
 from utils.data_types import EnhancedDataSet
 
 
-def _ds(station, ts_to_pollutants, extra_meta=None):
-    """Build a per-location Luchtmeetnet-shaped EnhancedDataSet."""
+def _ds(station, ts_to_pollutants, extra_meta=None, components=None):
+    """Build a per-location Luchtmeetnet-shaped EnhancedDataSet.
+
+    Matches the actual key set produced by `LuchtmeetnetCollector._get_metadata`
+    (including `components`) so envelope tests don't pass on incomplete
+    fixtures.
+    """
     metadata = {
         'data_type': 'air',
         'source': 'Luchtmeetnet API',
@@ -31,6 +36,7 @@ def _ds(station, ts_to_pollutants, extra_meta=None):
         'requested_latitude': 51.9,
         'requested_longitude': 3.9,
         'city': 'Arnhem',
+        'components': components if components is not None else ['NO2', 'PM10'],
     }
     if extra_meta:
         metadata.update(extra_meta)
@@ -97,6 +103,95 @@ class TestStationMetadataPreservation:
         assert set(payload['metadata']['stations'].keys()) == {'L1', 'L2'}
         assert payload['metadata']['stations']['L1']['station'] == 'NL001'
         assert payload['metadata']['stations']['L2']['station'] == 'NL002'
+
+    def test_components_field_preserved_per_station(self):
+        """PR #20 review HIGH/MEDIUM: `components` (the list of pollutants
+        the station actually measures) must be preserved. Without it,
+        downstream consumers cannot validate that a snapped station
+        actually reports the pollutant they're consuming.
+        """
+        locs = [
+            {'name': 'L1', 'lat': 52.0, 'lon': 4.0},
+            {'name': 'L2', 'lat': 53.0, 'lon': 5.0},
+        ]
+        datasets = [
+            _ds('NL001', {'2026-06-06T12:00:00+02:00': {'NO2': 20.0}},
+                components=['NO', 'NO2', 'NOX', 'PM10', 'PM25']),
+            _ds('NL002', {'2026-06-06T12:00:00+02:00': {'PM10': 15.0}},
+                components=['PM10', 'PM25']),
+        ]
+        payload = assemble_buurt_air_envelope(locs, datasets).to_dict()
+        assert payload['metadata']['stations']['L1']['components'] == [
+            'NO', 'NO2', 'NOX', 'PM10', 'PM25'
+        ]
+        assert payload['metadata']['stations']['L2']['components'] == ['PM10', 'PM25']
+
+
+class TestMutationIsolation:
+    """PR #20 review HIGH+MEDIUM: deep copies must isolate the published
+    envelope from the source collector's state. Any mutation on either
+    side after assembly must NOT leak to the other.
+    """
+
+    def test_issue_details_location_tag_does_not_mutate_source(self):
+        """Adding `details.location` during aggregation must not mutate
+        the original issue dict on the collector's metadata. Before the
+        fix this was a shallow `dict(issue)` copy, so the inner `details`
+        dict was shared.
+        """
+        locs = [{'name': 'L_BUURT_X', 'lat': 52.0, 'lon': 4.0}]
+        original_details = {'filtered': 60, 'total': 100}
+        original_issue = {
+            'check_name': 'station_completeness',
+            'severity': 'critical',
+            'message': 'degraded',
+            'details': original_details,
+        }
+        ds = _ds(
+            'NL001',
+            {'2026-06-06T12:00:00+02:00': {'NO2': 20.0}},
+            extra_meta={'collector_quality_issues': [original_issue]},
+        )
+
+        assemble_buurt_air_envelope(locs, [ds])
+
+        # The collector's original issue dict must NOT have gained `location`.
+        assert 'location' not in original_issue['details']
+        assert original_details == {'filtered': 60, 'total': 100}
+
+    def test_published_data_isolated_from_source(self):
+        """PR #20 review MEDIUM: the envelope's `data[<loc>]` must be a
+        copy, not a reference to `aq_ds.data`. Otherwise any downstream
+        mutation of either side poisons the other.
+        """
+        locs = [{'name': 'L1', 'lat': 52.0, 'lon': 4.0}]
+        source_data = {'2026-06-06T12:00:00+02:00': {'NO2': 20.0}}
+        ds = _ds('NL001', source_data)
+
+        envelope = assemble_buurt_air_envelope(locs, [ds])
+
+        # Mutate the source AFTER assembly.
+        ds.data['2026-06-06T12:00:00+02:00']['NO2'] = 999.0
+        ds.data['2026-06-06T13:00:00+02:00'] = {'NO2': 1000.0}
+
+        # Envelope must be unchanged.
+        assert envelope.data['L1']['2026-06-06T12:00:00+02:00']['NO2'] == 20.0
+        assert '2026-06-06T13:00:00+02:00' not in envelope.data['L1']
+
+
+class TestInputValidation:
+    """PR #20 review MINOR: silent zip-truncation on mismatched input
+    lengths would drop the tail of buurt_aq_data without notice.
+    """
+
+    def test_length_mismatch_raises(self):
+        locs = [
+            {'name': 'L1', 'lat': 52.0, 'lon': 4.0},
+            {'name': 'L2', 'lat': 52.1, 'lon': 4.1},
+        ]
+        ds = _ds('NL001', {'2026-06-06T12:00:00+02:00': {'NO2': 20.0}})
+        with pytest.raises(ValueError, match="length mismatch"):
+            assemble_buurt_air_envelope(locs, [ds])  # 2 locs vs 1 result
 
 
 class TestQualityIssueAggregation:

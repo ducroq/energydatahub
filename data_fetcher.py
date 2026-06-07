@@ -59,6 +59,7 @@ Notes:
 import os
 import sys
 import json
+import copy
 import shutil
 import configparser
 from datetime import datetime, timedelta
@@ -114,6 +115,18 @@ MAX_RETRY_ROUNDS = 3       # Up to 3 retry rounds for failed critical collectors
 CRITICAL_DATASETS = {'entsoe', 'entsoe_de'}
 
 
+# Per-location Luchtmeetnet metadata fields preserved (per-station) under
+# `metadata['stations'][<loc>]` in the buurt air-quality envelope.
+# `components` is the list of pollutants the station actually measures —
+# critical for downstream consumers to validate that a station reports the
+# pollutant they're looking at (PR #20 review HIGH-2).
+_BUURT_AIR_STATION_FIELDS = (
+    'station', 'station_location', 'station_latitude',
+    'station_longitude', 'requested_latitude', 'requested_longitude',
+    'city', 'components',
+)
+
+
 def assemble_buurt_air_envelope(buurt_locations, buurt_aq_data):
     """Combine per-location Luchtmeetnet datasets into one EnhancedDataSet.
 
@@ -126,39 +139,65 @@ def assemble_buurt_air_envelope(buurt_locations, buurt_aq_data):
     ``data`` keyed by location pins the envelope to the same shape as the
     other two buurt feeds.
 
-    Per-location station info (RIVM station number, coordinates, city) is
-    preserved in ``metadata['stations'][<loc>]``. Per-location
-    ``collector_quality_issues`` are aggregated into top-level
-    ``metadata['collector_quality_issues']`` (with ``details['location']``
-    set) so the pipeline-level data-quality gate still sees them after the
-    flatten.
+    Per-location station info (RIVM station number, coordinates, city,
+    components) is preserved in ``metadata['stations'][<loc>]``. Per-
+    location ``collector_quality_issues`` are aggregated into top-level
+    ``metadata['collector_quality_issues']`` with ``details['location']``
+    tagged, so the pipeline data-quality gate (PR #16 wiring) still sees
+    them after the flatten.
+
+    Defensive copies: the envelope's ``data`` and aggregated ``issues``
+    are deep-copied from the source datasets, so subsequent mutations on
+    either side cannot poison the other (PR #20 review HIGH/MEDIUM).
+
+    Args:
+        buurt_locations: list of dicts with at least a ``name`` key.
+        buurt_aq_data: list of EnhancedDataSet (or None on per-buurt
+            collector failure), same length and order as ``buurt_locations``.
 
     Returns:
         EnhancedDataSet ready for save_data_file, or None when none of the
         per-location collectors returned data.
+
+    Raises:
+        ValueError: if input lists have different lengths (would indicate
+            a wiring mistake in the orchestrator; silent ``zip`` truncation
+            would otherwise drop the tail without notice).
     """
+    if len(buurt_locations) != len(buurt_aq_data):
+        raise ValueError(
+            f"assemble_buurt_air_envelope: input length mismatch — "
+            f"{len(buurt_locations)} locations vs {len(buurt_aq_data)} "
+            f"results. Check the orchestrator's task wiring."
+        )
+
     buurt_air_data = {}
     buurt_air_stations = {}
     buurt_air_quality_issues = []
     for loc, aq_ds in zip(buurt_locations, buurt_aq_data):
         if not aq_ds:
             continue
-        buurt_air_data[loc['name']] = aq_ds.data
+        # Deep-copy the per-location data so subsequent mutations on the
+        # collector's `aq_ds.data` (e.g., a future debug logger updating
+        # it in place) cannot poison the published envelope (PR #20
+        # review MEDIUM).
+        buurt_air_data[loc['name']] = copy.deepcopy(aq_ds.data)
         buurt_air_stations[loc['name']] = {
-            k: aq_ds.metadata.get(k) for k in (
-                'station', 'station_location', 'station_latitude',
-                'station_longitude', 'requested_latitude',
-                'requested_longitude', 'city',
-            )
+            k: aq_ds.metadata.get(k) for k in _BUURT_AIR_STATION_FIELDS
         }
         for issue in (aq_ds.metadata.get('collector_quality_issues') or []):
-            tagged = dict(issue)
+            # Deep-copy so adding `details.location` here does NOT mutate
+            # the collector's original issue dict (PR #20 review HIGH).
+            tagged = copy.deepcopy(issue)
             tagged.setdefault('details', {})['location'] = loc['name']
             buurt_air_quality_issues.append(tagged)
 
     if not buurt_air_data:
         return None
 
+    # `locations` mirrors `data.keys()` deliberately: consumers reading only
+    # the metadata block (without traversing `data`) get the list directly,
+    # matching weather/solar buurt feed convention.
     air_metadata = {
         'data_type': 'air',
         'source': 'Luchtmeetnet API',
