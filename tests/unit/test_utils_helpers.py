@@ -452,7 +452,11 @@ class TestSaveDataFile:
         assert file_path.exists()
         with open(file_path) as f:
             loaded = json.load(f)
-        assert 'version' in loaded
+        # Canonical envelope: top level is {metadata, data}; the
+        # CombinedDataSet version now lives under metadata (#26).
+        assert set(loaded.keys()) == {'metadata', 'data'}
+        assert loaded['metadata']['version'] == '2.0'
+        assert 'test' in loaded['data']
 
     def test_save_with_malformed_timestamps_raises_error(self, tmp_path):
         """Test that malformed timestamps prevent saving."""

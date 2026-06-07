@@ -252,6 +252,98 @@ class TestWeatherFieldRanges:
         assert len(issues) == 0
 
 
+class TestGasStorageFieldRanges:
+    """Issue #24: gas_storage's nested {fill_level_pct, *_twh, *_gwh} dict
+    must validate per-field, not against a single 0-100% range that flags
+    every TWh value daily.
+    """
+
+    def _sample(self, **overrides):
+        base = {
+            'fill_level_pct': 15.24,
+            'working_capacity_twh': 21.9185,
+            'injection_gwh': 385.08,
+            'withdrawal_gwh': 7.9,
+            'net_change_gwh': 377.18,
+            'working_gas_volume_twh': 143.7945,
+        }
+        base.update(overrides)
+        return base
+
+    def test_realistic_sample_passes(self):
+        """The exact payload shape from issue #24 must produce zero issues."""
+        data = {'2026-05-29T00:00:00+02:00': self._sample()}
+        issues = validate_value_ranges(data, 'gas_storage', 'gas_storage')
+        assert issues == []
+
+    def test_impossible_fill_level_flagged(self):
+        """fill_level_pct > 100 is physically impossible and must flag."""
+        data = {'2026-05-29T00:00:00+02:00': self._sample(fill_level_pct=150.0)}
+        issues = validate_value_ranges(data, 'gas_storage', 'gas_storage')
+        assert len(issues) == 1
+        assert 'fill_level_pct=150.0' in issues[0].details['examples'][0]
+
+    def test_negative_capacity_flagged(self):
+        """Negative TWh values are impossible — must flag."""
+        data = {'2026-05-29T00:00:00+02:00': self._sample(working_capacity_twh=-5.0)}
+        issues = validate_value_ranges(data, 'gas_storage', 'gas_storage')
+        assert len(issues) == 1
+
+    def test_net_change_allows_negative(self):
+        """net_change_gwh is signed (withdrawal > injection → negative)."""
+        data = {'2026-05-29T00:00:00+02:00': self._sample(net_change_gwh=-1500.0)}
+        issues = validate_value_ranges(data, 'gas_storage', 'gas_storage')
+        assert issues == []
+
+    def test_validate_dataset_staleness_override(self):
+        """gas_storage gets 96h staleness threshold (GIE AGSI+ publishes
+        with 2-3 day lag); 60h old data must NOT trigger staleness."""
+        sixty_h_old = datetime.now(AMS) - timedelta(hours=60)
+        dataset = EnhancedDataSet(
+            metadata={
+                'data_type': 'gas_storage',
+                'source': 'GIE AGSI+',
+                'units': 'mixed',
+            },
+            data={sixty_h_old.isoformat(): self._sample()},
+        )
+        report = validate_dataset(dataset, 'gas_storage')
+        staleness = [i for i in report.issues if i.check_name == 'staleness']
+        assert staleness == []
+
+    def test_validate_dataset_staleness_still_fires_past_96h(self):
+        """Beyond the 96h override, gas_storage staleness must still flag."""
+        five_days_old = datetime.now(AMS) - timedelta(hours=120)
+        dataset = EnhancedDataSet(
+            metadata={
+                'data_type': 'gas_storage',
+                'source': 'GIE AGSI+',
+                'units': 'mixed',
+            },
+            data={five_days_old.isoformat(): self._sample()},
+        )
+        report = validate_dataset(dataset, 'gas_storage')
+        staleness = [i for i in report.issues if i.check_name == 'staleness']
+        assert len(staleness) == 1
+        assert staleness[0].details['threshold_hours'] == 96
+
+    def test_validate_dataset_clean_run_status(self):
+        """Realistic gas_storage data → status info (no value_range error,
+        no staleness error). This is the regression for the daily noise."""
+        fresh = datetime.now(AMS) - timedelta(hours=24)
+        dataset = EnhancedDataSet(
+            metadata={
+                'data_type': 'gas_storage',
+                'source': 'GIE AGSI+',
+                'units': 'mixed',
+            },
+            data={fresh.isoformat(): self._sample()},
+        )
+        report = validate_dataset(dataset, 'gas_storage')
+        # No range or staleness issues; status should not be error/critical
+        assert report.status not in ('error', 'critical')
+
+
 class TestCompleteness:
     """Tests for validate_completeness."""
 

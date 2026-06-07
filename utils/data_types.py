@@ -109,9 +109,19 @@ class CombinedDataSet:
         self.datasets[name] = dataset.to_dict()
 
     def to_dict(self):
-        return {
+        # Canonical {metadata, data} envelope — same shape as EnhancedDataSet
+        # and the 14 already-homogenised strategic feeds (issue #26). The
+        # per-collector sub-datasets keep their own {metadata, data} wrap
+        # under the top-level `data` key.
+        metadata = stamp_metadata({
             'version': self.version,
-            **self.datasets
+            'source': 'aggregated',
+            'data_type': 'combined',
+            'units': 'mixed',
+        })
+        return {
+            'metadata': metadata,
+            'data': self.datasets,
         }
     
     def write_to_json(self, filename: str):

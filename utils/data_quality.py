@@ -176,11 +176,6 @@ VALUE_RANGES = {
         'max': 15000.0,
         'unit': 'MW',
     },
-    'gas_storage_pct': {
-        'min': 0.0,
-        'max': 100.0,
-        'unit': '%',
-    },
 }
 
 # Per-field ranges for weather data (nested dict with multiple fields)
@@ -259,6 +254,29 @@ WEATHER_FIELD_RANGES = {
     # HDD/CDD (degree days)
     'hdd': (0.0, 50.0),
     'cdd': (0.0, 40.0),
+}
+
+# Per-field ranges for GIE gas-storage data. The collector publishes a nested
+# dict per timestamp mixing percent and energy fields; a single 0-100% range
+# (the prior behaviour) false-flags every TWh/GWh value daily (issue #24).
+# EU-aggregate upper bounds: working capacity ~1100 TWh historically;
+# daily injection/withdrawal flows ~3-4 TWh observed peak.
+GAS_STORAGE_FIELD_RANGES = {
+    'fill_level_pct': (0.0, 100.0),
+    'working_capacity_twh': (0.0, 1500.0),
+    'working_gas_volume_twh': (0.0, 1500.0),
+    'injection_gwh': (0.0, 5000.0),
+    'withdrawal_gwh': (0.0, 5000.0),
+    'net_change_gwh': (-5000.0, 5000.0),
+}
+
+# data_type → per-field range registry. When a data_type is registered here,
+# `validate_value_ranges` walks each nested-dict sub-key against its own
+# range instead of applying a single blanket range. Same pattern weather
+# has used since 2026-03; gas_storage joins it via issue #24.
+FIELD_RANGES_BY_TYPE = {
+    'weather': WEATHER_FIELD_RANGES,
+    'gas_storage': GAS_STORAGE_FIELD_RANGES,
 }
 
 # Expected minimum data points per dataset/source for a standard daily collection.
@@ -347,10 +365,10 @@ def validate_value_ranges(
         List of QualityIssue objects
     """
     issues = []
-    use_field_ranges = data_type == 'weather'
-    range_spec = VALUE_RANGES.get(data_type) if not use_field_ranges else None
+    field_ranges = FIELD_RANGES_BY_TYPE.get(data_type)
+    range_spec = VALUE_RANGES.get(data_type) if field_ranges is None else None
 
-    if not use_field_ranges and not range_spec:
+    if field_ranges is None and not range_spec:
         return issues
 
     out_of_range_count = 0
@@ -361,13 +379,13 @@ def validate_value_ranges(
             for sub_key, sub_value in value.items():
                 if not isinstance(sub_value, (int, float)) or sub_value is None:
                     continue
-                if use_field_ranges:
-                    if _check_field_range(sub_key, sub_value, WEATHER_FIELD_RANGES):
+                if field_ranges is not None:
+                    if _check_field_range(sub_key, sub_value, field_ranges):
                         out_of_range_count += 1
                         if len(out_of_range_examples) < 5:
-                            field_range = WEATHER_FIELD_RANGES.get(sub_key, ('?', '?'))
+                            fr = field_ranges.get(sub_key, ('?', '?'))
                             out_of_range_examples.append(
-                                f"{sub_key}={sub_value} (range {field_range[0]}-{field_range[1]})"
+                                f"{sub_key}={sub_value} (range {fr[0]}-{fr[1]})"
                             )
                 elif sub_value < range_spec['min'] or sub_value > range_spec['max']:
                     out_of_range_count += 1
@@ -383,8 +401,9 @@ def validate_value_ranges(
 
     if out_of_range_count > 0:
         severity = Severity.ERROR if out_of_range_count > 3 else Severity.WARNING
-        if use_field_ranges:
-            msg = f"{out_of_range_count} weather field values outside their specific ranges"
+        if field_ranges is not None:
+            msg = (f"{out_of_range_count} {data_type} field values outside "
+                   f"their specific ranges")
         else:
             msg = (f"{out_of_range_count} values outside range "
                    f"[{range_spec['min']}, {range_spec['max']}] {range_spec['unit']}")
@@ -659,18 +678,26 @@ def validate_duplicate_timestamps(
 
 # --- Data type to range mapping for automatic validation ---
 # Maps data_type from metadata to the VALUE_RANGES key to use.
-# 'weather' is special: uses per-field WEATHER_FIELD_RANGES instead.
+# 'weather' and 'gas_storage' are special: self-mapped so validate_value_ranges
+# resolves them via FIELD_RANGES_BY_TYPE (per-field) instead of a blanket range.
 DATA_TYPE_RANGE_MAP = {
     'energy_price': 'energy_price',
     'wind_generation': 'generation_mw',
     'wind_weather': 'wind_speed',
     'solar': 'solar_irradiance',
-    'weather': 'weather',            # Special: uses WEATHER_FIELD_RANGES per-field
+    'weather': 'weather',
     'load': 'load_mw',
     'generation': 'generation_mw',
     'grid_imbalance': 'energy_price',  # Imbalance prices in EUR/MWh
     'cross_border_flows': 'flow_mw',
-    'gas_storage': 'gas_storage_pct',
+    'gas_storage': 'gas_storage',
+}
+
+# Per-dataset staleness threshold overrides (hours). The default 48h applies
+# to most feeds; GIE AGSI+ publishes with a documented 2-3 day lag, so 96h
+# is the right floor before flagging (issue #24).
+STALENESS_OVERRIDES = {
+    'gas_storage': 96,
 }
 
 
@@ -727,7 +754,8 @@ def validate_dataset(
 
     # 4. Staleness check
     checks_run += 1
-    staleness_issues = validate_staleness(dataset.data)
+    max_age_hours = STALENESS_OVERRIDES.get(dataset_name, 48)
+    staleness_issues = validate_staleness(dataset.data, max_age_hours=max_age_hours)
     if staleness_issues:
         checks_failed += 1
         report.issues.extend(staleness_issues)

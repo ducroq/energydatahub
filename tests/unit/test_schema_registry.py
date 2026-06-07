@@ -31,6 +31,7 @@ from utils.schema_registry import (
     get_changelog,
     _migrate_1_to_2,
     _migrate_2_to_2_1,
+    _migrate_2_1_to_2_2,
 )
 from utils.data_types import EnhancedDataSet, CombinedDataSet
 
@@ -204,15 +205,20 @@ class TestMigrateToCurrentFull:
     """Tests for full migration path."""
 
     def test_v1_to_current(self):
-        """v1.0 data should migrate all the way to current."""
+        """v1.0 data should migrate all the way to v2.2."""
         data = {'2024-09-15T00:00:00': 50.5}
         result = migrate_to_current(data, filename='energy_price_forecast.json')
-        assert result['version'] == '2.1'
-        assert 'migrated_data' in result
-        assert result['migrated_data']['metadata']['schema_version'] == '2.1'
+        # v1.0 → v2.0 → v2.1 → v2.2: ends in canonical envelope.
+        # Per-collector sub-metadata is also bumped to '2.2' so consumers
+        # walking the wrap see a consistent version everywhere.
+        assert result['metadata']['schema_version'] == '2.2'
+        assert 'migrated_data' in result['data']
+        assert result['data']['migrated_data']['metadata']['schema_version'] == '2.2'
+        # `migrated_from` records the earliest origin in the chain (1.0 here).
+        assert result['data']['migrated_data']['metadata']['migrated_from'] == '1.0'
 
     def test_v2_to_current(self):
-        """v2.0 data should migrate to current."""
+        """v2.0 flat CombinedDataSet should migrate to v2.2 canonical envelope."""
         data = {
             'version': '2.0',
             'entsoe': {
@@ -221,27 +227,85 @@ class TestMigrateToCurrentFull:
             },
         }
         result = migrate_to_current(data)
-        assert result['version'] == '2.1'
-        assert result['entsoe']['metadata']['schema_version'] == '2.1'
+        assert result['metadata']['schema_version'] == '2.2'
+        assert 'entsoe' in result['data']
+        assert result['data']['entsoe']['metadata']['schema_version'] == '2.2'
 
     def test_current_version_no_migration(self):
-        """Current version data should pass through unchanged."""
+        """v2.2 data should pass through unchanged."""
         data = {
-            'version': '2.1',
-            'entsoe': {
-                'metadata': {'data_type': 'energy_price', 'schema_version': '2.1'},
-                'data': {'2026-01-15T00:00:00+01:00': 50.5},
+            'metadata': {
+                'schema_version': '2.2',
+                'version': '2.0',
+                'source': 'aggregated',
+                'data_type': 'combined',
+                'units': 'mixed',
+            },
+            'data': {
+                'entsoe': {
+                    'metadata': {'data_type': 'energy_price', 'schema_version': '2.2'},
+                    'data': {'2026-01-15T00:00:00+01:00': 50.5},
+                },
             },
         }
         result = migrate_to_current(data)
         assert result is data  # Same object, not modified
 
 
+class TestMigrate2_1To2_2:
+    """Tests for the v2.1 → v2.2 envelope-homogenisation migration (#26)."""
+
+    def test_flat_combined_dataset_is_wrapped(self):
+        """A v2.1 flat CombinedDataSet shape is wrapped in canonical envelope."""
+        data = {
+            'version': '2.0',  # CombinedDataSet internal version
+            'entsoe': {
+                'metadata': {'data_type': 'energy_price', 'schema_version': '2.1'},
+                'data': {'2026-01-15T00:00:00+01:00': 50.5},
+            },
+            'entsoe_de': {
+                'metadata': {'data_type': 'energy_price', 'schema_version': '2.1'},
+                'data': {'2026-01-15T00:00:00+01:00': 60.0},
+            },
+        }
+        result = _migrate_2_1_to_2_2(data)
+        # Top level is now the canonical envelope.
+        assert set(result.keys()) == {'metadata', 'data'}
+        assert result['metadata']['schema_version'] == '2.2'
+        assert result['metadata']['version'] == '2.0'  # preserved
+        assert result['metadata']['migrated_from'] == '2.1'
+        # Per-collector sub-datasets live under `data`.
+        assert set(result['data'].keys()) == {'entsoe', 'entsoe_de'}
+
+    def test_standalone_enhanced_dataset_just_bumps(self):
+        """Standalone EnhancedDataSet is already canonical — just bump the stamp."""
+        data = {
+            'metadata': {'data_type': 'weather', 'schema_version': '2.1'},
+            'data': {'2026-01-15T00:00:00+01:00': {'temp': 5.0}},
+        }
+        result = _migrate_2_1_to_2_2(data)
+        assert result['metadata']['schema_version'] == '2.2'
+        assert result['metadata']['migrated_from'] == '2.1'
+        # data section unchanged
+        assert result['data'] == {'2026-01-15T00:00:00+01:00': {'temp': 5.0}}
+
+    def test_already_v2_2_passthrough(self):
+        """A file already in v2.2 envelope should not be re-wrapped."""
+        data = {
+            'metadata': {'schema_version': '2.2', 'source': 'aggregated'},
+            'data': {'entsoe': {'metadata': {}, 'data': {}}},
+        }
+        result = _migrate_2_1_to_2_2(data)
+        # Stamp gets re-applied (idempotent) but shape stays the same.
+        assert result['metadata']['schema_version'] == '2.2'
+        assert 'entsoe' in result['data']
+
+
 class TestReadJsonFile:
     """Tests for read_json_file with actual files."""
 
     def test_read_v2_file(self):
-        """Should read a v2.0 file and migrate to current."""
+        """Should read a v2.0 file and migrate to current (v2.2)."""
         data = {
             'version': '2.0',
             'entsoe': {
@@ -257,8 +321,10 @@ class TestReadJsonFile:
 
         try:
             result = read_json_file(tmppath)
-            assert result['version'] == '2.1'
-            assert result['entsoe']['metadata']['schema_version'] == '2.1'
+            # After migration to v2.2 the file lives in the canonical envelope.
+            assert result['metadata']['schema_version'] == '2.2'
+            assert result['data']['entsoe']['metadata']['schema_version'] == '2.2'
+            assert result['metadata']['migrated_from'] == '2.1'
         finally:
             os.unlink(tmppath)
 
@@ -331,7 +397,8 @@ class TestCombinedDataSetIntegration:
     """Tests that CombinedDataSet works with versioned datasets."""
 
     def test_combined_preserves_versions(self):
-        """Datasets added to CombinedDataSet should keep their schema_version."""
+        """Datasets added to CombinedDataSet should keep their schema_version
+        once #26 moved the per-collector wraps under the top-level `data` key."""
         combined = CombinedDataSet()
         ds = EnhancedDataSet(
             metadata={'data_type': 'energy_price', 'source': 'test', 'units': 'EUR/MWh'},
@@ -339,7 +406,9 @@ class TestCombinedDataSetIntegration:
         )
         combined.add_dataset('test', ds)
         d = combined.to_dict()
-        assert d['test']['metadata']['schema_version'] == CURRENT_SCHEMA_VERSION
+        assert d['data']['test']['metadata']['schema_version'] == CURRENT_SCHEMA_VERSION
+        # Envelope itself is also schema-stamped.
+        assert d['metadata']['schema_version'] == CURRENT_SCHEMA_VERSION
 
 
 class TestGetters:

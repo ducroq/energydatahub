@@ -204,7 +204,7 @@ class TestCombinedDataSet:
         assert len(combined.datasets) == 0
 
     def test_to_dict(self):
-        """Test conversion to dictionary."""
+        """to_dict wraps datasets in the canonical {metadata, data} envelope (#26)."""
         combined = CombinedDataSet()
 
         metadata = {'data_type': 'energy_price'}
@@ -215,9 +215,13 @@ class TestCombinedDataSet:
 
         result = combined.to_dict()
 
-        assert 'test_source' in result
-        assert 'metadata' in result['test_source']
-        assert 'data' in result['test_source']
+        # Top level is the canonical envelope.
+        assert set(result.keys()) == {'metadata', 'data'}
+        assert isinstance(result['metadata'], dict)
+        # Per-collector sub-datasets still carry their own {metadata, data}.
+        assert 'test_source' in result['data']
+        assert 'metadata' in result['data']['test_source']
+        assert 'data' in result['data']['test_source']
 
     def test_write_to_json(self, tmp_path):
         """Test writing combined dataset to JSON."""
@@ -239,8 +243,14 @@ class TestCombinedDataSet:
         with open(file_path, 'r') as f:
             loaded = json.load(f)
 
-        assert 'test_source' in loaded
-        assert loaded['test_source']['metadata'] == metadata
+        # Canonical envelope on disk
+        assert set(loaded.keys()) == {'metadata', 'data'}
+        assert 'test_source' in loaded['data']
+        # The per-collector metadata is preserved (with the stamp_metadata
+        # schema_version added) inside the wrap.
+        loaded_meta = loaded['data']['test_source']['metadata']
+        assert loaded_meta['data_type'] == 'energy_price'
+        assert loaded_meta['source'] == 'Test'
 
     def test_bool_evaluation_empty(self):
         """Test boolean evaluation with empty dataset."""
@@ -286,14 +296,15 @@ class TestCombinedDataSet:
 
         result = combined.to_dict()
 
-        # to_dict() includes 'version' field, so len is 3 (version + 2 datasets)
-        assert len(result) == 3
-        assert 'version' in result
-        assert result['version'] == '2.0'
-        assert 'energy' in result
-        assert 'weather' in result
-        assert result['energy']['metadata']['data_type'] == 'energy_price'
-        assert result['weather']['metadata']['data_type'] == 'weather'
+        # Canonical envelope (#26): top level only exposes metadata + data.
+        assert set(result.keys()) == {'metadata', 'data'}
+        # The CombinedDataSet version is preserved inside metadata.
+        assert result['metadata']['version'] == '2.0'
+        # Per-collector sub-datasets live under `data`.
+        assert 'energy' in result['data']
+        assert 'weather' in result['data']
+        assert result['data']['energy']['metadata']['data_type'] == 'energy_price'
+        assert result['data']['weather']['metadata']['data_type'] == 'weather'
 
 
 class TestDataTypeEdgeCases:

@@ -250,16 +250,31 @@ def validate_data_timestamps(data: Dict[str, Any]) -> tuple[bool, list]:
                 if value and any(is_timestamp_like(k) for k in value.keys()):
                     validate_timestamps_recursive(value, source_name, f"{full_key}/")
 
-    for source_name, source_data in data.items():
-        # Skip version and other metadata fields
-        if source_name == 'version' or not isinstance(source_data, dict):
-            continue
+    # Resolve the per-source sections regardless of envelope shape:
+    #   - Wrapped CombinedDataSet (#26): {metadata, data: {src: {metadata, data}}}
+    #   - Legacy flat CombinedDataSet:    {version, src: {metadata, data}}
+    #   - Standalone EnhancedDataSet:     {metadata, data: {timestamp: value}}
+    sections = []
+    inner = data.get('data') if isinstance(data, dict) else None
+    if (isinstance(data.get('metadata'), dict) and isinstance(inner, dict)
+            and inner
+            and all(isinstance(v, dict) and 'data' in v for v in inner.values())):
+        # Wrapped multi-collector envelope
+        for src, section in inner.items():
+            sections.append((src, section))
+    elif isinstance(data.get('metadata'), dict) and isinstance(inner, dict):
+        # Standalone EnhancedDataSet — the envelope itself is the one section
+        sections.append(('', data))
+    else:
+        # Legacy flat shape
+        for src, section in data.items():
+            if src == 'version' or not isinstance(section, dict):
+                continue
+            sections.append((src, section))
 
-        # Check if this source has a 'data' dict with timestamps
+    for source_name, source_data in sections:
         if 'data' not in source_data:
             continue
-
-        # Validate timestamps (handles both flat and nested structures)
         validate_timestamps_recursive(source_data['data'], source_name)
 
     is_valid = len(malformed_timestamps) == 0

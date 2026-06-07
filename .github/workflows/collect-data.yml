@@ -44,6 +44,30 @@ jobs:
 
       run: python data_fetcher.py
 
+    # Soft tripwire: warn (don't fail) when an expected output JSON is missing.
+    # Surfaces silent collector dropouts in the Actions run summary without
+    # blocking publish — the hard gate is the next step. Always runs so we
+    # still get visibility when a later step fails.
+    - name: Verify expected output files
+      if: always()
+      run: |
+        expected=(
+          energy_price_forecast weather_forecast_multi_location weather_forecast_buurt
+          grid_imbalance wind_forecast ned_production solar_forecast solar_forecast_buurt
+          demand_weather_forecast air_quality_buurt cross_border_flows load_forecast
+          generation_forecast generation_mix calendar_features market_proxies
+          market_history gas_storage gas_flows
+        )
+        missing=0
+        for f in "${expected[@]}"; do
+          if [ ! -f "data/${f}.json" ]; then
+            echo "::warning::MISSING: data/${f}.json"
+            missing=$((missing + 1))
+          fi
+        done
+        present=$(( ${#expected[@]} - missing ))
+        echo "Data completeness: ${present}/${#expected[@]} files present"
+
     # Defensive: fail the workflow loudly if data_quality_report flags any
     # dataset as `critical`. Added 2026-06-05 after the GoogleWeatherCollector
     # silent-failure incident (7 months of `API_KEY_INVALID` while the

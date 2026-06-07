@@ -21,6 +21,9 @@ Schema Version History:
           CombinedDataSet with version field, normalized timestamps.
     2.1 - Added DST features to calendar_features, added data_quality_report.json,
           added schema_version to all metadata. (Mar 2026)
+    2.2 - Homogenised strategic-feed envelope: energy_price_forecast and
+          wind_forecast wrapped in canonical {metadata, data} (was flat
+          {version, src1, src2, ...}). Sibling to PR #20 buurt-air. (Jun 2026)
 """
 
 import json
@@ -31,7 +34,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # Current schema version
-CURRENT_SCHEMA_VERSION = "2.1"
+CURRENT_SCHEMA_VERSION = "2.2"
 
 # Schema changelog - documents what changed in each version
 SCHEMA_CHANGELOG = {
@@ -64,6 +67,17 @@ SCHEMA_CHANGELOG = {
             "Added DST features to calendar_features (is_dst, is_dst_transition_day, dst_utc_offset_hours)",
             "Added data_quality_report.json output",
             "Added schema_registry for backward-compatible reading",
+        ],
+    },
+    "2.2": {
+        "date": "2026-06-07",
+        "description": "Strategic-feed envelope homogenisation (issue #26)",
+        "changes": [
+            "CombinedDataSet.to_dict() now wraps in canonical {metadata, data}",
+            "energy_price_forecast.json moved per-collector keys under top-level `data`",
+            "wind_forecast.json moved per-collector keys under top-level `data`",
+            "Sibling to PR #20 buurt-air envelope homogenisation",
+            "Breaking for consumers reading payload['entsoe'] etc. — use payload['data']['entsoe']",
         ],
     },
 }
@@ -228,10 +242,66 @@ def _migrate_2_to_2_1(data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
+def _migrate_2_1_to_2_2(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Migrate v2.1 data to v2.2 format.
+
+    v2.1 CombinedDataSet files were `{version, src1: {metadata, data}, ...}`.
+    v2.2 wraps them as `{metadata, data: {src1: {metadata, data}, ...}}`.
+    Standalone EnhancedDataSet files (already `{metadata, data}`) just need
+    their `schema_version` bumped.
+
+    Args:
+        data: v2.1 format data
+
+    Returns:
+        Data in v2.2 format
+    """
+    # Standalone EnhancedDataSet: already canonical, just bump the stamp.
+    if (isinstance(data.get('metadata'), dict) and 'data' in data
+            and 'version' not in data):
+        data['metadata']['schema_version'] = '2.2'
+        data['metadata'].setdefault('migrated_from', '2.1')
+        return data
+
+    # Legacy flat CombinedDataSet: extract per-source datasets, wrap in
+    # canonical envelope. The top-level `version` field carried the
+    # CombinedDataSet format version (typically "2.0"); preserve it inside
+    # the new metadata for downstream parity with freshly-produced files.
+    if 'version' in data:
+        version_val = data.pop('version', '2.0')
+        sources = {
+            k: v for k, v in data.items()
+            if isinstance(v, dict) and 'metadata' in v and 'data' in v
+        }
+        # Bump each per-collector metadata to v2.2 too, so consumers walking
+        # `data['<source>']['metadata']['schema_version']` see the same
+        # version as the envelope. Mirrors what stamp_metadata produces for
+        # freshly-stamped CombinedDataSet output.
+        for sub in sources.values():
+            sub['metadata']['schema_version'] = '2.2'
+            sub['metadata'].setdefault('migrated_from', '2.1')
+        return {
+            'metadata': {
+                'schema_version': '2.2',
+                'version': version_val,
+                'source': 'aggregated',
+                'data_type': 'combined',
+                'units': 'mixed',
+                'migrated_from': '2.1',
+            },
+            'data': sources,
+        }
+
+    # Unrecognised shape — no-op, return as-is.
+    return data
+
+
 # Migration path: ordered list of (from_version, to_version, migration_func)
 MIGRATIONS = [
     ('1.0', '2.0', _migrate_1_to_2),
     ('2.0', '2.1', _migrate_2_to_2_1),
+    ('2.1', '2.2', _migrate_2_1_to_2_2),
 ]
 
 
