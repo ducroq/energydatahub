@@ -39,7 +39,7 @@
   - `ned_production`, `market_history` — completeness < 50%
   - `market_proxies` — staleness timestamp format issue
   - `grid_imbalance` (TenneT) — 422→429 cascade (#25)
-- **Open issues**: 9 total. Recent: #24 (gas_storage validator), #25 (TenneT cascade). Older: #2/#3/#4 (collector additions), #9 (storage migration).
+- **Open issues**: 10 total. Recent (this session): #24 (gas_storage validator), #25 (TenneT cascade), #26 (strategic-feeds envelope inconsistency — sibling of #17). Other recent: #21 (Liander dataset watcher — feature suggestion). Older: #2/#3/#4 (collector additions), #9 (storage migration), #13/#14 (Luchtmeetnet — likely auto-close on next sync).
 
 ## Active Decisions
 
@@ -48,3 +48,4 @@
 - Time resolution: store each source at native resolution, defer alignment to consumers — see [ADR-001](../docs/decisions/ADR-001-time-resolution-strategy.md)
 - In-repo memory (this file + topic files) over auto-memory, per agent-ready-projects ADR-001
 - OpenMeteo `OPENMETEO_SEMAPHORE_CAP` = collector count (not lower) — empirically required to avoid Open-Meteo's CDN per-source cooldown affecting late-scheduled collectors. See `collectors/_openmeteo_shared.py` docstring.
+- **Multi-collector concurrent upstream pattern**: when adding a new collector that hits an API already used by other collectors, assume the upstream applies per-source rate-limits, CDN cooldowns, or "no data" 4xx responses that look like transients. Five incidents in `memory/gotcha-log.md` (ENTSO-E 503 cascade, Luchtmeetnet 429, Open-Meteo 429 storm, Open-Meteo CDN cooldown timeout, TenneT 422→429) all share the same shape. Default prescription: (1) shared semaphore cap ≥ collector count, (2) per-location retry with exponential backoff, (3) classify non-retryable HTTP statuses (422/400/401/403/404) at the collector level instead of letting BaseCollector retry them. See `collectors/_openmeteo_shared.py` for the canonical implementation.

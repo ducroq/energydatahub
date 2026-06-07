@@ -40,6 +40,8 @@ collectors/
   base.py                    # BaseCollector ABC: retry, circuit breaker, validation
   _openmeteo_shared.py       # Shared Semaphore + per-location retry/backoff for OpenMeteo*
   entsoe*.py                 # ENTSO-E family (prices, wind, flows, load, generation)
+  energyzero.py / epex.py / elspot.py  # Day-ahead price collectors (NL/EU)
+  tennet.py                  # TenneT TSO (imbalance prices, grid balance)
   ned.py                     # NED.nl Dutch production
   market_proxies.py          # Carbon EUA + gas TTF prices
   openmeteo_weather.py       # Strategic + demand + buurt weather (replaces Google Weather)
@@ -48,7 +50,7 @@ collectors/
   luchtmeetnet.py            # Air quality (RIVM stations), buurt-level
   gie_storage.py             # Gas storage levels
   entsog_flows.py            # Gas pipeline flows
-  googleweather.py           # RETIRED 2026-06-05 — kept for cold revert only
+  googleweather.py / openweather.py / meteoserver.py  # RETIRED — kept for cold revert
 utils/
   data_types.py              # EnhancedDataSet, CombinedDataSet
   data_quality.py            # FMEA validation framework
