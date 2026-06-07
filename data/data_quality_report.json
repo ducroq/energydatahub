@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-06-05T17:49:25.796692+00:00",
+  "timestamp": "2026-06-07T07:32:49.101698+00:00",
   "overall_status": "error",
   "total_issues": 7,
-  "datasets_collected": 20,
+  "datasets_collected": 21,
   "datasets_missing": [],
   "dataset_reports": [
     {
@@ -10,7 +10,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -30,7 +30,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -40,7 +40,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 47,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -76,11 +76,21 @@
       "issues": []
     },
     {
+      "dataset_name": "solar_forecast_buurt",
+      "data_type": "solar_irradiance",
+      "source": "Open-Meteo API (free)",
+      "status": "info",
+      "data_points": 768,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
       "dataset_name": "wind_forecast",
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 624,
+      "data_points": 312,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -130,7 +140,7 @@
       "data_type": "load_forecast",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 384,
+      "data_points": 288,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -140,7 +150,7 @@
       "data_type": "generation_by_type",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 36,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -239,21 +249,21 @@
           "details": {
             "count": 24,
             "examples": [
-              "2026-05-27T00:00:00+02:00/injection_gwh: 458.66",
-              "2026-05-27T00:00:00+02:00/net_change_gwh: 441.66",
-              "2026-05-27T00:00:00+02:00/working_gas_volume_twh: 143.7945",
-              "2026-05-28T00:00:00+02:00/injection_gwh: 412.49",
-              "2026-05-28T00:00:00+02:00/net_change_gwh: 380.59000000000003"
+              "2026-05-29T00:00:00+02:00/injection_gwh: 385.08",
+              "2026-05-29T00:00:00+02:00/net_change_gwh: 377.18",
+              "2026-05-29T00:00:00+02:00/working_gas_volume_twh: 143.7945",
+              "2026-05-30T00:00:00+02:00/injection_gwh: 399.75",
+              "2026-05-30T00:00:00+02:00/net_change_gwh: 369.05"
             ]
           }
         },
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 67.8h old (threshold: 48h)",
+          "message": "Newest data is 57.5h old (threshold: 48h)",
           "details": {
-            "newest_timestamp": "2026-06-03T00:00:00+02:00",
-            "age_hours": 67.8,
+            "newest_timestamp": "2026-06-05T00:00:00+02:00",
+            "age_hours": 57.5,
             "threshold_hours": 48
           }
         }
