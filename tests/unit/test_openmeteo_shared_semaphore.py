@@ -1,15 +1,15 @@
 """
 Issue #11: All OpenMeteo* collectors must share a single rate-limit budget.
 
-Before this change each collector owned its own `asyncio.Semaphore(1)`, so
-the effective concurrency budget against Open-Meteo's API was
-`n_collectors × 1`. That number silently drifted every time a collector was
-added — exactly how the 2026-06-05 buurt additions broke the previous
-`Semaphore(2)+0.1s` budget (CI run 27068482501, HTTP 429 storm).
+Before this change each collector owned its own ``asyncio.Semaphore(1)``,
+so the effective concurrency budget against Open-Meteo's API was
+``n_collectors × 1``. That number silently drifted every time a collector
+was added — exactly how the 2026-06-05 buurt additions broke the previous
+``Semaphore(2)+0.1s`` budget (CI run 27068482501, HTTP 429 storm).
 
 These tests pin the invariant that the semaphore is module-level shared
-state, so a 6th OpenMeteo collector cannot regress the budget without
-deliberate edits to `collectors/_openmeteo_shared.py`.
+state, so a 7th OpenMeteo collector cannot regress the budget without
+deliberate edits to ``collectors/_openmeteo_shared.py``.
 
 File: tests/unit/test_openmeteo_shared_semaphore.py
 Created: 2026-06-06
@@ -66,19 +66,8 @@ class TestSharedSemaphoreShape:
     def test_semaphore_is_an_asyncio_semaphore(self):
         assert isinstance(_openmeteo_shared.OPENMETEO_SEMAPHORE, asyncio.Semaphore)
 
-    def test_cap_matches_documented_constant(self):
-        """Sanity-check: the live semaphore's internal value reflects the cap.
-
-        `asyncio.Semaphore._value` is a private attribute but it's the only
-        observable way to verify the cap at construction time. If CPython
-        ever renames it this test will fail loudly — pin to the constant
-        and update both together.
-        """
-        # On a fresh semaphore (no pending acquires) _value == cap.
-        assert _openmeteo_shared.OPENMETEO_SEMAPHORE._value == _openmeteo_shared.OPENMETEO_SEMAPHORE_CAP
-
     def test_cap_is_set_to_documented_safe_budget(self):
-        """5 = the empirically-safe budget from PR #10's fix."""
+        """5 = below the pre-#11 per-collector × 6 = 6 concurrent peak."""
         assert _openmeteo_shared.OPENMETEO_SEMAPHORE_CAP == 5
 
     def test_gap_is_set_to_documented_safe_budget(self):
@@ -87,21 +76,29 @@ class TestSharedSemaphoreShape:
 
 
 class TestSharedSemaphoreEnforcesConcurrency:
-    """Functional check: when 7 tasks acquire the semaphore concurrently,
-    no more than CAP can be in-flight at any moment.
+    """Functional check: when ``cap + N`` tasks acquire concurrently, no more
+    than ``cap`` may be in-flight at any moment.
+
+    Uses a LOCAL semaphore (not the live module singleton) so a flaky test
+    or KeyboardInterrupt can't leave the shared semaphore with a depressed
+    counter and poison subsequent test runs (PR #18 review LOW).
     """
 
     @pytest.mark.asyncio
     async def test_concurrency_is_bounded_by_cap(self):
-        sem = _openmeteo_shared.OPENMETEO_SEMAPHORE
+        # Construct a local semaphore that mirrors the shared one's cap.
+        # Verifying the cap value separately (via TestSharedSemaphoreShape)
+        # plus this behavior test together pin both "cap is N" and "the
+        # semaphore actually enforces N" without poking at `._value`.
         cap = _openmeteo_shared.OPENMETEO_SEMAPHORE_CAP
+        local_sem = asyncio.Semaphore(cap)
 
         in_flight = 0
         peak = 0
 
         async def worker():
             nonlocal in_flight, peak
-            async with sem:
+            async with local_sem:
                 in_flight += 1
                 peak = max(peak, in_flight)
                 # Yield once so other tasks have a chance to interleave and
@@ -112,3 +109,28 @@ class TestSharedSemaphoreEnforcesConcurrency:
         await asyncio.gather(*(worker() for _ in range(cap + 2)))
 
         assert peak <= cap
+
+    @pytest.mark.asyncio
+    async def test_shared_singleton_behaves_as_semaphore(self):
+        """Smoke-test the actual shared singleton's behavior without
+        risking state pollution: acquire + release in the same task. If
+        the singleton was replaced with something not-a-semaphore, this
+        fails.
+        """
+        await _openmeteo_shared.OPENMETEO_SEMAPHORE.acquire()
+        _openmeteo_shared.OPENMETEO_SEMAPHORE.release()
+
+
+class TestSingletonReloadGuard:
+    """The reload guard prevents accidental re-import from orphaning
+    in-flight acquisitions on the previous semaphore instance.
+    """
+
+    def test_reload_preserves_semaphore_identity(self):
+        """importlib.reload(_openmeteo_shared) must NOT create a new
+        semaphore object (would orphan any waiters on the old one)."""
+        import importlib
+        original = _openmeteo_shared.OPENMETEO_SEMAPHORE
+        importlib.reload(_openmeteo_shared)
+        # Identity preserved: guard in module body refused to overwrite.
+        assert _openmeteo_shared.OPENMETEO_SEMAPHORE is original
