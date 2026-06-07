@@ -24,6 +24,10 @@ Schema Version History:
     2.2 - Homogenised strategic-feed envelope: energy_price_forecast and
           wind_forecast wrapped in canonical {metadata, data} (was flat
           {version, src1, src2, ...}). Sibling to PR #20 buurt-air. (Jun 2026)
+    2.3 - Renamed gas_storage field `working_capacity_twh` → `gas_in_storage_twh`
+          for semantic accuracy (it always held the current stored volume,
+          not the working capacity). Tightened gas_storage range validators
+          based on observed NL distributions. (Jun 2026)
 """
 
 import json
@@ -34,7 +38,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # Current schema version
-CURRENT_SCHEMA_VERSION = "2.2"
+CURRENT_SCHEMA_VERSION = "2.3"
 
 # Schema changelog - documents what changed in each version
 SCHEMA_CHANGELOG = {
@@ -78,6 +82,17 @@ SCHEMA_CHANGELOG = {
             "wind_forecast.json moved per-collector keys under top-level `data`",
             "Sibling to PR #20 buurt-air envelope homogenisation",
             "Breaking for consumers reading payload['entsoe'] etc. — use payload['data']['entsoe']",
+        ],
+    },
+    "2.3": {
+        "date": "2026-06-07",
+        "description": "gas_storage field rename + range tightening (reviewer hotfix)",
+        "changes": [
+            "gas_storage field `working_capacity_twh` renamed to `gas_in_storage_twh`",
+            "  (semantic fix: the field always held current stored volume, not capacity)",
+            "GAS_STORAGE_FIELD_RANGES tightened to NL-realistic bounds (was ~10-26x loose)",
+            "data_quality.py comment corrected from EU-aggregate to NL-only scope",
+            "Auto-migrates historical v2.x gas_storage files via _migrate_2_2_to_2_3",
         ],
     },
 }
@@ -297,11 +312,62 @@ def _migrate_2_1_to_2_2(data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
+def _migrate_2_2_to_2_3(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Migrate v2.2 data to v2.3 format.
+
+    Renames the gas_storage field `working_capacity_twh` to `gas_in_storage_twh`
+    inside the nested per-timestamp payloads. Other dataset types are unaffected
+    (the rename is scoped to gas_storage by checking data_type in metadata).
+
+    Args:
+        data: v2.2 format data
+
+    Returns:
+        Data in v2.3 format (renamed in place + version bumped)
+    """
+    def _rename_in_section(section: Dict[str, Any]) -> None:
+        """Rename the gas_storage field inside one {metadata, data} section."""
+        meta = section.get('metadata') if isinstance(section, dict) else None
+        if not isinstance(meta, dict):
+            return
+        if meta.get('data_type') != 'gas_storage':
+            return
+        inner = section.get('data')
+        if not isinstance(inner, dict):
+            return
+        for ts_key, point in inner.items():
+            if isinstance(point, dict) and 'working_capacity_twh' in point:
+                point['gas_in_storage_twh'] = point.pop('working_capacity_twh')
+        meta['schema_version'] = '2.3'
+        meta.setdefault('migrated_from', '2.2')
+
+    # Canonical envelope: {metadata, data: {src: {metadata, data}}}
+    if (isinstance(data.get('metadata'), dict)
+            and isinstance(data.get('data'), dict)):
+        # Standalone EnhancedDataSet (gas_storage published this way)
+        _rename_in_section(data)
+        # Multi-collector wrap: walk each per-collector section too
+        for sub in data['data'].values():
+            if isinstance(sub, dict) and 'metadata' in sub and 'data' in sub:
+                _rename_in_section(sub)
+        # Bump envelope stamp regardless of whether any rename hit
+        data['metadata']['schema_version'] = '2.3'
+        return data
+
+    # Legacy flat (shouldn't appear at v2.2, but be defensive)
+    for key, section in data.items():
+        if isinstance(section, dict) and 'metadata' in section and 'data' in section:
+            _rename_in_section(section)
+    return data
+
+
 # Migration path: ordered list of (from_version, to_version, migration_func)
 MIGRATIONS = [
     ('1.0', '2.0', _migrate_1_to_2),
     ('2.0', '2.1', _migrate_2_to_2_1),
     ('2.1', '2.2', _migrate_2_1_to_2_2),
+    ('2.2', '2.3', _migrate_2_2_to_2_3),
 ]
 
 

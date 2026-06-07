@@ -109,7 +109,7 @@ class TestGieStorageCollector:
         first_data = parsed[first_timestamp]
 
         assert 'fill_level_pct' in first_data
-        assert 'working_capacity_twh' in first_data
+        assert 'gas_in_storage_twh' in first_data
         assert 'injection_gwh' in first_data
         assert 'withdrawal_gwh' in first_data
         assert 'net_change_gwh' in first_data
@@ -190,12 +190,12 @@ class TestGieStorageCollector:
         valid_data = {
             '2025-01-15T00:00:00+01:00': {
                 'fill_level_pct': 72.5,
-                'working_capacity_twh': 145.2,
+                'gas_in_storage_twh': 41.2,
                 'withdrawal_gwh': 892
             },
             '2025-01-16T00:00:00+01:00': {
                 'fill_level_pct': 71.8,
-                'working_capacity_twh': 143.8,
+                'gas_in_storage_twh': 40.9,
                 'withdrawal_gwh': 950
             }
         }
@@ -251,7 +251,7 @@ class TestGieStorageCollector:
 
         data_without_fill = {
             '2025-01-15T00:00:00+01:00': {
-                'working_capacity_twh': 145.2,
+                'gas_in_storage_twh': 41.2,
             }
         }
 

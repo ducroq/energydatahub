@@ -170,9 +170,11 @@ Google Weather API doesn't support open-sea coordinates (returns 404 errors). Op
 - Low storage levels indicate supply constraints → higher gas & electricity prices
 - Import/export flows affect local gas availability and prices
 
-**GIE AGSI+ Variables**:
+**GIE AGSI+ Variables** (NL country code):
 - `fill_level_pct`: Storage utilization (0-100%)
-- `working_capacity_twh`: Gas in storage (TWh)
+- `gas_in_storage_twh`: Current gas stored (TWh, varies 6-56 for NL) — renamed from
+  the inaccurate `working_capacity_twh` on 2026-06-07 (schema v2.3)
+- `working_gas_volume_twh`: Infrastructure working capacity (TWh, ~144 fixed for NL)
 - `injection_gwh` / `withdrawal_gwh`: Daily flow rates
 - `net_change_gwh`: Injection - withdrawal (positive = filling)
 

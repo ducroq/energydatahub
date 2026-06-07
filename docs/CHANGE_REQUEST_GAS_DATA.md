@@ -63,13 +63,18 @@ df = client.query_gas_storage("NL", start="2025-01-01", end="2025-01-19")
   "data": {
     "2025-01-19T00:00:00+01:00": {
       "fill_level_pct": 72.5,
-      "working_capacity_twh": 145.2,
+      "gas_in_storage_twh": 41.2,
       "injection_gwh": 0,
       "withdrawal_gwh": 892
     }
   }
 }
 ```
+
+> **Note (2026-06-07, schema v2.3)**: `working_capacity_twh` was renamed to
+> `gas_in_storage_twh` because the field always held the current stored
+> volume, not the working capacity. Historical files are auto-migrated on
+> read via `read_json_file`.
 
 **Resources**:
 - API Docs: https://www.gie.eu/transparency-platform/GIE_API_documentation_v006.pdf

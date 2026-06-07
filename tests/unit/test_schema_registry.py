@@ -32,6 +32,7 @@ from utils.schema_registry import (
     _migrate_1_to_2,
     _migrate_2_to_2_1,
     _migrate_2_1_to_2_2,
+    _migrate_2_2_to_2_3,
 )
 from utils.data_types import EnhancedDataSet, CombinedDataSet
 
@@ -205,20 +206,18 @@ class TestMigrateToCurrentFull:
     """Tests for full migration path."""
 
     def test_v1_to_current(self):
-        """v1.0 data should migrate all the way to v2.2."""
+        """v1.0 data should migrate all the way to CURRENT (v2.3)."""
         data = {'2024-09-15T00:00:00': 50.5}
         result = migrate_to_current(data, filename='energy_price_forecast.json')
-        # v1.0 → v2.0 → v2.1 → v2.2: ends in canonical envelope.
-        # Per-collector sub-metadata is also bumped to '2.2' so consumers
-        # walking the wrap see a consistent version everywhere.
-        assert result['metadata']['schema_version'] == '2.2'
+        # v1.0 → v2.0 → v2.1 → v2.2 → v2.3. Non-gas_storage payloads are
+        # untouched by 2.2→2.3 except for the envelope stamp.
+        assert result['metadata']['schema_version'] == CURRENT_SCHEMA_VERSION
         assert 'migrated_data' in result['data']
-        assert result['data']['migrated_data']['metadata']['schema_version'] == '2.2'
         # `migrated_from` records the earliest origin in the chain (1.0 here).
         assert result['data']['migrated_data']['metadata']['migrated_from'] == '1.0'
 
     def test_v2_to_current(self):
-        """v2.0 flat CombinedDataSet should migrate to v2.2 canonical envelope."""
+        """v2.0 flat CombinedDataSet should migrate to CURRENT canonical envelope."""
         data = {
             'version': '2.0',
             'entsoe': {
@@ -227,9 +226,8 @@ class TestMigrateToCurrentFull:
             },
         }
         result = migrate_to_current(data)
-        assert result['metadata']['schema_version'] == '2.2'
+        assert result['metadata']['schema_version'] == CURRENT_SCHEMA_VERSION
         assert 'entsoe' in result['data']
-        assert result['data']['entsoe']['metadata']['schema_version'] == '2.2'
 
     def test_current_version_no_migration(self):
         """v2.2 data should pass through unchanged."""
@@ -301,6 +299,73 @@ class TestMigrate2_1To2_2:
         assert 'entsoe' in result['data']
 
 
+class TestMigrate2_2To2_3:
+    """Tests for the v2.2 → v2.3 gas_storage field-rename migration (reviewer hotfix)."""
+
+    def test_gas_storage_field_renamed_in_standalone(self):
+        """Standalone gas_storage EnhancedDataSet: field is renamed in nested data."""
+        data = {
+            'metadata': {
+                'data_type': 'gas_storage',
+                'source': 'GIE AGSI+',
+                'schema_version': '2.2',
+            },
+            'data': {
+                '2026-05-29T00:00:00+02:00': {
+                    'fill_level_pct': 15.24,
+                    'working_capacity_twh': 21.9185,  # OLD field name
+                    'injection_gwh': 385.08,
+                },
+            },
+        }
+        result = _migrate_2_2_to_2_3(data)
+        point = result['data']['2026-05-29T00:00:00+02:00']
+        assert 'working_capacity_twh' not in point
+        assert point['gas_in_storage_twh'] == 21.9185
+        assert result['metadata']['schema_version'] == '2.3'
+        assert result['metadata']['migrated_from'] == '2.2'
+
+    def test_non_gas_storage_untouched(self):
+        """Energy-price payloads must NOT have their fields renamed."""
+        data = {
+            'metadata': {
+                'data_type': 'energy_price',
+                'source': 'ENTSO-E',
+                'schema_version': '2.2',
+            },
+            'data': {
+                '2026-05-29T00:00:00+02:00': 50.5,
+            },
+        }
+        result = _migrate_2_2_to_2_3(data)
+        # data is untouched; only envelope schema_version is bumped.
+        assert result['data'] == {'2026-05-29T00:00:00+02:00': 50.5}
+        assert result['metadata']['schema_version'] == '2.3'
+
+    def test_gas_storage_inside_combined_wrap(self):
+        """If gas_storage ever appears inside a CombinedDataSet wrap, rename
+        reaches into the sub-dataset too."""
+        data = {
+            'metadata': {'schema_version': '2.2', 'source': 'aggregated'},
+            'data': {
+                'gie': {
+                    'metadata': {'data_type': 'gas_storage'},
+                    'data': {
+                        '2026-05-29T00:00:00+02:00': {
+                            'working_capacity_twh': 22.0,
+                            'fill_level_pct': 15.0,
+                        },
+                    },
+                },
+            },
+        }
+        result = _migrate_2_2_to_2_3(data)
+        sub_point = result['data']['gie']['data']['2026-05-29T00:00:00+02:00']
+        assert 'gas_in_storage_twh' in sub_point
+        assert sub_point['gas_in_storage_twh'] == 22.0
+        assert 'working_capacity_twh' not in sub_point
+
+
 class TestReadJsonFile:
     """Tests for read_json_file with actual files."""
 
@@ -321,9 +386,9 @@ class TestReadJsonFile:
 
         try:
             result = read_json_file(tmppath)
-            # After migration to v2.2 the file lives in the canonical envelope.
-            assert result['metadata']['schema_version'] == '2.2'
-            assert result['data']['entsoe']['metadata']['schema_version'] == '2.2'
+            # After migration to CURRENT, file lives in canonical envelope.
+            assert result['metadata']['schema_version'] == CURRENT_SCHEMA_VERSION
+            # `migrated_from` records the earliest origin in the chain.
             assert result['metadata']['migrated_from'] == '2.1'
         finally:
             os.unlink(tmppath)

@@ -227,11 +227,15 @@ class GieStorageCollector(BaseCollector):
                 if fill_pct is not None:
                     data_point['fill_level_pct'] = float(fill_pct)
 
-            # Working gas volume (TWh)
+            # Current gas in storage (TWh) — the variable amount actually
+            # stored right now. Pre-2026-06-07 this was mislabeled
+            # `working_capacity_twh`; renamed for semantic accuracy and
+            # to disambiguate from `working_gas_volume_twh` below (which
+            # is the fixed infrastructure capacity).
             if 'gasInStorage' in raw_data.columns:
                 gas_twh = row.get('gasInStorage')
                 if gas_twh is not None:
-                    data_point['working_capacity_twh'] = float(gas_twh)
+                    data_point['gas_in_storage_twh'] = float(gas_twh)
 
             # Injection rate (GWh/day)
             if 'injection' in raw_data.columns:

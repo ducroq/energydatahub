@@ -259,15 +259,22 @@ WEATHER_FIELD_RANGES = {
 # Per-field ranges for GIE gas-storage data. The collector publishes a nested
 # dict per timestamp mixing percent and energy fields; a single 0-100% range
 # (the prior behaviour) false-flags every TWh/GWh value daily (issue #24).
-# EU-aggregate upper bounds: working capacity ~1100 TWh historically;
-# daily injection/withdrawal flows ~3-4 TWh observed peak.
+# Bounds derived from 133 observed NL files (1062 records, Jan-May 2026):
+#   gas_in_storage_twh observed 6-56 TWh (NL is country_code='NL' per
+#     data_fetcher.py:545 — NOT EU aggregate). 200 TWh ceiling = 3.5x peak.
+#   working_gas_volume_twh ~144 TWh (fixed NL infrastructure capacity).
+#   injection peak ~422 GWh/day; withdrawal peak ~1287 GWh/day (Jan 2026 cold).
+#   net_change is asymmetric: winter withdrawal dominates so lower bound is wider.
+# If country_code is ever switched to EU aggregate, all bounds need to be
+# re-derived — EU working capacity is ~1100 TWh and peak withdrawal can
+# exceed 10,000 GWh/day.
 GAS_STORAGE_FIELD_RANGES = {
-    'fill_level_pct': (0.0, 100.0),
-    'working_capacity_twh': (0.0, 1500.0),
-    'working_gas_volume_twh': (0.0, 1500.0),
-    'injection_gwh': (0.0, 5000.0),
-    'withdrawal_gwh': (0.0, 5000.0),
-    'net_change_gwh': (-5000.0, 5000.0),
+    'fill_level_pct':         (0.0,    100.0),
+    'gas_in_storage_twh':     (0.0,    200.0),
+    'working_gas_volume_twh': (0.0,    200.0),
+    'injection_gwh':          (0.0,   1500.0),
+    'withdrawal_gwh':         (0.0,   3000.0),
+    'net_change_gwh':         (-3000.0, 1500.0),
 }
 
 # data_type → per-field range registry. When a data_type is registered here,

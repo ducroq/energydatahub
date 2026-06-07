@@ -259,13 +259,14 @@ class TestGasStorageFieldRanges:
     """
 
     def _sample(self, **overrides):
+        # Realistic NL gas storage payload (post field-rename hotfix).
         base = {
             'fill_level_pct': 15.24,
-            'working_capacity_twh': 21.9185,
+            'gas_in_storage_twh': 21.9185,    # variable (6-56 TWh observed range)
             'injection_gwh': 385.08,
             'withdrawal_gwh': 7.9,
             'net_change_gwh': 377.18,
-            'working_gas_volume_twh': 143.7945,
+            'working_gas_volume_twh': 143.7945,  # fixed infrastructure capacity
         }
         base.update(overrides)
         return base
@@ -283,9 +284,9 @@ class TestGasStorageFieldRanges:
         assert len(issues) == 1
         assert 'fill_level_pct=150.0' in issues[0].details['examples'][0]
 
-    def test_negative_capacity_flagged(self):
+    def test_negative_stored_gas_flagged(self):
         """Negative TWh values are impossible — must flag."""
-        data = {'2026-05-29T00:00:00+02:00': self._sample(working_capacity_twh=-5.0)}
+        data = {'2026-05-29T00:00:00+02:00': self._sample(gas_in_storage_twh=-5.0)}
         issues = validate_value_ranges(data, 'gas_storage', 'gas_storage')
         assert len(issues) == 1
 
