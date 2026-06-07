@@ -51,6 +51,7 @@ from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
 from collectors._openmeteo_shared import (
     OPENMETEO_SEMAPHORE,
     OPENMETEO_GAP_SECONDS,
+    fetch_location_with_retry,
 )
 
 
@@ -171,18 +172,18 @@ class OpenMeteoOffshoreWindCollector(BaseCollector):
         self.logger.debug(f"Fetching offshore wind data for {len(self.locations)} locations")
 
         results = {}
-        # Rate-limit budget is shared across ALL OpenMeteo* collectors via
-        # collectors/_openmeteo_shared.py (issue #11). Adding a 6th collector
-        # no longer requires retuning this file.
+        # Rate-limit budget + per-location retry are shared across ALL
+        # OpenMeteo* collectors via collectors/_openmeteo_shared.py (issue
+        # #11 + 2026-06-07 timeout regression).
         async def fetch_with_rate_limit(
             session: aiohttp.ClientSession,
             location: Dict[str, Any],
             delay: bool,
         ):
-            async with OPENMETEO_SEMAPHORE:
-                if delay:
-                    await asyncio.sleep(OPENMETEO_GAP_SECONDS)
-                return await self._fetch_location_data(session, location)
+            return await fetch_location_with_retry(
+                session, location, self._fetch_location_data,
+                logger=self.logger, apply_gap=delay,
+            )
 
         async with aiohttp.ClientSession() as session:
             tasks = [

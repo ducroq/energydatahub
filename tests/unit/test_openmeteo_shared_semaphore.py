@@ -66,13 +66,141 @@ class TestSharedSemaphoreShape:
     def test_semaphore_is_an_asyncio_semaphore(self):
         assert isinstance(_openmeteo_shared.OPENMETEO_SEMAPHORE, asyncio.Semaphore)
 
-    def test_cap_is_set_to_documented_safe_budget(self):
-        """5 = below the pre-#11 per-collector × 6 = 6 concurrent peak."""
-        assert _openmeteo_shared.OPENMETEO_SEMAPHORE_CAP == 5
+    def test_cap_equals_collector_count(self):
+        """6 = matches the 6 OpenMeteo collectors in data_fetcher.py.
+
+        Bumped from 5 → 6 after the 2026-06-07 timeout regression: a cap
+        below collector count caused late-scheduled collectors (offshore
+        + buurt) to time out on Open-Meteo's CDN per-source cooldown
+        window while early strategic collectors monopolised the FIFO
+        queue. cap == count restores the pre-#11 per-collector × Semaphore(1)
+        effective behavior — parallel sessions instead of one serialised
+        queue.
+        """
+        assert _openmeteo_shared.OPENMETEO_SEMAPHORE_CAP == 6
 
     def test_gap_is_set_to_documented_safe_budget(self):
         """0.5s = the inter-request gap from PR #10's fix."""
         assert _openmeteo_shared.OPENMETEO_GAP_SECONDS == 0.5
+
+
+class TestFetchLocationWithRetry:
+    """Per-location retry-with-backoff wrapper for OpenMeteo collectors.
+
+    Belt-and-suspenders against transient timeouts/429/5xx — even after
+    the cap bump fixed the root cause, a single bad response should
+    self-heal without a full collection re-run.
+    """
+
+    @pytest.mark.asyncio
+    async def test_success_on_first_attempt_no_retry(self):
+        import logging
+        from collectors._openmeteo_shared import fetch_location_with_retry
+
+        call_count = 0
+
+        async def fetch_fn(session, location):
+            nonlocal call_count
+            call_count += 1
+            return {'name': location['name'], 'data': {'ok': True}, 'error': None}
+
+        result = await fetch_location_with_retry(
+            session=None,
+            location={'name': 'L1'},
+            fetch_fn=fetch_fn,
+            logger=logging.getLogger('test'),
+            apply_gap=False,
+        )
+        assert result['data'] == {'ok': True}
+        assert call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_succeeds_after_transient_failures(self, monkeypatch):
+        """Two failures then success → returns success, total 3 calls."""
+        import logging
+        from collectors import _openmeteo_shared
+        # Speed test up: reduce backoff to ~0.
+        monkeypatch.setattr(_openmeteo_shared, 'RETRY_INITIAL_DELAY_SECONDS', 0.0)
+
+        call_count = 0
+
+        async def fetch_fn(session, location):
+            nonlocal call_count
+            call_count += 1
+            if call_count < 3:
+                return {'name': location['name'], 'data': None, 'error': 'timeout'}
+            return {'name': location['name'], 'data': {'ok': True}, 'error': None}
+
+        result = await _openmeteo_shared.fetch_location_with_retry(
+            session=None,
+            location={'name': 'L1'},
+            fetch_fn=fetch_fn,
+            logger=logging.getLogger('test'),
+            apply_gap=False,
+        )
+        assert result['data'] == {'ok': True}
+        assert call_count == 3  # used all 3 attempts (2 failed + 1 succeeded)
+
+    @pytest.mark.asyncio
+    async def test_returns_last_failure_after_all_retries(self, monkeypatch):
+        import logging
+        from collectors import _openmeteo_shared
+        monkeypatch.setattr(_openmeteo_shared, 'RETRY_INITIAL_DELAY_SECONDS', 0.0)
+
+        call_count = 0
+
+        async def fetch_fn(session, location):
+            nonlocal call_count
+            call_count += 1
+            return {'name': location['name'], 'data': None, 'error': f'attempt-{call_count}-failed'}
+
+        result = await _openmeteo_shared.fetch_location_with_retry(
+            session=None,
+            location={'name': 'L_dead'},
+            fetch_fn=fetch_fn,
+            logger=logging.getLogger('test'),
+            apply_gap=False,
+        )
+        assert result['data'] is None
+        assert call_count == _openmeteo_shared.MAX_RETRIES
+        # Error reflects the LAST attempt, not the first.
+        assert 'attempt-3-failed' in result['error']
+
+    @pytest.mark.asyncio
+    async def test_exponential_backoff_delays(self, monkeypatch):
+        """Backoff sequence: 1s, 2s, 4s, ... — measured by counting
+        asyncio.sleep calls between attempts."""
+        import logging
+        from collectors import _openmeteo_shared
+
+        sleep_durations = []
+        original_sleep = asyncio.sleep
+
+        async def fake_sleep(d):
+            sleep_durations.append(d)
+            await original_sleep(0)
+
+        monkeypatch.setattr(asyncio, 'sleep', fake_sleep)
+
+        async def always_fail(session, location):
+            return {'name': location['name'], 'data': None, 'error': 'x'}
+
+        await _openmeteo_shared.fetch_location_with_retry(
+            session=None,
+            location={'name': 'L1'},
+            fetch_fn=always_fail,
+            logger=logging.getLogger('test'),
+            apply_gap=False,  # don't conflate with retry delays
+        )
+
+        # MAX_RETRIES attempts means MAX_RETRIES - 1 inter-attempt sleeps.
+        backoff_sleeps = sleep_durations  # since apply_gap=False, all sleeps are retries
+        expected = [
+            _openmeteo_shared.RETRY_INITIAL_DELAY_SECONDS
+            * (_openmeteo_shared.RETRY_BACKOFF_BASE ** i)
+            for i in range(_openmeteo_shared.MAX_RETRIES - 1)
+        ]
+        assert backoff_sleeps == expected
 
 
 class TestSharedSemaphoreEnforcesConcurrency:
