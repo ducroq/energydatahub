@@ -685,27 +685,89 @@ def validate_duplicate_timestamps(
 
 # --- Data type to range mapping for automatic validation ---
 # Maps data_type from metadata to the VALUE_RANGES key to use.
-# 'weather' and 'gas_storage' are special: self-mapped so validate_value_ranges
-# resolves them via FIELD_RANGES_BY_TYPE (per-field) instead of a blanket range.
+#
+# NOTE: 'weather' and 'gas_storage' are SENTINEL keys (their values match
+# themselves, not VALUE_RANGES entries). validate_value_ranges checks
+# FIELD_RANGES_BY_TYPE first and routes those types to per-field validation
+# instead of a blanket scalar range. Adding a `VALUE_RANGES['gas_storage']`
+# entry would be unreachable — the sentinel is what activates the per-field
+# path. Same for 'weather'.
 DATA_TYPE_RANGE_MAP = {
     'energy_price': 'energy_price',
     'wind_generation': 'generation_mw',
     'wind_weather': 'wind_speed',
     'solar': 'solar_irradiance',
-    'weather': 'weather',
+    'weather': 'weather',                # sentinel → FIELD_RANGES_BY_TYPE
     'load': 'load_mw',
     'generation': 'generation_mw',
-    'grid_imbalance': 'energy_price',  # Imbalance prices in EUR/MWh
+    'grid_imbalance': 'energy_price',    # Imbalance prices in EUR/MWh
     'cross_border_flows': 'flow_mw',
-    'gas_storage': 'gas_storage',
+    'gas_storage': 'gas_storage',        # sentinel → FIELD_RANGES_BY_TYPE
 }
 
 # Per-dataset staleness threshold overrides (hours). The default 48h applies
 # to most feeds; GIE AGSI+ publishes with a documented 2-3 day lag, so 96h
 # is the right floor before flagging (issue #24).
+#
+# Note the parallel-registry pattern: STALENESS_OVERRIDES is keyed by
+# dataset_name (pipeline truth) while FIELD_RANGES_BY_TYPE is keyed by
+# data_type (semantic). For datasets where these coincide (gas_storage)
+# this is invisible; for the future case where they don't, look up via
+# `get_dataset_validation_config()` below — that function is the single
+# point of truth for "what does the pipeline know about this dataset?".
 STALENESS_OVERRIDES = {
     'gas_storage': 96,
 }
+
+
+# Expected data_type per pipeline dataset_name. When the pipeline's dataset
+# name is one of these keys, the expected data_type is the source of truth
+# for validation routing — even if metadata.data_type from the upstream API
+# says otherwise. Defends against MITM-controlled metadata steering
+# validation to a more lenient field-range registry (security audit MEDIUM,
+# CWE-20). Datasets whose name is not in this map fall back to trusting
+# metadata.data_type (no expected-type pin).
+EXPECTED_DATA_TYPE = {
+    'gas_storage': 'gas_storage',
+    'weather_forecast_multi_location': 'weather',
+    'weather_forecast_buurt': 'weather',
+    'demand_weather_forecast': 'weather',
+    'solar_forecast': 'solar',
+    'solar_forecast_buurt': 'solar',
+    'grid_imbalance': 'grid_imbalance',
+    'cross_border_flows': 'cross_border_flows',
+    'load_forecast': 'load',
+    'generation_forecast': 'generation',
+    'generation_mix': 'generation',
+}
+
+
+def get_dataset_validation_config(
+    dataset_name: str,
+    data_type: str,
+) -> Dict[str, Any]:
+    """
+    Single lookup point for per-dataset validation config.
+
+    Internally consults FIELD_RANGES_BY_TYPE (keyed by data_type, since
+    field semantics are per-type) and STALENESS_OVERRIDES (keyed by
+    dataset_name, since publish-cadence overrides are per-dataset). When
+    debugging "what does the pipeline know about <dataset>?", this is the
+    single function to call (refactoring review tier-2 finding #8).
+
+    Args:
+        dataset_name: Pipeline identifier (e.g. 'gas_storage', 'weather_forecast_buurt')
+        data_type:    Semantic type from metadata (e.g. 'gas_storage', 'weather')
+
+    Returns:
+        Dict with keys:
+          field_ranges    - per-field (min, max) dict or None if no per-field config
+          staleness_hours - max age in hours (default 48)
+    """
+    return {
+        'field_ranges': FIELD_RANGES_BY_TYPE.get(data_type),
+        'staleness_hours': STALENESS_OVERRIDES.get(dataset_name, 48),
+    }
 
 
 def validate_dataset(
@@ -722,9 +784,31 @@ def validate_dataset(
     Returns:
         DatasetQualityReport with all findings
     """
-    data_type = dataset.metadata.get('data_type', 'unknown')
+    raw_data_type = dataset.metadata.get('data_type', 'unknown')
     source = dataset.metadata.get('source', 'unknown')
     data_points = _count_data_points(dataset.data)
+
+    # Security defense (CWE-20): if the pipeline registers an expected
+    # data_type for this dataset name, prefer it over the upstream-provided
+    # metadata.data_type. Prevents an attacker MITMing the source API and
+    # setting metadata.data_type='weather' on a non-weather payload to
+    # steer the validator to a more lenient field-range registry. We log
+    # a warning so the mismatch is visible in the run log.
+    expected = EXPECTED_DATA_TYPE.get(dataset_name)
+    if expected is not None and raw_data_type != expected:
+        logger.warning(
+            f"[DQ:{dataset_name}] metadata.data_type='{raw_data_type}' "
+            f"does not match registered expected '{expected}' — using "
+            f"expected for validation routing"
+        )
+        data_type = expected
+    else:
+        data_type = raw_data_type
+
+    # Single point of truth for per-dataset config (#8): one call covers
+    # field_ranges + staleness so future per-dataset config additions
+    # have one place to land.
+    config = get_dataset_validation_config(dataset_name, data_type)
 
     report = DatasetQualityReport(
         dataset_name=dataset_name,
@@ -761,8 +845,9 @@ def validate_dataset(
 
     # 4. Staleness check
     checks_run += 1
-    max_age_hours = STALENESS_OVERRIDES.get(dataset_name, 48)
-    staleness_issues = validate_staleness(dataset.data, max_age_hours=max_age_hours)
+    staleness_issues = validate_staleness(
+        dataset.data, max_age_hours=config['staleness_hours']
+    )
     if staleness_issues:
         checks_failed += 1
         report.issues.extend(staleness_issues)

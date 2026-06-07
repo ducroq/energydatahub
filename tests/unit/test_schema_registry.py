@@ -230,10 +230,14 @@ class TestMigrateToCurrentFull:
         assert 'entsoe' in result['data']
 
     def test_current_version_no_migration(self):
-        """v2.2 data should pass through unchanged."""
+        """Data already at CURRENT_SCHEMA_VERSION passes through unchanged.
+
+        Identity preserved: `result is data`. Older versions are deep-copied
+        before migration (review finding #4 — uniform mutation semantics).
+        """
         data = {
             'metadata': {
-                'schema_version': '2.2',
+                'schema_version': CURRENT_SCHEMA_VERSION,
                 'version': '2.0',
                 'source': 'aggregated',
                 'data_type': 'combined',
@@ -241,13 +245,39 @@ class TestMigrateToCurrentFull:
             },
             'data': {
                 'entsoe': {
-                    'metadata': {'data_type': 'energy_price', 'schema_version': '2.2'},
+                    'metadata': {
+                        'data_type': 'energy_price',
+                        'schema_version': CURRENT_SCHEMA_VERSION,
+                    },
                     'data': {'2026-01-15T00:00:00+01:00': 50.5},
                 },
             },
         }
         result = migrate_to_current(data)
-        assert result is data  # Same object, not modified
+        assert result is data  # Same object, no copy needed at CURRENT
+
+    def test_pre_current_version_does_not_mutate_input(self):
+        """Migration paths must NOT mutate the caller's input dict.
+
+        Review finding #4 (HIGH): _migrate_2_1_to_2_2's standalone branch
+        used to mutate in-place. migrate_to_current now deep-copies before
+        applying migrations, so a caller holding a pre-migration reference
+        can rely on it staying intact.
+        """
+        import copy as _copy
+        original = {
+            'metadata': {'schema_version': '2.2', 'data_type': 'energy_price'},
+            'data': {'2026-01-15T00:00:00+01:00': 50.5},
+        }
+        snapshot = _copy.deepcopy(original)
+
+        result = migrate_to_current(original)
+
+        # Migration happened (different version)
+        assert result is not original
+        assert result['metadata']['schema_version'] == CURRENT_SCHEMA_VERSION
+        # Original is unchanged
+        assert original == snapshot
 
 
 class TestMigrate2_1To2_2:

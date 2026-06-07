@@ -30,6 +30,7 @@ Schema Version History:
           based on observed NL distributions. (Jun 2026)
 """
 
+import copy
 import json
 import logging
 from typing import Dict, Any, Optional, List
@@ -380,6 +381,14 @@ def migrate_to_current(
 
     Applies migrations sequentially: 1.0 -> 2.0 -> 2.1 -> ...
 
+    Contract: the caller's input dict is treated as immutable. The current
+    version pass-through returns the original (no work needed); all other
+    paths return a freshly deep-copied object. Individual migration
+    functions may mutate freely because they only see the local copy.
+    This makes the mutation semantics uniform across the legacy-flat /
+    standalone / wrapped branches of `_migrate_2_1_to_2_2` and friends
+    (reviewer finding HIGH on 3dfc7fb).
+
     Args:
         data: The parsed JSON data (any version)
         filename: Original filename (for v1.0 migration context)
@@ -393,6 +402,12 @@ def migrate_to_current(
         return data
 
     logger.info(f"Migrating data from v{version} to v{CURRENT_SCHEMA_VERSION}")
+
+    # Deep-copy so individual migration functions can mutate freely without
+    # corrupting the caller's reference. Each migration func returns a dict;
+    # the chain reassigns, but the original input remains pristine for any
+    # caller that wants to retain a pre-migration baseline (e.g. for diff logs).
+    data = copy.deepcopy(data)
 
     for from_ver, to_ver, migrate_func in MIGRATIONS:
         if version <= from_ver:

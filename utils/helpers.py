@@ -207,24 +207,37 @@ def detect_file_type(content: str) -> str:
     
 def validate_data_timestamps(data: Dict[str, Any]) -> tuple[bool, list]:
     """
-    Validate all timestamps in a data structure for correct timezone formatting.
+    Validate all timestamps in a canonical-envelope data structure.
 
-    Handles both flat structures (timestamp -> value) and nested structures
-    (country/location -> timestamp -> value) used by multi-region collectors.
+    Expects v2.x canonical shape `{metadata, data}`. Callers reading historical
+    files in legacy shapes must pass data through `schema_registry.migrate_to_current`
+    first (which produces the canonical envelope). Production write-path callers
+    (`save_data_file` on `CombinedDataSet.to_dict()` or `EnhancedDataSet.to_dict()`)
+    always emit canonical shape, so this is a no-op for them.
+
+    Shape discriminator (deterministic, not duck-typed):
+      - `metadata.data_type == 'combined'` → multi-collector wrap; iterate
+        each `data[<source>]` sub-section.
+      - any other `data_type`              → standalone EnhancedDataSet; the
+        envelope itself is the single section.
+
+    Tier-2 refactor (review findings #5 + #9, 2026-06-07): replaced the
+    earlier duck-typed three-branch discriminator. The empty-inner case
+    (every sub-collector failed → `data: {}`) no longer false-passes via
+    the standalone branch; it now correctly routes to the combined branch
+    based on `data_type='combined'` and returns `(True, [])` for "no
+    timestamps to invalidate" — the completeness validator is responsible
+    for surfacing the actual data loss.
 
     Args:
-        data (dict): The data dictionary to validate (CombinedDataSet.to_dict() format)
+        data (dict): Canonical-envelope dictionary
 
     Returns:
         tuple: (is_valid, list of malformed timestamps)
 
-    Examples:
-        >>> data = {'version': '2.0', 'elspot': {'data': {'2025-10-24T12:00:00+00:09': 50.0}}}
-        >>> is_valid, malformed = validate_data_timestamps(data)
-        >>> is_valid
-        False
-        >>> malformed
-        ['elspot: 2025-10-24T12:00:00+00:09']
+    Raises:
+        ValueError: if `data` is not in canonical envelope shape. Callers
+            that may receive legacy shapes must migrate first.
     """
     from utils.timezone_helpers import validate_timestamp_format
 
@@ -250,27 +263,28 @@ def validate_data_timestamps(data: Dict[str, Any]) -> tuple[bool, list]:
                 if value and any(is_timestamp_like(k) for k in value.keys()):
                     validate_timestamps_recursive(value, source_name, f"{full_key}/")
 
-    # Resolve the per-source sections regardless of envelope shape:
-    #   - Wrapped CombinedDataSet (#26): {metadata, data: {src: {metadata, data}}}
-    #   - Legacy flat CombinedDataSet:    {version, src: {metadata, data}}
-    #   - Standalone EnhancedDataSet:     {metadata, data: {timestamp: value}}
+    if not isinstance(data, dict):
+        raise ValueError("validate_data_timestamps expects a dict")
+    metadata = data.get('metadata')
+    inner = data.get('data')
+    if not isinstance(metadata, dict) or not isinstance(inner, dict):
+        raise ValueError(
+            "validate_data_timestamps expects canonical envelope "
+            "{metadata, data}. Migrate legacy shapes via "
+            "schema_registry.migrate_to_current first."
+        )
+
     sections = []
-    inner = data.get('data') if isinstance(data, dict) else None
-    if (isinstance(data.get('metadata'), dict) and isinstance(inner, dict)
-            and inner
-            and all(isinstance(v, dict) and 'data' in v for v in inner.values())):
-        # Wrapped multi-collector envelope
+    if metadata.get('data_type') == 'combined':
+        # Combined multi-collector wrap — iterate each per-collector section.
+        # Empty `inner` is a legitimate "every collector failed" state; the
+        # loop is a no-op and we correctly return (True, []) — completeness
+        # validation surfaces the data loss separately.
         for src, section in inner.items():
             sections.append((src, section))
-    elif isinstance(data.get('metadata'), dict) and isinstance(inner, dict):
-        # Standalone EnhancedDataSet — the envelope itself is the one section
-        sections.append(('', data))
     else:
-        # Legacy flat shape
-        for src, section in data.items():
-            if src == 'version' or not isinstance(section, dict):
-                continue
-            sections.append((src, section))
+        # Standalone EnhancedDataSet — the envelope itself is the section.
+        sections.append(('', data))
 
     for source_name, source_data in sections:
         if 'data' not in source_data:

@@ -30,6 +30,8 @@ from utils.data_quality import (
     validate_duplicate_timestamps,
     validate_dataset,
     validate_pipeline,
+    get_dataset_validation_config,
+    EXPECTED_DATA_TYPE,
 )
 from utils.data_types import EnhancedDataSet
 
@@ -250,6 +252,77 @@ class TestWeatherFieldRanges:
         }
         issues = validate_value_ranges(data, 'weather', 'test')
         assert len(issues) == 0
+
+
+class TestDatasetValidationConfig:
+    """Reviewer tier-2 finding #8: single lookup point for per-dataset config."""
+
+    def test_gas_storage_returns_both_field_ranges_and_staleness(self):
+        cfg = get_dataset_validation_config('gas_storage', 'gas_storage')
+        assert cfg['field_ranges'] is not None
+        assert 'fill_level_pct' in cfg['field_ranges']
+        assert cfg['staleness_hours'] == 96
+
+    def test_weather_returns_field_ranges_but_default_staleness(self):
+        cfg = get_dataset_validation_config('weather_forecast_buurt', 'weather')
+        assert cfg['field_ranges'] is not None
+        assert 'main_temp' in cfg['field_ranges']
+        assert cfg['staleness_hours'] == 48  # default
+
+    def test_unknown_dataset_returns_safe_defaults(self):
+        cfg = get_dataset_validation_config('unknown', 'unknown')
+        assert cfg['field_ranges'] is None
+        assert cfg['staleness_hours'] == 48
+
+
+class TestExpectedDataTypeDefense:
+    """Review finding #6 (MEDIUM, CWE-20): MITM-injected metadata.data_type
+    cannot steer validation to the wrong field-range registry. When the
+    pipeline knows the expected data_type for a dataset_name, that wins.
+    """
+
+    def test_mismatched_data_type_uses_expected_for_routing(self, caplog):
+        """gas_storage dataset with metadata.data_type='weather' (injected)
+        must still route through gas_storage validation rules."""
+        # Realistic gas_storage payload but with weather data_type spoofed
+        # in the envelope metadata. If the defense fails, validate_value_ranges
+        # would use WEATHER_FIELD_RANGES and skip the gas_storage range checks.
+        dataset = EnhancedDataSet(
+            metadata={
+                'data_type': 'weather',  # MITM-spoofed; real should be gas_storage
+                'source': 'GIE AGSI+',
+                'units': 'mixed',
+            },
+            data={
+                (datetime.now(AMS) - timedelta(hours=12)).isoformat(): {
+                    'fill_level_pct': 15.24,
+                    'gas_in_storage_twh': 21.9185,
+                    'injection_gwh': 385.08,
+                },
+            },
+        )
+
+        import logging
+        with caplog.at_level(logging.WARNING, logger='utils.data_quality'):
+            report = validate_dataset(dataset, 'gas_storage')
+
+        # The report's data_type field reflects the expected value (defended).
+        assert report.data_type == 'gas_storage'
+        # A warning was logged about the mismatch.
+        assert any(
+            'gas_storage' in rec.message and 'weather' in rec.message
+            for rec in caplog.records
+        )
+
+    def test_expected_data_type_registry_covers_named_feeds(self):
+        """Sanity check: the headline datasets the pipeline publishes have
+        their expected data_type pinned, so a future MITM cannot silently
+        steer validation for the most important feeds."""
+        # Feeds the ML downstream most relies on:
+        assert 'gas_storage' in EXPECTED_DATA_TYPE
+        assert 'grid_imbalance' in EXPECTED_DATA_TYPE
+        assert 'load_forecast' in EXPECTED_DATA_TYPE
+        assert 'generation_forecast' in EXPECTED_DATA_TYPE
 
 
 class TestGasStorageFieldRanges:

@@ -383,19 +383,24 @@ class TestDetectFileType:
 
 
 class TestValidateDataTimestamps:
-    """Test timestamp validation function."""
+    """Test timestamp validation function (canonical envelope only)."""
+
+    def _wrap_combined(self, sub_datasets):
+        return {
+            'metadata': {'data_type': 'combined', 'source': 'aggregated'},
+            'data': sub_datasets,
+        }
 
     def test_valid_timestamps(self):
         """Test validation with valid timestamps."""
-        data = {
-            'version': '2.0',
+        data = self._wrap_combined({
             'energy': {
                 'data': {
                     '2025-10-25T12:00:00+02:00': 100.5,
                     '2025-10-25T13:00:00+01:00': 105.0
                 }
             }
-        }
+        })
 
         is_valid, malformed = validate_data_timestamps(data)
 
@@ -404,15 +409,14 @@ class TestValidateDataTimestamps:
 
     def test_malformed_timestamps(self):
         """Test detection of malformed timestamps."""
-        data = {
-            'version': '2.0',
+        data = self._wrap_combined({
             'energy': {
                 'data': {
                     '2025-10-25T12:00:00+00:09': 100.5,  # Malformed
                     '2025-10-25T13:00:00+02:00': 105.0
                 }
             }
-        }
+        })
 
         is_valid, malformed = validate_data_timestamps(data)
 
@@ -420,15 +424,16 @@ class TestValidateDataTimestamps:
         assert len(malformed) == 1
         assert 'energy' in malformed[0]
 
-    def test_skip_version_field(self):
-        """Test that version field is skipped."""
-        data = {
-            'version': '2.0'
-        }
+    def test_legacy_flat_shape_raises(self):
+        """Legacy flat `{version, src: {...}}` files must be migrated first.
 
-        is_valid, malformed = validate_data_timestamps(data)
+        Callers reading historical files should pass them through
+        `schema_registry.migrate_to_current` before validating.
+        """
+        legacy_data = {'version': '2.0'}
 
-        assert is_valid is True
+        with pytest.raises(ValueError, match="canonical envelope"):
+            validate_data_timestamps(legacy_data)
 
 
 class TestSaveDataFile:
