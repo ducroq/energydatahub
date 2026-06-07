@@ -279,13 +279,24 @@ GAS_STORAGE_FIELD_RANGES = {
     'net_change_gwh':         (-3000.0, 1500.0),
 }
 
+# Per-field ranges for ENTSO-E A72 Nordic hydro reservoirs (#3 security review).
+# Without this entry the pipeline range check silently no-ops on hydro_reservoir,
+# leaving only the collector's in-band bounds — which a plausible-value MITM
+# (e.g. flipping NO from 8.4e7 to 8.4e6, a credible 10x drawdown) would defeat.
+# Upper bound matches the collector's _validate_data ceiling of 1.2e8 MWh.
+HYDRO_RESERVOIR_FIELD_RANGES = {
+    'reservoir_mwh': (0.0, 1.2e8),
+}
+
 # data_type → per-field range registry. When a data_type is registered here,
 # `validate_value_ranges` walks each nested-dict sub-key against its own
 # range instead of applying a single blanket range. Same pattern weather
-# has used since 2026-03; gas_storage joins it via issue #24.
+# has used since 2026-03; gas_storage joins it via issue #24; hydro_reservoir
+# joins it via #3 security review.
 FIELD_RANGES_BY_TYPE = {
     'weather': WEATHER_FIELD_RANGES,
     'gas_storage': GAS_STORAGE_FIELD_RANGES,
+    'hydro_reservoir': HYDRO_RESERVOIR_FIELD_RANGES,
 }
 
 # Expected minimum data points per dataset/source for a standard daily collection.
@@ -311,6 +322,14 @@ EXPECTED_MIN_POINTS = {
     'gas_storage': 1,                # Daily values
     'gas_flows': 1,                  # Daily values
     'ned_production': 24,
+    # Nordic hydro (#3): weekly cadence × 2 zones (NO/SE) over a 12-week
+    # window yields ~20 points after the 2-3 week publication lag. 12 = 6
+    # fresh weeks × 2 zones — flags total collection collapse without
+    # papering over single-zone degradation. FOLLOW-UP: per-zone completeness
+    # signal belongs inside the collector's `collector_quality_issues`, so a
+    # half-dark zone (e.g. NO=10, SE=2) still raises a warning even when the
+    # aggregate clears this floor.
+    'nordic_hydro': 12,
     # Old collector names (for backtest compatibility)
     'OpenWeather': 8,                # OpenWeather free tier: limited forecast points
     'MeteoServer': 24,
@@ -338,6 +357,7 @@ DATASET_MISSING_SEVERITY: Dict[str, str] = {
     'epex':           'info',
     'elspot':         'info',
     'grid_imbalance': 'warning',  # TenneT 422 cascade per #25
+    'nordic_hydro':   'info',     # #3 — leading indicator, not gate-critical
 }
 
 # Back-compat shims: derive the three named lists from the dict so any
@@ -385,6 +405,41 @@ def _check_field_range(
     return value < min_val or value > max_val
 
 
+def _flatten_to_timestamp_records(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Flatten a 2-level location/zone-keyed structure into a 1-level
+    timestamp-keyed dict so `validate_value_ranges` walks all records.
+
+    Pipeline shapes seen in the wild:
+      - 1-level (gas_storage):  {iso_ts: {field: value, ...}, ...}
+      - 2-level (weather, nordic_hydro):
+            {location_or_zone: {iso_ts: {field: value, ...}, ...}, ...}
+
+    Before this helper, the validator only iterated the outer dict and
+    skipped 2-level structures (the inner value was a dict, not numeric),
+    silently no-op'ing range checks on weather and the new hydro feed.
+    Detected via the #3 security review.
+
+    Heuristic for "is this already flat?": if any of the first few
+    top-level keys parses as an ISO timestamp, treat as 1-level and
+    return unchanged. Otherwise descend one level.
+    """
+    for key in list(data.keys())[:3]:
+        try:
+            datetime.fromisoformat(str(key).replace('Z', '+00:00'))
+            return data
+        except (ValueError, TypeError):
+            continue
+
+    flat: Dict[str, Any] = {}
+    for outer_key, inner in data.items():
+        if not isinstance(inner, dict):
+            continue
+        for ts, fields in inner.items():
+            flat[f"{outer_key}/{ts}"] = fields
+    return flat
+
+
 def validate_value_ranges(
     data: Dict[str, Any],
     data_type: str,
@@ -414,7 +469,7 @@ def validate_value_ranges(
     out_of_range_count = 0
     out_of_range_examples = []
 
-    for timestamp, value in data.items():
+    for timestamp, value in _flatten_to_timestamp_records(data).items():
         if isinstance(value, dict):
             for sub_key, sub_value in value.items():
                 if not isinstance(sub_value, (int, float)) or sub_value is None:
@@ -736,6 +791,7 @@ DATA_TYPE_RANGE_MAP = {
     'grid_imbalance': 'energy_price',    # Imbalance prices in EUR/MWh
     'cross_border_flows': 'flow_mw',
     'gas_storage': 'gas_storage',        # sentinel → FIELD_RANGES_BY_TYPE
+    'hydro_reservoir': 'hydro_reservoir',  # sentinel → FIELD_RANGES_BY_TYPE
 }
 
 # Per-dataset staleness threshold overrides (hours). The default 48h applies
@@ -750,6 +806,11 @@ DATA_TYPE_RANGE_MAP = {
 # point of truth for "what does the pipeline know about this dataset?".
 STALENESS_OVERRIDES = {
     'gas_storage': 96,
+    # ENTSO-E A72 Nordic hydro reservoirs publish weekly with a 2-3 week
+    # publication lag, so the default 48h threshold would always trip.
+    # 28 days (672h) flags only genuinely stale data while accommodating
+    # normal publication delays and bank-holiday weeks.
+    'nordic_hydro': 672,
 }
 
 
@@ -802,6 +863,7 @@ EXPECTED_DATA_TYPE = {
     'market_history':                  'market_history',
     'gas_flows':                       'gas_flows',
     'air_quality_buurt':               'air',
+    'nordic_hydro':                    'hydro_reservoir',
 }
 
 

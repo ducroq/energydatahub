@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-06-07T17:09:34+00:00",
+  "computed_at": "2026-06-07T21:06:06+02:00",
   "schema_version": "2.3",
   "feeds": {
     "energy_price_forecast.json": {
@@ -2189,6 +2189,76 @@
         }
       },
       "data_type": "generation_by_type",
+      "sources": null
+    },
+    "nordic_hydro.json": {
+      "shape_hash": "5393fc0af912e0faed7da574d59286a2",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "NO": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "iso_week": "int",
+                    "iso_year": "int",
+                    "reservoir_mwh": "float"
+                  }
+                }
+              },
+              "SE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "iso_week": "int",
+                    "iso_year": "int",
+                    "reservoir_mwh": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "collector": "str",
+              "country_codes": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "country_names": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "data_type": "str",
+              "document_type": "str",
+              "end_time": "str",
+              "resolution": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "hydro_reservoir",
       "sources": null
     },
     "calendar_features.json": {

@@ -19,15 +19,9 @@ API Documentation:
     Unit:          MWh (stored energy equivalent of current reservoir volume)
 
 Status:
-    Code complete + mock-tested. NOT yet wired into `data_fetcher.py`
-    pending a one-time real-API smoke test against the existing
-    ENTSOE_API_KEY. To wire in:
-      1. Add `EntsoeHydroCollector` to the imports in `data_fetcher.py`
-      2. Instantiate it in the collector setup block (mirrors
-         `EntsoeGenerationCollector` initialisation)
-      3. Add the gather call alongside the other ENTSO-E queries
-      4. Add a save block writing `nordic_hydro.json`
-      5. Add to `quality_datasets` in the quality-report block
+    Wired into `data_fetcher.py` (#3 closed). Publishes to
+    `nordic_hydro.json` daily; field-range validated via
+    `FIELD_RANGES_BY_TYPE['hydro_reservoir']` in `utils/data_quality.py`.
 
 Usage:
     from collectors.entsoe_hydro import EntsoeHydroCollector

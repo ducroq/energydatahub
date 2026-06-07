@@ -84,6 +84,7 @@ from collectors import (
     EntsoeFlowsCollector,
     EntsoeLoadCollector,
     EntsoeGenerationCollector,
+    EntsoeHydroCollector,
     EnergyZeroCollector,
     EpexCollector,
     ElspotCollector,
@@ -390,6 +391,11 @@ async def main() -> None:
         gie_end = today - timedelta(days=2)  # 2 days ago (most recent available)
         gie_start = today - timedelta(days=9)  # 9 days ago (week of data)
 
+        # ENTSO-E A72 hydro reservoirs publish weekly with ~2-3 week lag.
+        # 12-week window matches the smoke-test pattern in issue #3 and
+        # yields ~10 fresh weekly points per zone after lag.
+        hydro_start = today - timedelta(weeks=12)
+
         # Initialize collectors with new architecture
         entsoe_collector = EntsoeCollector(api_key=entsoe_api_key)
         energy_zero_collector = EnergyZeroCollector()
@@ -530,6 +536,11 @@ async def main() -> None:
             include_actual=True
         )
 
+        # ENTSO-E Nordic hydro reservoir collector (A72 — weekly cadence).
+        # Reservoir levels in NO/SE drive Nordic hydro output and propagate
+        # into Dutch import prices via cross-border flows. Issue #3.
+        entsoe_hydro_collector = EntsoeHydroCollector(api_key=entsoe_api_key)
+
         # Market Proxy collector for carbon and gas prices (requires Alpha Vantage API key)
         # Carbon and gas prices are key drivers of electricity prices
         market_proxy_collector = None
@@ -569,6 +580,7 @@ async def main() -> None:
             entsoe_load_collector.collect(today, tomorrow),  # Load forecasts
             entsoe_generation_collector.collect(today, tomorrow),  # French nuclear generation
             entsoe_genmix_collector.collect(yesterday, today),  # Full generation mix (NL, DE, BE)
+            entsoe_hydro_collector.collect(hydro_start, today),  # Nordic hydro reservoirs (#3, weekly)
             openmeteo_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt weather (FyE B1, 16-day)
             openmeteo_solar_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt solar irradiance (FyE B1, 16-day)
             # Buurt air quality — one collector per location, historical 24h window
@@ -603,12 +615,12 @@ async def main() -> None:
         # Unpack results - NED.nl, market proxies, and gas collectors are optional at the end.
         # Buurt air-quality tail: one slot per buurt location (currently 2).
         n_buurt_aq = len(luchtmeetnet_buurt_collectors)
-        fixed_count = 17 + n_buurt_aq
+        fixed_count = 18 + n_buurt_aq
         (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, strategic_weather_data, elspot_data,
          tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
          offshore_wind_data, flows_data, load_data, generation_data,
-         genmix_data, buurt_weather_data, buurt_solar_data) = results[:17]
-        buurt_aq_data = list(results[17:fixed_count])  # parallel to buurt_locations order
+         genmix_data, hydro_data, buurt_weather_data, buurt_solar_data) = results[:18]
+        buurt_aq_data = list(results[18:fixed_count])  # parallel to buurt_locations order
 
         # Handle optional collectors (NED.nl, market proxies, and gas data)
         optional_idx = fixed_count
@@ -794,6 +806,14 @@ async def main() -> None:
             shutil.copy(full_path, os.path.join(output_path, "generation_forecast.json"))
             logging.info(f"Saved generation data for {len(generation_data.data)} countries (nuclear availability)")
 
+        # Save Nordic hydro reservoir data (NO, SE - weekly cadence, ~2-3 week lag)
+        if hydro_data:
+            full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_nordic_hydro.json")
+            save_data_file(data=hydro_data, file_path=full_path, handler=handler, encrypt=encryption)
+            shutil.copy(full_path, os.path.join(output_path, "nordic_hydro.json"))
+            zones = list(hydro_data.data.keys()) if hydro_data.data else []
+            logging.info(f"Saved Nordic hydro reservoirs for {len(zones)} zones: {zones}")
+
         # Save generation mix data (NL, DE, BE - all fuel types)
         if genmix_data:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_generation_mix.json")
@@ -971,6 +991,7 @@ async def main() -> None:
             ('load_forecast.json',                   load_data),
             ('generation_forecast.json',             generation_data),
             ('generation_mix.json',                  genmix_data),
+            ('nordic_hydro.json',                    hydro_data),
             ('calendar_features.json',               calendar_dataset),
             ('market_proxies.json',                  market_proxy_data),
             ('market_history.json',                  market_history_dataset),
@@ -1012,6 +1033,7 @@ async def main() -> None:
             'load_forecast': load_data,
             'generation_forecast': generation_data,
             'generation_mix': genmix_data,
+            'nordic_hydro': hydro_data,
             'ned_production': ned_data,
             'market_proxies': market_proxy_data,
             'market_history': market_history_dataset,
