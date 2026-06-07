@@ -59,6 +59,7 @@ Notes:
 import os
 import sys
 import json
+import copy
 import shutil
 import configparser
 from datetime import datetime, timedelta
@@ -112,6 +113,102 @@ MAX_RETRY_ROUNDS = 3       # Up to 3 retry rounds for failed critical collectors
 
 # Critical datasets — if these are missing, Augur's forecast breaks
 CRITICAL_DATASETS = {'entsoe', 'entsoe_de'}
+
+
+# Per-location Luchtmeetnet metadata fields preserved (per-station) under
+# `metadata['stations'][<loc>]` in the buurt air-quality envelope.
+# `components` is the list of pollutants the station actually measures —
+# critical for downstream consumers to validate that a station reports the
+# pollutant they're looking at (PR #20 review HIGH-2).
+_BUURT_AIR_STATION_FIELDS = (
+    'station', 'station_location', 'station_latitude',
+    'station_longitude', 'requested_latitude', 'requested_longitude',
+    'city', 'components',
+)
+
+
+def assemble_buurt_air_envelope(buurt_locations, buurt_aq_data):
+    """Combine per-location Luchtmeetnet datasets into one EnhancedDataSet.
+
+    Issue #17: the air-quality buurt feed previously used a CombinedDataSet,
+    which serialises to ``{version, loc1: {...}, loc2: {...}}`` — location
+    keys at the root, no top-level ``metadata``/``data`` envelope. The
+    weather and solar buurt feeds publish as ``{metadata, data: {loc: {...}}}``.
+    This mismatch silently broke FyE's consumer (saw ``available: []``)
+    after PR #10's cron ran. Returning a single EnhancedDataSet with
+    ``data`` keyed by location pins the envelope to the same shape as the
+    other two buurt feeds.
+
+    Per-location station info (RIVM station number, coordinates, city,
+    components) is preserved in ``metadata['stations'][<loc>]``. Per-
+    location ``collector_quality_issues`` are aggregated into top-level
+    ``metadata['collector_quality_issues']`` with ``details['location']``
+    tagged, so the pipeline data-quality gate (PR #16 wiring) still sees
+    them after the flatten.
+
+    Defensive copies: the envelope's ``data`` and aggregated ``issues``
+    are deep-copied from the source datasets, so subsequent mutations on
+    either side cannot poison the other (PR #20 review HIGH/MEDIUM).
+
+    Args:
+        buurt_locations: list of dicts with at least a ``name`` key.
+        buurt_aq_data: list of EnhancedDataSet (or None on per-buurt
+            collector failure), same length and order as ``buurt_locations``.
+
+    Returns:
+        EnhancedDataSet ready for save_data_file, or None when none of the
+        per-location collectors returned data.
+
+    Raises:
+        ValueError: if input lists have different lengths (would indicate
+            a wiring mistake in the orchestrator; silent ``zip`` truncation
+            would otherwise drop the tail without notice).
+    """
+    if len(buurt_locations) != len(buurt_aq_data):
+        raise ValueError(
+            f"assemble_buurt_air_envelope: input length mismatch — "
+            f"{len(buurt_locations)} locations vs {len(buurt_aq_data)} "
+            f"results. Check the orchestrator's task wiring."
+        )
+
+    buurt_air_data = {}
+    buurt_air_stations = {}
+    buurt_air_quality_issues = []
+    for loc, aq_ds in zip(buurt_locations, buurt_aq_data):
+        if not aq_ds:
+            continue
+        # Deep-copy the per-location data so subsequent mutations on the
+        # collector's `aq_ds.data` (e.g., a future debug logger updating
+        # it in place) cannot poison the published envelope (PR #20
+        # review MEDIUM).
+        buurt_air_data[loc['name']] = copy.deepcopy(aq_ds.data)
+        buurt_air_stations[loc['name']] = {
+            k: aq_ds.metadata.get(k) for k in _BUURT_AIR_STATION_FIELDS
+        }
+        for issue in (aq_ds.metadata.get('collector_quality_issues') or []):
+            # Deep-copy so adding `details.location` here does NOT mutate
+            # the collector's original issue dict (PR #20 review HIGH).
+            tagged = copy.deepcopy(issue)
+            tagged.setdefault('details', {})['location'] = loc['name']
+            buurt_air_quality_issues.append(tagged)
+
+    if not buurt_air_data:
+        return None
+
+    # `locations` mirrors `data.keys()` deliberately: consumers reading only
+    # the metadata block (without traversing `data`) get the list directly,
+    # matching weather/solar buurt feed convention.
+    air_metadata = {
+        'data_type': 'air',
+        'source': 'Luchtmeetnet API',
+        'units': 'µg/m³',
+        'locations': list(buurt_air_data.keys()),
+        'stations': buurt_air_stations,
+    }
+    if buurt_air_quality_issues:
+        air_metadata['collector_quality_issues'] = buurt_air_quality_issues
+    return EnhancedDataSet(metadata=air_metadata, data=buurt_air_data)
+
 
 # Setup logging with UTF-8 encoding (Windows console defaults to cp1252)
 _stream_handler = logging.StreamHandler()
@@ -663,22 +760,14 @@ async def main() -> None:
             logging.info(f"Saved buurt solar irradiance forecast for {len(buurt_locations)} neighbourhoods (FyE B1)")
 
         # Save buurt-level air quality (FyE B1 transdisciplinary signal).
-        # Combines per-buurt Luchtmeetnet datasets into one envelope, keyed by
-        # location name. Historical 24h window, snaps to nearest RIVM station.
-        # NOTE schema divergence: wind_forecast.json keys its CombinedDataSet
-        # datasets by SOURCE type ('entsoe_wind_generation', 'offshore_wind');
-        # air_quality_buurt.json keys by LOCATION name ('Elsweide_Arnhem_NL',
-        # 'Elderveld_Arnhem_NL'). Both are intentional but mean any consumer
-        # iterating .datasets must understand the key semantics per-file.
-        buurt_air_combined = CombinedDataSet()
-        for loc, aq_ds in zip(buurt_locations, buurt_aq_data):
-            if aq_ds:
-                buurt_air_combined.add_dataset(loc['name'], aq_ds)
-        if buurt_air_combined.datasets:
+        # Envelope shape pinned by `assemble_buurt_air_envelope` to match
+        # weather_forecast_buurt.json / solar_forecast_buurt.json — see #17.
+        buurt_air_combined = assemble_buurt_air_envelope(buurt_locations, buurt_aq_data)
+        if buurt_air_combined is not None:
             full_path = os.path.join(output_path, f"{datetime.now().strftime('%y%m%d_%H%M%S')}_air_quality_buurt.json")
             save_data_file(data=buurt_air_combined, file_path=full_path, handler=handler, encrypt=encryption)
             shutil.copy(full_path, os.path.join(output_path, "air_quality_buurt.json"))
-            logging.info(f"Saved buurt air quality (Luchtmeetnet) for {len(buurt_air_combined.datasets)} neighbourhoods (FyE B1)")
+            logging.info(f"Saved buurt air quality (Luchtmeetnet) for {len(buurt_air_combined.data)} neighbourhoods (FyE B1)")
 
         # Save cross-border flows data (import/export between NL and neighbors)
         if flows_data:
@@ -863,7 +952,7 @@ async def main() -> None:
             'weather_forecast_multi_location': strategic_weather_data,
             'weather_forecast_buurt': buurt_weather_data,
             'solar_forecast_buurt': buurt_solar_data,
-            'air_quality_buurt': buurt_air_combined if buurt_air_combined.datasets else None,
+            'air_quality_buurt': buurt_air_combined,  # None when no buurt locations collected; see #17
             'grid_imbalance': tennet_data,
             'wind_forecast': entsoe_wind_data,
             'solar_forecast': solar_data,
