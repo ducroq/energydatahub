@@ -128,6 +128,45 @@ class RetryConfig:
 - Attempt 3: Wait ~2.0s
 - Jitter adds ±50% randomness to delays
 
+### 2a. NonRetryableError (Permanent Failure Signal)
+
+**Purpose**: Skip the retry loop when a failure cannot be cured by trying again.
+
+```python
+from collectors.base import NonRetryableError
+
+class MyCollector(BaseCollector):
+    async def _fetch_raw_data(self, start_time, end_time, **kwargs):
+        try:
+            return await api.call(...)
+        except Exception as e:
+            # Permanent? Bail out — retrying changes nothing.
+            from collectors._http_classifier import raise_if_permanent
+            raise_if_permanent(e, context="MyCollector")
+            raise  # transient — propagate to BaseCollector's retry loop
+```
+
+`_retry_with_backoff` recognises `NonRetryableError` and re-raises immediately
+instead of burning the retry budget. Use it for:
+
+- HTTP 4xx-class errors that won't change on retry (422/400/401/403/404).
+  The shared helper `collectors/_http_classifier.raise_if_permanent` does the
+  classification — adopt it from any collector that hits a 4xx cascade.
+- "I've tried everything I can; the upstream is permanently empty for this
+  window" exit paths from a per-zone loop (issue #25, EntsoeHydroCollector).
+- Validation errors discovered before the API call where retrying the same
+  input is pointless.
+
+**Do NOT use NonRetryableError for**: 5xx (server errors), 429 (rate-limited),
+timeouts, connection resets — these are transient and may succeed on retry.
+Let them propagate as their native exception types so `_retry_with_backoff`
+applies its exponential backoff.
+
+**Common trap**: raising a plain `ValueError` / `RuntimeError` when you mean
+"permanent" — the outer retry loop catches `Exception` and retries it. The
+exception **name** is the signal, not the message. See
+`memory/gotcha-log.md` entry from 2026-06-07.
+
 ### 3. CollectorStatus (Enum)
 
 **Purpose**: Track collection outcome

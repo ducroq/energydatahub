@@ -14,11 +14,12 @@ Automated energy market data collection platform for electricity price predictio
 | When | Read |
 |------|------|
 | Starting any session | Compare `framework:` version above against [CHANGELOG](https://github.com/ducroq/agent-ready-projects/blob/master/CHANGELOG.md). If behind, surface drift before starting work — adopting changes is your call. |
-| Adding a new collector | `collectors/base.py` — BaseCollector pattern, `collectors/entsoe_generation.py` — good example |
-| Changing data output format | `utils/data_types.py` — EnhancedDataSet/CombinedDataSet, `utils/schema_registry.py` — versioning |
-| Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow |
+| Adding a new collector | `collectors/base.py` — BaseCollector pattern, `collectors/entsoe_generation.py` — good example, `collectors/entsoe_hydro.py` — minimal example. Also see `collectors/_http_classifier.py` for the HTTP-status bail-out pattern (raise_if_permanent) — use it from `_fetch_raw_data` to skip retries on permanent client errors (422/400/401/403/404). |
+| Changing data output format | `utils/data_types.py` — EnhancedDataSet/CombinedDataSet, `utils/schema_registry.py` — versioning + migration chain. **Any shape change requires bumping `CURRENT_SCHEMA_VERSION` + adding a `_migrate_X_to_Y` function + a SCHEMA_CHANGELOG entry**. The CI tripwire (`scripts/detect_schema_drift.py`) enforces this. |
+| Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (currently --warn-only). |
 | Working with encryption/publish | `utils/secure_data_handler.py`, `docs/CI_CD_SETUP.md` |
-| Debugging data quality issues | `utils/data_quality.py` — FMEA-based validation framework |
+| Debugging data quality issues | `utils/data_quality.py` — FMEA validation. Per-dataset config via `get_dataset_validation_config()`. Missing-dataset severity via `DATASET_MISSING_SEVERITY` dict (single source of truth). |
+| Adding a published dataset | Update `EXPECTED_DATA_TYPE` (defends against MITM-spoofed data_type, CWE-20) AND the published_feeds block in `data_fetcher.py` AND `quality_datasets` dict — `test_published_feeds_all_pinned` will fail if you skip the first one. |
 | Stuck or debugging something weird | `memory/gotcha-log.md` — problem-fix archive |
 | Ending a session | Run `/curate` — reviews gotcha log, promotes patterns, syncs docs, surfaces stale memory |
 | Monthly or after major restructuring | Run `/audit-context` — structural audit (duplication, wrong-layer placement, broken refs) |
@@ -35,13 +36,19 @@ Automated energy market data collection platform for electricity price predictio
 ## Architecture
 
 ```
-data_fetcher.py              # Main orchestrator — initializes collectors, runs async gather
+data_fetcher.py              # Main orchestrator — initializes collectors, runs async gather,
+                             # writes data/_shape_signatures.json sidecar pre-encryption
 collectors/
-  base.py                    # BaseCollector ABC: retry, circuit breaker, validation
+  base.py                    # BaseCollector ABC: retry, circuit breaker, validation,
+                             # NonRetryableError for permanent failures (#25)
+  _http_classifier.py        # Shared HTTP status classifier (raise_if_permanent) for
+                             # 422/400/401/403/404 → NonRetryableError. Used by tennet.py;
+                             # available for adoption by any collector that hits 4xx cascades.
   _openmeteo_shared.py       # Shared Semaphore + per-location retry/backoff for OpenMeteo*
-  entsoe*.py                 # ENTSO-E family (prices, wind, flows, load, generation)
+  entsoe*.py                 # ENTSO-E family (prices, wind, flows, load, generation, hydro)
+  entsoe_hydro.py            # Nordic hydro reservoirs (A72) — code shipped, awaits wire-in
   energyzero.py / epex.py / elspot.py  # Day-ahead price collectors (NL/EU)
-  tennet.py                  # TenneT TSO (imbalance prices, grid balance)
+  tennet.py                  # TenneT TSO (imbalance prices, grid balance) — uses _http_classifier
   ned.py                     # NED.nl Dutch production
   market_proxies.py          # Carbon EUA + gas TTF prices
   openmeteo_weather.py       # Strategic + demand + buurt weather (replaces Google Weather)
@@ -52,15 +59,24 @@ collectors/
   entsog_flows.py            # Gas pipeline flows
   googleweather.py / openweather.py / meteoserver.py  # RETIRED — kept for cold revert
 utils/
-  data_types.py              # EnhancedDataSet, CombinedDataSet
-  data_quality.py            # FMEA validation framework
-  schema_registry.py         # Version detection + migration (v1.0 → v2.0 → v2.1)
-  secure_data_handler.py     # AES-CBC encryption
+  data_types.py              # EnhancedDataSet, CombinedDataSet — canonical {metadata, data} envelope
+  data_quality.py            # FMEA validation. DATASET_MISSING_SEVERITY (single registry),
+                             # EXPECTED_DATA_TYPE (MITM defense), get_dataset_validation_config()
+  schema_registry.py         # Version detection + migration (v1.0 → v2.0 → v2.1 → v2.2 → v2.3).
+                             # stamp_metadata embeds the version's changelog slice (Layer B).
+  shape_signature.py         # Structural fingerprint for schema-drift detection (#27)
+  secure_data_handler.py     # AES-CBC + HMAC-SHA256 encryption
   calendar_features.py       # Holiday/DST features
-data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + current copies
+scripts/
+  detect_schema_drift.py     # CI tripwire diffing data/_shape_signatures.json against HEAD (#27)
+  backfill_entsoe.py / archive_to_monthly.py / backfill_gas_storage.py
+data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + current copies +
+                             # _shape_signatures.json sidecar (unencrypted, committed)
 docs/                        # GitHub Pages: encrypted JSON + project documentation
 .github/workflows/
-  collect-data.yml           # Daily 16:00 UTC collection + publish
+  collect-data.yml           # Daily 16:00 UTC collection + publish. Includes completeness
+                             # tripwire (warn on missing files) + schema-drift tripwire
+                             # (--warn-only initially; flip to fail-mode once trusted).
   test.yml                   # PR/push test pipeline (path-filtered, Python 3.12 only)
 ```
 
@@ -68,15 +84,18 @@ docs/                        # GitHub Pages: encrypted JSON + project documentat
 
 | Path | What it is |
 |------|-----------|
-| `data_fetcher.py` | Main orchestrator — all collector wiring and save logic |
-| `collectors/base.py` | BaseCollector ABC with retry/circuit breaker |
+| `data_fetcher.py` | Main orchestrator — all collector wiring, save logic, shape-signature sidecar emission |
+| `collectors/base.py` | BaseCollector ABC with retry/circuit breaker + `NonRetryableError` |
+| `collectors/_http_classifier.py` | Shared HTTP status classifier (`raise_if_permanent`) — adopt this when adding a new API collector |
 | `collectors/__init__.py` | All collector exports |
-| `utils/data_types.py` | EnhancedDataSet / CombinedDataSet classes |
-| `utils/schema_registry.py` | Schema versioning and migration |
-| `utils/data_quality.py` | FMEA quality validation |
+| `utils/data_types.py` | EnhancedDataSet / CombinedDataSet classes (canonical envelope since v2.2) |
+| `utils/schema_registry.py` | Schema versioning + migration chain (currently v2.3). `stamp_metadata` embeds changelog slice. |
+| `utils/shape_signature.py` | Structural fingerprint for the schema-drift CI tripwire |
+| `utils/data_quality.py` | FMEA quality validation. `DATASET_MISSING_SEVERITY` registry + `get_dataset_validation_config()` lookup. |
 | `settings.ini` | Public config (location, encryption flag) |
 | `secrets.ini` | API keys (gitignored) |
-| `.github/workflows/collect-data.yml` | Daily CI/CD pipeline |
+| `.github/workflows/collect-data.yml` | Daily CI/CD pipeline (collect → sidecar → completeness tripwire → schema-drift tripwire → quality gate → publish) |
+| `scripts/detect_schema_drift.py` | CI tripwire — diffs `data/_shape_signatures.json` against `git show HEAD:` |
 | `scripts/backfill_entsoe.py` | Backfill missing ENTSO-E prices into historical files |
 | `scripts/archive_to_monthly.py` | Decrypt `data/` files into `05. Data/YYYY-MM/` monthly archive (idempotent) |
 | `tests/backtest_data_quality.py` | Run FMEA quality framework against all historical files |
@@ -104,8 +123,14 @@ python scripts/archive_to_monthly.py --since 260201
 # Run data quality backtest on historical files
 python tests/backtest_data_quality.py
 
+# Check schema drift locally (after a `python data_fetcher.py` run)
+python scripts/detect_schema_drift.py --previous-ref HEAD --warn-only
+
 # Check GitHub Actions status
 gh run list --limit 5
+
+# Trigger a manual collection run (requires PAT secret in workflow)
+gh workflow run "Collect and Publish Data"
 ```
 
 ## Commit Conventions
