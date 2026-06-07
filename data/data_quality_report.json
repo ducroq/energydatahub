@@ -1,16 +1,18 @@
 {
-  "timestamp": "2026-06-07T09:22:42.201966+00:00",
+  "timestamp": "2026-06-07T17:00:29.746714+00:00",
   "overall_status": "error",
-  "total_issues": 7,
-  "datasets_collected": 22,
-  "datasets_missing": [],
+  "total_issues": 5,
+  "datasets_collected": 21,
+  "datasets_missing": [
+    "grid_imbalance"
+  ],
   "dataset_reports": [
     {
       "dataset_name": "entsoe",
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +22,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -30,7 +32,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -40,7 +42,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 24,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -57,41 +59,31 @@
     },
     {
       "dataset_name": "weather_forecast_multi_location",
-      "data_type": "demand_weather",
+      "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
       "data_points": 1440,
-      "checks_passed": 4,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
     {
       "dataset_name": "weather_forecast_buurt",
-      "data_type": "demand_weather",
+      "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
       "data_points": 768,
-      "checks_passed": 4,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
     {
       "dataset_name": "solar_forecast_buurt",
-      "data_type": "solar_irradiance",
+      "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
       "data_points": 768,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
@@ -100,28 +92,28 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 312,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
     {
       "dataset_name": "solar_forecast",
-      "data_type": "solar_irradiance",
+      "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
       "data_points": 1176,
-      "checks_passed": 4,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
     {
       "dataset_name": "demand_weather_forecast",
-      "data_type": "demand_weather",
+      "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
       "data_points": 1848,
-      "checks_passed": 4,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
@@ -147,31 +139,31 @@
     },
     {
       "dataset_name": "load_forecast",
-      "data_type": "load_forecast",
+      "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
       "data_points": 384,
-      "checks_passed": 4,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
     {
       "dataset_name": "generation_forecast",
-      "data_type": "generation_by_type",
+      "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 44,
-      "checks_passed": 4,
+      "data_points": 72,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
     {
       "dataset_name": "generation_mix",
-      "data_type": "generation_by_type",
+      "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
       "data_points": 216,
-      "checks_passed": 4,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
@@ -247,37 +239,11 @@
       "dataset_name": "gas_storage",
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
-      "status": "error",
+      "status": "info",
       "data_points": 48,
-      "checks_passed": 3,
-      "checks_failed": 2,
-      "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "error",
-          "message": "24 values outside range [0.0, 100.0] %",
-          "details": {
-            "count": 24,
-            "examples": [
-              "2026-05-29T00:00:00+02:00/injection_gwh: 385.08",
-              "2026-05-29T00:00:00+02:00/net_change_gwh: 377.18",
-              "2026-05-29T00:00:00+02:00/working_gas_volume_twh: 143.7945",
-              "2026-05-30T00:00:00+02:00/injection_gwh: 399.75",
-              "2026-05-30T00:00:00+02:00/net_change_gwh: 369.05"
-            ]
-          }
-        },
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 59.4h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-06-05T00:00:00+02:00",
-            "age_hours": 59.4,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "gas_flows",
