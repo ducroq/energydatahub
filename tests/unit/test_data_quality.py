@@ -324,6 +324,39 @@ class TestExpectedDataTypeDefense:
         assert 'load_forecast' in EXPECTED_DATA_TYPE
         assert 'generation_forecast' in EXPECTED_DATA_TYPE
 
+    def test_price_feeds_pinned_post_review(self):
+        """Reviewer security-auditor MEDIUM finding (CWE-20): the five
+        per-source energy-price feeds were the highest-value MITM targets
+        (an attacker could spoof data_type='weather' to route EUR/MWh
+        values through temperature/pressure bounds and silently pass
+        nonsense). All five must now be pinned to 'energy_price'."""
+        for feed in ('entsoe', 'entsoe_de', 'energy_zero', 'epex', 'elspot'):
+            assert feed in EXPECTED_DATA_TYPE, f"Price feed {feed!r} not pinned"
+            assert EXPECTED_DATA_TYPE[feed] == 'energy_price'
+
+    def test_published_feeds_all_pinned(self):
+        """Every dataset name that appears in data_fetcher.py's
+        `quality_datasets` block should have a pin. Drift between the
+        two registries means a newly-added feed would silently lack the
+        defense — this guards against that.
+        """
+        # Mirrors the quality_datasets dict in data_fetcher.py:946-970.
+        # Update both together when a new feed is added.
+        published_feeds = {
+            'entsoe', 'entsoe_de', 'energy_zero', 'epex', 'elspot',
+            'weather_forecast_multi_location', 'weather_forecast_buurt',
+            'solar_forecast_buurt', 'air_quality_buurt', 'grid_imbalance',
+            'wind_forecast', 'solar_forecast', 'demand_weather_forecast',
+            'offshore_wind', 'cross_border_flows', 'load_forecast',
+            'generation_forecast', 'generation_mix', 'ned_production',
+            'market_proxies', 'market_history', 'gas_storage', 'gas_flows',
+        }
+        missing = published_feeds - set(EXPECTED_DATA_TYPE.keys())
+        assert missing == set(), (
+            f"These published feeds lack an EXPECTED_DATA_TYPE pin and are "
+            f"vulnerable to data_type-spoof MITM (CWE-20): {sorted(missing)}"
+        )
+
 
 class TestGasStorageFieldRanges:
     """Issue #24: gas_storage's nested {fill_level_pct, *_twh, *_gwh} dict
@@ -714,6 +747,53 @@ class TestValidatePipeline:
         report = validate_pipeline(datasets)
         assert report.status == 'critical'
         assert report.total_issues > 0
+
+
+class TestDatasetMissingSeverityRegistry:
+    """Reviewer tier-2 finding (refactoring-guide OVER-ENGINEERED):
+    the three parallel registries collapsed into a single
+    DATASET_MISSING_SEVERITY dict. The back-compat shims must still
+    derive correctly from the dict so any importer keeps working.
+    """
+
+    def test_required_datasets_derived_from_critical(self):
+        from utils.data_quality import DATASET_MISSING_SEVERITY, REQUIRED_DATASETS
+        for name in REQUIRED_DATASETS:
+            assert DATASET_MISSING_SEVERITY.get(name) == 'critical'
+        # And the reverse — every critical entry shows up in REQUIRED_DATASETS.
+        for name, sev in DATASET_MISSING_SEVERITY.items():
+            if sev == 'critical':
+                assert name in REQUIRED_DATASETS
+
+    def test_warning_datasets_derived(self):
+        from utils.data_quality import DATASET_MISSING_SEVERITY, WARNING_IF_MISSING_DATASETS
+        for name in WARNING_IF_MISSING_DATASETS:
+            assert DATASET_MISSING_SEVERITY.get(name) == 'warning'
+
+    def test_expected_datasets_includes_critical_and_info(self):
+        """EXPECTED_DATASETS historically included REQUIRED_DATASETS as a
+        superset (it duplicates the critical entries plus info-flake
+        ones). The back-compat shim preserves this — both critical and
+        info entries appear."""
+        from utils.data_quality import DATASET_MISSING_SEVERITY, EXPECTED_DATASETS
+        for name in EXPECTED_DATASETS:
+            sev = DATASET_MISSING_SEVERITY.get(name)
+            assert sev in ('critical', 'info')
+
+    def test_grid_imbalance_is_warning_severity(self):
+        """The #25 soft-gate is preserved through the refactor."""
+        from utils.data_quality import DATASET_MISSING_SEVERITY
+        assert DATASET_MISSING_SEVERITY['grid_imbalance'] == 'warning'
+
+    def test_critical_datasets_are_entsoe_and_energy_zero(self):
+        """Stable contract: the two critical datasets are the day-ahead
+        price feeds that Augur depends on."""
+        from utils.data_quality import DATASET_MISSING_SEVERITY
+        critical = {
+            name for name, sev in DATASET_MISSING_SEVERITY.items()
+            if sev == 'critical'
+        }
+        assert critical == {'entsoe', 'energy_zero'}
 
 
 class TestSoftGateForGridImbalance:

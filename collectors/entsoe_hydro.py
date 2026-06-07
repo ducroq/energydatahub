@@ -202,7 +202,14 @@ class EntsoeHydroCollector(BaseCollector):
             )
 
         if not results:
-            raise ValueError(
+            # All zones returned None or empty. Retrying the outer loop
+            # will hit the same state — bail out via NonRetryableError so
+            # BaseCollector's `_retry_with_backoff` doesn't burn additional
+            # attempts (reviewer BLOCKER on 935c483: raising ValueError
+            # here was caught by the outer Exception handler and got
+            # retried up to max_attempts times, defeating the per-zone
+            # bail-out intent).
+            raise NonRetryableError(
                 "No reservoir data returned for any requested country"
             )
         return results
@@ -291,13 +298,18 @@ class EntsoeHydroCollector(BaseCollector):
                 continue
             for ts, point in country_data.items():
                 mwh = point.get('reservoir_mwh')
-                # Physical bounds: ENTSO-E A72 returns non-negative MWh.
-                # A single Nordic country's stored hydro energy rarely
-                # exceeds ~100 TWh (1e8 MWh).
-                if mwh is None or mwh < 0 or mwh > 2e8:
+                # Physical bounds derived from NVE / Statnett public data:
+                # NO peak usable reservoir capacity ~85 TWh = 8.5e7 MWh,
+                # SE ~33 TWh = 3.3e7 MWh, FI ~5 TWh = 5e6 MWh. 1.2e8 gives
+                # ~40% headroom over Norway's peak — tight enough to catch
+                # a 2x unit-scaling error (e.g. GWh reported as MWh) and a
+                # 10x error (kWh reported as MWh) is caught at ~8.5e8 too.
+                # ENTSO-E A72 returns non-negative MWh; zero is a legal
+                # dead-storage edge case.
+                if mwh is None or mwh < 0 or mwh > 1.2e8:
                     warnings.append(
                         f"{country_code} {ts}: reservoir_mwh={mwh} out of "
-                        "plausible range [0, 2e8]"
+                        "plausible range [0, 1.2e8]"
                     )
         return not warnings, warnings
 

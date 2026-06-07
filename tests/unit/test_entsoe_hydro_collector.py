@@ -147,6 +147,44 @@ class TestEntsoeHydroValidate:
         assert ok is False
         assert any("out of plausible range" in w for w in warnings)
 
+    def test_norway_peak_within_bound(self):
+        """Norway's physical maximum (~85 TWh = 8.5e7 MWh) must pass."""
+        collector = EntsoeHydroCollector(api_key="test_key")
+        data = {
+            "NO": {
+                "2026-01-19T01:00:00+01:00": {
+                    "reservoir_mwh": 8.5e7,
+                    "iso_week": 4,
+                    "iso_year": 2026,
+                },
+            },
+        }
+        ok, warnings = collector._validate_data(
+            data, datetime(2026, 1, 1, tzinfo=AMS), datetime(2026, 3, 1, tzinfo=AMS)
+        )
+        assert ok is True
+        assert warnings == []
+
+    def test_2x_unit_error_caught_after_tightening(self):
+        """A 2x unit-scaling error (e.g. GWh mislabeled MWh on NO at peak)
+        produces 1.7e8 — must be flagged by the post-review bound 1.2e8.
+        Regression for dataset-qa finding on 935c483."""
+        collector = EntsoeHydroCollector(api_key="test_key")
+        data = {
+            "NO": {
+                "2026-01-19T01:00:00+01:00": {
+                    "reservoir_mwh": 1.7e8,  # 2× Norway peak
+                    "iso_week": 4,
+                    "iso_year": 2026,
+                },
+            },
+        }
+        ok, warnings = collector._validate_data(
+            data, datetime(2026, 1, 1, tzinfo=AMS), datetime(2026, 3, 1, tzinfo=AMS)
+        )
+        assert ok is False
+        assert any("out of plausible range" in w for w in warnings)
+
     def test_empty_data_fails(self):
         collector = EntsoeHydroCollector(api_key="test_key")
         ok, warnings = collector._validate_data(
@@ -160,8 +198,11 @@ class TestEntsoeHydroFetchClassifier:
     it inherits the #25 bail-out pattern from the BaseCollector."""
 
     @pytest.mark.asyncio
-    async def test_fetch_raises_value_error_when_all_zones_return_none(self):
-        """If every zone returns None after retries, fail loudly."""
+    async def test_fetch_raises_non_retryable_when_all_zones_return_none(self):
+        """If every zone returns None after retries, raise NonRetryableError
+        so the BaseCollector outer loop bails out cleanly (reviewer BLOCKER
+        on 935c483: previously raised ValueError which got caught by the
+        outer Exception handler and triggered max_attempts retries)."""
         collector = EntsoeHydroCollector(api_key="test_key")
 
         # Patch _retry_single to always return None (mimics two zones both failing)
@@ -169,11 +210,47 @@ class TestEntsoeHydroFetchClassifier:
             return None
 
         with patch.object(collector, "_retry_single", side_effect=always_none):
-            with pytest.raises(ValueError, match="No reservoir data"):
+            with pytest.raises(NonRetryableError, match="No reservoir data"):
                 await collector._fetch_raw_data(
                     datetime(2026, 1, 1, tzinfo=AMS),
                     datetime(2026, 2, 1, tzinfo=AMS),
                 )
+
+    @pytest.mark.asyncio
+    async def test_all_zones_empty_makes_only_one_attempt(self):
+        """End-to-end via collect(): all-zones-empty bails out on first try.
+
+        Regression for the reviewer BLOCKER: if this raises ValueError
+        instead of NonRetryableError, the outer retry loop would run
+        max_attempts (default 3) times, each calling _retry_single twice
+        (once per zone). Counting the per-zone calls confirms the
+        bail-out fires after the first attempt.
+        """
+        collector = EntsoeHydroCollector(
+            api_key="test_key",
+            country_codes=["NO", "SE"],
+            retry_config=RetryConfig(max_attempts=3, initial_delay=0.01),
+        )
+
+        call_count = 0
+
+        async def returns_none(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            return None
+
+        with patch.object(collector, "_retry_single", side_effect=returns_none):
+            start = datetime(2026, 1, 1, tzinfo=AMS)
+            end = datetime(2026, 2, 1, tzinfo=AMS)
+            result = await collector.collect(start, end)
+
+        assert result is None
+        # Only 2 calls (one per zone, single outer attempt). Without the
+        # bail-out, would be 6 (2 zones × 3 outer retries).
+        assert call_count == 2, (
+            f"Expected 2 calls (1 outer attempt × 2 zones), got {call_count}. "
+            "The retry loop is still burning attempts on a permanent state."
+        )
 
     @pytest.mark.asyncio
     async def test_fetch_propagates_non_retryable_error(self):

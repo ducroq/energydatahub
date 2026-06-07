@@ -101,21 +101,20 @@ class PipelineQualityReport:
     @property
     def status(self) -> str:
         statuses = [r.status for r in self.dataset_reports]
-        has_critical_missing = any(
-            name in REQUIRED_DATASETS for name in self.missing_datasets
-        )
-        has_warning_missing = any(
-            name in WARNING_IF_MISSING_DATASETS for name in self.missing_datasets
-        )
+        # Per-name severity contribution from missing datasets — single
+        # registry consulted instead of three parallel lists (tier-2
+        # reviewer finding on 7c0de64).
+        missing_severities = {
+            DATASET_MISSING_SEVERITY.get(name, 'info')
+            for name in self.missing_datasets
+        }
 
-        # Worst-case wins. Required missing or any critical dataset wins
-        # over everything; then error; then warning (covers both warning-
-        # severity reports AND known-operational missing datasets per #25).
-        if has_critical_missing or "critical" in statuses:
+        # Worst-case wins ladder: critical > error > warning > info.
+        if 'critical' in missing_severities or "critical" in statuses:
             return "critical"
         if "error" in statuses:
             return "error"
-        if has_warning_missing or "warning" in statuses:
+        if 'warning' in missing_severities or "warning" in statuses:
             return "warning"
         return "info"
 
@@ -317,20 +316,41 @@ EXPECTED_MIN_POINTS = {
     'MeteoServer': 24,
 }
 
-# Required datasets (pipeline should warn if these are missing)
-REQUIRED_DATASETS = ['entsoe', 'energy_zero']
-EXPECTED_DATASETS = [
-    'entsoe', 'entsoe_de', 'energy_zero', 'epex', 'elspot',
-]
+# Severity when each dataset is absent from the pipeline. Single source of
+# truth — what was previously three parallel registries (REQUIRED_DATASETS /
+# EXPECTED_DATASETS / WARNING_IF_MISSING_DATASETS) with overlapping membership
+# and implicit precedence is now one dict. Reviewer tier-2 finding on 7c0de64.
+#
+#   'critical' — pipeline status promotes to 'critical' if this dataset is
+#                missing. Downstream forecasts (Augur) materially degrade.
+#   'warning'  — known operational issue (e.g. TenneT 422 per #25); the
+#                absence promotes status to 'warning' but doesn't block
+#                publish.
+#   'info'     — expected but routinely flaky upstream sources; absence is
+#                noted in missing_datasets but doesn't promote status.
+#
+# Datasets NOT in this dict trigger no status promotion when missing
+# (silent absence) — they're either optional or aren't tracked here yet.
+DATASET_MISSING_SEVERITY: Dict[str, str] = {
+    'entsoe':         'critical',
+    'energy_zero':    'critical',
+    'entsoe_de':      'info',
+    'epex':           'info',
+    'elspot':         'info',
+    'grid_imbalance': 'warning',  # TenneT 422 cascade per #25
+}
 
-# Datasets that should normally be present but whose absence is a known
-# operational issue (not a "stop everything" event). Missing items here
-# promote pipeline status to "warning" — visible in data_quality_report
-# and the CI summary, but doesn't block publish. Issue #25 (TenneT 422→429
-# cascade) puts grid_imbalance silently absent for weeks at a time; this
-# soft-gate makes that visible to anyone reading overall_status.
+# Back-compat shims: derive the three named lists from the dict so any
+# code (tests, other modules) that imported these names continues to work.
+# These are read-only — mutate DATASET_MISSING_SEVERITY instead.
+REQUIRED_DATASETS = [
+    name for name, sev in DATASET_MISSING_SEVERITY.items() if sev == 'critical'
+]
+EXPECTED_DATASETS = [
+    name for name, sev in DATASET_MISSING_SEVERITY.items() if sev in ('critical', 'info')
+]
 WARNING_IF_MISSING_DATASETS = [
-    'grid_imbalance',  # TenneT — known 422 cascade per #25
+    name for name, sev in DATASET_MISSING_SEVERITY.items() if sev == 'warning'
 ]
 
 
@@ -741,17 +761,47 @@ STALENESS_OVERRIDES = {
 # CWE-20). Datasets whose name is not in this map fall back to trusting
 # metadata.data_type (no expected-type pin).
 EXPECTED_DATA_TYPE = {
-    'gas_storage': 'gas_storage',
+    # Energy-price feeds (highest-value MITM target — spoofing data_type
+    # could route EUR/MWh values through weather field-range validation
+    # and silently pass nonsense). Security audit MEDIUM CWE-20 on
+    # 7c0de64. The five price feeds share the same data_type because
+    # they're separate sub-sources of `energy_price_forecast`.
+    'entsoe':                          'energy_price',
+    'entsoe_de':                       'energy_price',
+    'energy_zero':                     'energy_price',
+    'epex':                            'energy_price',
+    'elspot':                          'energy_price',
+    # Existing entries (a74f662). Note: some legacy entries below pin to
+    # validation-routing aliases ('weather' / 'solar' / 'load' / 'generation')
+    # rather than the actual collector emission ('demand_weather' /
+    # 'solar_irradiance' / 'load_forecast' / 'generation_by_type'). The
+    # aliases keep range validation routed correctly through
+    # DATA_TYPE_RANGE_MAP at the cost of a warning per run. Separate cleanup
+    # to align the collectors with the validation registry is a follow-up.
+    'gas_storage':                     'gas_storage',
     'weather_forecast_multi_location': 'weather',
-    'weather_forecast_buurt': 'weather',
-    'demand_weather_forecast': 'weather',
-    'solar_forecast': 'solar',
-    'solar_forecast_buurt': 'solar',
-    'grid_imbalance': 'grid_imbalance',
-    'cross_border_flows': 'cross_border_flows',
-    'load_forecast': 'load',
-    'generation_forecast': 'generation',
-    'generation_mix': 'generation',
+    'weather_forecast_buurt':          'weather',
+    'demand_weather_forecast':         'weather',
+    'solar_forecast':                  'solar',
+    'solar_forecast_buurt':            'solar',
+    'grid_imbalance':                  'grid_imbalance',
+    'cross_border_flows':              'cross_border_flows',
+    'load_forecast':                   'load',
+    'generation_forecast':             'generation',
+    'generation_mix':                  'generation',
+    # Newly pinned feeds (reviewer follow-up to 7c0de64). These match the
+    # actual collector emissions so no mismatch warning fires; they pin
+    # the data_type so a MITM-spoofed metadata.data_type cannot redirect
+    # validation. Where the legit type has no DATA_TYPE_RANGE_MAP entry
+    # (offshore_wind, energy_production, etc.), pinning still defends
+    # against the "spoof to weather for lenient validation" attack vector.
+    'wind_forecast':                   'wind_generation',
+    'offshore_wind':                   'offshore_wind',
+    'ned_production':                  'energy_production',
+    'market_proxies':                  'market_proxies',
+    'market_history':                  'market_history',
+    'gas_flows':                       'gas_flows',
+    'air_quality_buurt':               'air',
 }
 
 
@@ -931,30 +981,24 @@ def validate_pipeline(
         timestamp=datetime.now().astimezone().isoformat(),
     )
 
-    # Check for missing required datasets
-    for name in REQUIRED_DATASETS:
-        if name not in datasets or datasets[name] is None:
-            report.missing_datasets.append(name)
-            logger.warning(f"[DQ:pipeline] Required dataset '{name}' is missing")
-
-    # Check for missing expected datasets
-    for name in EXPECTED_DATASETS:
-        if name not in datasets or datasets[name] is None:
-            if name not in report.missing_datasets:
-                report.missing_datasets.append(name)
-                logger.info(f"[DQ:pipeline] Expected dataset '{name}' is missing")
-
-    # Check for known-operational-issue datasets — these are soft-gated
-    # (warning, not critical) so the absence surfaces in overall_status
-    # without blocking publish (#25).
-    for name in WARNING_IF_MISSING_DATASETS:
-        if name not in datasets or datasets[name] is None:
-            if name not in report.missing_datasets:
-                report.missing_datasets.append(name)
-                logger.warning(
-                    f"[DQ:pipeline] Soft-gated dataset '{name}' is missing — "
-                    "pipeline status will be 'warning' (publish not blocked)"
-                )
+    # Single pass over the consolidated severity registry. Log level
+    # tracks severity so an absent critical dataset is flagged as a
+    # warning in the operator log, while an info-severity flake is
+    # quietly noted.
+    _missing_log = {
+        'critical': logger.warning,
+        'warning':  logger.warning,
+        'info':     logger.info,
+    }
+    for name, severity in DATASET_MISSING_SEVERITY.items():
+        if name in datasets and datasets[name] is not None:
+            continue
+        report.missing_datasets.append(name)
+        log_fn = _missing_log.get(severity, logger.info)
+        log_fn(
+            f"[DQ:pipeline] Dataset '{name}' is missing "
+            f"(severity={severity})"
+        )
 
     # Validate each collected dataset
     for name, dataset in datasets.items():
