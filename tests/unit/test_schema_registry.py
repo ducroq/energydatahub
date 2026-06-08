@@ -23,6 +23,7 @@ from zoneinfo import ZoneInfo
 
 from utils.schema_registry import (
     CURRENT_SCHEMA_VERSION,
+    _migrate_2_3_to_2_4,
     detect_version,
     stamp_metadata,
     migrate_to_current,
@@ -457,6 +458,71 @@ class TestMigrate2_2To2_3:
         assert 'gas_in_storage_twh' in sub_point
         assert sub_point['gas_in_storage_twh'] == 22.0
         assert 'working_capacity_twh' not in sub_point
+
+
+class TestMigrate2_3To2_4:
+    """Tests for the v2.3 → v2.4 grid_imbalance additive-metadata migration.
+
+    The 2.4 bump added `balance_delta_status`, `country_code`, `market`,
+    `resolution`, `data_fields`, `collector_quality_issues` to
+    grid_imbalance.json at publish time. The migration is a no-op
+    except version stamp — old files don't get the new fields
+    retrofitted (a historical degraded run may have looked balanced;
+    we will not lie about it after the fact).
+    """
+
+    def test_envelope_version_stamped(self):
+        data = {
+            'metadata': {
+                'data_type': 'grid_imbalance',
+                'schema_version': '2.3',
+            },
+            'data': {'2026-05-29T00:00:00+02:00': {'imbalance_price': 50.0}},
+        }
+        result = _migrate_2_3_to_2_4(data)
+        assert result['metadata']['schema_version'] == '2.4'
+        assert result['metadata']['migrated_from'] == '2.3'
+
+    def test_data_payload_unchanged(self):
+        """Migration must not touch the data payload — it's additive metadata."""
+        data = {
+            'metadata': {'data_type': 'grid_imbalance', 'schema_version': '2.3'},
+            'data': {
+                '2026-05-29T00:00:00+02:00': {
+                    'imbalance_price': 50.0,
+                    'balance_delta': 12.5,
+                    'direction': 'short',
+                },
+            },
+        }
+        before = {
+            ts: dict(point) for ts, point in data['data'].items()
+        }
+        result = _migrate_2_3_to_2_4(data)
+        assert result['data'] == before
+
+    def test_balance_delta_status_NOT_backfilled(self):
+        """We DO NOT retroactively add 'complete' to historical files —
+        a historical degraded run may have synthesised values that looked
+        balanced. Consumers should treat absent `balance_delta_status` as
+        'unknown'."""
+        data = {
+            'metadata': {'data_type': 'grid_imbalance', 'schema_version': '2.3'},
+            'data': {'2026-05-29T00:00:00+02:00': {'imbalance_price': 50.0}},
+        }
+        result = _migrate_2_3_to_2_4(data)
+        assert 'balance_delta_status' not in result['metadata']
+
+    def test_non_grid_imbalance_envelope_also_stamped(self):
+        """The 2.4 bump applies to all v2.x envelopes (consumers
+        expect every published file to carry the current version),
+        even though only grid_imbalance actually gained fields."""
+        data = {
+            'metadata': {'data_type': 'energy_price', 'schema_version': '2.3'},
+            'data': {'entsoe': {}},
+        }
+        result = _migrate_2_3_to_2_4(data)
+        assert result['metadata']['schema_version'] == '2.4'
 
 
 class TestReadJsonFile:

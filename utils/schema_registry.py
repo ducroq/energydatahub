@@ -28,6 +28,15 @@ Schema Version History:
           for semantic accuracy (it always held the current stored volume,
           not the working capacity). Tightened gas_storage range validators
           based on observed NL distributions. (Jun 2026)
+    2.4 - Additive metadata extensions on grid_imbalance.json:
+          `balance_delta_status` (complete/synthesised/unknown) so consumers
+          can distinguish a real balanced grid from synthesised flat-line,
+          plus `country_code` / `market` / `resolution` / `data_fields`
+          fields that were previously only in _get_metadata but never
+          reached the published file. `collector_quality_issues` array
+          may carry a `balance_delta_synthesised` warning when synthesised.
+          Migration is a no-op except version stamp — all fields are
+          additive. (Jun 2026)
 """
 
 import copy
@@ -39,7 +48,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # Current schema version
-CURRENT_SCHEMA_VERSION = "2.3"
+CURRENT_SCHEMA_VERSION = "2.4"
 
 # Schema changelog - documents what changed in each version
 SCHEMA_CHANGELOG = {
@@ -94,6 +103,29 @@ SCHEMA_CHANGELOG = {
             "GAS_STORAGE_FIELD_RANGES tightened to NL-realistic bounds (was ~10-26x loose)",
             "data_quality.py comment corrected from EU-aggregate to NL-only scope",
             "Auto-migrates historical v2.x gas_storage files via _migrate_2_2_to_2_3",
+        ],
+    },
+    "2.4": {
+        "date": "2026-06-08",
+        "description": "grid_imbalance metadata extensions (#25 follow-up)",
+        "changes": [
+            "Added `metadata.balance_delta_status` to grid_imbalance.json:",
+            "  'complete' = balance_delta endpoint returned data",
+            "  'synthesised' = endpoint failed permanently, balance_delta values",
+            "    defaulted to 0.0 and direction='unknown' across the day",
+            "    (do NOT treat as a real balanced grid)",
+            "  'unknown' = pre-fetch state, should not appear in published files",
+            "Added previously-missing `country_code`, `market`, `resolution`,",
+            "  `data_fields`, `api_version`, `collector` keys to grid_imbalance",
+            "  metadata. Were in `_get_metadata` but the custom `collect()`",
+            "  override was building metadata from scratch — fixed in same",
+            "  commit so all `_get_metadata` fields now propagate to publish.",
+            "`metadata.collector_quality_issues` may carry a",
+            "  'balance_delta_synthesised' warning so downstream gates see the",
+            "  degradation as a structured signal, not just a flat-line.",
+            "Migration is additive: old v2.3 grid_imbalance files do not lose",
+            "  data; new fields are missing and consumers should treat",
+            "  absent `balance_delta_status` as 'unknown'.",
         ],
     },
 }
@@ -380,12 +412,41 @@ def _migrate_2_2_to_2_3(data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
+def _migrate_2_3_to_2_4(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Migrate v2.3 data to v2.4 format.
+
+    The 2.4 bump is purely additive: new metadata keys on grid_imbalance
+    (`balance_delta_status`, `country_code`, `market`, `resolution`,
+    `data_fields`, `collector_quality_issues`) are appended at publish
+    time, not retrofitted into historical files. So the migration is
+    effectively a no-op except for stamping the version forward and
+    recording the lineage on the envelope.
+
+    Consumers reading a v2.3-era grid_imbalance file (no
+    `balance_delta_status` key) should treat the value as 'unknown' —
+    we do NOT backfill 'complete' because the historical file may
+    actually have come from a degraded run.
+
+    Args:
+        data: v2.3 format data
+
+    Returns:
+        Data in v2.4 format (version bumped, no data change)
+    """
+    if isinstance(data.get('metadata'), dict):
+        data['metadata']['schema_version'] = '2.4'
+        data['metadata'].setdefault('migrated_from', '2.3')
+    return data
+
+
 # Migration path: ordered list of (from_version, to_version, migration_func)
 MIGRATIONS = [
     ('1.0', '2.0', _migrate_1_to_2),
     ('2.0', '2.1', _migrate_2_to_2_1),
     ('2.1', '2.2', _migrate_2_1_to_2_2),
     ('2.2', '2.3', _migrate_2_2_to_2_3),
+    ('2.3', '2.4', _migrate_2_3_to_2_4),
 ]
 
 
