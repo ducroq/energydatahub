@@ -19,7 +19,7 @@
 |-------|------------|------|
 | Multi-collector concurrent → upstream rate-limit / CDN cascades (5-incident pattern: ENTSO-E 503, Luchtmeetnet 429, Open-Meteo 429, Open-Meteo CDN cooldown, TenneT 422→429) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 |
 | Parallel hard-coded registries keyed on the same identifier (2-incident pattern: 3-list missing-severity collapse in `data_quality.py`; 2-list expected-files vs docs-prepare in `collect-data.yml`) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 |
-| Silent quality-gate skip (2-incident pattern: GoogleWeather `API_KEY_INVALID` silent-success for 7 months; `validate_value_ranges` 2-level nesting silent-skip for ~3 months) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 |
+| Silent quality-gate skip (3-incident pattern, broadened 2026-06-08: GoogleWeather `API_KEY_INVALID` silent-success for 7 months; `validate_value_ranges` 2-level nesting silent-skip for ~3 months; TenneT custom `collect()` override silently dropped `balance_delta_status` + `collector_quality_issues` at publish boundary, ab3dcd4) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 (broadened 2026-06-08) |
 
 ### Optional result unpacking uses fragile index counting (2026-03-27)
 **Problem**: Adding a new fixed task to `asyncio.gather()` requires updating the slice index (e.g., `results[:14]` -> `results[:15]`) and `optional_idx`. Easy to miscount.

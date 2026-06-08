@@ -8,7 +8,7 @@ A robust Python-based system for collecting, processing, and publishing energy p
 - **Robust Architecture**: BaseCollector pattern with retry logic and circuit breakers
 - **Data Validation**: Comprehensive timezone normalization and data type validation
 - **Data Quality Framework**: FMEA-based quality checks (value ranges, completeness, staleness, null ratios) with per-run reports
-- **Schema Registry**: Versioned data schemas (v1.0→v2.0→v2.1) with automatic migration for backward-compatible reading
+- **Schema Registry**: Versioned data schemas (v1.0→v2.0→v2.1→v2.2→v2.3→v2.4) with automatic migration for backward-compatible reading
 - **Calendar Features**: DST-aware holiday/working-day features for NL/DE/BE/FR (electricity demand prediction)
 - **Secure Publishing**: AES-CBC encryption with HMAC-SHA256 for all published data
 - **Automated Workflows**: GitHub Actions for scheduled data collection and publishing (daily at 16:00 UTC)
@@ -91,14 +91,14 @@ Encrypted data is automatically published to GitHub Pages daily:
 
 ```json
 {
-  "version": "2.1",
+  "version": "2.4",
   "entsoe": {
     "metadata": {
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform",
       "units": "EUR/MWh",
       "country": "NL",
-      "schema_version": "2.1",
+      "schema_version": "2.4",
       "start_time": "2025-10-25T00:00:00+02:00",
       "end_time": "2025-10-26T00:00:00+02:00"
     },
@@ -281,7 +281,7 @@ export METEO_API_KEY="your_api_key"
 - **Overall**: 61% code coverage
 - **Base Collector**: 94% coverage
 - **Utils**: 75-91% coverage
-- **246 tests**: Unit, integration, and failure scenario tests
+- **605 tests**: Unit, integration, and failure scenario tests
 
 ## 🔗 Related Projects
 
@@ -392,8 +392,12 @@ python -c "from collectors import EpexCollector; c = EpexCollector(); print(c.ge
 ✅ **Production Ready** - Active development and maintenance
 
 **Latest Updates:**
+- ✅ TenneT resilience: split try-block keeps `settlement_prices` flowing when `balance_delta` endpoint is down; `balance_delta_status` metadata stamp distinguishes synthesised flat-line from real balanced grid; schema v2.4 (Jun 2026)
+- ✅ Schema-drift tripwire: structural fingerprint diffing per CI run; catches silent shape changes that ship without a `CURRENT_SCHEMA_VERSION` bump (issue #27, Jun 2026)
+- ✅ Per-feed validation: SOLAR_FIELD_RANGES, LOAD_FIELD_RANGES, HYDRO_RESERVOIR_FIELD_RANGES derived from 3 months observed data; eliminates dawn/dusk false-positive noise on solar feeds (issue #28, Jun 2026)
+- ✅ Nordic hydro reservoirs: ENTSO-E A72 weekly cadence for NO+SE, leading indicator for NL import prices via NorNed (issue #3, Jun 2026)
 - ✅ Data Quality: FMEA-based validation framework with per-run quality reports (Mar 2026)
-- ✅ Schema Registry: Versioned schemas (v2.1) with backward-compatible migration (Mar 2026)
+- ✅ Schema Registry: Versioned schemas (v2.4) with backward-compatible migration (Mar 2026, refined through Jun 2026)
 - ✅ Calendar Features: DST-aware holiday/season features for NL/DE/BE/FR (Mar 2026)
 - ✅ Collector Fixes: EnergyZero hour-00 fix, MeteoServer sentinel value handling (Mar 2026)
 - ✅ Offshore Wind: Open-Meteo collector for actual offshore coordinates (Dec 2025)
