@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-06-08T08:48:07+00:00",
+  "computed_at": "2026-06-08T08:57:20+00:00",
   "schema_version": "2.3",
   "feeds": {
     "energy_price_forecast.json": {
@@ -672,102 +672,6 @@
         "offshore_wind"
       ]
     },
-    "air_quality_buurt.json": {
-      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int",
-                    "PM10": "float",
-                    "PM25": "float"
-                  }
-                }
-              },
-              "Elsweide_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "data_type": "str",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "stations": {
-                "_kind": "dict",
-                "keys": {
-                  "Elderveld_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  },
-                  "Elsweide_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  }
-                }
-              },
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "air",
-      "sources": null
-    },
     "weather_forecast_multi_location.json": {
       "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
       "shape_signature": {
@@ -995,7 +899,7 @@
       "sources": null
     },
     "grid_imbalance.json": {
-      "shape_hash": "3b0e29a4021c4fe1923da07a7f1a3bf0",
+      "shape_hash": "200f27c65561b1f5fb7c3c47415ef5e5",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -1020,11 +924,37 @@
             "_kind": "dict",
             "keys": {
               "api_version": "str",
+              "balance_delta_status": "str",
               "collection_timestamp": "str",
+              "collector": "str",
+              "collector_quality_issues": {
+                "_kind": "list",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "check_name": "str",
+                    "details": {
+                      "_kind": "dict",
+                      "keys": {
+                        "reason": "str"
+                      }
+                    },
+                    "message": "str",
+                    "severity": "str"
+                  }
+                }
+              },
               "country": "str",
+              "country_code": "str",
+              "data_fields": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
               "data_points": "int",
               "data_type": "str",
               "end_time": "str",
+              "market": "str",
+              "resolution": "str",
               "schema_changelog_entry": {
                 "_kind": "dict",
                 "keys": {
