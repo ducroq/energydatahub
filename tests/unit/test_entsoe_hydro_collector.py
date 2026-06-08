@@ -102,6 +102,28 @@ class TestEntsoeHydroParseResponse:
         parsed = collector._parse_response(raw, start, end)
         assert len(parsed["NO"]) == 3  # 1 NaN dropped
 
+    def test_parse_tolerates_tz_naive_timestamps(self):
+        """Sonnet review: some entsoe-py versions return a tz-naive
+        index. Without the defensive guard, comparing naive `dt` against
+        tz-aware window bounds raises `TypeError`. The guard assumes UTC
+        for naive timestamps and routes through the standard Amsterdam
+        normalisation."""
+        collector = self._collector()
+        # Build a tz-naive series (no tzinfo on the index)
+        timestamps_naive = pd.DatetimeIndex([
+            pd.Timestamp("2026-01-05T00:00:00"),
+            pd.Timestamp("2026-01-12T00:00:00"),
+        ])
+        series = pd.Series([8.0e7, 7.6e7], index=timestamps_naive)
+        raw = {"NO": series}
+
+        start = datetime(2026, 1, 1, tzinfo=AMS)
+        end = datetime(2026, 2, 1, tzinfo=AMS)
+        # Must not raise TypeError; both points should be in the window.
+        parsed = collector._parse_response(raw, start, end)
+        assert "NO" in parsed
+        assert len(parsed["NO"]) == 2
+
     def test_parse_raises_when_no_points_in_window(self):
         collector = self._collector()
         raw = {"NO": _make_weekly_series("NO", n_weeks=4)}
@@ -191,6 +213,181 @@ class TestEntsoeHydroValidate:
             {}, datetime(2026, 1, 1, tzinfo=AMS), datetime(2026, 3, 1, tzinfo=AMS)
         )
         assert ok is False
+
+
+class TestEntsoeHydroPerZoneCompleteness:
+    """Issue #29: per-zone completeness signal so a half-dark zone
+    (NO=10, SE=2 — aggregates to 12 and passes
+    EXPECTED_MIN_POINTS['nordic_hydro']=12) still fires a warning."""
+
+    def _make_zone_data(self, n_points: int) -> dict:
+        """Build a per-zone data dict with `n_points` weekly entries."""
+        start = pd.Timestamp("2026-01-05T00:00:00+01:00")
+        return {
+            (start + pd.Timedelta(weeks=w)).isoformat(): {
+                "reservoir_mwh": 8.0e7,
+                "iso_week": w + 2,
+                "iso_year": 2026,
+            }
+            for w in range(n_points)
+        }
+
+    def test_healthy_zones_emit_no_per_zone_issue(self):
+        """Both zones at the floor (6 points each) — no warning."""
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO", "SE"])
+        data = {
+            "NO": self._make_zone_data(6),
+            "SE": self._make_zone_data(6),
+        }
+        collector._validate_data(
+            data,
+            datetime(2026, 1, 1, tzinfo=AMS),
+            datetime(2026, 3, 1, tzinfo=AMS),
+        )
+        assert collector._collector_quality_issues == []
+
+    def test_half_dark_zone_fires_warning(self):
+        """Acceptance from #29: NO=10, SE=2 → at least one issue with
+        zone='SE' and severity='warning'."""
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO", "SE"])
+        data = {
+            "NO": self._make_zone_data(10),
+            "SE": self._make_zone_data(2),
+        }
+        collector._validate_data(
+            data,
+            datetime(2026, 1, 1, tzinfo=AMS),
+            datetime(2026, 3, 1, tzinfo=AMS),
+        )
+        issues = collector._collector_quality_issues
+        assert len(issues) == 1
+        assert issues[0]["check_name"] == "completeness_per_zone"
+        assert issues[0]["severity"] == "warning"
+        assert issues[0]["details"]["zone"] == "SE"
+        assert issues[0]["details"]["observed"] == 2
+        assert issues[0]["details"]["expected"] == 6
+
+    def test_both_zones_half_dark_fires_two_warnings(self):
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO", "SE"])
+        data = {
+            "NO": self._make_zone_data(3),
+            "SE": self._make_zone_data(2),
+        }
+        collector._validate_data(
+            data,
+            datetime(2026, 1, 1, tzinfo=AMS),
+            datetime(2026, 3, 1, tzinfo=AMS),
+        )
+        issues = collector._collector_quality_issues
+        assert len(issues) == 2
+        zones = {i["details"]["zone"] for i in issues}
+        assert zones == {"NO", "SE"}
+
+    def test_validate_data_resets_per_run(self):
+        """Stale issues from a prior run must not leak into the next."""
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO", "SE"])
+        # Run 1: half-dark — populates instance state
+        collector._validate_data(
+            {"NO": self._make_zone_data(2), "SE": self._make_zone_data(6)},
+            datetime(2026, 1, 1, tzinfo=AMS),
+            datetime(2026, 3, 1, tzinfo=AMS),
+        )
+        assert len(collector._collector_quality_issues) == 1
+        # Run 2: healthy — instance state must reset
+        collector._validate_data(
+            {"NO": self._make_zone_data(6), "SE": self._make_zone_data(6)},
+            datetime(2026, 1, 1, tzinfo=AMS),
+            datetime(2026, 3, 1, tzinfo=AMS),
+        )
+        assert collector._collector_quality_issues == []
+
+    @pytest.mark.asyncio
+    async def test_collect_metadata_surfaces_per_zone_issues(self):
+        """End-to-end through `collect()`: the per-zone issue lands in
+        `dataset.metadata['collector_quality_issues']` via the
+        BaseCollector auto-inject."""
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO", "SE"])
+
+        # Return NO=10 weekly points but SE=2 (half-dark)
+        async def fake_per_country(query_func, *args, **kwargs):
+            code = query_func.keywords.get("country_code")
+            n = 10 if code == "NO" else 2
+            return _make_weekly_series(code, n_weeks=n)
+
+        with patch.object(collector, "_retry_single", side_effect=fake_per_country):
+            start = datetime(2026, 1, 1, tzinfo=AMS)
+            end = datetime(2026, 3, 1, tzinfo=AMS)
+            dataset = await collector.collect(start, end)
+
+        assert dataset is not None
+        assert "collector_quality_issues" in dataset.metadata
+        issues = dataset.metadata["collector_quality_issues"]
+        # SE = 2 < 6 → one issue; NO = 10 ≥ 6 → no issue.
+        assert len(issues) == 1
+        assert issues[0]["details"]["zone"] == "SE"
+        assert issues[0]["severity"] == "warning"
+
+    @pytest.mark.asyncio
+    async def test_collect_metadata_omits_key_when_no_issues(self):
+        """When all zones are healthy, the auto-inject does NOT add an
+        empty `collector_quality_issues` key — keeps the envelope tidy."""
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO", "SE"])
+
+        async def fake_per_country(query_func, *args, **kwargs):
+            code = query_func.keywords.get("country_code")
+            return _make_weekly_series(code, n_weeks=8)  # both healthy
+
+        with patch.object(collector, "_retry_single", side_effect=fake_per_country):
+            start = datetime(2026, 1, 1, tzinfo=AMS)
+            end = datetime(2026, 3, 1, tzinfo=AMS)
+            dataset = await collector.collect(start, end)
+
+        assert dataset is not None
+        assert "collector_quality_issues" not in dataset.metadata
+
+    @pytest.mark.asyncio
+    async def test_collect_metadata_deepcopies_so_caller_cant_mutate_instance(self):
+        """Defends against the shallow-copy mutation gotcha (PR #20 HIGH).
+        The deep copy now lives in BaseCollector.collect()."""
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO"])
+
+        async def fake_per_country(query_func, *args, **kwargs):
+            return _make_weekly_series("NO", n_weeks=2)  # half-dark
+
+        with patch.object(collector, "_retry_single", side_effect=fake_per_country):
+            start = datetime(2026, 1, 1, tzinfo=AMS)
+            end = datetime(2026, 3, 1, tzinfo=AMS)
+            dataset = await collector.collect(start, end)
+
+        # Mutate the metadata copy
+        dataset.metadata["collector_quality_issues"][0]["details"]["zone"] = "TAMPERED"
+        # Instance state must be untouched
+        assert collector._collector_quality_issues[0]["details"]["zone"] == "NO"
+
+    @pytest.mark.asyncio
+    async def test_collect_resets_quality_issues_at_top(self):
+        """The BaseCollector.collect() reset must clear stale state from
+        a prior run — covers opus-H1 (stale state survives if _parse_response
+        raises). Inject stale state, then run a healthy collect()."""
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO"])
+        # Stale state from a hypothetical prior run
+        collector._add_quality_issue(
+            check_name='completeness_per_zone', severity='warning',
+            message='stale', details={'zone': 'STALE'},
+        )
+        assert collector._collector_quality_issues  # populated
+
+        async def fake_per_country(query_func, *args, **kwargs):
+            return _make_weekly_series("NO", n_weeks=8)  # healthy
+
+        with patch.object(collector, "_retry_single", side_effect=fake_per_country):
+            start = datetime(2026, 1, 1, tzinfo=AMS)
+            end = datetime(2026, 3, 1, tzinfo=AMS)
+            dataset = await collector.collect(start, end)
+
+        # Stale state cleared; healthy run emits no key.
+        assert "collector_quality_issues" not in dataset.metadata
+        assert collector._collector_quality_issues == []
 
 
 class TestEntsoeHydroFetchClassifier:

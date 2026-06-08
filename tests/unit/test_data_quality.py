@@ -451,6 +451,191 @@ class TestGasStorageFieldRanges:
         assert report.status not in ('error', 'critical')
 
 
+class TestDataTypeRangeMapInvariants:
+    """Refactoring-guide H2 — DATA_TYPE_RANGE_MAP entries that route to
+    FIELD_RANGES_BY_TYPE must actually exist there; otherwise
+    `validate_value_ranges` silently no-ops. The module-load assert in
+    utils/data_quality.py catches missing entries at import; these tests
+    pin the behavior so a deletion can't slip in unnoticed."""
+
+    def test_every_self_mapped_data_type_has_coverage(self):
+        """Every key→key entry in DATA_TYPE_RANGE_MAP must resolve to
+        either FIELD_RANGES_BY_TYPE or VALUE_RANGES coverage."""
+        from utils.data_quality import (
+            DATA_TYPE_RANGE_MAP, FIELD_RANGES_BY_TYPE, VALUE_RANGES,
+        )
+        self_mapped = {k for k, v in DATA_TYPE_RANGE_MAP.items() if k == v}
+        coverage = set(FIELD_RANGES_BY_TYPE.keys()) | set(VALUE_RANGES.keys())
+        missing = self_mapped - coverage
+        assert not missing, f"Uncovered self-mapped data_types: {missing}"
+
+    def test_solar_irradiance_alias_routes_to_solar(self):
+        """opus M2: alias defends a non-EXPECTED_DATA_TYPE-pinned dataset
+        whose collector emits the canonical 'solar_irradiance' name."""
+        from utils.data_quality import DATA_TYPE_RANGE_MAP, FIELD_RANGES_BY_TYPE
+        assert DATA_TYPE_RANGE_MAP['solar_irradiance'] == 'solar'
+        assert 'solar' in FIELD_RANGES_BY_TYPE
+
+    def test_load_forecast_alias_routes_to_load(self):
+        """opus M2: same protection for collector-emitted 'load_forecast'."""
+        from utils.data_quality import DATA_TYPE_RANGE_MAP, FIELD_RANGES_BY_TYPE
+        assert DATA_TYPE_RANGE_MAP['load_forecast'] == 'load'
+        assert 'load' in FIELD_RANGES_BY_TYPE
+
+    def test_validate_value_ranges_via_solar_irradiance_alias(self):
+        """End-to-end: a solar value passed via 'solar_irradiance' alias
+        routes through the per-field SOLAR_FIELD_RANGES rather than the
+        old blanket VALUE_RANGES['solar_irradiance'] = [0,1400] (which
+        would re-introduce the #28 dawn/dusk false-positive)."""
+        from utils.data_quality import DATA_TYPE_RANGE_MAP, validate_value_ranges
+        range_type = DATA_TYPE_RANGE_MAP['solar_irradiance']
+        # dhi=-200 must pass through SOLAR_FIELD_RANGES (floor -300)
+        data = {'2026-05-29T05:00:00+02:00': {
+            'ghi': 0.0, 'dni': 0.0, 'dhi': -200.0,
+            'direct': 0.0, 'cloud_cover': 100.0,
+        }}
+        issues = validate_value_ranges(data, range_type, 'solar_forecast')
+        assert issues == []
+
+
+class TestSolarFieldRanges:
+    """Issue #28: OpenMeteo solar feeds emit (ghi, dni, dhi, direct,
+    cloud_cover) — the prior blanket [0, 1400] route via `solar_irradiance`
+    fired on every dawn/dusk numerical-noise negative (observed DHI down
+    to -266 W/m²).
+    """
+
+    def _sample(self, **overrides):
+        # Realistic Open-Meteo solar payload, mid-day clear-sky conditions.
+        base = {
+            'ghi': 450.0,
+            'dni': 700.0,
+            'dhi': 100.0,
+            'direct': 380.0,
+            'cloud_cover': 35.0,
+        }
+        base.update(overrides)
+        return base
+
+    def test_realistic_sample_passes(self):
+        """Mid-day clear-sky values must produce zero issues."""
+        data = {'2026-05-29T12:00:00+02:00': self._sample()}
+        issues = validate_value_ranges(data, 'solar', 'solar_forecast')
+        assert issues == []
+
+    def test_dawn_dusk_negative_noise_passes(self):
+        """The whole point of #28: small negative dawn/dusk values are
+        Open-Meteo numerical noise, not data errors. Must not flag."""
+        data = {
+            '2026-05-29T05:00:00+02:00': self._sample(
+                ghi=-0.5, direct=-0.2, dhi=-12.0,
+            ),
+        }
+        issues = validate_value_ranges(data, 'solar', 'solar_forecast')
+        assert issues == []
+
+    def test_observed_dhi_extreme_passes(self):
+        """DHI floor (-300) chosen to absorb the worst observed Open-Meteo
+        dawn artifact (-266 W/m²). Anything within observed range must pass."""
+        data = {'2026-05-29T06:00:00+02:00': self._sample(dhi=-260.0)}
+        issues = validate_value_ranges(data, 'solar', 'solar_forecast')
+        assert issues == []
+
+    def test_poison_dhi_flagged(self):
+        """A massive DHI value (10x physical max) is a poison signal that
+        the bound is still tight enough to catch real attacks/regressions."""
+        data = {'2026-05-29T12:00:00+02:00': self._sample(dhi=9999.0)}
+        issues = validate_value_ranges(data, 'solar', 'solar_forecast')
+        assert len(issues) == 1
+        assert 'dhi' in issues[0].details['examples'][0]
+
+    def test_poison_ghi_flagged(self):
+        """GHI ceiling (1400 W/m²) — beyond the solar constant is impossible."""
+        data = {'2026-05-29T12:00:00+02:00': self._sample(ghi=2500.0)}
+        issues = validate_value_ranges(data, 'solar', 'solar_forecast')
+        assert len(issues) == 1
+
+    def test_negative_cloud_cover_flagged(self):
+        """cloud_cover is a percentage — negative is impossible."""
+        data = {'2026-05-29T12:00:00+02:00': self._sample(cloud_cover=-5.0)}
+        issues = validate_value_ranges(data, 'solar', 'solar_forecast')
+        assert len(issues) == 1
+
+    def test_two_level_zone_nested_payload(self):
+        """Solar feeds publish as {location: {ts: {fields}}} — verify the
+        flatten helper routes per-field validation through correctly."""
+        data = {
+            'Rotterdam_NL': {
+                '2026-05-29T12:00:00+02:00': self._sample(),
+            },
+            'Berlin_DE': {
+                '2026-05-29T12:00:00+02:00': self._sample(ghi=2500.0),  # poison
+            },
+        }
+        issues = validate_value_ranges(data, 'solar', 'solar_forecast')
+        assert len(issues) == 1  # Berlin's poison ghi only
+
+
+class TestLoadFieldRanges:
+    """Issue #28: ENTSO-E load feeds emit (load_forecast, load_actual,
+    forecast_error) — forecast_error is signed (negative when we
+    over-predicted demand) and the prior blanket [0, 100000] flagged it.
+    """
+
+    def _sample(self, **overrides):
+        # Realistic NL load values, evening peak.
+        base = {
+            'load_forecast': 14500.0,
+            'load_actual': 14200.0,
+            'forecast_error': 300.0,
+        }
+        base.update(overrides)
+        return base
+
+    def test_realistic_sample_passes(self):
+        data = {'2026-05-29T19:00:00+02:00': self._sample()}
+        issues = validate_value_ranges(data, 'load', 'load_forecast')
+        assert issues == []
+
+    def test_negative_forecast_error_passes(self):
+        """The whole point of #28 for load: forecast_error legitimately
+        goes negative when we over-predicted demand."""
+        data = {'2026-05-29T19:00:00+02:00': self._sample(forecast_error=-2500.0)}
+        issues = validate_value_ranges(data, 'load', 'load_forecast')
+        assert issues == []
+
+    def test_negative_load_forecast_flagged(self):
+        """load_forecast (actual demand) cannot be negative — must flag."""
+        data = {'2026-05-29T19:00:00+02:00': self._sample(load_forecast=-100.0)}
+        issues = validate_value_ranges(data, 'load', 'load_forecast')
+        assert len(issues) == 1
+
+    def test_poison_forecast_error_flagged(self):
+        """A forecast_error of -99k MW is bigger than the entire grid —
+        poison signal must still fire."""
+        data = {'2026-05-29T19:00:00+02:00': self._sample(forecast_error=-99000.0)}
+        issues = validate_value_ranges(data, 'load', 'load_forecast')
+        assert len(issues) == 1
+
+    def test_poison_load_actual_flagged(self):
+        """load_actual ceiling — load_actual > 100GW is implausible for any
+        single country."""
+        data = {'2026-05-29T19:00:00+02:00': self._sample(load_actual=200000.0)}
+        issues = validate_value_ranges(data, 'load', 'load_forecast')
+        assert len(issues) == 1
+
+    def test_two_level_country_nested_payload(self):
+        """ENTSO-E load publishes as {country: {ts: {fields}}}."""
+        data = {
+            'NL': {'2026-05-29T19:00:00+02:00': self._sample()},
+            'DE_LU': {
+                '2026-05-29T19:00:00+02:00': self._sample(load_forecast=-50.0),
+            },
+        }
+        issues = validate_value_ranges(data, 'load', 'load_forecast')
+        assert len(issues) == 1
+
+
 class TestCompleteness:
     """Tests for validate_completeness."""
 

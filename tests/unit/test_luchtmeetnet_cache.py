@@ -669,16 +669,19 @@ class TestLuchtmeetnetStationCompletenessQuality:
         assert 'collector_quality_issues' not in metadata
 
     def test_warning_issue_above_warning_threshold(self):
-        """30% filtered → warning severity."""
+        """30% filtered → warning severity. The BaseCollector hook now
+        owns the metadata injection (refactoring H1 collapsed the two
+        prior dialects); `_get_metadata` only POPULATES via
+        `_add_quality_issue`. The injection happens in `collect()`."""
         self._reset_class_state()
 
         collector = LuchtmeetnetCollector(52.37, 4.89)
         collector._last_filter_stats = {'total': 100, 'filtered': 30}
         start = datetime.now()
         end = start + timedelta(hours=1)
-        metadata = collector._get_metadata(start, end)
+        collector._get_metadata(start, end)
 
-        issues = metadata.get('collector_quality_issues', [])
+        issues = collector._collector_quality_issues
         assert len(issues) == 1
         assert issues[0]['check_name'] == 'station_completeness'
         assert issues[0]['severity'] == 'warning'
@@ -692,9 +695,9 @@ class TestLuchtmeetnetStationCompletenessQuality:
         collector._last_filter_stats = {'total': 100, 'filtered': 60}
         start = datetime.now()
         end = start + timedelta(hours=1)
-        metadata = collector._get_metadata(start, end)
+        collector._get_metadata(start, end)
 
-        issues = metadata.get('collector_quality_issues', [])
+        issues = collector._collector_quality_issues
         assert len(issues) == 1
         assert issues[0]['severity'] == 'critical'
 
@@ -758,8 +761,10 @@ class TestLuchtmeetnetStationCompletenessQuality:
         m2 = c2._get_metadata(datetime.now(), datetime.now() + timedelta(hours=1))
 
         # c1 emits critical, c2 emits no issue — neither sees the other's stats.
-        assert m1['collector_quality_issues'][0]['severity'] == 'critical'
-        assert 'collector_quality_issues' not in m2
+        # Quality signals live on the populator (instance state) per
+        # refactoring H1; metadata-side injection happens in collect().
+        assert c1._collector_quality_issues[0]['severity'] == 'critical'
+        assert c2._collector_quality_issues == []
         assert m1['stations_filtered'] == 60
         assert m2['stations_filtered'] == 5
 

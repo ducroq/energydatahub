@@ -9,11 +9,23 @@ against the silent-shape-break failure mode behind PR #20 and #26.
 
 Exit codes:
   0 — no drift detected, OR drift detected but schema_version was
-      bumped (the change is properly versioned), OR --warn-only is set.
-  1 — drift detected AND schema_version did NOT change. The pipeline
-      shipped a new shape without bumping the version — exactly the
-      class of bug this tripwire exists to catch.
+      bumped (the change is properly versioned), OR --warn-only is set,
+      OR only catalog drift (feeds added/removed) without a within-feed
+      shape change — see "Catalog vs shape drift" below.
+  1 — within-feed shape drift AND schema_version did NOT change. The
+      pipeline shipped a new shape without bumping the version — exactly
+      the class of bug this tripwire exists to catch.
   2 — script setup error (missing files, git failure, etc.)
+
+Catalog vs shape drift:
+  schema_version captures the envelope/migration shape of existing
+  feeds, NOT the feed catalog. A transiently-failing collector
+  recovering (feed appears) or a collector being retired (feed
+  disappears) is operational and never warrants a version bump. So
+  fail-mode reserves exit 1 for `feeds_changed` — within-feed shape
+  diffs with no version bump. `feeds_added` and `feeds_removed` always
+  surface as warnings, never failures. Without this split, the
+  tripwire would fire on every transient collector miss-and-recover.
 
 Usage:
     python scripts/detect_schema_drift.py
@@ -45,6 +57,19 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from utils.shape_signature import diff_signatures  # noqa: E402
+
+# Feeds whose disappearance from the publish set is operationally
+# critical — silent retirement is the threat security audit M2 flagged.
+# When any of these appear in `feeds_removed`, we upgrade the catalog-
+# drift summary to ::error:: even in catalog-only path (the within-feed
+# fail-mode trip is unaffected). Keep this curated; flooding the set
+# would re-introduce false positives on transient collector blips.
+CRITICAL_FEEDS = frozenset({
+    'energy_price_forecast.json',     # combined entsoe + energy_zero — Augur primary input
+    'load_forecast.json',
+    'generation_forecast.json',
+    'weather_forecast_multi_location.json',
+})
 
 
 def _load_current_sidecar(path: Path) -> Dict[str, Any]:
@@ -112,7 +137,7 @@ def _emit_summary(report: Dict[str, Any], current_path: Path) -> None:
     print(f"  feeds removed:  {report['feeds_removed'] or '(none)'}")
     print(f"  feeds unchanged: {len(report['feeds_unchanged'])}")
     if report["feeds_changed"]:
-        print(f"  feeds CHANGED:")
+        print("  feeds CHANGED:")
         for c in report["feeds_changed"]:
             print(f"    - {c['feed']}: {c['previous_hash']} -> {c['current_hash']}")
             if c.get("sources_diff"):
@@ -122,7 +147,7 @@ def _emit_summary(report: Dict[str, Any], current_path: Path) -> None:
                 if sd["removed"]:
                     print(f"        - collectors: {sd['removed']}")
     else:
-        print(f"  feeds CHANGED:  (none)")
+        print("  feeds CHANGED:  (none)")
 
 
 def main() -> int:
@@ -180,21 +205,76 @@ def main() -> int:
         )
         return 0
 
-    # Drift WITHOUT a version bump → the failure mode this tripwire catches
-    feed_count = len(report["feeds_changed"]) + len(report["feeds_added"]) \
-        + len(report["feeds_removed"])
-    msg = (
-        f"Schema drift detected across {feed_count} feed(s) but "
-        f"schema_version did not change (still "
-        f"{report['current_schema_version']}). Either bump "
-        "CURRENT_SCHEMA_VERSION + add a SCHEMA_CHANGELOG entry + a migration "
-        "function, or revert the shape change."
-    )
-    if args.warn_only:
-        print(f"::warning::{msg} (warn-only mode — not failing)")
-        return 0
-    print(f"::error::{msg}")
-    return 1
+    # Drift WITHOUT a version bump. Split by class:
+    #   - feeds_changed (within-feed shape diff) → the failure mode this
+    #     tripwire catches.
+    #   - feeds_added / feeds_removed only → operational catalog drift
+    #     (transient collector recovery, retired collector). Surface as
+    #     warning even in fail-mode — see "Catalog vs shape drift" in
+    #     the module docstring.
+
+    # Catalog-drift summary message — assembled once so we can surface
+    # it both in catalog-only mode AND alongside a within-feed
+    # alert (opus M4: warn-only with both kinds of drift was losing
+    # this summary entirely).
+    added = report["feeds_added"]
+    removed = report["feeds_removed"]
+    critical_removed = sorted(set(removed) & CRITICAL_FEEDS)
+    catalog_msg: Optional[str] = None
+    if added or removed:
+        parts = []
+        if added:
+            parts.append(f"{len(added)} added ({', '.join(added)})")
+        if removed:
+            parts.append(f"{len(removed)} removed ({', '.join(removed)})")
+        catalog_msg = (
+            f"Catalog drift: {'; '.join(parts)}. No within-feed shape "
+            "change required for catalog drift — treated as operational "
+            "(transient collector recovery / retirement)."
+        )
+
+    if report["feeds_changed"]:
+        changed_count = len(report["feeds_changed"])
+        msg = (
+            f"Within-feed shape drift on {changed_count} feed(s) "
+            f"without a schema_version bump (still "
+            f"{report['current_schema_version']}). Either bump "
+            "CURRENT_SCHEMA_VERSION + add a SCHEMA_CHANGELOG entry + "
+            "a migration function, or revert the shape change."
+        )
+        if args.warn_only:
+            print(f"::warning::{msg} (warn-only mode — not failing)")
+            if catalog_msg:
+                print(f"::warning::{catalog_msg}")
+            if critical_removed:
+                print(
+                    f"::error::Critical feed(s) removed: {critical_removed}. "
+                    "Investigate before next pipeline run."
+                )
+            return 0
+        print(f"::error::{msg}")
+        if catalog_msg:
+            print(f"::warning::{catalog_msg}")
+        if critical_removed:
+            print(
+                f"::error::Critical feed(s) removed: {critical_removed}. "
+                "Investigate before next pipeline run."
+            )
+        return 1
+
+    # Catalog-only drift (added/removed but no within-feed shape diff).
+    # Critical-feed removal upgrades to ::error:: even though catalog
+    # drift normally exits 0 (security audit M2).
+    print(f"::warning::{catalog_msg}")
+    if critical_removed:
+        print(
+            f"::error::Critical feed(s) removed: {critical_removed}. "
+            "Catalog-drift normally exits 0, but a critical-feed loss is "
+            "operationally severe enough to fail CI even without a "
+            "schema_version bump."
+        )
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

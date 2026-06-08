@@ -109,7 +109,7 @@ class TestEndToEnd:
         repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
         result = _run_script(repo)
         assert result.returncode == 1, result.stdout + result.stderr
-        assert "schema_version did not change" in result.stdout
+        assert "without a schema_version bump" in result.stdout
         assert "::error::" in result.stdout
 
     def test_drift_with_version_bump_exits_0(self, tmp_path):
@@ -186,6 +186,148 @@ class TestEndToEnd:
         result = _run_script(repo)
         assert result.returncode == 2, result.stdout + result.stderr
         assert "::error::Sidecar file not found" in result.stderr
+
+    def test_feeds_added_only_exits_0_with_warning(self, tmp_path):
+        """Catalog drift (a collector recovers from a transient miss in the
+        baseline) is operational, not a schema event. Must NOT fail in
+        fail-mode — that would block the 2026-06-21 fail-mode flip on the
+        first transiently-recovered collector."""
+        prev = {
+            "computed_at": "2026-06-06T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {"gas_storage.json": _feed("abc")},
+        }
+        curr = {
+            "computed_at": "2026-06-07T16:00:00+00:00",
+            "schema_version": "2.3",  # NO bump
+            "feeds": {
+                "gas_storage.json": _feed("abc"),
+                "air_quality_buurt.json": _feed("xyz"),  # recovered from baseline miss
+            },
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "Catalog drift" in result.stdout
+        assert "air_quality_buurt.json" in result.stdout
+        assert "::warning::" in result.stdout
+        assert "::error::" not in result.stdout
+
+    def test_feeds_removed_only_exits_0_with_warning(self, tmp_path):
+        """A collector retirement (or persistent failure) shows up as
+        feeds_removed. Operational, not schema."""
+        prev = {
+            "computed_at": "2026-06-06T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {
+                "gas_storage.json": _feed("abc"),
+                "retired_feed.json": _feed("def"),
+            },
+        }
+        curr = {
+            "computed_at": "2026-06-07T16:00:00+00:00",
+            "schema_version": "2.3",  # NO bump
+            "feeds": {"gas_storage.json": _feed("abc")},
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "Catalog drift" in result.stdout
+        assert "retired_feed.json" in result.stdout
+        assert "::warning::" in result.stdout
+        assert "::error::" not in result.stdout
+
+    def test_within_feed_change_plus_catalog_drift_still_fails(self, tmp_path):
+        """Mixed case: a within-feed shape change AND a catalog change.
+        The shape change still dominates and fail-mode must trip."""
+        prev = {
+            "computed_at": "2026-06-06T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {"gas_storage.json": _feed("old")},
+        }
+        curr = {
+            "computed_at": "2026-06-07T16:00:00+00:00",
+            "schema_version": "2.3",  # NO bump
+            "feeds": {
+                "gas_storage.json": _feed("new"),  # shape changed
+                "air_quality_buurt.json": _feed("xyz"),  # also added
+            },
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "Within-feed shape drift" in result.stdout
+        assert "::error::" in result.stdout
+
+    def test_critical_feed_removal_exits_1_in_catalog_path(self, tmp_path):
+        """Security audit M2: a critical feed disappearing must fail CI
+        even though catalog-only drift normally exits 0. Prevents silent
+        retirement (CWE-693) when the upstream completeness tripwire and
+        DATASET_MISSING_SEVERITY ever drift apart."""
+        prev = {
+            "computed_at": "2026-06-06T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {
+                "gas_storage.json": _feed("abc"),
+                "energy_price_forecast.json": _feed("def"),  # CRITICAL
+            },
+        }
+        curr = {
+            "computed_at": "2026-06-07T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {"gas_storage.json": _feed("abc")},  # critical removed
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "Critical feed(s) removed" in result.stdout
+        assert "energy_price_forecast.json" in result.stdout
+
+    def test_non_critical_feed_removal_exits_0(self, tmp_path):
+        """A non-critical removed feed still exits 0 — the upgrade is
+        scoped to the curated CRITICAL_FEEDS set only."""
+        prev = {
+            "computed_at": "2026-06-06T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {
+                "gas_storage.json": _feed("abc"),
+                "air_quality_buurt.json": _feed("xyz"),
+            },
+        }
+        curr = {
+            "computed_at": "2026-06-07T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {"gas_storage.json": _feed("abc")},
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "Catalog drift" in result.stdout
+        assert "Critical feed(s) removed" not in result.stdout
+
+    def test_warn_only_keeps_catalog_summary_alongside_shape_alert(self, tmp_path):
+        """opus M4: when both within-feed and catalog drift occur in
+        warn-only mode, both summaries must surface — previously the
+        catalog summary was lost."""
+        prev = {
+            "computed_at": "2026-06-06T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {"gas_storage.json": _feed("old")},
+        }
+        curr = {
+            "computed_at": "2026-06-07T16:00:00+00:00",
+            "schema_version": "2.3",
+            "feeds": {
+                "gas_storage.json": _feed("new"),         # shape changed
+                "air_quality_buurt.json": _feed("xyz"),   # also added
+            },
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo, "--warn-only")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "Within-feed shape drift" in result.stdout
+        assert "Catalog drift" in result.stdout
+        assert "air_quality_buurt.json" in result.stdout
 
     def test_combined_feed_source_diff_surfaced(self, tmp_path):
         """A combined wrap that loses a per-collector source is visible

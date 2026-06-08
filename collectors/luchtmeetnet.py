@@ -461,6 +461,9 @@ class LuchtmeetnetCollector(BaseCollector):
         # or were copied from the class snapshot on a cache hit. Reading
         # from instance state means concurrent buurt collectors cannot
         # misattribute each other's stats (security audit HIGH-1).
+        # Quality signal emitted through the BaseCollector hook (refactoring
+        # H1 collapsed the two prior dialects); `collect()` auto-injects
+        # `metadata['collector_quality_issues']` after this method returns.
         stats = self._last_filter_stats
         if stats and stats['total'] > 0:
             filtered = stats['filtered']
@@ -474,16 +477,16 @@ class LuchtmeetnetCollector(BaseCollector):
                     'critical' if ratio > STATION_FILTER_CRITICAL_THRESHOLD
                     else 'warning'
                 )
-                metadata.setdefault('collector_quality_issues', []).append({
-                    'check_name': 'station_completeness',
-                    'severity': severity,
-                    'message': (
+                self._add_quality_issue(
+                    check_name='station_completeness',
+                    severity=severity,
+                    message=(
                         f"{filtered}/{total} Luchtmeetnet stations filtered "
                         f"({ratio * 100:.0f}%) — selection may have shifted "
                         f"to a less-representative station"
                     ),
-                    'details': {'filtered': filtered, 'total': total},
-                })
+                    details={'filtered': filtered, 'total': total},
+                )
 
         return metadata
 

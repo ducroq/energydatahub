@@ -85,6 +85,13 @@ class TennetCollector(BaseCollector):
         )
         self.api_key = api_key
         self.client = TenneTeuClient(api_key=api_key)
+        # Tracks whether `balance_delta` data came through cleanly this
+        # run, or whether the parser synthesised 0.0 placeholders because
+        # the endpoint failed. Surfaced via `metadata['balance_delta_status']`
+        # so downstream consumers can distinguish "API said 0" from "we
+        # had to make it up" (security audit H1). Reset at top of
+        # `_fetch_raw_data` each run.
+        self._last_balance_delta_status: str = 'unknown'
 
     async def _fetch_raw_data(
         self, start_time: datetime, end_time: datetime, **kwargs
@@ -106,51 +113,133 @@ class TennetCollector(BaseCollector):
         self.logger.debug(
             f"Fetching TenneT data from {start_time.date()} to {end_time.date()}"
         )
+        # Reset per-run synthesis flag so the metadata stamp reflects THIS
+        # run, not the previous one. (Refactoring-guide H1's `collect()`
+        # reset clears `_collector_quality_issues` separately.)
+        self._last_balance_delta_status = 'unknown'
 
-        # Run the synchronous API calls in an executor to avoid blocking
+        # settlement_prices is the primary signal — its failure aborts
+        # the whole collection so the retry/bail-out machinery (issue
+        # #25, classifier in 7673750) still applies.
+        settlement_prices_df = await self._fetch_one_endpoint(
+            self.client.query_settlement_prices,
+            'settlement_prices',
+            start_time,
+            end_time,
+            fatal_on_permanent=True,
+        )
+
+        # balance_delta is the secondary signal. The `balance-delta`
+        # endpoint has been returning HTTP 404 for every window tested
+        # 2026-06-08 (yesterday → 30d back), most likely because TenneT
+        # retired the old endpoint without updating the tenneteu-py
+        # library (the original #25 issue mentioned the now-gone
+        # `balance-delta-high-res` URL). Without an independent error
+        # path the 404 would take settlement_prices down with it — that's
+        # why `grid_imbalance` was silently absent from the published
+        # feed for weeks. Catch permanent errors here; the parser at
+        # `_parse_response` already defaults `balance_delta=0.0` and
+        # `direction='unknown'` when the DataFrame is None/empty.
+        balance_delta_df = await self._fetch_one_endpoint(
+            self.client.query_balance_delta,
+            'balance_delta',
+            start_time,
+            end_time,
+            fatal_on_permanent=False,
+        )
+
+        # When balance_delta is absent, emit a structured signal so a
+        # downstream ML consumer (Augur) can distinguish "API said the
+        # grid was balanced" from "we synthesised zero because the API
+        # is dead" — without this, a synthetic flat-line is
+        # indistinguishable from real balanced data (security audit H1).
+        if balance_delta_df is None or balance_delta_df.empty:
+            self._last_balance_delta_status = 'synthesised'
+            self._add_quality_issue(
+                check_name='balance_delta_synthesised',
+                severity='warning',
+                message=(
+                    "TenneT balance_delta endpoint returned no data — "
+                    "balance_delta values defaulted to 0.0 and "
+                    "direction='unknown' across the published day. "
+                    "Treat as MISSING, not as a balanced grid."
+                ),
+                details={'reason': 'endpoint permanent error or empty response'},
+            )
+        else:
+            self._last_balance_delta_status = 'complete'
+
+        record_count_settlement = len(settlement_prices_df) if settlement_prices_df is not None else 0
+        record_count_balance = len(balance_delta_df) if balance_delta_df is not None else 0
+        self.logger.info(
+            f"Fetched TenneT data: {record_count_settlement} settlement price records, "
+            f"{record_count_balance} balance delta records"
+        )
+
+        return {
+            'settlement_prices': settlement_prices_df,
+            'balance_delta': balance_delta_df
+        }
+
+    async def _fetch_one_endpoint(
+        self,
+        call,
+        name: str,
+        start_time: datetime,
+        end_time: datetime,
+        fatal_on_permanent: bool,
+    ) -> Optional[pd.DataFrame]:
+        """
+        Run one TenneT API call in the executor with HTTP-status
+        classification (refactoring-guide M1: collapse the two near-
+        identical endpoint fetch+classify blocks).
+
+        Args:
+            call: The synchronous client method to invoke
+                (e.g. `self.client.query_settlement_prices`).
+            name: Endpoint identifier for logs ('settlement_prices' /
+                'balance_delta'). Surfaced in the NonRetryableError
+                context so a 4am operator can pin which endpoint died.
+            start_time, end_time: Forwarded to the client method.
+            fatal_on_permanent: True for the primary signal (raise
+                NonRetryableError on 4xx → BaseCollector bails out).
+                False for secondary signals (swallow permanent errors,
+                return None so the caller can record the degradation).
+
+        Returns:
+            The DataFrame on success; None when fatal_on_permanent=False
+            and the endpoint returned a permanent error.
+
+        Raises:
+            NonRetryableError: fatal_on_permanent + permanent status.
+            Exception: transient error path — propagated so
+                BaseCollector's retry loop can take another attempt.
+        """
         loop = asyncio.get_event_loop()
-
         try:
-            # Fetch settlement prices (imbalance prices)
-            settlement_prices_df = await loop.run_in_executor(
-                None,
-                self.client.query_settlement_prices,
-                start_time,
-                end_time
-            )
-
-            # Fetch balance delta data
-            balance_delta_df = await loop.run_in_executor(
-                None,
-                self.client.query_balance_delta,
-                start_time,
-                end_time
-            )
-
-            self.logger.info(
-                f"Fetched TenneT data: {len(settlement_prices_df)} settlement price records, "
-                f"{len(balance_delta_df)} balance delta records"
-            )
-
-            return {
-                'settlement_prices': settlement_prices_df,
-                'balance_delta': balance_delta_df
-            }
-
+            return await loop.run_in_executor(None, call, start_time, end_time)
         except Exception as e:
-            # Classify so BaseCollector's retry loop doesn't burn three
-            # attempts on a permanent error (issue #25). A 422→422→429
-            # cascade is the textbook example: the original 422 means
-            # "data not published yet", retrying hammers the endpoint
-            # and trips the per-IP rate-limiter. `raise_if_permanent`
-            # extracts the HTTP status and re-raises as NonRetryableError
-            # for the permanent set (422/400/401/403/404).
             status = _extract_http_status(e)
-            self.logger.error(
-                f"Failed to fetch TenneT data: {e}"
-                + (f" (HTTP {status})" if status else "")
+            suffix = f" (HTTP {status})" if status else ""
+
+            if fatal_on_permanent:
+                self.logger.error(f"Failed to fetch TenneT {name}: {e}{suffix}")
+                raise_if_permanent(e, context=f"TenneT {name}")
+                raise
+
+            if status in _PERMANENT_HTTP_STATUSES:
+                self.logger.warning(
+                    f"TenneT {name} returned HTTP {status} (permanent) — "
+                    "continuing without it; secondary signal degraded"
+                )
+                return None
+
+            # Transient (5xx, 429, timeout) on a non-fatal endpoint — log
+            # WARNING (not ERROR; the retry loop will have another go,
+            # opus L1 finding) and propagate.
+            self.logger.warning(
+                f"TenneT {name} transient fetch error: {e}{suffix} — propagating for retry"
             )
-            raise_if_permanent(e, context="TenneT")
             raise
 
     def _parse_response(
@@ -505,6 +594,17 @@ class TennetCollector(BaseCollector):
                 "resolution": "PTU (15 minutes)",
                 "data_fields": ["imbalance_price", "balance_delta", "direction"],
                 "api_version": "tennet.eu v1",
+                # Marker so a downstream consumer (Augur) can distinguish
+                # an API-confirmed balanced grid from a synthesised
+                # flat-line (security audit H1). Values:
+                #   'complete'    — balance_delta fetched OK
+                #   'synthesised' — endpoint permanent-failed; values
+                #                   are 0.0 / direction='unknown' across
+                #                   the day. Treat as MISSING, not as
+                #                   real "balanced" signal.
+                #   'unknown'     — pre-fetch state (should not appear
+                #                   in published metadata).
+                "balance_delta_status": self._last_balance_delta_status,
             }
         )
 

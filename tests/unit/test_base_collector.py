@@ -316,6 +316,116 @@ class TestBaseCollector:
         assert metrics[0].status == CollectorStatus.PARTIAL
 
 
+class TestCollectorQualityIssuesHook:
+    """Refactoring-guide H1: BaseCollector owns the `_collector_quality_issues`
+    populator + reset + metadata injection. Collapses the prior dialect
+    divergence between Luchtmeetnet and EntsoeHydroCollector."""
+
+    @pytest.mark.unit
+    def test_add_quality_issue_appends_to_instance_state(self):
+        collector = MockCollector()
+        assert collector._collector_quality_issues == []
+
+        collector._add_quality_issue(
+            check_name='x_check', severity='warning',
+            message='x message', details={'k': 1},
+        )
+        assert len(collector._collector_quality_issues) == 1
+        entry = collector._collector_quality_issues[0]
+        assert entry['check_name'] == 'x_check'
+        assert entry['severity'] == 'warning'
+        assert entry['details'] == {'k': 1}
+
+    @pytest.mark.unit
+    def test_add_quality_issue_defaults_empty_details(self):
+        collector = MockCollector()
+        collector._add_quality_issue('chk', 'info', 'msg')
+        assert collector._collector_quality_issues[0]['details'] == {}
+
+    @pytest.mark.unit
+    def test_reset_clears_accumulated_issues(self):
+        collector = MockCollector()
+        collector._add_quality_issue('chk', 'warning', 'msg')
+        assert collector._collector_quality_issues
+        collector._reset_quality_issues()
+        assert collector._collector_quality_issues == []
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collect_resets_quality_issues_at_top(self):
+        """Stale state from before `collect()` runs is cleared so a
+        prior aborted run cannot leak into this one."""
+        collector = MockCollector()
+        collector._add_quality_issue('stale', 'warning', 'leftover')
+        assert collector._collector_quality_issues
+
+        start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        end = start + timedelta(hours=24)
+        await collector.collect(start, end)
+
+        # The MockCollector doesn't emit issues, so after collect() the
+        # state must be clean (proving collect() reset it).
+        assert collector._collector_quality_issues == []
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collect_auto_injects_into_metadata(self):
+        """A collector that calls `_add_quality_issue` inside
+        `_validate_data` sees the issue in the dataset metadata after
+        `collect()` returns — no per-collector plumbing needed."""
+
+        class EmitterCollector(MockCollector):
+            def _validate_data(self, data, start_time, end_time):
+                self._add_quality_issue(
+                    'demo_check', 'warning', 'demo message',
+                    details={'tag': 'demo'},
+                )
+                return True, []
+
+        collector = EmitterCollector()
+        start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        end = start + timedelta(hours=24)
+        dataset = await collector.collect(start, end)
+
+        assert 'collector_quality_issues' in dataset.metadata
+        issues = dataset.metadata['collector_quality_issues']
+        assert len(issues) == 1
+        assert issues[0]['check_name'] == 'demo_check'
+        assert issues[0]['details']['tag'] == 'demo'
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collect_omits_key_when_no_issues(self):
+        """No-emit run keeps metadata tidy — no empty key."""
+        collector = MockCollector()
+        start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        end = start + timedelta(hours=24)
+        dataset = await collector.collect(start, end)
+        assert 'collector_quality_issues' not in dataset.metadata
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collect_deepcopies_so_caller_cant_mutate_instance(self):
+        """Mutating dataset.metadata['collector_quality_issues'][i]['details']
+        must NOT mutate the collector's instance state — defends against
+        the shallow-copy gotcha (PR #20 HIGH)."""
+
+        class EmitterCollector(MockCollector):
+            def _validate_data(self, data, start_time, end_time):
+                self._add_quality_issue(
+                    'demo', 'warning', 'm', details={'tag': 'original'},
+                )
+                return True, []
+
+        collector = EmitterCollector()
+        start = datetime(2025, 10, 25, 12, 0, tzinfo=ZoneInfo('Europe/Amsterdam'))
+        end = start + timedelta(hours=24)
+        dataset = await collector.collect(start, end)
+        dataset.metadata['collector_quality_issues'][0]['details']['tag'] = 'TAMPERED'
+
+        assert collector._collector_quality_issues[0]['details']['tag'] == 'original'
+
+
 class TestRetryConfig:
     """Tests for RetryConfig."""
 

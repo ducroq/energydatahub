@@ -288,15 +288,61 @@ HYDRO_RESERVOIR_FIELD_RANGES = {
     'reservoir_mwh': (0.0, 1.2e8),
 }
 
+# Per-field ranges for OpenMeteo solar feeds (#28). The collector emits
+# 3-letter aliases (ghi/dni/dhi/direct) plus cloud_cover — NOT the
+# OpenMeteo source names that WEATHER_FIELD_RANGES carries. The prior
+# blanket [0, 1400] route via `solar_irradiance` fired on every
+# dawn/dusk numerical-noise negative (DHI observed as low as -266 W/m²
+# from Open-Meteo). Bounds derived from 107 solar_forecast + 8
+# solar_forecast_buurt files Mar-Jun 2026 (215k records):
+#   ghi   observed [-1, 912];    bound [-10, 1400]  (physical ceiling)
+#   dni   observed [0, 933];     bound [0, 1400]    (always non-negative)
+#   dhi   observed [-266, 683];  bound [-300, 800]  (dawn artifact + 1.2x)
+#   direct observed [-1, 785];   bound [-10, 1200]
+#   cloud_cover observed [0,100]; bound [0, 100]    (% bounded)
+SOLAR_FIELD_RANGES = {
+    'ghi':         (-10.0, 1400.0),
+    'dni':         (   0.0, 1400.0),
+    'dhi':         (-300.0,  800.0),
+    'direct':      ( -10.0, 1200.0),
+    'cloud_cover': (   0.0,  100.0),
+}
+
+# Per-field ranges for ENTSO-E load forecast feeds (#28). The collector
+# emits load_forecast + load_actual + forecast_error per timestamp per
+# country. The prior blanket [0, 100000] route via `load_mw` fired on
+# every signed forecast_error (observed -6779 to +18914 MW) which is
+# legitimately negative when the forecast over-predicted demand.
+# Bounds derived from 104 files Mar-Jun 2026 (65k records):
+#   load_forecast  observed [5163, 70295];   bound [0, 100000] (NL+DE peak ~75 GW)
+#   load_actual    observed [0,    71296];   bound [0, 100000]
+#   forecast_error observed [-6779, 18914];  bound [-20000, 25000]
+#
+# forecast_error asymmetry (opus L5): -20000/-6779 = 2.95x, +25000/+18914 = 1.32x.
+# The asymmetric headroom is intentional, not a derivation artefact:
+# we observed only Mar-Jun 2026 — winter peak demand months
+# (Dec/Jan/Feb) push positive forecast_error higher because cold-snap
+# heating spikes are routinely under-predicted, while over-prediction
+# (negative error) is less seasonal. Tightening the positive bound to
+# match the negative would risk dawn-cold-snap false positives next
+# winter. Re-derive after a full winter cycle if either bound feels off.
+LOAD_FIELD_RANGES = {
+    'load_forecast':  (    0.0, 100000.0),
+    'load_actual':    (    0.0, 100000.0),
+    'forecast_error': (-20000.0,  25000.0),
+}
+
 # data_type → per-field range registry. When a data_type is registered here,
 # `validate_value_ranges` walks each nested-dict sub-key against its own
 # range instead of applying a single blanket range. Same pattern weather
 # has used since 2026-03; gas_storage joins it via issue #24; hydro_reservoir
-# joins it via #3 security review.
+# joins it via #3 security review; solar + load join it via #28.
 FIELD_RANGES_BY_TYPE = {
     'weather': WEATHER_FIELD_RANGES,
     'gas_storage': GAS_STORAGE_FIELD_RANGES,
     'hydro_reservoir': HYDRO_RESERVOIR_FIELD_RANGES,
+    'solar': SOLAR_FIELD_RANGES,
+    'load': LOAD_FIELD_RANGES,
 }
 
 # Expected minimum data points per dataset/source for a standard daily collection.
@@ -324,11 +370,11 @@ EXPECTED_MIN_POINTS = {
     'ned_production': 24,
     # Nordic hydro (#3): weekly cadence × 2 zones (NO/SE) over a 12-week
     # window yields ~20 points after the 2-3 week publication lag. 12 = 6
-    # fresh weeks × 2 zones — flags total collection collapse without
-    # papering over single-zone degradation. FOLLOW-UP: per-zone completeness
-    # signal belongs inside the collector's `collector_quality_issues`, so a
-    # half-dark zone (e.g. NO=10, SE=2) still raises a warning even when the
-    # aggregate clears this floor.
+    # fresh weeks × 2 zones — flags total collection collapse. The
+    # per-zone completeness signal (#29) lives inside
+    # EntsoeHydroCollector._validate_data and surfaces a half-dark zone
+    # (e.g. NO=10 SE=2 = 12 aggregate, passes here) via
+    # `collector_quality_issues`, so this aggregate floor stays additive.
     'nordic_hydro': 12,
     # Old collector names (for backtest compatibility)
     'OpenWeather': 8,                # OpenWeather free tier: limited forecast points
@@ -784,15 +830,47 @@ DATA_TYPE_RANGE_MAP = {
     'energy_price': 'energy_price',
     'wind_generation': 'generation_mw',
     'wind_weather': 'wind_speed',
-    'solar': 'solar_irradiance',
-    'weather': 'weather',                # sentinel → FIELD_RANGES_BY_TYPE
-    'load': 'load_mw',
+    'solar': 'solar',                    # routed via FIELD_RANGES_BY_TYPE (#28)
+    'weather': 'weather',                # routed via FIELD_RANGES_BY_TYPE
+    'load': 'load',                      # routed via FIELD_RANGES_BY_TYPE (#28)
     'generation': 'generation_mw',
     'grid_imbalance': 'energy_price',    # Imbalance prices in EUR/MWh
     'cross_border_flows': 'flow_mw',
-    'gas_storage': 'gas_storage',        # sentinel → FIELD_RANGES_BY_TYPE
-    'hydro_reservoir': 'hydro_reservoir',  # sentinel → FIELD_RANGES_BY_TYPE
+    'gas_storage': 'gas_storage',        # routed via FIELD_RANGES_BY_TYPE
+    'hydro_reservoir': 'hydro_reservoir',  # routed via FIELD_RANGES_BY_TYPE
+    # Aliases for collector-emission data_types that aren't pinned by
+    # EXPECTED_DATA_TYPE (opus M2 belt-and-suspenders). EXPECTED_DATA_TYPE
+    # already rewrites solar_forecast/load_forecast to canonical 'solar'/
+    # 'load' for the pipeline, but a future-added solar/load dataset
+    # NOT in EXPECTED_DATA_TYPE would otherwise get zero range validation
+    # because DATA_TYPE_RANGE_MAP.get('solar_irradiance') was None.
+    'solar_irradiance': 'solar',
+    'load_forecast':    'load',
 }
+
+# Invariant (refactoring-guide H2): every DATA_TYPE_RANGE_MAP entry whose
+# value matches a key in FIELD_RANGES_BY_TYPE must actually exist there.
+# Without this, a typo or stale entry silently no-ops `validate_value_ranges`
+# on that data_type at production time. Module-load assert means a missing
+# entry is caught at import (test-collection), not at first poisoned value.
+_FIELD_RANGE_TARGETS = {
+    v for v in DATA_TYPE_RANGE_MAP.values() if v in FIELD_RANGES_BY_TYPE
+}
+_DECLARED_FIELD_RANGE_TYPES = set(FIELD_RANGES_BY_TYPE.keys())
+_routed = {v for v in DATA_TYPE_RANGE_MAP.values()
+           if v not in VALUE_RANGES and v in FIELD_RANGES_BY_TYPE}
+# Every routed-to-FIELD_RANGES target must have an entry. Conversely, any
+# self-mapping data_type ('solar' -> 'solar') that's NOT in either registry
+# would silently skip validation — also catch that here.
+_self_mapped = {k for k, v in DATA_TYPE_RANGE_MAP.items() if k == v}
+_self_mapped_missing = _self_mapped - _DECLARED_FIELD_RANGE_TYPES - set(VALUE_RANGES.keys())
+assert not _self_mapped_missing, (
+    f"DATA_TYPE_RANGE_MAP self-mapped entries lack FIELD_RANGES_BY_TYPE/"
+    f"VALUE_RANGES coverage: {_self_mapped_missing}. Either add the field "
+    "ranges or change the mapping target."
+)
+del _FIELD_RANGE_TARGETS, _DECLARED_FIELD_RANGE_TYPES, _routed
+del _self_mapped, _self_mapped_missing
 
 # Per-dataset staleness threshold overrides (hours). The default 48h applies
 # to most feeds; GIE AGSI+ publishes with a documented 2-3 day lag, so 96h

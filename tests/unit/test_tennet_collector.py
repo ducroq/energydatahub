@@ -535,5 +535,165 @@ class TestTennetHttpClassifier:
             )
 
 
+class TestTennetBalanceDeltaSplit:
+    """Issue #25 root-cause follow-up (2026-06-08 probe): TenneT retired
+    the `balance-delta` endpoint without updating the tenneteu-py library;
+    it now returns HTTP 404 for every window. Previously the 404
+    propagated up and took the working settlement_prices payload down
+    with it — that's why `grid_imbalance` was silently absent. The split
+    `_fetch_one_endpoint` helper keeps settlement_prices flowing while
+    balance_delta degrades gracefully and emits a synthesis signal."""
+
+    def _http_error_with_status(self, status: int) -> Exception:
+        exc = Exception(f"{status} Client Error: Unknown for url: ...")
+        exc.response = MagicMock(status_code=status)
+        return exc
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_balance_delta_404_does_not_block_settlement_prices(self):
+        """The whole point of the split: a permanent balance_delta error
+        does not kill the run; settlement_prices still propagates."""
+        collector = TennetCollector(api_key="test_api_key")
+        settlement_df = create_sample_settlement_prices_df()
+
+        collector.client.query_settlement_prices = Mock(return_value=settlement_df)
+        collector.client.query_balance_delta = Mock(
+            side_effect=self._http_error_with_status(404)
+        )
+
+        amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+        start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+        end = start + timedelta(days=1)
+
+        result = await collector._fetch_raw_data(start, end)
+
+        assert result['settlement_prices'] is settlement_df
+        assert result['balance_delta'] is None
+        # Synthesised marker recorded for the metadata stamp
+        assert collector._last_balance_delta_status == 'synthesised'
+        # Quality signal emitted so Augur can tell synthesis from real balance
+        issues = collector._collector_quality_issues
+        assert len(issues) == 1
+        assert issues[0]['check_name'] == 'balance_delta_synthesised'
+        assert issues[0]['severity'] == 'warning'
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_successful_balance_delta_marks_complete(self):
+        """When both endpoints succeed, the marker is 'complete' and NO
+        synthesis warning is emitted."""
+        collector = TennetCollector(api_key="test_api_key")
+        settlement_df = create_sample_settlement_prices_df()
+        balance_df = create_sample_balance_delta_df()
+
+        collector.client.query_settlement_prices = Mock(return_value=settlement_df)
+        collector.client.query_balance_delta = Mock(return_value=balance_df)
+
+        amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+        start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+        end = start + timedelta(days=1)
+
+        await collector._fetch_raw_data(start, end)
+
+        assert collector._last_balance_delta_status == 'complete'
+        # No synthesised signal on a clean run
+        assert not any(
+            issue['check_name'] == 'balance_delta_synthesised'
+            for issue in collector._collector_quality_issues
+        )
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_metadata_stamps_balance_delta_status(self):
+        """The metadata envelope must carry `balance_delta_status` so a
+        downstream consumer can distinguish synthesised zeros from a
+        genuinely balanced grid (security audit H1)."""
+        collector = TennetCollector(api_key="test_api_key")
+        collector._last_balance_delta_status = 'synthesised'
+
+        amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+        start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+        end = start + timedelta(days=1)
+
+        meta = collector._get_metadata(start, end)
+        assert meta['balance_delta_status'] == 'synthesised'
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_balance_delta_422_also_swallowed(self):
+        """Any permanent status (422/400/401/403/404) on balance_delta
+        produces None, not an exception — covers the original #25 422
+        case in case the endpoint resurrects with a different status."""
+        collector = TennetCollector(api_key="test_api_key")
+        settlement_df = create_sample_settlement_prices_df()
+
+        for status in (400, 401, 403, 404, 422):
+            collector.client.query_settlement_prices = Mock(return_value=settlement_df)
+            collector.client.query_balance_delta = Mock(
+                side_effect=self._http_error_with_status(status)
+            )
+            amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+            start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+            end = start + timedelta(days=1)
+
+            result = await collector._fetch_raw_data(start, end)
+            assert result['balance_delta'] is None, (
+                f"HTTP {status} should be swallowed for balance_delta"
+            )
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_balance_delta_transient_still_raises(self):
+        """Transient failures (5xx, 429, timeout) on balance_delta must
+        still propagate so BaseCollector's retry loop gets a chance."""
+        collector = TennetCollector(api_key="test_api_key")
+        settlement_df = create_sample_settlement_prices_df()
+
+        for status in (429, 500, 502, 503, 504):
+            collector.client.query_settlement_prices = Mock(return_value=settlement_df)
+            collector.client.query_balance_delta = Mock(
+                side_effect=self._http_error_with_status(status)
+            )
+            amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+            start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+            end = start + timedelta(days=1)
+
+            with pytest.raises(Exception) as exc_info:
+                await collector._fetch_raw_data(start, end)
+            # The raised exception must NOT be NonRetryableError (transient
+            # errors should be retried by BaseCollector).
+            from collectors.base import NonRetryableError
+            assert not isinstance(exc_info.value, NonRetryableError), (
+                f"HTTP {status} should propagate as transient"
+            )
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_settlement_prices_permanent_still_bails_out(self):
+        """Regression check: the existing classifier behaviour on the
+        primary signal must not change. settlement_prices 422 still raises
+        NonRetryableError immediately."""
+        from collectors.base import NonRetryableError
+        collector = TennetCollector(api_key="test_api_key")
+
+        collector.client.query_settlement_prices = Mock(
+            side_effect=self._http_error_with_status(422)
+        )
+        # balance_delta should never be reached — but mock it defensively
+        collector.client.query_balance_delta = Mock(return_value=None)
+
+        amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+        start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+        end = start + timedelta(days=1)
+
+        with pytest.raises(NonRetryableError, match="HTTP 422"):
+            await collector._fetch_raw_data(start, end)
+
+        # Confirm balance_delta was NOT called — settlement_prices error
+        # short-circuited the whole fetch.
+        collector.client.query_balance_delta.assert_not_called()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -325,6 +325,26 @@ class TestDiffSignatures:
         assert report["feeds_removed"] == []
         assert report["feeds_changed"] == []
 
+    def test_diff_signatures_contract_keys_always_lists(self):
+        """opus M3: pin the contract that feeds_added/removed/changed
+        are always lists (not None) regardless of input shape. Defends
+        the detect_schema_drift.py truthy checks against silent None-vs-
+        empty-list confusion."""
+        # Empty inputs
+        r = diff_signatures({}, {})
+        assert isinstance(r["feeds_added"], list)
+        assert isinstance(r["feeds_removed"], list)
+        assert isinstance(r["feeds_changed"], list)
+        assert isinstance(r["feeds_unchanged"], list)
+        # Inputs without `feeds` key at all
+        r = diff_signatures({"schema_version": "2.3"}, {"schema_version": "2.3"})
+        assert r["feeds_added"] == []
+        assert r["feeds_removed"] == []
+        assert r["feeds_changed"] == []
+        # Non-dict input defensively coerced
+        r = diff_signatures(None, {"schema_version": "2.3", "feeds": {}})
+        assert r["feeds_added"] == []
+
 
 class TestDailyChurnImmunity:
     """Property test: signatures are stable across daily runs.

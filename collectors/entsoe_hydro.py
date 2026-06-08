@@ -41,6 +41,7 @@ import asyncio
 from datetime import datetime
 from functools import partial
 from typing import Any, Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -83,6 +84,13 @@ class EntsoeHydroCollector(BaseCollector):
         'FI': 'Finland',  # not enabled by default but supported
     }
 
+    # Per-zone completeness floor (#29). The aggregate
+    # EXPECTED_MIN_POINTS['nordic_hydro']=12 (6 fresh weeks × 2 zones)
+    # catches total collapse but not single-zone half-dark (e.g. NO=10,
+    # SE=2 still aggregates to 12). Six fresh weekly points per zone is
+    # the same definition applied per-zone.
+    EXPECTED_POINTS_PER_ZONE: int = 6
+
     def __init__(
         self,
         api_key: str,
@@ -110,6 +118,12 @@ class EntsoeHydroCollector(BaseCollector):
         )
         self.api_key = api_key
         self.country_codes = country_codes or list(self.DEFAULT_COUNTRY_CODES)
+        # Per-run quality signals use the BaseCollector hook
+        # (`self._add_quality_issue` + auto-reset in `collect()` + auto-
+        # inject in `_get_metadata`). No collector-specific plumbing needed
+        # here — see `collectors/base.py`. Refactoring-guide H1 collapsed
+        # the prior dialect into the base hook (was two divergent
+        # implementations across Luchtmeetnet + EntsoeHydro).
 
         if EntsoePandasClient is None:
             raise ImportError(
@@ -157,6 +171,10 @@ class EntsoeHydroCollector(BaseCollector):
         # Per-country: use `_retry_single` so one failed country doesn't
         # poison the whole collection. The BaseCollector-level retry still
         # wraps the outer call; this is the inner per-source backoff.
+        # NonRetryableError raised by `_retry_single` (e.g. via the HTTP
+        # classifier) propagates naturally out of this loop and up to
+        # BaseCollector's bail-out path — no explicit catch+raise needed
+        # (opus N2 dead-code removal).
         results: Dict[str, pd.Series] = {}
         for code in self.country_codes:
             query_func = partial(
@@ -165,11 +183,7 @@ class EntsoeHydroCollector(BaseCollector):
                 start=start_ts,
                 end=end_ts,
             )
-            try:
-                series = await self._retry_single(query_func, max_attempts=2)
-            except NonRetryableError:
-                # Re-raise so BaseCollector's retry loop sees it and bails out.
-                raise
+            series = await self._retry_single(query_func, max_attempts=2)
             if series is None:
                 self.logger.warning(
                     f"{code}: query_aggregate_water_reservoirs returned None "
@@ -247,6 +261,15 @@ class EntsoeHydroCollector(BaseCollector):
                 if pd.isna(value):
                     continue
                 dt = ts.to_pydatetime() if hasattr(ts, 'to_pydatetime') else ts
+                # Defensive guard (sonnet): some entsoe-py versions have
+                # been observed returning a tz-naive Timestamp index for
+                # certain series. Comparing naive `dt` against tz-aware
+                # `start_time`/`end_time` raises TypeError. Assume UTC
+                # for naive timestamps — the A72 endpoint documents UTC
+                # cadence — then let the downstream Amsterdam normalisation
+                # handle the conversion.
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=ZoneInfo('UTC'))
                 if not (start_time <= dt < end_time):
                     continue
                 amsterdam_dt = normalize_timestamp_to_amsterdam(dt)
@@ -284,11 +307,38 @@ class EntsoeHydroCollector(BaseCollector):
     ) -> tuple[bool, List[str]]:
         """Validate the nested per-country structure."""
         warnings: List[str] = []
+        # Reset per-run structured signals explicitly so callers that
+        # exercise `_validate_data` directly (unit tests, manual scripts)
+        # see clean state. `collect()` also resets at its top, so under
+        # the production flow this is a defensive double-reset rather
+        # than load-bearing.
+        self._reset_quality_issues()
         if not data:
             return False, ["No hydro reservoir data collected"]
         for country_code, country_data in data.items():
+            n_points = len(country_data) if country_data else 0
+            # Per-zone completeness signal (#29). The structured signal
+            # below covers both the empty-zone and the half-dark cases
+            # uniformly; emit the legacy free-text warning only for the
+            # empty case so an operator scanning the run log still sees
+            # the zone name (the structured signal lands in the report).
             if not country_data:
                 warnings.append(f"{country_code}: no data points")
+            if n_points < self.EXPECTED_POINTS_PER_ZONE:
+                self._add_quality_issue(
+                    check_name='completeness_per_zone',
+                    severity='warning',
+                    message=(
+                        f"{country_code} has {n_points} weekly points "
+                        f"(expected >= {self.EXPECTED_POINTS_PER_ZONE})"
+                    ),
+                    details={
+                        'zone': country_code,
+                        'observed': n_points,
+                        'expected': self.EXPECTED_POINTS_PER_ZONE,
+                    },
+                )
+            if not country_data:
                 continue
             for ts, point in country_data.items():
                 mwh = point.get('reservoir_mwh')
@@ -322,4 +372,7 @@ class EntsoeHydroCollector(BaseCollector):
             'resolution': 'weekly',
             'document_type': 'A72 (Reservoir filling)',
         })
+        # `collector_quality_issues` injection happens automatically in
+        # `BaseCollector.collect()` after this method returns — no
+        # per-collector plumbing needed.
         return metadata

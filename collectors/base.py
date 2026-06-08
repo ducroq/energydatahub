@@ -35,6 +35,7 @@ Usage:
 """
 
 import asyncio
+import copy
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -179,6 +180,18 @@ class BaseCollector(ABC):
         # Circuit breaker state
         self._circuit_breaker = CircuitBreakerState()
 
+        # Structured per-run quality signals. Populated via `_add_quality_issue`
+        # by subclasses (typically inside `_validate_data` or a wrapping
+        # step). Reset at the top of every `collect()` invocation so a
+        # stale signal from a prior run cannot leak into a later
+        # successful one. Surfaced via `metadata['collector_quality_issues']`
+        # — see `collect()` for the deepcopy injection. This is the single
+        # registry that both Luchtmeetnet station-completeness (issue #12)
+        # and EntsoeHydro per-zone completeness (issue #29) feed into so
+        # the pipeline DQ gate's worst-case-wins ladder sees them uniformly.
+        # Refactoring-guide H1 finding consolidated the two prior dialects.
+        self._collector_quality_issues: List[Dict[str, Any]] = []
+
     @abstractmethod
     async def _fetch_raw_data(
         self,
@@ -230,11 +243,56 @@ class BaseCollector(ABC):
         """
         pass
 
+    def _add_quality_issue(
+        self,
+        check_name: str,
+        severity: str,
+        message: str,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """
+        Add a structured quality signal for this run.
+
+        Surfaced via `metadata['collector_quality_issues']` after `collect()`
+        finishes (deepcopied so callers cannot mutate the collector's state
+        through nested `details`). The pipeline DQ gate
+        (`utils/data_quality.py::validate_dataset`) consults this list to
+        promote dataset status to the requested severity.
+
+        Args:
+            check_name: Identifier for the check (e.g. 'station_completeness',
+                'completeness_per_zone'). Surfaced as-is in the report.
+            severity: 'info' | 'warning' | 'error' | 'critical'. Matches
+                `utils.data_quality.Severity` values.
+            message: Operator-facing summary.
+            details: Optional structured payload for downstream consumers.
+                Will be deep-copied at emit time.
+        """
+        self._collector_quality_issues.append({
+            'check_name': check_name,
+            'severity': severity,
+            'message': message,
+            'details': details or {},
+        })
+
+    def _reset_quality_issues(self) -> None:
+        """
+        Clear any accumulated quality signals.
+
+        Auto-called at the top of every `collect()` so subclasses don't have
+        to remember. Subclasses MAY also call this explicitly when their
+        tests drive `_validate_data` directly without going through `collect()`.
+        """
+        self._collector_quality_issues = []
+
     def _get_metadata(self, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
         """
         Get metadata for the dataset.
 
-        Can be overridden by subclasses to add custom metadata.
+        Can be overridden by subclasses to add custom metadata. Note: do
+        NOT manually inject `collector_quality_issues` here — `collect()`
+        does it automatically after `_get_metadata` returns, so the deep-
+        copy + non-empty-guard happens in one place.
 
         Args:
             start_time: Start of time range
@@ -575,6 +633,10 @@ class BaseCollector(ABC):
         collection_id = str(uuid.uuid4())[:8]
         start_timestamp = time.time()
 
+        # Reset per-run quality signals so a prior run's state cannot leak
+        # into this one even if the prior collect() raised before _validate_data.
+        self._reset_quality_issues()
+
         # Check circuit breaker
         if not self._check_circuit_breaker():
             self.logger.warning(
@@ -626,6 +688,15 @@ class BaseCollector(ABC):
 
             # Step 5: Create EnhancedDataSet
             metadata = self._get_metadata(start_time, end_time)
+            # Auto-inject structured quality signals collected during this
+            # run. Deep-copy defends against downstream code mutating the
+            # collector's instance state via nested `details` dicts (the
+            # PR #20 shallow-copy gotcha). Only added when non-empty so a
+            # clean run's metadata stays tidy.
+            if self._collector_quality_issues:
+                metadata['collector_quality_issues'] = copy.deepcopy(
+                    self._collector_quality_issues
+                )
             dataset = EnhancedDataSet(
                 metadata=metadata,
                 data=normalized_data
