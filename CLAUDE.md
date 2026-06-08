@@ -40,7 +40,10 @@ data_fetcher.py              # Main orchestrator — initializes collectors, run
                              # writes data/_shape_signatures.json sidecar pre-encryption
 collectors/
   base.py                    # BaseCollector ABC: retry, circuit breaker, validation,
-                             # NonRetryableError for permanent failures (#25)
+                             # NonRetryableError for permanent failures (#25), and
+                             # `_add_quality_issue()` hook + auto-reset in collect() +
+                             # auto-deepcopy injection of metadata['collector_quality_issues']
+                             # (refactoring H1, 4c59378). Use the hook — don't roll your own.
   _http_classifier.py        # Shared HTTP status classifier (raise_if_permanent) for
                              # 422/400/401/403/404 → NonRetryableError. Used by tennet.py;
                              # available for adoption by any collector that hits 4xx cascades.
@@ -68,8 +71,16 @@ utils/
   secure_data_handler.py     # AES-CBC + HMAC-SHA256 encryption
   calendar_features.py       # Holiday/DST features
 scripts/
-  detect_schema_drift.py     # CI tripwire diffing data/_shape_signatures.json against HEAD (#27)
+  detect_schema_drift.py     # CI tripwire diffing data/_shape_signatures.json against HEAD (#27).
+                             # Splits within-feed shape drift (fail) from catalog drift (warn)
+                             # per the 2026-06-08 buurt-drift fix; CRITICAL_FEEDS escalates
+                             # removed-critical-feed catalog drift to ::error::.
   backfill_entsoe.py / archive_to_monthly.py / backfill_gas_storage.py
+  sample_observed_ranges.py  # One-shot diagnostic: sample data/ files per feed, compute observed
+                             # min/max per field. Used to derive #28's SOLAR_FIELD_RANGES /
+                             # LOAD_FIELD_RANGES. Re-run when adding a new per-field range bound.
+  probe_tennet_windows.py    # One-shot diagnostic: probe TenneT API across windows to identify
+                             # endpoint availability. Used for #25 root-cause analysis.
 data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + current copies +
                              # _shape_signatures.json sidecar (unencrypted, committed)
 docs/                        # GitHub Pages: encrypted JSON + project documentation
