@@ -621,6 +621,66 @@ class TestTennetBalanceDeltaSplit:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
+    async def test_published_dataset_carries_balance_delta_status(self):
+        """REGRESSION for the 2026-06-08 18:46 dispatched-run finding:
+        TenneT overrides `collect()` and uses `_create_dataset` instead
+        of `_get_metadata`. Earlier the override built its own metadata
+        from scratch, so `balance_delta_status` was added to
+        _get_metadata but never reached the published file. Verify the
+        dataset that comes out of collect() carries the marker."""
+        collector = TennetCollector(api_key="test_api_key")
+        settlement_df = create_sample_settlement_prices_df()
+
+        collector.client.query_settlement_prices = Mock(return_value=settlement_df)
+        collector.client.query_balance_delta = Mock(
+            side_effect=self._http_error_with_status(422)
+        )
+
+        amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+        start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+        end = start + timedelta(days=1)
+        dataset = await collector.collect(start, end)
+
+        assert dataset is not None
+        assert dataset.metadata.get('balance_delta_status') == 'synthesised'
+        # Quality issue must also surface in the published metadata
+        # (silent-quality-gate-skip pattern caught: _add_quality_issue
+        # populated the instance state, but the custom collect()
+        # override was skipping the auto-inject before this fix).
+        issues = dataset.metadata.get('collector_quality_issues', [])
+        assert any(
+            i['check_name'] == 'balance_delta_synthesised' for i in issues
+        ), f"Expected balance_delta_synthesised in {issues}"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_published_dataset_carries_collector_specific_metadata(self):
+        """Regression: same as above but verifies all TenneT-specific
+        _get_metadata fields propagate (country_code, market, resolution,
+        data_fields, api_version, balance_delta_status) — not just the
+        ones the original `_create_dataset` happened to duplicate."""
+        collector = TennetCollector(api_key="test_api_key")
+        settlement_df = create_sample_settlement_prices_df()
+        balance_df = create_sample_balance_delta_df()
+
+        collector.client.query_settlement_prices = Mock(return_value=settlement_df)
+        collector.client.query_balance_delta = Mock(return_value=balance_df)
+
+        amsterdam_tz = ZoneInfo('Europe/Amsterdam')
+        start = datetime(2026, 6, 7, 0, 0, tzinfo=amsterdam_tz)
+        end = start + timedelta(days=1)
+        dataset = await collector.collect(start, end)
+
+        for key in (
+            'country_code', 'market', 'resolution',
+            'data_fields', 'api_version', 'balance_delta_status',
+        ):
+            assert key in dataset.metadata, f"missing {key} in published metadata"
+        # Backwards-compat alias
+        assert dataset.metadata['country'] == 'NL'
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_balance_delta_422_also_swallowed(self):
         """Any permanent status (422/400/401/403/404) on balance_delta
         produces None, not an exception — covers the original #25 422

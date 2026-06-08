@@ -19,6 +19,7 @@ API Registration: https://www.tennet.eu/registration-api-token
 """
 
 import asyncio
+import copy
 import logging
 import time
 import uuid
@@ -446,17 +447,24 @@ class TennetCollector(BaseCollector):
         Returns:
             EnhancedDataSet with metadata and data
         """
-        metadata = {
-            "data_type": "grid_imbalance",
-            "source": "TenneT TSO (tennet.eu API)",
-            "units": "EUR/MWh (price), MW (balance)",
-            "country": "NL",
-            "start_time": start_time.isoformat(),
-            "end_time": end_time.isoformat(),
-            "data_points": len(parsed_data),
-            "collection_timestamp": datetime.now().isoformat(),
-            "api_version": "tennet.eu v1",
-        }
+        # Base metadata from `_get_metadata` so all collector-specific
+        # fields (country_code, market, resolution, data_fields,
+        # api_version, balance_delta_status) land in the published
+        # envelope. Previously this method built its own metadata dict
+        # from scratch, which meant any new field added to _get_metadata
+        # (e.g. balance_delta_status, 4c59378) was silently dropped at
+        # the publish boundary — the unit tests for _get_metadata
+        # passed but the actual file never got the stamp. Discovered in
+        # the 2026-06-08 18:46 dispatched verification run.
+        metadata = self._get_metadata(start_time, end_time)
+        # Per-run augments (not in _get_metadata because they depend on
+        # the parsed payload size and current wall-clock).
+        metadata["data_points"] = len(parsed_data)
+        metadata["collection_timestamp"] = datetime.now().isoformat()
+        # Preserve the long-standing 'country' alias for backward
+        # compatibility with downstream consumers; 'country_code' from
+        # _get_metadata is the canonical field going forward.
+        metadata["country"] = "NL"
 
         # Convert to simplified format for chart display
         # Separate imbalance price from balance delta
@@ -494,6 +502,13 @@ class TennetCollector(BaseCollector):
         """
         collection_id = str(uuid.uuid4())[:8]
         start_timestamp = time.time()
+
+        # Reset per-run quality signals at the top of every collect() —
+        # mirrors BaseCollector's behaviour so this custom collect()
+        # override honours the same contract. Without this, stale
+        # `balance_delta_synthesised` warnings from a prior run could
+        # leak into a healthy run (refactoring H1 fix, 4c59378).
+        self._reset_quality_issues()
 
         # Check circuit breaker
         if not self._check_circuit_breaker():
@@ -536,6 +551,19 @@ class TennetCollector(BaseCollector):
             # Step 4: Create EnhancedDataSet with complex structure
             self.logger.debug(f"[{collection_id}] Creating dataset...")
             dataset = self._create_dataset(normalized_data, start_time, end_time)
+
+            # Auto-inject `collector_quality_issues` into the dataset's
+            # metadata — mirrors BaseCollector.collect()'s contract so
+            # this override honours the hook. Without this, the
+            # `balance_delta_synthesised` warning emitted by
+            # _fetch_raw_data would never reach the published file
+            # (the unit-test-level _add_quality_issue passed, the live
+            # file never got the signal — silent-quality-gate-skip
+            # pattern from memory/MEMORY.md Active Decisions).
+            if self._collector_quality_issues:
+                dataset.metadata['collector_quality_issues'] = copy.deepcopy(
+                    self._collector_quality_issues
+                )
 
             # Update metrics
             metrics.data_points_collected = len(normalized_data)
