@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-06-08T09:04:05.109340+00:00",
+  "timestamp": "2026-06-08T18:22:49.480407+00:00",
   "overall_status": "error",
   "total_issues": 6,
-  "datasets_collected": 24,
+  "datasets_collected": 23,
   "datasets_missing": [],
   "dataset_reports": [
     {
@@ -10,7 +10,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -30,7 +30,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -40,7 +40,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 24,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -86,16 +86,6 @@
       "issues": []
     },
     {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
@@ -119,7 +109,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 312,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -179,7 +169,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 40,
+      "data_points": 80,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
