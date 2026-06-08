@@ -19,7 +19,7 @@ Automated energy market data collection platform for electricity price predictio
 | Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (currently --warn-only). |
 | Working with encryption/publish | `utils/secure_data_handler.py`, `docs/CI_CD_SETUP.md` |
 | Debugging data quality issues | `utils/data_quality.py` — FMEA validation. Per-dataset config via `get_dataset_validation_config()`. Missing-dataset severity via `DATASET_MISSING_SEVERITY` dict (single source of truth). |
-| Adding a published dataset | 8-touchpoint checklist (BLOCKER on c40a53b — missing one silently breaks publishing). In `data_fetcher.py`: (1) collector import, (2) instantiate, (3) `tasks.append`, (4) unpack tuple + `fixed_count`, (5) save block, (6) `published_feeds` sidecar, (7) `quality_datasets`. In `utils/data_quality.py`: (8) `EXPECTED_DATA_TYPE` MITM defense, plus `EXPECTED_MIN_POINTS` / `STALENESS_OVERRIDES` / `DATASET_MISSING_SEVERITY` / `FIELD_RANGES_BY_TYPE` as cadence + validation needs dictate. In `.github/workflows/collect-data.yml`: **both** the completeness tripwire list (~line 54) AND the docs-prepare copy list (~line 118) — they're parallel hard-coded lists with no test asserting they match. `test_published_feeds_all_pinned` catches a missing `EXPECTED_DATA_TYPE` entry only. |
+| Adding a published dataset | `memory/project_published_dataset_checklist.md` — 8-touchpoint checklist across `data_fetcher.py`, `utils/data_quality.py`, and `.github/workflows/collect-data.yml`. **Missing one silently breaks publishing** (BLOCKER on c40a53b). Read before wiring a new collector into the publish set. |
 | Stuck or debugging something weird | `memory/gotcha-log.md` — problem-fix archive |
 | Ending a session | Run `/curate` — reviews gotcha log, promotes patterns, syncs docs, surfaces stale memory |
 | Monthly or after major restructuring | Run `/audit-context` — structural audit (duplication, wrong-layer placement, broken refs) |
@@ -87,7 +87,7 @@ docs/                        # GitHub Pages: encrypted JSON + project documentat
 .github/workflows/
   collect-data.yml           # Daily 16:00 UTC collection + publish. Includes completeness
                              # tripwire (warn on missing files) + schema-drift tripwire
-                             # (--warn-only initially; flip to fail-mode once trusted).
+                             # (currently --warn-only; see MEMORY.md Current State for flip target).
   test.yml                   # PR/push test pipeline (path-filtered, Python 3.12 only)
 ```
 
