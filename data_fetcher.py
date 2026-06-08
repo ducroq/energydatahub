@@ -62,6 +62,7 @@ import json
 import copy
 import shutil
 import configparser
+from collections.abc import Awaitable
 from typing import Any, Dict
 from datetime import datetime, timedelta
 import asyncio
@@ -563,45 +564,46 @@ async def main() -> None:
         # Gas import/export flows affect gas availability and prices
         entsog_flows_collector = EntsogFlowsCollector(country_code='NL')
 
-        # Collect data from all sources (national/regional for price prediction)
-        tasks = [
-            entsoe_collector.collect(today, tomorrow, country_code=country_code),
-            entsoe_collector.collect(today, tomorrow, country_code='DE_LU'),  # German prices (coupled market)
-            energy_zero_collector.collect(today, tomorrow),
-            epex_collector.collect(today, tomorrow),
-            openmeteo_strategic_collector.collect(today, ten_days_ahead),  # 10-day forecast, strategic CWE+DK locations
-            elspot_collector.collect(today, tomorrow, country_code=country_code),
-            tennet_collector.collect(yesterday, today),  # TenneT data has a delay, use historical data
-            entsoe_wind_collector.collect(today, tomorrow),  # Wind generation forecasts
-            openmeteo_solar_collector.collect(today, ten_days_ahead),  # Solar irradiance for supply
-            openmeteo_weather_collector.collect(today, ten_days_ahead),  # Demand weather (temperature)
-            openmeteo_offshore_wind_collector.collect(today, ten_days_ahead),  # Offshore wind at actual locations
-            entsoe_flows_collector.collect(yesterday, today),  # Cross-border flows (historical)
-            entsoe_load_collector.collect(today, tomorrow),  # Load forecasts
-            entsoe_generation_collector.collect(today, tomorrow),  # French nuclear generation
-            entsoe_genmix_collector.collect(yesterday, today),  # Full generation mix (NL, DE, BE)
-            entsoe_hydro_collector.collect(hydro_start, today),  # Nordic hydro reservoirs (#3, weekly)
-            openmeteo_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt weather (FyE B1, 16-day)
-            openmeteo_solar_buurt_collector.collect(today, sixteen_days_ahead),  # Buurt solar irradiance (FyE B1, 16-day)
-            # Buurt air quality — one collector per location, historical 24h window
-            *[c.collect(yesterday, today) for c in luchtmeetnet_buurt_collectors],
+        # Collect data from all sources (national/regional for price prediction).
+        # Named (key, coroutine) pairs — results are reassembled into a dict
+        # after gather, so adding/removing a task requires no index accounting.
+        task_specs: list[tuple[str, Awaitable]] = [
+            ('entsoe_nl', entsoe_collector.collect(today, tomorrow, country_code=country_code)),
+            ('entsoe_de', entsoe_collector.collect(today, tomorrow, country_code='DE_LU')),  # German prices (coupled market)
+            ('energy_zero', energy_zero_collector.collect(today, tomorrow)),
+            ('epex', epex_collector.collect(today, tomorrow)),
+            ('strategic_weather', openmeteo_strategic_collector.collect(today, ten_days_ahead)),  # 10-day, strategic CWE+DK
+            ('elspot', elspot_collector.collect(today, tomorrow, country_code=country_code)),
+            ('tennet', tennet_collector.collect(yesterday, today)),  # TenneT data has a delay
+            ('entsoe_wind', entsoe_wind_collector.collect(today, tomorrow)),  # Wind generation forecasts
+            ('solar', openmeteo_solar_collector.collect(today, ten_days_ahead)),  # Solar irradiance for supply
+            ('demand_weather', openmeteo_weather_collector.collect(today, ten_days_ahead)),  # Demand weather (temperature)
+            ('offshore_wind', openmeteo_offshore_wind_collector.collect(today, ten_days_ahead)),
+            ('entsoe_flows', entsoe_flows_collector.collect(yesterday, today)),  # Cross-border flows (historical)
+            ('entsoe_load', entsoe_load_collector.collect(today, tomorrow)),  # Load forecasts
+            ('entsoe_generation', entsoe_generation_collector.collect(today, tomorrow)),  # French nuclear generation
+            ('entsoe_genmix', entsoe_genmix_collector.collect(yesterday, today)),  # Full generation mix (NL, DE, BE)
+            ('entsoe_hydro', entsoe_hydro_collector.collect(hydro_start, today)),  # Nordic hydro reservoirs (#3, weekly)
+            ('buurt_weather', openmeteo_buurt_collector.collect(today, sixteen_days_ahead)),  # FyE B1, 16-day
+            ('buurt_solar', openmeteo_solar_buurt_collector.collect(today, sixteen_days_ahead)),  # FyE B1, 16-day
         ]
 
-        # Add NED.nl collection if API key is configured
+        # Buurt air quality — one collector per location, historical 24h window.
+        # Keys are positional within the buurt_locations list (preserved on unpack).
+        for i, c in enumerate(luchtmeetnet_buurt_collectors):
+            task_specs.append((f'buurt_aq_{i}', c.collect(yesterday, today)))
+
+        # Optionals — only present when an API key is configured.
         if ned_collector:
-            tasks.append(ned_collector.collect(today, tomorrow))
-
-        # Add market proxy collection if API key is configured
+            task_specs.append(('ned', ned_collector.collect(today, tomorrow)))
         if market_proxy_collector:
-            tasks.append(market_proxy_collector.collect(today, today))
-
-        # Add GIE storage collection if API key is configured
+            task_specs.append(('market_proxy', market_proxy_collector.collect(today, today)))
         # Note: GIE AGSI+ has ~2-3 day publication delay, so we query older dates
         if gie_collector:
-            tasks.append(gie_collector.collect(gie_start, gie_end))
+            task_specs.append(('gie_storage', gie_collector.collect(gie_start, gie_end)))
 
-        # Add ENTSOG gas flows collection (no API key required)
-        tasks.append(entsog_flows_collector.collect(yesterday, today))
+        # ENTSOG gas flows — always collected (no API key required)
+        task_specs.append(('entsog_flows', entsog_flows_collector.collect(yesterday, today)))
 
         # NOTE: deliberately NOT using return_exceptions=True.
         # BaseCollector.collect() traps internally and returns None on failure
@@ -610,33 +612,34 @@ async def main() -> None:
         # exception object if gather started surfacing exceptions. Don't
         # change this flag without also adding explicit isinstance(_, BaseException)
         # checks before the per-collector save blocks.
-        results = await asyncio.gather(*tasks)
+        keys, coros = zip(*task_specs)
+        result_list = await asyncio.gather(*coros)
+        results: dict[str, Any] = dict(zip(keys, result_list))
 
-        # Unpack results - NED.nl, market proxies, and gas collectors are optional at the end.
-        # Buurt air-quality tail: one slot per buurt location (currently 2).
-        n_buurt_aq = len(luchtmeetnet_buurt_collectors)
-        fixed_count = 18 + n_buurt_aq
-        (entsoe_data, entsoe_de_data, energy_zero_data, epex_data, strategic_weather_data, elspot_data,
-         tennet_data, entsoe_wind_data, solar_data, demand_weather_data,
-         offshore_wind_data, flows_data, load_data, generation_data,
-         genmix_data, hydro_data, buurt_weather_data, buurt_solar_data) = results[:18]
-        buurt_aq_data = list(results[18:fixed_count])  # parallel to buurt_locations order
-
-        # Handle optional collectors (NED.nl, market proxies, and gas data)
-        optional_idx = fixed_count
-        ned_data = None
-        market_proxy_data = None
-        gie_storage_data = None
-        entsog_flows_data = None
-        if ned_collector:
-            ned_data = results[optional_idx] if len(results) > optional_idx else None
-            optional_idx += 1
-        if market_proxy_collector:
-            market_proxy_data = results[optional_idx] if len(results) > optional_idx else None
-            optional_idx += 1
-        if gie_collector:
-            gie_storage_data = results[optional_idx] if len(results) > optional_idx else None
-            optional_idx += 1
+        # Named extraction — no index accounting, no slice math.
+        entsoe_data = results['entsoe_nl']
+        entsoe_de_data = results['entsoe_de']
+        energy_zero_data = results['energy_zero']
+        epex_data = results['epex']
+        strategic_weather_data = results['strategic_weather']
+        elspot_data = results['elspot']
+        tennet_data = results['tennet']
+        entsoe_wind_data = results['entsoe_wind']
+        solar_data = results['solar']
+        demand_weather_data = results['demand_weather']
+        offshore_wind_data = results['offshore_wind']
+        flows_data = results['entsoe_flows']
+        load_data = results['entsoe_load']
+        generation_data = results['entsoe_generation']
+        genmix_data = results['entsoe_genmix']
+        hydro_data = results['entsoe_hydro']
+        buurt_weather_data = results['buurt_weather']
+        buurt_solar_data = results['buurt_solar']
+        buurt_aq_data = [results[f'buurt_aq_{i}'] for i in range(len(luchtmeetnet_buurt_collectors))]
+        ned_data = results.get('ned')
+        market_proxy_data = results.get('market_proxy')
+        gie_storage_data = results.get('gie_storage')
+        entsog_flows_data = results['entsog_flows']
 
         # --- Retry failed critical collectors ---
         # ENTSO-E price data is critical for Augur's forecast. If the API was
@@ -644,7 +647,7 @@ async def main() -> None:
         for retry_round in range(1, MAX_RETRY_ROUNDS + 1):
             failed_critical = []
             if entsoe_data is None:
-                failed_critical.append('entsoe')
+                failed_critical.append('entsoe_nl')
             if entsoe_de_data is None:
                 failed_critical.append('entsoe_de')
 
@@ -659,7 +662,7 @@ async def main() -> None:
 
             retry_tasks = {}
             if entsoe_data is None:
-                retry_tasks['entsoe'] = entsoe_collector.collect(
+                retry_tasks['entsoe_nl'] = entsoe_collector.collect(
                     today, tomorrow, country_code=country_code
                 )
             if entsoe_de_data is None:
@@ -671,12 +674,10 @@ async def main() -> None:
             for key, result in zip(retry_tasks.keys(), retry_results):
                 if result is not None:
                     logging.info(f"Retry succeeded for '{key}' on round {retry_round}")
-                    if key == 'entsoe':
+                    if key == 'entsoe_nl':
                         entsoe_data = result
                     elif key == 'entsoe_de':
                         entsoe_de_data = result
-        # ENTSOG flows is always collected (no API key required)
-        entsog_flows_data = results[optional_idx] if len(results) > optional_idx else None
 
         combined_data = CombinedDataSet()
         combined_data.add_dataset('entsoe', entsoe_data)

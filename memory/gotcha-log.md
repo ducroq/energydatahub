@@ -21,10 +21,10 @@
 | Parallel hard-coded registries keyed on the same identifier (2-incident pattern: 3-list missing-severity collapse in `data_quality.py`; 2-list expected-files vs docs-prepare in `collect-data.yml`) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 |
 | Silent quality-gate skip (3-incident pattern, broadened 2026-06-08: GoogleWeather `API_KEY_INVALID` silent-success for 7 months; `validate_value_ranges` 2-level nesting silent-skip for ~3 months; TenneT custom `collect()` override silently dropped `balance_delta_status` + `collector_quality_issues` at publish boundary, ab3dcd4) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 (broadened 2026-06-08) |
 
-### Optional result unpacking uses fragile index counting (2026-03-27)
+### Optional result unpacking uses fragile index counting (2026-03-27) [RESOLVED 2026-06-08]
 **Problem**: Adding a new fixed task to `asyncio.gather()` requires updating the slice index (e.g., `results[:14]` -> `results[:15]`) and `optional_idx`. Easy to miscount.
 **Root cause**: Results are unpacked positionally from a flat list. Optional collectors are appended conditionally, making the index depend on which optionals are enabled.
-**Fix**: Bumped index from 14 to 15 when adding generation mix. Future improvement: consider using a dict-based result collection pattern instead of positional unpacking.
+**Fix**: Refactored `data_fetcher.py:566-640` to dict-based pattern. Tasks are now built as a list of `(name, coroutine)` pairs; after `asyncio.gather`, results are zipped into `dict[str, Any]` and consumed by name (`results['entsoe_nl']`, `results.get('ned')`). Removed `fixed_count`, `optional_idx`, and the hard-coded `18`. Adding a new task now requires only one line in `task_specs` + one consumer; no slice math, no index walking. 621 tests green.
 
 ### Coverage gate failed spuriously on filtered test job after PR #16 merge (2026-06-07) [RESOLVED]
 **Problem**: After PR #16 merged, the Tests workflow's "Run critical timezone tests only" job failed with `Required test coverage of 20% not reached. Total coverage: 19.50%`. Generated an email notification even though HEAD of main was green (subsequent PR #18 + PR #20 merges added covered code and pushed coverage back over threshold).
