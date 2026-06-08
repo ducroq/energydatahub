@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-06-07T21:06:06+02:00",
+  "computed_at": "2026-06-08T08:48:07+00:00",
   "schema_version": "2.3",
   "feeds": {
     "energy_price_forecast.json": {
@@ -992,6 +992,59 @@
         }
       },
       "data_type": "demand_weather",
+      "sources": null
+    },
+    "grid_imbalance.json": {
+      "shape_hash": "3b0e29a4021c4fe1923da07a7f1a3bf0",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "balance_delta": {
+                "_kind": "timestamp_map",
+                "value_shape": "float"
+              },
+              "direction": {
+                "_kind": "timestamp_map",
+                "value_shape": "str"
+              },
+              "imbalance_price": {
+                "_kind": "timestamp_map",
+                "value_shape": "float"
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_version": "str",
+              "collection_timestamp": "str",
+              "country": "str",
+              "data_points": "int",
+              "data_type": "str",
+              "end_time": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "grid_imbalance",
       "sources": null
     },
     "ned_production.json": {

@@ -1,18 +1,16 @@
 {
-  "timestamp": "2026-06-07T17:09:34.785253+00:00",
+  "timestamp": "2026-06-08T08:48:07.858223+00:00",
   "overall_status": "error",
   "total_issues": 5,
-  "datasets_collected": 22,
-  "datasets_missing": [
-    "grid_imbalance"
-  ],
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "dataset_reports": [
     {
       "dataset_name": "entsoe",
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -22,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -32,7 +30,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -42,7 +40,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 47,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -98,11 +96,21 @@
       "issues": []
     },
     {
+      "dataset_name": "grid_imbalance",
+      "data_type": "grid_imbalance",
+      "source": "TenneT TSO (tennet.eu API)",
+      "status": "info",
+      "data_points": 288,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
       "dataset_name": "wind_forecast",
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 624,
+      "data_points": 312,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -162,7 +170,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 72,
+      "data_points": 40,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -173,6 +181,16 @@
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
       "data_points": 216,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "nordic_hydro",
+      "data_type": "hydro_reservoir",
+      "source": "ENTSO-E Transparency Platform (A72)",
+      "status": "info",
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
