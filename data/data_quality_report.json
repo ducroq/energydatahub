@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-08T18:22:49.480407+00:00",
-  "overall_status": "error",
-  "total_issues": 6,
+  "timestamp": "2026-06-09T08:37:16.323825+00:00",
+  "overall_status": "warning",
+  "total_issues": 2,
   "datasets_collected": 23,
   "datasets_missing": [],
   "dataset_reports": [
@@ -10,7 +10,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -30,7 +30,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -40,7 +40,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 47,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -109,7 +109,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 624,
+      "data_points": 312,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -149,7 +149,7 @@
       "data_type": "cross_border_flows",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 99,
+      "data_points": 97,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -158,18 +158,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "6 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 6,
+            "examples": [
+              "NL/2026-06-09T08:15:00+02:00: forecast_error=3315.5, load_actual=7397.306, ratio=0.45",
+              "NL/2026-06-09T08:30:00+02:00: forecast_error=3318.7, load_actual=7033.226, ratio=0.47",
+              "NL/2026-06-09T08:45:00+02:00: forecast_error=3539.7, load_actual=6635.906, ratio=0.53",
+              "NL/2026-06-09T09:00:00+02:00: forecast_error=4004.5, load_actual=6086.506, ratio=0.66",
+              "NL/2026-06-09T09:15:00+02:00: forecast_error=4452.2, load_actual=5479.776, ratio=0.81"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 80,
+      "data_points": 40,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -189,7 +206,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 18,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -198,76 +215,38 @@
       "dataset_name": "ned_production",
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
-      "status": "error",
-      "data_points": 6,
-      "checks_passed": 2,
-      "checks_failed": 2,
-      "issues": [
-        {
-          "check_name": "completeness",
-          "severity": "error",
-          "message": "Only 6 data points (expected >= 24, 25% complete)",
-          "details": {
-            "actual": 6,
-            "expected_min": 24,
-            "completeness_ratio": 0.25
-          }
-        },
-        {
-          "check_name": "staleness",
-          "severity": "warning",
-          "message": "Could not parse any timestamps to check staleness"
-        }
-      ]
+      "status": "info",
+      "data_points": 405,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "warning",
-      "data_points": 51,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "warning",
-          "message": "Could not parse any timestamps to check staleness"
-        }
-      ]
+      "status": "info",
+      "data_points": 26,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "error",
-      "data_points": 4,
-      "checks_passed": 2,
-      "checks_failed": 2,
-      "issues": [
-        {
-          "check_name": "completeness",
-          "severity": "error",
-          "message": "Only 4 data points (expected >= 24, 17% complete)",
-          "details": {
-            "actual": 4,
-            "expected_min": 24,
-            "completeness_ratio": 0.17
-          }
-        },
-        {
-          "check_name": "staleness",
-          "severity": "warning",
-          "message": "Could not parse any timestamps to check staleness"
-        }
-      ]
+      "status": "info",
+      "data_points": 84,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "gas_storage",
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 48,
+      "data_points": 8,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -277,7 +256,7 @@
       "data_type": "gas_flows",
       "source": "ENTSOG Transparency Platform",
       "status": "info",
-      "data_points": 10,
+      "data_points": 2,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
