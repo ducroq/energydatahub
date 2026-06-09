@@ -64,7 +64,9 @@ collectors/
 utils/
   data_types.py              # EnhancedDataSet, CombinedDataSet — canonical {metadata, data} envelope
   data_quality.py            # FMEA validation. DATASET_MISSING_SEVERITY (single registry),
-                             # EXPECTED_DATA_TYPE (MITM defense), get_dataset_validation_config()
+                             # EXPECTED_DATA_TYPE (MITM defense), get_dataset_validation_config(),
+                             # validate_load_cross_field_consistency (#30, ratio threshold 0.40),
+                             # depth-walking _count_data_points / _extract_timestamp_keys (#32)
   schema_registry.py         # Version detection + migration (v1.0 → v2.0 → v2.1 → v2.2 → v2.3).
                              # stamp_metadata embeds the version's changelog slice (Layer B).
   shape_signature.py         # Structural fingerprint for schema-drift detection (#27)
