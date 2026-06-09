@@ -420,20 +420,49 @@ WARNING_IF_MISSING_DATASETS = [
 ]
 
 
-def _count_data_points(data: Any) -> int:
-    """Count data points, handling nested structures."""
-    if not isinstance(data, dict):
+def _is_timestamp_str(s: Any) -> bool:
+    """True if `s` is a string that parses as ISO date or datetime."""
+    try:
+        datetime.fromisoformat(str(s).replace('Z', '+00:00'))
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+def _count_data_points(data: Any, _max_depth: int = 5) -> int:
+    """Count records in a possibly nested data dict.
+
+    Heuristic (timestamp-aware, depth-walking — issue #32):
+      - If a dict's keys parse as ISO timestamps, it IS the record
+        collection — return its length (each entry is one record,
+        whether the value is a scalar or a fields-dict).
+      - Otherwise recurse into dict children (up to `_max_depth`) and
+        sum their counts. Non-dict children contribute 0.
+      - A dict with neither timestamp keys nor dict children is a
+        snapshot leaf — count as 1.
+
+    Shapes handled:
+      flat:     {ts: scalar}                       -> N (top level)
+      flat:     {ts: {field: val}}                 -> N (top level)
+      2-level:  {loc: {ts: {field: val}}}          -> sum per loc
+      3-level:  {kind: {class: {ts: {field}}}}     -> deeper sum (#32)
+      mixed:    {series: {metadata, data: {ts}}}   -> recursed; metadata
+                sub-dict adds +1 noise per series, swamped by N >> 1 in
+                practice (market_history)
+      snapshot: {commodity: {field: val}}          -> one record per
+                commodity (market_proxies)
+    """
+    if not isinstance(data, dict) or _max_depth <= 0 or not data:
         return 0
-    # Check if values are nested dicts (multi-location data)
-    first_value = next(iter(data.values()), None)
-    if isinstance(first_value, dict):
-        # Could be location -> {timestamp -> value} or timestamp -> {fields}
-        # Count leaf values
-        return sum(
-            len(v) if isinstance(v, dict) else 1
-            for v in data.values()
-        )
-    return len(data)
+    keys_sample = list(data.keys())[:5]
+    if all(_is_timestamp_str(k) for k in keys_sample):
+        return len(data)
+    dict_children = [v for v in data.values() if isinstance(v, dict)]
+    if not dict_children:
+        # Non-empty dict with no dict children and no timestamp keys —
+        # a snapshot leaf (e.g. one commodity's fields in market_proxies).
+        return 1
+    return sum(_count_data_points(child, _max_depth - 1) for child in dict_children)
 
 
 def _check_field_range(
@@ -767,44 +796,40 @@ def validate_null_ratio(
     return issues
 
 
-def _extract_timestamp_keys(data: Dict[str, Any]) -> List[str]:
+def _extract_timestamp_keys(data: Dict[str, Any], _max_depth: int = 5) -> List[str]:
     """
-    Extract timestamp-like keys from data, searching one level deep if needed.
+    Extract timestamp-like keys from data, walking deeper when needed.
 
     Many datasets nest timestamps under country/location keys, e.g.:
     {'NL': {'2026-03-30T00:00:00+02:00': {...}}, 'DE_LU': {...}}
 
+    Some go deeper (issue #32): ned_production has
+    {energy_type: {forecast|actual: {ts: {fields}}}} and market_history
+    has {series: {metadata, data: {date: price}}}. Walking only 1 level
+    deep missed those.
+
     Returns:
-        List of string keys that look like ISO timestamps
+        List of string keys that look like ISO timestamps. The first
+        sub-tree containing timestamps is returned (breadth-first), so
+        staleness only inspects one consistent layer of the data.
     """
-    keys = []
-    # First try top-level keys
-    for key in data.keys():
-        try:
-            datetime.fromisoformat(str(key).replace('Z', '+00:00'))
-            keys.append(key)
-        except (ValueError, TypeError):
-            continue
-
-    # If no timestamps at top level, check one level deeper
-    if not keys:
-        for value in data.values():
-            if isinstance(value, dict):
-                for key in value.keys():
-                    try:
-                        datetime.fromisoformat(str(key).replace('Z', '+00:00'))
-                        keys.append(key)
-                    except (ValueError, TypeError):
-                        continue
-                if keys:
-                    break  # Found timestamps, no need to check more sub-dicts
-
-    return keys
+    if not isinstance(data, dict) or _max_depth <= 0:
+        return []
+    keys = [k for k in data.keys() if _is_timestamp_str(k)]
+    if keys:
+        return keys
+    for v in data.values():
+        if isinstance(v, dict):
+            child_keys = _extract_timestamp_keys(v, _max_depth - 1)
+            if child_keys:
+                return child_keys
+    return []
 
 
 def validate_staleness(
     data: Dict[str, Any],
     max_age_hours: int = 48,
+    metadata_anchor_iso: Optional[str] = None,
 ) -> List[QualityIssue]:
     """
     Check that data is not stale (all timestamps too old).
@@ -812,6 +837,12 @@ def validate_staleness(
     Args:
         data: The data dictionary with ISO timestamp keys
         max_age_hours: Maximum acceptable age of newest data point
+        metadata_anchor_iso: Optional ISO timestamp from dataset metadata
+            (e.g. metadata['end_time']) used as fallback when the data
+            shape carries no timestamp-keyed dict — typical for snapshot
+            datasets like market_proxies. Without this, snapshots fire
+            a misleading "Could not parse any timestamps" warning every
+            run (issue #32).
 
     Returns:
         List of QualityIssue objects
@@ -827,10 +858,28 @@ def validate_staleness(
     for key in _extract_timestamp_keys(data):
         try:
             dt = datetime.fromisoformat(str(key).replace('Z', '+00:00'))
+            # Date-only ISO (e.g. '2026-06-09', used by market_history)
+            # parses as naive — assume Amsterdam wall-clock so the
+            # subsequent `now - dt` doesn't raise TypeError. Same anchor
+            # convention as `_extract_timestamp_keys`.
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=now.tzinfo)
             if newest_ts is None or dt > newest_ts:
                 newest_ts = dt
         except (ValueError, TypeError):
             continue
+
+    if newest_ts is None and metadata_anchor_iso:
+        # Snapshot-shape datasets (no timestamp-keyed dict in data) fall
+        # back to the metadata anchor — usually metadata['end_time'].
+        try:
+            newest_ts = datetime.fromisoformat(
+                str(metadata_anchor_iso).replace('Z', '+00:00')
+            )
+            if newest_ts.tzinfo is None:
+                newest_ts = newest_ts.replace(tzinfo=now.tzinfo)
+        except (ValueError, TypeError):
+            newest_ts = None
 
     if newest_ts is None:
         issues.append(QualityIssue(
@@ -1146,10 +1195,17 @@ def validate_dataset(
             checks_failed += 1
             report.issues.extend(cross_issues)
 
-    # 4. Staleness check
+    # 4. Staleness check. Snapshot datasets (e.g. market_proxies) have
+    # no timestamp-keyed dict; fall back to metadata's end/start_time so
+    # they don't fire a misleading "could not parse" warning (#32).
     checks_run += 1
+    staleness_anchor = (
+        dataset.metadata.get('end_time') or dataset.metadata.get('start_time')
+    )
     staleness_issues = validate_staleness(
-        dataset.data, max_age_hours=config['staleness_hours']
+        dataset.data,
+        max_age_hours=config['staleness_hours'],
+        metadata_anchor_iso=staleness_anchor,
     )
     if staleness_issues:
         checks_failed += 1

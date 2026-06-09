@@ -818,6 +818,50 @@ class TestCompleteness:
         issues = validate_completeness(data, 'elspot')
         assert len(issues) == 0
 
+    def test_ned_production_3level_shape_counted(self):
+        """Issue #32: ned_production data is 3 levels deep
+        ({energy_type: {forecast|actual: {ts: {fields}}}}). Pre-fix
+        `_count_data_points` returned 6 (energy_types × classes),
+        triggering false completeness/error every day."""
+        ts = _make_price_data(24)  # {ts: scalar} — 24 entries
+        # Map scalars to fields-dicts so it mirrors real ned shape:
+        ts_dict = {k: {'capacity_kw': v} for k, v in ts.items()}
+        data = {
+            'solar':         {'forecast': ts_dict, 'actual': ts_dict},
+            'wind_onshore':  {'forecast': ts_dict, 'actual': ts_dict},
+            'wind_offshore': {'forecast': ts_dict, 'actual': ts_dict},
+        }
+        # 3 kinds × 2 classes × 24 timestamps = 144
+        issues = validate_completeness(data, 'ned_production')
+        assert issues == [], f"Expected no completeness issues, got {issues}"
+
+    def test_market_history_3level_with_metadata_counted(self):
+        """Issue #32: market_history data is
+        {series: {metadata: {...}, data: {date: price}}}. Pre-fix
+        returned 4 (2 series × 2 sub-keys metadata/data). Now counts
+        the date-keyed inner dict."""
+        ts = _make_price_data(50)  # 50 daily entries
+        data = {
+            'gas_ttf':    {'metadata': {'units': 'EUR/MWh'}, 'data': ts},
+            'carbon_eua': {'metadata': {'units': 'USD/share'}, 'data': ts},
+        }
+        # 2 series × 50 dates = 100 (+ 2 metadata sub-dicts counted as 1
+        # each = 102). Well above the 24 floor.
+        issues = validate_completeness(data, 'market_history')
+        assert issues == []
+
+    def test_market_proxies_snapshot_passes(self):
+        """Issue #32: market_proxies is a snapshot
+        ({commodity: {field: val}}). Each commodity counts as one
+        record; with EXPECTED_MIN_POINTS=1 the dataset passes."""
+        data = {
+            'carbon':  {'price': 80.0, 'units': 'USD/share', 'date': '2026-06-08'},
+            'gas_ttf': {'price': 45.0, 'units': 'EUR/MWh',   'date': '2026-06-08'},
+            'gas':     {'price': 12.0, 'units': 'USD',       'date': '2026-06-08'},
+        }
+        issues = validate_completeness(data, 'market_proxies')
+        assert issues == []
+
 
 class TestNullRatio:
     """Tests for validate_null_ratio."""
@@ -926,6 +970,70 @@ class TestStaleness:
         }
         issues = validate_staleness(data)
         assert len(issues) == 0  # Newest is fresh
+
+    def test_3level_shape_walks_deeper_for_timestamps(self):
+        """Issue #32: ned_production has timestamps 3 levels deep.
+        Pre-fix `_extract_timestamp_keys` only walked 1 level deep and
+        returned [] → fired the misleading 'could not parse' warning
+        every run."""
+        fresh = datetime.now(AMS)
+        ts_dict = {fresh.isoformat(): {'capacity_kw': 100.0}}
+        data = {
+            'solar':         {'forecast': ts_dict, 'actual': ts_dict},
+            'wind_onshore':  {'forecast': ts_dict, 'actual': ts_dict},
+        }
+        issues = validate_staleness(data)
+        assert issues == [], (
+            f"Expected staleness to find the timestamps 3 levels deep, "
+            f"got {issues}"
+        )
+
+    def test_market_history_data_subkey_dates_found(self):
+        """market_history nests dates under {series: {data: {date: price}}}.
+        Walker must reach the date keys."""
+        fresh_date = datetime.now(AMS).date().isoformat()
+        data = {
+            'gas_ttf': {
+                'metadata': {'units': 'EUR/MWh'},
+                'data': {fresh_date: 45.0},
+            },
+        }
+        issues = validate_staleness(data)
+        assert issues == []
+
+    def test_snapshot_falls_back_to_metadata_anchor(self):
+        """Issue #32: market_proxies is a snapshot — no timestamp-keyed
+        dict in data. With metadata_anchor_iso, staleness uses that as
+        the freshness anchor instead of emitting the misleading
+        'could not parse' warning."""
+        fresh = datetime.now(AMS).isoformat()
+        snapshot = {
+            'carbon':  {'price': 80.0, 'date': fresh},
+            'gas_ttf': {'price': 45.0, 'date': fresh},
+        }
+        issues = validate_staleness(snapshot, metadata_anchor_iso=fresh)
+        assert issues == []
+
+    def test_snapshot_without_anchor_still_warns(self):
+        """If no metadata_anchor_iso is supplied AND the data has no
+        timestamp-keyed dict, the original 'could not parse' warning
+        still fires (pre-#32 behaviour preserved when caller doesn't
+        opt into the fallback)."""
+        snapshot = {
+            'carbon':  {'price': 80.0},
+            'gas_ttf': {'price': 45.0},
+        }
+        issues = validate_staleness(snapshot)
+        assert len(issues) == 1
+        assert issues[0].severity == Severity.WARNING
+
+    def test_stale_metadata_anchor_flags(self):
+        """If the fallback anchor itself is stale, the check still fires."""
+        old = (datetime.now(AMS) - timedelta(days=7)).isoformat()
+        snapshot = {'carbon': {'price': 80.0}}
+        issues = validate_staleness(snapshot, metadata_anchor_iso=old)
+        assert len(issues) == 1
+        assert issues[0].check_name == 'staleness'
 
 
 class TestDuplicateTimestamps:
