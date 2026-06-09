@@ -315,6 +315,13 @@ class EntsoeHydroCollector(BaseCollector):
         self._reset_quality_issues()
         if not data:
             return False, ["No hydro reservoir data collected"]
+        # Iterate `data.items()` rather than `self.country_codes`: if a
+        # future entsoe-py version leaks an unexpected zone through
+        # `_fetch_raw_data`'s per-code filter, the per-zone completeness
+        # signal still fires (tagged with the unexpected zone code).
+        # Default-to-defensive — a library regression that silently adds
+        # a zone should surface as a quality warning, not vanish.
+        # Pinned by `test_unexpected_zone_in_data_does_not_crash` (#31).
         for country_code, country_data in data.items():
             n_points = len(country_data) if country_data else 0
             # Per-zone completeness signal (#29). The structured signal

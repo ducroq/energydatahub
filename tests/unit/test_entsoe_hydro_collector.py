@@ -301,6 +301,32 @@ class TestEntsoeHydroPerZoneCompleteness:
         )
         assert collector._collector_quality_issues == []
 
+    def test_unexpected_zone_in_data_does_not_crash(self):
+        """Defensive: collector initialised with ['NO'] but data contains
+        'NO' + 'FI' (e.g. a future entsoe-py regression where the multi-
+        zone DataFrame collapse leaks an extra zone). `_validate_data`
+        iterates `data.items()` rather than `self.country_codes`, so the
+        unexpected zone gets the per-zone completeness signal — pinning
+        the default-to-defensive behaviour documented inline.
+        Issue #31."""
+        collector = EntsoeHydroCollector(api_key="test_key", country_codes=["NO"])
+        data = {
+            "NO": self._make_zone_data(8),  # healthy
+            "FI": self._make_zone_data(2),  # unexpected zone, half-dark
+        }
+        collector._validate_data(
+            data,
+            datetime(2026, 1, 1, tzinfo=AMS),
+            datetime(2026, 3, 1, tzinfo=AMS),
+        )
+        issues = collector._collector_quality_issues
+        # The unexpected zone gets a per-zone signal because it's below
+        # the floor; the healthy expected zone (NO=8) does not.
+        assert len(issues) == 1
+        assert issues[0]["details"]["zone"] == "FI"
+        assert issues[0]["details"]["observed"] == 2
+        assert issues[0]["severity"] == "warning"
+
     @pytest.mark.asyncio
     async def test_collect_metadata_surfaces_per_zone_issues(self):
         """End-to-end through `collect()`: the per-zone issue lands in
