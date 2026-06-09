@@ -21,6 +21,13 @@
 | Parallel hard-coded registries keyed on the same identifier (2-incident pattern: 3-list missing-severity collapse in `data_quality.py`; 2-list expected-files vs docs-prepare in `collect-data.yml`) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 |
 | Silent quality-gate skip (3-incident pattern, broadened 2026-06-08: GoogleWeather `API_KEY_INVALID` silent-success for 7 months; `validate_value_ranges` 2-level nesting silent-skip for ~3 months; TenneT custom `collect()` override silently dropped `balance_delta_status` + `collector_quality_issues` at publish boundary, ab3dcd4) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 (broadened 2026-06-08) |
 
+### ENTSO-E NL load over-forecast — #30 check fired on first production run (2026-06-09)
+**Observation**: First dispatched run after shipping the #30 cross-field consistency check (3b04f1b, 0.40 threshold) fired 6 warnings on NL load between 08:15-09:30 Amsterdam. Pattern: forecast steady at ~10 GW, actual ramping 7.4 → 5.5 GW, error climbing from +3.3 to +4.5 GW, ratio climbing from 0.45 to 0.81. All six records consecutive 15-min slots → not noise, a real model miss.
+**Hypothesis**: ENTSO-E's NL load forecast for Tue 2026-06-09 morning didn't account for either (a) behind-the-meter PV ramp on a sunny June morning depressing net load, or (b) a wrong day-type calendar feature (post-Pinksteren week?). The signal is exactly the kind #30 was designed to catch — `|forecast_error|/load_actual` between 45-81% is physically implausible if forecast and actual are independently correct.
+**Action**: None yet — keep 0.40 threshold and watch. The #30 issue derivation said max observed Mar-Jun ratio was 0.27, so today's data extends the sample. If this recurs on multiple non-anomalous days, recalibrate; if it's confined to summer mornings, may need a `is_summer_morning_ramp` exemption rather than blanket loosening.
+**Where**: `utils/data_quality.py::validate_load_cross_field_consistency`, threshold `LOAD_CROSS_FIELD_RATIO_THRESHOLD = 0.4`. Tighten or loosen here if recalibration needed.
+**Pickup signal**: if subsequent daily runs surface non-morning-ramp records too (e.g. evening or random midday slots), the threshold itself is wrong rather than the underlying data being anomalous.
+
 ### Optional result unpacking uses fragile index counting (2026-03-27) [RESOLVED 2026-06-08]
 **Problem**: Adding a new fixed task to `asyncio.gather()` requires updating the slice index (e.g., `results[:14]` -> `results[:15]`) and `optional_idx`. Easy to miscount.
 **Root cause**: Results are unpacked positionally from a flat list. Optional collectors are appended conditionally, making the index depend on which optionals are enabled.
