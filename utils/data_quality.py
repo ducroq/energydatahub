@@ -561,6 +561,93 @@ def validate_value_ranges(
     return issues
 
 
+# Threshold for the load cross-field consistency check (#30). A MITM that
+# tampers `load_actual` and `forecast_error` independently can produce a
+# triple whose per-field bounds pass (#28) but whose internal arithmetic
+# is broken — e.g. (load_forecast=70000, load_actual=50000, forecast_error=20000)
+# implies a forecast error of 40% of actual load, which is physically
+# absurd. Derivation: max observed |forecast_error|/load_actual over the
+# Mar-Jun 2026 sample = 18914/70295 = 0.27. 0.40 gives ~48% headroom over
+# the worst observed. Re-derive after a full winter cycle if cold-snap
+# under-prediction stretches the legit ceiling closer to 0.40.
+LOAD_CROSS_FIELD_RATIO_THRESHOLD = 0.4
+
+# Denominator floor (MW) for the load consistency ratio. Prevents
+# division blow-up when load_actual is near zero (e.g. early-AM minimum,
+# a missing record, or a tampered zero). Below this floor we still
+# evaluate the check but use 1000 MW so a small absolute |forecast_error|
+# doesn't false-flag.
+LOAD_CROSS_FIELD_ACTUAL_FLOOR = 1000.0
+
+
+def validate_load_cross_field_consistency(
+    data: Dict[str, Any],
+    dataset_name: str,
+) -> List[QualityIssue]:
+    """
+    Cross-field consistency check for the load triple (#30).
+
+    `forecast_error` should be a small fraction of `load_actual`. If
+    |forecast_error| / max(|load_actual|, floor) exceeds
+    LOAD_CROSS_FIELD_RATIO_THRESHOLD, the record is internally inconsistent
+    — either upstream arithmetic is broken or the values were tampered
+    independently. Defends against the MITM scenario where the attacker
+    flips multiple fields to a triple whose per-field bounds (#28) all pass
+    but whose ratio gives the game away.
+
+    Args:
+        data:         The load data (1- or 2-level nested by country/timestamp)
+        dataset_name: For reporting
+
+    Returns:
+        List of QualityIssue. Empty when all records are internally consistent.
+    """
+    issues: List[QualityIssue] = []
+    inconsistent_count = 0
+    examples: List[str] = []
+
+    for ts_key, record in _flatten_to_timestamp_records(data).items():
+        if not isinstance(record, dict):
+            continue
+        load_actual = record.get('load_actual')
+        forecast_error = record.get('forecast_error')
+        if not isinstance(load_actual, (int, float)):
+            continue
+        if not isinstance(forecast_error, (int, float)):
+            continue
+        denom = max(abs(load_actual), LOAD_CROSS_FIELD_ACTUAL_FLOOR)
+        ratio = abs(forecast_error) / denom
+        # Inclusive boundary: the acceptance triple
+        # (load_actual=50000, forecast_error=20000) is exactly 0.40 and
+        # must flag (#30). The threshold reads as "40% or more is bad".
+        if ratio >= LOAD_CROSS_FIELD_RATIO_THRESHOLD:
+            inconsistent_count += 1
+            if len(examples) < 5:
+                examples.append(
+                    f"{ts_key}: forecast_error={forecast_error}, "
+                    f"load_actual={load_actual}, ratio={ratio:.2f}"
+                )
+
+    if inconsistent_count > 0:
+        issues.append(QualityIssue(
+            check_name='load_cross_field_consistency',
+            severity=Severity.WARNING,
+            message=(
+                f"{inconsistent_count} load records have "
+                f"|forecast_error|/load_actual > "
+                f"{LOAD_CROSS_FIELD_RATIO_THRESHOLD:.0%} — possible "
+                "field-tampered values or broken upstream arithmetic"
+            ),
+            details={
+                'count': inconsistent_count,
+                'examples': examples,
+                'threshold': LOAD_CROSS_FIELD_RATIO_THRESHOLD,
+            },
+        ))
+
+    return issues
+
+
 def _is_dst_transition_data(data: Dict[str, Any]) -> bool:
     """Check if data spans a DST transition day (23 or 25 hour day)."""
     for key in data.keys():
@@ -1045,6 +1132,19 @@ def validate_dataset(
         if range_issues:
             checks_failed += 1
             report.issues.extend(range_issues)
+
+    # 3b. Load cross-field consistency (#30). Defence-in-depth beyond
+    # the per-field bounds (#28): a MITM can stay inside per-field
+    # bounds while tampering load_actual + forecast_error to an
+    # internally-inconsistent triple.
+    if data_type == 'load':
+        checks_run += 1
+        cross_issues = validate_load_cross_field_consistency(
+            dataset.data, dataset_name
+        )
+        if cross_issues:
+            checks_failed += 1
+            report.issues.extend(cross_issues)
 
     # 4. Staleness check
     checks_run += 1

@@ -636,6 +636,135 @@ class TestLoadFieldRanges:
         assert len(issues) == 1
 
 
+class TestLoadCrossFieldConsistency:
+    """Issue #30: defence-in-depth check on the load triple
+    (load_forecast, load_actual, forecast_error). After #28's per-field
+    bounds, a MITM that flips load_actual + forecast_error independently
+    can still produce a triple inside all per-field bounds. This check
+    flags |forecast_error|/load_actual > 40%."""
+
+    def _sample(self, **overrides):
+        # Realistic NL evening peak, same as TestLoadFieldRanges.
+        base = {
+            'load_forecast': 14500.0,
+            'load_actual': 14200.0,
+            'forecast_error': 300.0,
+        }
+        base.update(overrides)
+        return base
+
+    def test_realistic_triple_passes(self):
+        """Acceptance from #30: the realistic record (ratio ~0.02) passes."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        data = {'2026-05-29T19:00:00+02:00': self._sample()}
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert issues == []
+
+    def test_mitm_triple_flags_warning(self):
+        """Acceptance from #30: tampered triple
+        (load_forecast=14500, load_actual=50000, forecast_error=20000) —
+        each value passes #28's per-field bounds but ratio is 0.40 →
+        WARNING."""
+        from utils.data_quality import (
+            validate_load_cross_field_consistency,
+            Severity,
+        )
+        data = {
+            '2026-05-29T19:00:00+02:00': self._sample(
+                load_actual=50000.0,
+                forecast_error=20000.0,
+            )
+        }
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert len(issues) == 1
+        assert issues[0].severity == Severity.WARNING
+        assert issues[0].check_name == 'load_cross_field_consistency'
+        assert issues[0].details['count'] == 1
+
+    def test_max_observed_real_world_ratio_passes(self):
+        """The worst observed Mar-Jun 2026 ratio was 18914/70295 = 0.269.
+        The 0.40 threshold must give comfortable headroom over this."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        data = {
+            '2026-02-15T08:00:00+01:00': self._sample(
+                load_forecast=70000.0,
+                load_actual=70295.0,
+                forecast_error=18914.0,
+            )
+        }
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert issues == []
+
+    def test_negative_forecast_error_uses_abs_in_ratio(self):
+        """Forecast error is signed; the consistency check uses |error|
+        so a large over-prediction triggers the same way as an under-
+        prediction."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        data = {
+            '2026-05-29T19:00:00+02:00': self._sample(
+                load_actual=50000.0,
+                forecast_error=-25000.0,  # ratio 0.50
+            )
+        }
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert len(issues) == 1
+
+    def test_near_zero_load_actual_uses_floor(self):
+        """When load_actual is near zero the denominator floor (1000 MW)
+        kicks in. A small absolute |forecast_error| should not false-flag."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        # 100 MW error against ~0 actual → ratio 0.10 with floor (passes)
+        data = {
+            '2026-05-29T03:00:00+02:00': self._sample(
+                load_actual=0.0,
+                forecast_error=100.0,
+            )
+        }
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert issues == []
+
+    def test_near_zero_actual_with_large_error_still_flags(self):
+        """The floor stops false positives at small absolute errors; a
+        genuinely large absolute error still trips the check."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        # 5000 MW error against ~0 actual → ratio 5.0 with floor → flags
+        data = {
+            '2026-05-29T03:00:00+02:00': self._sample(
+                load_actual=0.0,
+                forecast_error=5000.0,
+            )
+        }
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert len(issues) == 1
+
+    def test_two_level_country_nested_payload(self):
+        """ENTSO-E load publishes as {country: {ts: {fields}}} — the
+        flatten helper must reach the inner records."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        data = {
+            'NL': {'2026-05-29T19:00:00+02:00': self._sample()},
+            'DE_LU': {
+                '2026-05-29T19:00:00+02:00': self._sample(
+                    load_actual=50000.0,
+                    forecast_error=20001.0,  # just over 0.40 threshold
+                ),
+            },
+        }
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert len(issues) == 1
+        assert issues[0].details['count'] == 1  # DE_LU only
+
+    def test_missing_fields_skipped(self):
+        """Records that lack load_actual or forecast_error are skipped
+        (this check doesn't double up on completeness)."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        data = {
+            '2026-05-29T19:00:00+02:00': {'load_forecast': 14500.0},
+        }
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert issues == []
+
+
 class TestCompleteness:
     """Tests for validate_completeness."""
 
