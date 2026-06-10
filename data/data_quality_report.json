@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-10T13:55:43.276268+00:00",
+  "timestamp": "2026-06-10T18:31:32.728312+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 23,
@@ -109,7 +109,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 432,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -166,9 +166,9 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "28 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "40 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 28,
+            "count": 40,
             "examples": [
               "NL/2026-06-10T08:15:00+02:00: forecast_error=3143.4, load_actual=7568.926, ratio=0.42",
               "NL/2026-06-10T08:30:00+02:00: forecast_error=3507.5, load_actual=7076.346, ratio=0.50",
@@ -186,7 +186,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 60,
+      "data_points": 80,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -206,7 +206,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 19,
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -216,7 +216,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 471,
+      "data_points": 525,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -246,7 +246,7 @@
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 6,
+      "data_points": 8,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
