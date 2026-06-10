@@ -29,10 +29,16 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-# Loose ISO-8601 timestamp detector. Keys that match this pattern collapse
-# in the signature (we record their value-shape, not the timestamp itself)
-# so the daily-rolling timestamps don't churn the fingerprint.
-_TS_PATTERN = re.compile(r'^\d{4}-\d{2}-\d{2}T')
+# Loose date/timestamp detector. Matches ISO-8601 date-only keys
+# ('2026-06-10') as well as date+time keys ('2026-06-10T13:00:00+02:00',
+# '2026-06-10 13:00:00'). Keys that match this pattern collapse in the
+# signature (we record their value-shape, not the timestamp itself) so the
+# daily-rolling timestamps don't churn the fingerprint. Date-only support
+# is required by `market_proxies.gas_ttf.history` and `market_history.*.data`
+# which key rolling history windows by 'YYYY-MM-DD' — without the trailing
+# `([T ].*|$)` branch, those would enumerate every day individually and
+# the fingerprint would churn each time the window advanced.
+_TS_PATTERN = re.compile(r'^\d{4}-\d{2}-\d{2}([T ].*|$)')
 
 
 def _is_timestamp_key(k: Any) -> bool:

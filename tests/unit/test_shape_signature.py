@@ -83,6 +83,38 @@ class TestComputeShapeSignature:
         b = {"2026-06-01T00:00:00+02:00": {"price": 50.0, "volume": 1000}}
         assert compute_shape_signature(a) != compute_shape_signature(b)
 
+    def test_date_only_keys_collapse(self):
+        """Date-only keys ('YYYY-MM-DD', no T separator) also collapse.
+
+        Required by `market_proxies.gas_ttf.history` and
+        `market_history.*.data` which key rolling history windows by
+        calendar date. Without this, the signature enumerated every day
+        and the fingerprint churned each time the window advanced.
+        """
+        a = {
+            "2026-06-01": 50.0,
+            "2026-06-02": 55.0,
+            "2026-06-03": 60.0,
+        }
+        b = {
+            "2026-06-07": 100.0,  # different day, different price
+            "2026-06-08": 110.0,
+            "2026-06-09": 120.0,
+            "2026-06-10": 130.0,  # one extra date
+        }
+        sig_a = compute_shape_signature(a)
+        sig_b = compute_shape_signature(b)
+        assert sig_a == sig_b
+        assert sig_a["_kind"] == "timestamp_map"
+        assert sig_a["value_shape"] == "float"
+
+    def test_date_only_value_shape_change_still_detected(self):
+        """Collapse must not blind us to real shape drift inside a
+        date-keyed map (e.g. a value flips from float to dict)."""
+        a = {"2026-06-01": 50.0}
+        b = {"2026-06-01": {"price": 50.0}}
+        assert compute_shape_signature(a) != compute_shape_signature(b)
+
     def test_mixed_keys_do_not_collapse(self):
         """Documented design constraint: a dict mixing timestamp keys with
         a non-timestamp key (e.g. `{ts1: v1, ts2: v2, 'metadata': m}`)
@@ -353,6 +385,44 @@ class TestDailyChurnImmunity:
     timestamps and different per-record values must produce the same hash —
     that's the foundation that makes CI drift detection signal-not-noise.
     """
+
+    def test_market_history_stable_across_days(self):
+        """Real-world regression guard from CI run 27278130553 (2026-06-10):
+        market_history.json and market_proxies.json drifted daily because
+        their rolling history windows were keyed by 'YYYY-MM-DD' (date-only,
+        no T) — which the original _TS_PATTERN didn't recognise as
+        timestamp-like, so every date was enumerated individually in the
+        signature and the fingerprint churned each time the window rolled.
+        """
+        day1 = {
+            "metadata": {"data_type": "market_history", "schema_version": "2.4"},
+            "data": {
+                "gas_ttf": {
+                    "metadata": {"source": "yfinance", "ticker": "TTF=F", "units": "EUR/MWh"},
+                    "data": {
+                        "2026-02-24": 42.5,
+                        "2026-02-25": 43.1,
+                        "2026-02-26": 41.8,
+                    },
+                },
+            },
+        }
+        day7 = {
+            "metadata": {"data_type": "market_history", "schema_version": "2.4"},
+            "data": {
+                "gas_ttf": {
+                    "metadata": {"source": "yfinance", "ticker": "TTF=F", "units": "EUR/MWh"},
+                    "data": {
+                        "2026-03-02": 45.0,  # window rolled forward
+                        "2026-03-03": 46.2,
+                        "2026-03-04": 44.9,
+                        "2026-03-05": 47.1,  # one extra date
+                    },
+                },
+            },
+        }
+        assert signature_hash(compute_shape_signature(day1)) == \
+               signature_hash(compute_shape_signature(day7))
 
     def test_gas_storage_stable_across_days(self):
         day1 = {

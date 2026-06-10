@@ -1,7 +1,622 @@
 {
-  "computed_at": "2026-06-09T17:56:27+00:00",
+  "computed_at": "2026-06-10T15:26:58+02:00",
   "schema_version": "2.4",
   "feeds": {
+    "air_quality_buurt.json": {
+      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Elderveld_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "AQI": "int",
+                    "PM10": "float",
+                    "PM25": "float"
+                  }
+                }
+              },
+              "Elsweide_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "AQI": "int"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "data_type": "str",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "stations": {
+                "_kind": "dict",
+                "keys": {
+                  "Elderveld_Arnhem_NL": {
+                    "_kind": "dict",
+                    "keys": {
+                      "city": "str",
+                      "components": {
+                        "_kind": "list",
+                        "value_shape": "str"
+                      },
+                      "requested_latitude": "float",
+                      "requested_longitude": "float",
+                      "station": "str",
+                      "station_latitude": "float",
+                      "station_location": "str",
+                      "station_longitude": "float"
+                    }
+                  },
+                  "Elsweide_Arnhem_NL": {
+                    "_kind": "dict",
+                    "keys": {
+                      "city": "str",
+                      "components": {
+                        "_kind": "list",
+                        "value_shape": "str"
+                      },
+                      "requested_latitude": "float",
+                      "requested_longitude": "float",
+                      "station": "str",
+                      "station_latitude": "float",
+                      "station_location": "str",
+                      "station_longitude": "float"
+                    }
+                  }
+                }
+              },
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "air",
+      "sources": null
+    },
+    "calendar_features.json": {
+      "shape_hash": "032b4980f3430acfe13fa2684c9c7149",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "timestamp_map",
+            "value_shape": {
+              "_kind": "dict",
+              "keys": {
+                "day": "int",
+                "day_of_week": "int",
+                "day_of_year": "int",
+                "dst_utc_offset_hours": "int",
+                "holiday_count": "int",
+                "holiday_impact": "int",
+                "holiday_name_be": "null",
+                "holiday_name_de": "null",
+                "holiday_name_fr": "null",
+                "holiday_name_nl": "null",
+                "hour": "int",
+                "is_bridge_day": "bool",
+                "is_dst": "bool",
+                "is_dst_transition_day": "bool",
+                "is_friday": "bool",
+                "is_holiday_be": "bool",
+                "is_holiday_de": "bool",
+                "is_holiday_fr": "bool",
+                "is_holiday_nl": "bool",
+                "is_monday": "bool",
+                "is_summer": "bool",
+                "is_weekend": "bool",
+                "is_winter": "bool",
+                "is_working_day": "bool",
+                "is_working_day_regional": "bool",
+                "month": "int",
+                "season": "str",
+                "week_of_year": "int",
+                "year": "int"
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "countries": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "upcoming_holidays": {
+                "_kind": "list",
+                "value_shape": null
+              }
+            }
+          }
+        }
+      },
+      "data_type": "calendar_features",
+      "sources": null
+    },
+    "cross_border_flows.json": {
+      "shape_hash": "ef0cf1145d5f3200a47db6865cf8f6a7",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "flows": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "BE\u2192NL": "float",
+                    "DE\u2192NL": "float",
+                    "DK\u2192NL": "float",
+                    "GB\u2192NL": "float",
+                    "NL_BE_net": "float",
+                    "NL_DE_net": "float",
+                    "NL_DK_net": "float",
+                    "NL_GB_net": "float",
+                    "NL\u2192BE": "float",
+                    "NL\u2192DE": "float",
+                    "NL\u2192DK": "float",
+                    "NL\u2192GB": "float",
+                    "NL\u2192NO": "float",
+                    "NO\u2192NL": "float",
+                    "total_net_position": "float"
+                  }
+                }
+              },
+              "summary": {
+                "_kind": "dict",
+                "keys": {
+                  "avg_net_position": "float",
+                  "borders": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "data_points": "int"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_version": "str",
+              "borders": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "collector": "str",
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "resolution": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "sign_convention": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str",
+              "zones": {
+                "_kind": "dict",
+                "keys": {
+                  "BE": "str",
+                  "DE_LU": "str",
+                  "DK_1": "str",
+                  "GB": "str",
+                  "NL": "str",
+                  "NO_2": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "cross_border_flows",
+      "sources": null
+    },
+    "demand_weather_forecast.json": {
+      "shape_hash": "e48bf3be782c83fdf7935af30a07fec4",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Amsterdam_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Antwerp_BE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Brussels_BE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Cologne_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Dusseldorf_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Eindhoven_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Groningen_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Hamburg_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Rotterdam_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "The_Hague_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Utrecht_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "data_type": "str",
+              "degree_day_config": {
+                "_kind": "dict",
+                "keys": {
+                  "cooling_base_temp": "float",
+                  "heating_base_temp": "float"
+                }
+              },
+              "description": "str",
+              "end_time": "str",
+              "forecast_days": "int",
+              "location_count": "int",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "total_population_covered": "int",
+              "units": "str",
+              "variables": {
+                "_kind": "dict",
+                "keys": {
+                  "apparent_temperature": "str",
+                  "cape": "str",
+                  "cdd": "str",
+                  "cloud_cover": "str",
+                  "condition": "str",
+                  "dew_point": "str",
+                  "hdd": "str",
+                  "humidity": "str",
+                  "precipitation": "str",
+                  "precipitation_probability": "str",
+                  "pressure": "str",
+                  "temperature": "str",
+                  "uv_index": "str",
+                  "visibility": "str",
+                  "weather_code": "str",
+                  "wind_direction": "str",
+                  "wind_speed": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "demand_weather",
+      "sources": null
+    },
     "energy_price_forecast.json": {
       "shape_hash": "d8551eee2074681291e2390c9714ec30",
       "shape_signature": {
@@ -231,6 +846,1435 @@
         "entsoe_de",
         "epex"
       ]
+    },
+    "gas_flows.json": {
+      "shape_hash": "23d3eaa738d751a1d55fd3026ef295c5",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "timestamp_map",
+            "value_shape": {
+              "_kind": "dict",
+              "keys": {
+                "entry_points": "int",
+                "entry_total_gwh": "float",
+                "exit_points": "int",
+                "exit_total_gwh": "float",
+                "net_flow_gwh": "float"
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_documentation": "str",
+              "collector": "str",
+              "country_code": "str",
+              "data_frequency": "str",
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str",
+              "usage_notes": {
+                "_kind": "list",
+                "value_shape": "str"
+              }
+            }
+          }
+        }
+      },
+      "data_type": "gas_flows",
+      "sources": null
+    },
+    "gas_storage.json": {
+      "shape_hash": "cf3ac47c345e440cd864fff9351b8b73",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "timestamp_map",
+            "value_shape": {
+              "_kind": "dict",
+              "keys": {
+                "fill_level_pct": "float",
+                "gas_in_storage_twh": "float",
+                "injection_gwh": "float",
+                "net_change_gwh": "float",
+                "withdrawal_gwh": "float",
+                "working_gas_volume_twh": "float"
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_documentation": "str",
+              "collector": "str",
+              "country_code": "str",
+              "data_frequency": "str",
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str",
+              "usage_notes": {
+                "_kind": "list",
+                "value_shape": "str"
+              }
+            }
+          }
+        }
+      },
+      "data_type": "gas_storage",
+      "sources": null
+    },
+    "generation_forecast.json": {
+      "shape_hash": "08c84d5bf6b1c269685a7f5b9cb9d195",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "FR": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "nuclear_actual": "float",
+                    "nuclear_availability": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_version": "str",
+              "collector": "str",
+              "country_codes": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "generation_types": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "include_actual": "bool",
+              "include_forecast": "bool",
+              "resolution": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "type_names": {
+                "_kind": "dict",
+                "keys": {
+                  "nuclear": "str"
+                }
+              },
+              "units": "str",
+              "zones": {
+                "_kind": "dict",
+                "keys": {
+                  "FR": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "generation_by_type",
+      "sources": null
+    },
+    "generation_mix.json": {
+      "shape_hash": "0343381cb452e41fefb8193d97ecfdd8",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "BE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "fossil_gas_actual": "float",
+                    "nuclear_actual": "float",
+                    "solar_actual": "float",
+                    "wind_offshore_actual": "float",
+                    "wind_onshore_actual": "float"
+                  }
+                }
+              },
+              "DE_LU": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "fossil_gas_actual": "float",
+                    "fossil_hard_coal_actual": "float",
+                    "solar_actual": "float",
+                    "wind_offshore_actual": "float",
+                    "wind_onshore_actual": "float"
+                  }
+                }
+              },
+              "NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "fossil_gas_actual": "float",
+                    "fossil_hard_coal_actual": "float",
+                    "nuclear_actual": "float",
+                    "solar_actual": "float",
+                    "wind_offshore_actual": "float",
+                    "wind_onshore_actual": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_version": "str",
+              "collector": "str",
+              "country_codes": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "generation_types": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "include_actual": "bool",
+              "include_forecast": "bool",
+              "resolution": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "type_names": {
+                "_kind": "dict",
+                "keys": {
+                  "fossil_gas": "str",
+                  "fossil_hard_coal": "str",
+                  "hydro_reservoir": "str",
+                  "hydro_run_of_river": "str",
+                  "nuclear": "str",
+                  "solar": "str",
+                  "wind_offshore": "str",
+                  "wind_onshore": "str"
+                }
+              },
+              "units": "str",
+              "zones": {
+                "_kind": "dict",
+                "keys": {
+                  "BE": "str",
+                  "DE_LU": "str",
+                  "NL": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "generation_by_type",
+      "sources": null
+    },
+    "grid_imbalance.json": {
+      "shape_hash": "200f27c65561b1f5fb7c3c47415ef5e5",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "balance_delta": {
+                "_kind": "timestamp_map",
+                "value_shape": "float"
+              },
+              "direction": {
+                "_kind": "timestamp_map",
+                "value_shape": "str"
+              },
+              "imbalance_price": {
+                "_kind": "timestamp_map",
+                "value_shape": "float"
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_version": "str",
+              "balance_delta_status": "str",
+              "collection_timestamp": "str",
+              "collector": "str",
+              "collector_quality_issues": {
+                "_kind": "list",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "check_name": "str",
+                    "details": {
+                      "_kind": "dict",
+                      "keys": {
+                        "reason": "str"
+                      }
+                    },
+                    "message": "str",
+                    "severity": "str"
+                  }
+                }
+              },
+              "country": "str",
+              "country_code": "str",
+              "data_fields": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "data_points": "int",
+              "data_type": "str",
+              "end_time": "str",
+              "market": "str",
+              "resolution": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "grid_imbalance",
+      "sources": null
+    },
+    "load_forecast.json": {
+      "shape_hash": "fac9d3f0e1b94e116f2ddb4b52978908",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "DE_LU": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "forecast_error": "float",
+                    "load_actual": "float",
+                    "load_forecast": "float"
+                  }
+                }
+              },
+              "NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "forecast_error": "float",
+                    "load_actual": "float",
+                    "load_forecast": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_version": "str",
+              "collector": "str",
+              "country_codes": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "forecast_type": "str",
+              "include_actual": "bool",
+              "resolution": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str",
+              "zones": {
+                "_kind": "dict",
+                "keys": {
+                  "DE_LU": "str",
+                  "NL": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "load_forecast",
+      "sources": null
+    },
+    "market_history.json": {
+      "shape_hash": "ee2db4ef4485b9335d32a036851df138",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "carbon_eua": {
+                "_kind": "dict",
+                "keys": {
+                  "data": {
+                    "_kind": "timestamp_map",
+                    "value_shape": "float"
+                  },
+                  "metadata": {
+                    "_kind": "dict",
+                    "keys": {
+                      "source": "str",
+                      "ticker": "str",
+                      "units": "str"
+                    }
+                  }
+                }
+              },
+              "gas_ttf": {
+                "_kind": "dict",
+                "keys": {
+                  "data": {
+                    "_kind": "timestamp_map",
+                    "value_shape": "float"
+                  },
+                  "metadata": {
+                    "_kind": "dict",
+                    "keys": {
+                      "source": "str",
+                      "ticker": "str",
+                      "units": "str"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "rolling_window_days": "int",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str"
+            }
+          }
+        }
+      },
+      "data_type": "market_history",
+      "sources": null
+    },
+    "market_proxies.json": {
+      "shape_hash": "e5231b062e10a6aba4721e9f781c4133",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "carbon": {
+                "_kind": "dict",
+                "keys": {
+                  "change": "float",
+                  "change_pct": "float",
+                  "date": "str",
+                  "description": "str",
+                  "high": "float",
+                  "low": "float",
+                  "name": "str",
+                  "open": "float",
+                  "prev_close": "float",
+                  "price": "float",
+                  "source": "str",
+                  "ticker": "str",
+                  "units": "str",
+                  "volume": "int"
+                }
+              },
+              "gas": {
+                "_kind": "dict",
+                "keys": {
+                  "change": "float",
+                  "change_pct": "float",
+                  "date": "str",
+                  "description": "str",
+                  "high": "float",
+                  "low": "float",
+                  "name": "str",
+                  "note": "str",
+                  "open": "float",
+                  "prev_close": "float",
+                  "price": "float",
+                  "source": "str",
+                  "ticker": "str",
+                  "units": "str",
+                  "volume": "int"
+                }
+              },
+              "gas_ttf": {
+                "_kind": "dict",
+                "keys": {
+                  "change_pct": "float",
+                  "currency": "str",
+                  "date": "str",
+                  "description": "str",
+                  "high": "float",
+                  "history": {
+                    "_kind": "timestamp_map",
+                    "value_shape": "float"
+                  },
+                  "low": "float",
+                  "mean_7d": "float",
+                  "name": "str",
+                  "note": "str",
+                  "open": "float",
+                  "prev_close": "float",
+                  "price": "float",
+                  "price_lag1": "float",
+                  "price_lag2": "float",
+                  "price_lag7": "float",
+                  "source": "str",
+                  "ticker": "str",
+                  "trend_7d": "str",
+                  "units": "str",
+                  "volatility_7d": "float",
+                  "volume": "int"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_key_configured": "bool",
+              "carbon_symbol": "str",
+              "collector": "str",
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "fallback_source": "str",
+              "gas_proxy_symbol": "str",
+              "gas_ttf_symbol": "str",
+              "primary_source": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str",
+              "usage_notes": {
+                "_kind": "list",
+                "value_shape": "str"
+              }
+            }
+          }
+        }
+      },
+      "data_type": "market_proxies",
+      "sources": null
+    },
+    "ned_production.json": {
+      "shape_hash": "a27584b93b681f1493e800060146a6d6",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "solar": {
+                "_kind": "dict",
+                "keys": {
+                  "actual": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  },
+                  "forecast": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  }
+                }
+              },
+              "wind_offshore": {
+                "_kind": "dict",
+                "keys": {
+                  "actual": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  },
+                  "forecast": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  }
+                }
+              },
+              "wind_onshore": {
+                "_kind": "dict",
+                "keys": {
+                  "actual": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  },
+                  "forecast": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "country": "str",
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "energy_types": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "granularity": "str",
+              "include_actual": "bool",
+              "include_forecast": "bool",
+              "operators": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "energy_production",
+      "sources": null
+    },
+    "nordic_hydro.json": {
+      "shape_hash": "5393fc0af912e0faed7da574d59286a2",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "NO": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "iso_week": "int",
+                    "iso_year": "int",
+                    "reservoir_mwh": "float"
+                  }
+                }
+              },
+              "SE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "iso_week": "int",
+                    "iso_year": "int",
+                    "reservoir_mwh": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "collector": "str",
+              "country_codes": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "country_names": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "data_type": "str",
+              "document_type": "str",
+              "end_time": "str",
+              "resolution": "str",
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "hydro_reservoir",
+      "sources": null
+    },
+    "solar_forecast.json": {
+      "shape_hash": "7510f34db80fb2d2ff39e44cc0ee3d62",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Antwerp_BE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Eindhoven_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Groningen_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Lelystad_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Munich_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Rotterdam_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Stuttgart_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "forecast_days": "int",
+              "location_count": "int",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str",
+              "variables": {
+                "_kind": "dict",
+                "keys": {
+                  "cloud_cover": "str",
+                  "dhi": "str",
+                  "direct": "str",
+                  "dni": "str",
+                  "ghi": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "solar_irradiance",
+      "sources": null
+    },
+    "solar_forecast_buurt.json": {
+      "shape_hash": "49a96e1dee4d3b61387fc2baa842a8e4",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Elderveld_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Elsweide_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "forecast_days": "int",
+              "location_count": "int",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str",
+              "variables": {
+                "_kind": "dict",
+                "keys": {
+                  "cloud_cover": "str",
+                  "dhi": "str",
+                  "direct": "str",
+                  "dni": "str",
+                  "ghi": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "solar_irradiance",
+      "sources": null
+    },
+    "weather_forecast_buurt.json": {
+      "shape_hash": "0965ed96fb3058ab238d42bf109f8bff",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Elderveld_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Elsweide_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "data_type": "str",
+              "degree_day_config": {
+                "_kind": "dict",
+                "keys": {
+                  "cooling_base_temp": "float",
+                  "heating_base_temp": "float"
+                }
+              },
+              "description": "str",
+              "end_time": "str",
+              "forecast_days": "int",
+              "location_count": "int",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "total_population_covered": "int",
+              "units": "str",
+              "variables": {
+                "_kind": "dict",
+                "keys": {
+                  "apparent_temperature": "str",
+                  "cape": "str",
+                  "cdd": "str",
+                  "cloud_cover": "str",
+                  "condition": "str",
+                  "dew_point": "str",
+                  "hdd": "str",
+                  "humidity": "str",
+                  "precipitation": "str",
+                  "precipitation_probability": "str",
+                  "pressure": "str",
+                  "temperature": "str",
+                  "uv_index": "str",
+                  "visibility": "str",
+                  "weather_code": "str",
+                  "wind_direction": "str",
+                  "wind_speed": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "demand_weather",
+      "sources": null
+    },
+    "weather_forecast_multi_location.json": {
+      "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Brussels_BE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Esbjerg_DK": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Hamburg_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "IJmuiden_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Munich_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "data_type": "str",
+              "degree_day_config": {
+                "_kind": "dict",
+                "keys": {
+                  "cooling_base_temp": "float",
+                  "heating_base_temp": "float"
+                }
+              },
+              "description": "str",
+              "end_time": "str",
+              "forecast_days": "int",
+              "location_count": "int",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "total_population_covered": "int",
+              "units": "str",
+              "variables": {
+                "_kind": "dict",
+                "keys": {
+                  "apparent_temperature": "str",
+                  "cape": "str",
+                  "cdd": "str",
+                  "cloud_cover": "str",
+                  "condition": "str",
+                  "dew_point": "str",
+                  "hdd": "str",
+                  "humidity": "str",
+                  "precipitation": "str",
+                  "precipitation_probability": "str",
+                  "pressure": "str",
+                  "temperature": "str",
+                  "uv_index": "str",
+                  "visibility": "str",
+                  "weather_code": "str",
+                  "wind_direction": "str",
+                  "wind_speed": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "demand_weather",
+      "sources": null
     },
     "wind_forecast.json": {
       "shape_hash": "99a0460b47c951788c494c6659a70d80",
@@ -671,2161 +2715,6 @@
         "entsoe_wind_generation",
         "offshore_wind"
       ]
-    },
-    "air_quality_buurt.json": {
-      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int",
-                    "PM10": "float",
-                    "PM25": "float"
-                  }
-                }
-              },
-              "Elsweide_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "data_type": "str",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "stations": {
-                "_kind": "dict",
-                "keys": {
-                  "Elderveld_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  },
-                  "Elsweide_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  }
-                }
-              },
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "air",
-      "sources": null
-    },
-    "weather_forecast_multi_location.json": {
-      "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Brussels_BE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Esbjerg_DK": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Hamburg_DE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "IJmuiden_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Munich_DE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_rate_limit": "str",
-              "collector": "str",
-              "data_type": "str",
-              "degree_day_config": {
-                "_kind": "dict",
-                "keys": {
-                  "cooling_base_temp": "float",
-                  "heating_base_temp": "float"
-                }
-              },
-              "description": "str",
-              "end_time": "str",
-              "forecast_days": "int",
-              "location_count": "int",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "total_population_covered": "int",
-              "units": "str",
-              "variables": {
-                "_kind": "dict",
-                "keys": {
-                  "apparent_temperature": "str",
-                  "cape": "str",
-                  "cdd": "str",
-                  "cloud_cover": "str",
-                  "condition": "str",
-                  "dew_point": "str",
-                  "hdd": "str",
-                  "humidity": "str",
-                  "precipitation": "str",
-                  "precipitation_probability": "str",
-                  "pressure": "str",
-                  "temperature": "str",
-                  "uv_index": "str",
-                  "visibility": "str",
-                  "weather_code": "str",
-                  "wind_direction": "str",
-                  "wind_speed": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "demand_weather",
-      "sources": null
-    },
-    "grid_imbalance.json": {
-      "shape_hash": "200f27c65561b1f5fb7c3c47415ef5e5",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "balance_delta": {
-                "_kind": "timestamp_map",
-                "value_shape": "float"
-              },
-              "direction": {
-                "_kind": "timestamp_map",
-                "value_shape": "str"
-              },
-              "imbalance_price": {
-                "_kind": "timestamp_map",
-                "value_shape": "float"
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_version": "str",
-              "balance_delta_status": "str",
-              "collection_timestamp": "str",
-              "collector": "str",
-              "collector_quality_issues": {
-                "_kind": "list",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "check_name": "str",
-                    "details": {
-                      "_kind": "dict",
-                      "keys": {
-                        "reason": "str"
-                      }
-                    },
-                    "message": "str",
-                    "severity": "str"
-                  }
-                }
-              },
-              "country": "str",
-              "country_code": "str",
-              "data_fields": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "data_points": "int",
-              "data_type": "str",
-              "end_time": "str",
-              "market": "str",
-              "resolution": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "grid_imbalance",
-      "sources": null
-    },
-    "ned_production.json": {
-      "shape_hash": "a27584b93b681f1493e800060146a6d6",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "solar": {
-                "_kind": "dict",
-                "keys": {
-                  "actual": {
-                    "_kind": "timestamp_map",
-                    "value_shape": {
-                      "_kind": "dict",
-                      "keys": {
-                        "capacity_kw": "float",
-                        "co2_kg": "float",
-                        "utilization_pct": "float",
-                        "volume_kwh": "float"
-                      }
-                    }
-                  },
-                  "forecast": {
-                    "_kind": "timestamp_map",
-                    "value_shape": {
-                      "_kind": "dict",
-                      "keys": {
-                        "capacity_kw": "float",
-                        "co2_kg": "float",
-                        "utilization_pct": "float",
-                        "volume_kwh": "float"
-                      }
-                    }
-                  }
-                }
-              },
-              "wind_offshore": {
-                "_kind": "dict",
-                "keys": {
-                  "actual": {
-                    "_kind": "timestamp_map",
-                    "value_shape": {
-                      "_kind": "dict",
-                      "keys": {
-                        "capacity_kw": "float",
-                        "co2_kg": "float",
-                        "utilization_pct": "float",
-                        "volume_kwh": "float"
-                      }
-                    }
-                  },
-                  "forecast": {
-                    "_kind": "timestamp_map",
-                    "value_shape": {
-                      "_kind": "dict",
-                      "keys": {
-                        "capacity_kw": "float",
-                        "co2_kg": "float",
-                        "utilization_pct": "float",
-                        "volume_kwh": "float"
-                      }
-                    }
-                  }
-                }
-              },
-              "wind_onshore": {
-                "_kind": "dict",
-                "keys": {
-                  "actual": {
-                    "_kind": "timestamp_map",
-                    "value_shape": {
-                      "_kind": "dict",
-                      "keys": {
-                        "capacity_kw": "float",
-                        "co2_kg": "float",
-                        "utilization_pct": "float",
-                        "volume_kwh": "float"
-                      }
-                    }
-                  },
-                  "forecast": {
-                    "_kind": "timestamp_map",
-                    "value_shape": {
-                      "_kind": "dict",
-                      "keys": {
-                        "capacity_kw": "float",
-                        "co2_kg": "float",
-                        "utilization_pct": "float",
-                        "volume_kwh": "float"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_rate_limit": "str",
-              "collector": "str",
-              "country": "str",
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "energy_types": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "granularity": "str",
-              "include_actual": "bool",
-              "include_forecast": "bool",
-              "operators": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "energy_production",
-      "sources": null
-    },
-    "solar_forecast.json": {
-      "shape_hash": "7510f34db80fb2d2ff39e44cc0ee3d62",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Antwerp_BE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Eindhoven_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Groningen_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Lelystad_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Munich_DE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Rotterdam_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Stuttgart_DE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_rate_limit": "str",
-              "collector": "str",
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "forecast_days": "int",
-              "location_count": "int",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str",
-              "variables": {
-                "_kind": "dict",
-                "keys": {
-                  "cloud_cover": "str",
-                  "dhi": "str",
-                  "direct": "str",
-                  "dni": "str",
-                  "ghi": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "solar_irradiance",
-      "sources": null
-    },
-    "demand_weather_forecast.json": {
-      "shape_hash": "e48bf3be782c83fdf7935af30a07fec4",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Amsterdam_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Antwerp_BE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Brussels_BE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Cologne_DE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Dusseldorf_DE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Eindhoven_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Groningen_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Hamburg_DE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Rotterdam_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "The_Hague_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Utrecht_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_rate_limit": "str",
-              "collector": "str",
-              "data_type": "str",
-              "degree_day_config": {
-                "_kind": "dict",
-                "keys": {
-                  "cooling_base_temp": "float",
-                  "heating_base_temp": "float"
-                }
-              },
-              "description": "str",
-              "end_time": "str",
-              "forecast_days": "int",
-              "location_count": "int",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "total_population_covered": "int",
-              "units": "str",
-              "variables": {
-                "_kind": "dict",
-                "keys": {
-                  "apparent_temperature": "str",
-                  "cape": "str",
-                  "cdd": "str",
-                  "cloud_cover": "str",
-                  "condition": "str",
-                  "dew_point": "str",
-                  "hdd": "str",
-                  "humidity": "str",
-                  "precipitation": "str",
-                  "precipitation_probability": "str",
-                  "pressure": "str",
-                  "temperature": "str",
-                  "uv_index": "str",
-                  "visibility": "str",
-                  "weather_code": "str",
-                  "wind_direction": "str",
-                  "wind_speed": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "demand_weather",
-      "sources": null
-    },
-    "weather_forecast_buurt.json": {
-      "shape_hash": "0965ed96fb3058ab238d42bf109f8bff",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
-              "Elsweide_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_rate_limit": "str",
-              "collector": "str",
-              "data_type": "str",
-              "degree_day_config": {
-                "_kind": "dict",
-                "keys": {
-                  "cooling_base_temp": "float",
-                  "heating_base_temp": "float"
-                }
-              },
-              "description": "str",
-              "end_time": "str",
-              "forecast_days": "int",
-              "location_count": "int",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "total_population_covered": "int",
-              "units": "str",
-              "variables": {
-                "_kind": "dict",
-                "keys": {
-                  "apparent_temperature": "str",
-                  "cape": "str",
-                  "cdd": "str",
-                  "cloud_cover": "str",
-                  "condition": "str",
-                  "dew_point": "str",
-                  "hdd": "str",
-                  "humidity": "str",
-                  "precipitation": "str",
-                  "precipitation_probability": "str",
-                  "pressure": "str",
-                  "temperature": "str",
-                  "uv_index": "str",
-                  "visibility": "str",
-                  "weather_code": "str",
-                  "wind_direction": "str",
-                  "wind_speed": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "demand_weather",
-      "sources": null
-    },
-    "solar_forecast_buurt.json": {
-      "shape_hash": "49a96e1dee4d3b61387fc2baa842a8e4",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Elsweide_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_rate_limit": "str",
-              "collector": "str",
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "forecast_days": "int",
-              "location_count": "int",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str",
-              "variables": {
-                "_kind": "dict",
-                "keys": {
-                  "cloud_cover": "str",
-                  "dhi": "str",
-                  "direct": "str",
-                  "dni": "str",
-                  "ghi": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "solar_irradiance",
-      "sources": null
-    },
-    "cross_border_flows.json": {
-      "shape_hash": "ef0cf1145d5f3200a47db6865cf8f6a7",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "flows": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "BE\u2192NL": "float",
-                    "DE\u2192NL": "float",
-                    "DK\u2192NL": "float",
-                    "GB\u2192NL": "float",
-                    "NL_BE_net": "float",
-                    "NL_DE_net": "float",
-                    "NL_DK_net": "float",
-                    "NL_GB_net": "float",
-                    "NL\u2192BE": "float",
-                    "NL\u2192DE": "float",
-                    "NL\u2192DK": "float",
-                    "NL\u2192GB": "float",
-                    "NL\u2192NO": "float",
-                    "NO\u2192NL": "float",
-                    "total_net_position": "float"
-                  }
-                }
-              },
-              "summary": {
-                "_kind": "dict",
-                "keys": {
-                  "avg_net_position": "float",
-                  "borders": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "data_points": "int"
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_version": "str",
-              "borders": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "collector": "str",
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "resolution": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "sign_convention": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str",
-              "zones": {
-                "_kind": "dict",
-                "keys": {
-                  "BE": "str",
-                  "DE_LU": "str",
-                  "DK_1": "str",
-                  "GB": "str",
-                  "NL": "str",
-                  "NO_2": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "cross_border_flows",
-      "sources": null
-    },
-    "load_forecast.json": {
-      "shape_hash": "fac9d3f0e1b94e116f2ddb4b52978908",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "DE_LU": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "forecast_error": "float",
-                    "load_actual": "float",
-                    "load_forecast": "float"
-                  }
-                }
-              },
-              "NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "forecast_error": "float",
-                    "load_actual": "float",
-                    "load_forecast": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_version": "str",
-              "collector": "str",
-              "country_codes": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "forecast_type": "str",
-              "include_actual": "bool",
-              "resolution": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str",
-              "zones": {
-                "_kind": "dict",
-                "keys": {
-                  "DE_LU": "str",
-                  "NL": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "load_forecast",
-      "sources": null
-    },
-    "generation_forecast.json": {
-      "shape_hash": "08c84d5bf6b1c269685a7f5b9cb9d195",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "FR": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "nuclear_actual": "float",
-                    "nuclear_availability": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_version": "str",
-              "collector": "str",
-              "country_codes": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "generation_types": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "include_actual": "bool",
-              "include_forecast": "bool",
-              "resolution": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "type_names": {
-                "_kind": "dict",
-                "keys": {
-                  "nuclear": "str"
-                }
-              },
-              "units": "str",
-              "zones": {
-                "_kind": "dict",
-                "keys": {
-                  "FR": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "generation_by_type",
-      "sources": null
-    },
-    "generation_mix.json": {
-      "shape_hash": "0343381cb452e41fefb8193d97ecfdd8",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "BE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "fossil_gas_actual": "float",
-                    "nuclear_actual": "float",
-                    "solar_actual": "float",
-                    "wind_offshore_actual": "float",
-                    "wind_onshore_actual": "float"
-                  }
-                }
-              },
-              "DE_LU": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "fossil_gas_actual": "float",
-                    "fossil_hard_coal_actual": "float",
-                    "solar_actual": "float",
-                    "wind_offshore_actual": "float",
-                    "wind_onshore_actual": "float"
-                  }
-                }
-              },
-              "NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "fossil_gas_actual": "float",
-                    "fossil_hard_coal_actual": "float",
-                    "nuclear_actual": "float",
-                    "solar_actual": "float",
-                    "wind_offshore_actual": "float",
-                    "wind_onshore_actual": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_version": "str",
-              "collector": "str",
-              "country_codes": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "generation_types": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "include_actual": "bool",
-              "include_forecast": "bool",
-              "resolution": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "type_names": {
-                "_kind": "dict",
-                "keys": {
-                  "fossil_gas": "str",
-                  "fossil_hard_coal": "str",
-                  "hydro_reservoir": "str",
-                  "hydro_run_of_river": "str",
-                  "nuclear": "str",
-                  "solar": "str",
-                  "wind_offshore": "str",
-                  "wind_onshore": "str"
-                }
-              },
-              "units": "str",
-              "zones": {
-                "_kind": "dict",
-                "keys": {
-                  "BE": "str",
-                  "DE_LU": "str",
-                  "NL": "str"
-                }
-              }
-            }
-          }
-        }
-      },
-      "data_type": "generation_by_type",
-      "sources": null
-    },
-    "nordic_hydro.json": {
-      "shape_hash": "5393fc0af912e0faed7da574d59286a2",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "NO": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "iso_week": "int",
-                    "iso_year": "int",
-                    "reservoir_mwh": "float"
-                  }
-                }
-              },
-              "SE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "iso_week": "int",
-                    "iso_year": "int",
-                    "reservoir_mwh": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "collector": "str",
-              "country_codes": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "country_names": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "data_type": "str",
-              "document_type": "str",
-              "end_time": "str",
-              "resolution": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "hydro_reservoir",
-      "sources": null
-    },
-    "calendar_features.json": {
-      "shape_hash": "032b4980f3430acfe13fa2684c9c7149",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "timestamp_map",
-            "value_shape": {
-              "_kind": "dict",
-              "keys": {
-                "day": "int",
-                "day_of_week": "int",
-                "day_of_year": "int",
-                "dst_utc_offset_hours": "int",
-                "holiday_count": "int",
-                "holiday_impact": "int",
-                "holiday_name_be": "null",
-                "holiday_name_de": "null",
-                "holiday_name_fr": "null",
-                "holiday_name_nl": "null",
-                "hour": "int",
-                "is_bridge_day": "bool",
-                "is_dst": "bool",
-                "is_dst_transition_day": "bool",
-                "is_friday": "bool",
-                "is_holiday_be": "bool",
-                "is_holiday_de": "bool",
-                "is_holiday_fr": "bool",
-                "is_holiday_nl": "bool",
-                "is_monday": "bool",
-                "is_summer": "bool",
-                "is_weekend": "bool",
-                "is_winter": "bool",
-                "is_working_day": "bool",
-                "is_working_day_regional": "bool",
-                "month": "int",
-                "season": "str",
-                "week_of_year": "int",
-                "year": "int"
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "countries": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "upcoming_holidays": {
-                "_kind": "list",
-                "value_shape": null
-              }
-            }
-          }
-        }
-      },
-      "data_type": "calendar_features",
-      "sources": null
-    },
-    "market_proxies.json": {
-      "shape_hash": "adcc243b5ca204d0f6f1a30354752fa0",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "carbon": {
-                "_kind": "dict",
-                "keys": {
-                  "change": "float",
-                  "change_pct": "float",
-                  "date": "str",
-                  "description": "str",
-                  "high": "float",
-                  "low": "float",
-                  "name": "str",
-                  "open": "float",
-                  "prev_close": "float",
-                  "price": "float",
-                  "source": "str",
-                  "ticker": "str",
-                  "units": "str",
-                  "volume": "int"
-                }
-              },
-              "gas": {
-                "_kind": "dict",
-                "keys": {
-                  "change": "float",
-                  "change_pct": "float",
-                  "date": "str",
-                  "description": "str",
-                  "high": "float",
-                  "low": "float",
-                  "name": "str",
-                  "note": "str",
-                  "open": "float",
-                  "prev_close": "float",
-                  "price": "float",
-                  "source": "str",
-                  "ticker": "str",
-                  "units": "str",
-                  "volume": "int"
-                }
-              },
-              "gas_ttf": {
-                "_kind": "dict",
-                "keys": {
-                  "change_pct": "float",
-                  "currency": "str",
-                  "date": "str",
-                  "description": "str",
-                  "high": "float",
-                  "history": {
-                    "_kind": "dict",
-                    "keys": {
-                      "2026-05-05": "float",
-                      "2026-05-06": "float",
-                      "2026-05-07": "float",
-                      "2026-05-08": "float",
-                      "2026-05-11": "float",
-                      "2026-05-12": "float",
-                      "2026-05-13": "float",
-                      "2026-05-14": "float",
-                      "2026-05-15": "float",
-                      "2026-05-18": "float",
-                      "2026-05-19": "float",
-                      "2026-05-20": "float",
-                      "2026-05-21": "float",
-                      "2026-05-22": "float",
-                      "2026-05-26": "float",
-                      "2026-05-27": "float",
-                      "2026-05-28": "float",
-                      "2026-05-29": "float",
-                      "2026-06-01": "float",
-                      "2026-06-02": "float",
-                      "2026-06-03": "float",
-                      "2026-06-04": "float",
-                      "2026-06-05": "float",
-                      "2026-06-08": "float",
-                      "2026-06-09": "float"
-                    }
-                  },
-                  "low": "float",
-                  "mean_7d": "float",
-                  "name": "str",
-                  "note": "str",
-                  "open": "float",
-                  "prev_close": "float",
-                  "price": "float",
-                  "price_lag1": "float",
-                  "price_lag2": "float",
-                  "price_lag7": "float",
-                  "source": "str",
-                  "ticker": "str",
-                  "trend_7d": "str",
-                  "units": "str",
-                  "volatility_7d": "float",
-                  "volume": "int"
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_key_configured": "bool",
-              "carbon_symbol": "str",
-              "collector": "str",
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "fallback_source": "str",
-              "gas_proxy_symbol": "str",
-              "gas_ttf_symbol": "str",
-              "primary_source": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str",
-              "usage_notes": {
-                "_kind": "list",
-                "value_shape": "str"
-              }
-            }
-          }
-        }
-      },
-      "data_type": "market_proxies",
-      "sources": null
-    },
-    "market_history.json": {
-      "shape_hash": "34939e4615a91f0dda25771e85cc61c7",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "carbon_eua": {
-                "_kind": "dict",
-                "keys": {
-                  "data": {
-                    "_kind": "dict",
-                    "keys": {
-                      "2026-03-11": "float",
-                      "2026-03-12": "float",
-                      "2026-03-13": "float",
-                      "2026-03-16": "float",
-                      "2026-03-17": "float",
-                      "2026-03-18": "float",
-                      "2026-03-19": "float",
-                      "2026-03-20": "float"
-                    }
-                  },
-                  "metadata": {
-                    "_kind": "dict",
-                    "keys": {
-                      "source": "str",
-                      "ticker": "str",
-                      "units": "str"
-                    }
-                  }
-                }
-              },
-              "gas_ttf": {
-                "_kind": "dict",
-                "keys": {
-                  "data": {
-                    "_kind": "dict",
-                    "keys": {
-                      "2026-02-24": "float",
-                      "2026-02-25": "float",
-                      "2026-02-26": "float",
-                      "2026-02-27": "float",
-                      "2026-03-02": "float",
-                      "2026-03-03": "float",
-                      "2026-03-04": "float",
-                      "2026-03-05": "float",
-                      "2026-03-06": "float",
-                      "2026-03-09": "float",
-                      "2026-03-10": "float",
-                      "2026-03-11": "float",
-                      "2026-03-12": "float",
-                      "2026-03-13": "float",
-                      "2026-03-16": "float",
-                      "2026-03-17": "float",
-                      "2026-03-18": "float",
-                      "2026-03-19": "float",
-                      "2026-03-20": "float",
-                      "2026-03-23": "float",
-                      "2026-03-24": "float",
-                      "2026-03-25": "float",
-                      "2026-03-26": "float",
-                      "2026-03-27": "float",
-                      "2026-03-30": "float",
-                      "2026-03-31": "float",
-                      "2026-04-01": "float",
-                      "2026-04-02": "float",
-                      "2026-04-06": "float",
-                      "2026-04-07": "float",
-                      "2026-04-08": "float",
-                      "2026-04-09": "float",
-                      "2026-04-10": "float",
-                      "2026-04-13": "float",
-                      "2026-04-14": "float",
-                      "2026-04-15": "float",
-                      "2026-04-16": "float",
-                      "2026-04-17": "float",
-                      "2026-04-20": "float",
-                      "2026-04-21": "float",
-                      "2026-04-22": "float",
-                      "2026-04-23": "float",
-                      "2026-04-24": "float",
-                      "2026-04-27": "float",
-                      "2026-04-28": "float",
-                      "2026-04-29": "float",
-                      "2026-04-30": "float",
-                      "2026-05-01": "float",
-                      "2026-05-04": "float",
-                      "2026-05-05": "float",
-                      "2026-05-06": "float",
-                      "2026-05-07": "float",
-                      "2026-05-08": "float",
-                      "2026-05-11": "float",
-                      "2026-05-12": "float",
-                      "2026-05-13": "float",
-                      "2026-05-14": "float",
-                      "2026-05-15": "float",
-                      "2026-05-18": "float",
-                      "2026-05-19": "float",
-                      "2026-05-20": "float",
-                      "2026-05-21": "float",
-                      "2026-05-22": "float",
-                      "2026-05-25": "float",
-                      "2026-05-26": "float",
-                      "2026-05-27": "float",
-                      "2026-05-28": "float",
-                      "2026-05-29": "float",
-                      "2026-06-01": "float",
-                      "2026-06-02": "float",
-                      "2026-06-03": "float",
-                      "2026-06-04": "float",
-                      "2026-06-05": "float",
-                      "2026-06-08": "float",
-                      "2026-06-09": "float"
-                    }
-                  },
-                  "metadata": {
-                    "_kind": "dict",
-                    "keys": {
-                      "source": "str",
-                      "ticker": "str",
-                      "units": "str"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "rolling_window_days": "int",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str"
-            }
-          }
-        }
-      },
-      "data_type": "market_history",
-      "sources": null
-    },
-    "gas_storage.json": {
-      "shape_hash": "cf3ac47c345e440cd864fff9351b8b73",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "timestamp_map",
-            "value_shape": {
-              "_kind": "dict",
-              "keys": {
-                "fill_level_pct": "float",
-                "gas_in_storage_twh": "float",
-                "injection_gwh": "float",
-                "net_change_gwh": "float",
-                "withdrawal_gwh": "float",
-                "working_gas_volume_twh": "float"
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_documentation": "str",
-              "collector": "str",
-              "country_code": "str",
-              "data_frequency": "str",
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str",
-              "usage_notes": {
-                "_kind": "list",
-                "value_shape": "str"
-              }
-            }
-          }
-        }
-      },
-      "data_type": "gas_storage",
-      "sources": null
-    },
-    "gas_flows.json": {
-      "shape_hash": "23d3eaa738d751a1d55fd3026ef295c5",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "timestamp_map",
-            "value_shape": {
-              "_kind": "dict",
-              "keys": {
-                "entry_points": "int",
-                "entry_total_gwh": "float",
-                "exit_points": "int",
-                "exit_total_gwh": "float",
-                "net_flow_gwh": "float"
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_documentation": "str",
-              "collector": "str",
-              "country_code": "str",
-              "data_frequency": "str",
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str",
-              "usage_notes": {
-                "_kind": "list",
-                "value_shape": "str"
-              }
-            }
-          }
-        }
-      },
-      "data_type": "gas_flows",
-      "sources": null
     }
   }
 }
