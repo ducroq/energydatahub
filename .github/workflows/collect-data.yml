@@ -101,15 +101,14 @@ jobs:
     # you move this step to run AFTER the commit (where HEAD becomes
     # today's commit), switch the flag to `--previous-ref HEAD~1`.
     #
-    # Initially shipped in --warn-only mode for the bedding-in period so
-    # any false positives surface before flipping to fail mode. Remove
-    # --warn-only when the signal is trusted.
+    # Fail-mode: any within-feed shape drift without a CURRENT_SCHEMA_VERSION
+    # bump aborts the run. Re-add --warn-only to re-enter the bedding-in
+    # period if a new false-positive class emerges.
     - name: Schema-drift tripwire
       if: always()
       run: |
         python scripts/detect_schema_drift.py \
-          --previous-ref HEAD \
-          --warn-only
+          --previous-ref HEAD
 
     - name: Prepare docs folder with only current data
       run: |
