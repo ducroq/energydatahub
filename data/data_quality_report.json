@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-06-10T18:31:32.728312+00:00",
+  "timestamp": "2026-06-11T18:44:09.369557+00:00",
   "overall_status": "warning",
   "total_issues": 2,
-  "datasets_collected": 23,
+  "datasets_collected": 24,
   "datasets_missing": [],
   "dataset_reports": [
     {
@@ -80,8 +80,18 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 768,
+      "data_points": 750,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -166,15 +176,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "40 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "28 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 40,
+            "count": 28,
             "examples": [
-              "NL/2026-06-10T08:15:00+02:00: forecast_error=3143.4, load_actual=7568.926, ratio=0.42",
-              "NL/2026-06-10T08:30:00+02:00: forecast_error=3507.5, load_actual=7076.346, ratio=0.50",
-              "NL/2026-06-10T08:45:00+02:00: forecast_error=3533.2, load_actual=6933.906, ratio=0.51",
-              "NL/2026-06-10T09:00:00+02:00: forecast_error=3600.5, load_actual=6778.856, ratio=0.53",
-              "NL/2026-06-10T09:15:00+02:00: forecast_error=3503.4, load_actual=6730.896, ratio=0.52"
+              "NL/2026-06-11T08:00:00+02:00: forecast_error=3175.9, load_actual=7230.996, ratio=0.44",
+              "NL/2026-06-11T08:15:00+02:00: forecast_error=3477.7, load_actual=6822.116, ratio=0.51",
+              "NL/2026-06-11T08:30:00+02:00: forecast_error=3767.5, load_actual=6499.806, ratio=0.58",
+              "NL/2026-06-11T08:45:00+02:00: forecast_error=3793.5, load_actual=6222.336, ratio=0.61",
+              "NL/2026-06-11T09:00:00+02:00: forecast_error=3648.9, load_actual=6118.136, ratio=0.60"
             ],
             "threshold": 0.4
           }
@@ -216,7 +226,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 525,
+      "data_points": 528,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -236,7 +246,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 86,
+      "data_points": 87,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
