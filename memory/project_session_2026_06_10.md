@@ -59,6 +59,15 @@ Drafted agent-to-agent message templating the corrected diagnosis + two patch op
 2. **Watch tomorrow's EDH scheduled run** (2026-06-11 16:00 UTC) — first run where fail-mode tripwire sees a fully-rolled date window for `market_history.json` / `market_proxies.json` *without* the regeneration safety net. The math says it'll pass (timestamp_map collapse is date-independent), but empirical confirmation is still missing.
 3. If either of those surfaces something new, escalate. Otherwise the loop is closed.
 
+## Resolution (verified 2026-06-12) — loop closed
+
+Both open items confirmed:
+
+1. **Augur recovered.** Parser patch landed in augur `e11487b` (`fix(ml): unwrap EDH v2.2 {metadata, data} envelope in price + wind parsers`), plus follow-up hardening `c29671e` (parser tests + isinstance guards). Verified from augur's committed state (`C:\local_dev\augur`): `shadow_state.json` `last_run_utc=2026-06-11T18:45Z`, 120 pending predictions spanning `2026-06-12T22:00Z → 2026-06-15T21:00Z` (full 72h+ envelope restored, vs the ~24h stub during the incident), and `eval_log.jsonl` has realised-price eval rows for 2026-06-09 and 2026-06-11 — well past the `2026-06-07T21:00Z` pin. Daily commits 06-10/06-11 report `ARF OK | shadow rc=0/eval rc=0`.
+2. **Fail-mode tripwire passed its first fully-rolled window.** Scheduled run `27369503754` (2026-06-11 18:42 UTC) exited clean: no within-feed shape drift on `market_history.json` / `market_proxies.json` after the date window rolled without the regeneration safety net. Only signal was operational catalog drift — `air_quality_buurt.json` *added* back (Luchtmeetnet buurt recovered), sidecar now 20 feeds.
+
+No second issue surfaced. Incident fully closed.
+
 ## Commits this session
 
 - `8e63148` — `ci(schema-drift): flip tripwire from --warn-only to fail-mode`
