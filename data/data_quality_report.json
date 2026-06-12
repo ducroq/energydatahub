@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-06-12T10:23:38.994455+00:00",
+  "timestamp": "2026-06-12T18:02:16.918985+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
-  "datasets_collected": 23,
+  "total_issues": 2,
+  "datasets_collected": 24,
   "datasets_missing": [],
   "dataset_reports": [
     {
@@ -10,7 +10,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -30,7 +30,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -40,7 +40,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 24,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -86,6 +86,16 @@
       "issues": []
     },
     {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 24,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
@@ -109,7 +119,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 336,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -158,18 +168,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "14 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 14,
+            "examples": [
+              "NL/2026-06-12T12:00:00+02:00: forecast_error=2663.3, load_actual=5873.126, ratio=0.45",
+              "NL/2026-06-12T13:45:00+02:00: forecast_error=2307.5, load_actual=5568.476, ratio=0.41",
+              "NL/2026-06-12T14:00:00+02:00: forecast_error=2479.8, load_actual=5469.696, ratio=0.45",
+              "NL/2026-06-12T14:15:00+02:00: forecast_error=2888.5, load_actual=5191.556, ratio=0.56",
+              "NL/2026-06-12T14:30:00+02:00: forecast_error=3146.3, load_actual=4939.716, ratio=0.64"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 48,
+      "data_points": 76,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -199,7 +226,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 429,
+      "data_points": 519,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
