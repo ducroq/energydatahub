@@ -329,6 +329,65 @@ class TestEndToEnd:
         assert "Catalog drift" in result.stdout
         assert "air_quality_buurt.json" in result.stdout
 
+    def test_volatile_feed_within_change_exits_0_with_warning(self, tmp_path):
+        """The 2026-06-13 false positive: air_quality_buurt's data block is
+        keyed by the RIVM station/pollutant set, which legitimately varies
+        day-to-day. A within-feed shape change on a VOLATILE_SHAPE_FEEDS feed
+        warns but must NOT fail CI."""
+        prev = {
+            "computed_at": "2026-06-12T16:00:00+00:00",
+            "schema_version": "2.4",
+            "feeds": {
+                "gas_storage.json": _feed("abc"),
+                "air_quality_buurt.json": _feed("b343fc99"),  # 1 station that day
+            },
+        }
+        curr = {
+            "computed_at": "2026-06-13T16:00:00+00:00",
+            "schema_version": "2.4",  # NO bump — station came back online
+            "feeds": {
+                "gas_storage.json": _feed("abc"),
+                "air_quality_buurt.json": _feed("c30a221a"),  # 2 stations again
+            },
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "volatile feed(s)" in result.stdout
+        assert "air_quality_buurt.json" in result.stdout
+        assert "::warning::" in result.stdout
+        assert "::error::" not in result.stdout
+        # No catalog drift here → must not emit a stray "::warning::None".
+        assert "None" not in result.stdout
+
+    def test_volatile_change_plus_enforced_change_still_fails(self, tmp_path):
+        """A volatile feed changing does NOT mask a real shape break on a
+        non-volatile feed in the same run — the enforced change still trips
+        fail-mode."""
+        prev = {
+            "computed_at": "2026-06-12T16:00:00+00:00",
+            "schema_version": "2.4",
+            "feeds": {
+                "gas_storage.json": _feed("old"),
+                "air_quality_buurt.json": _feed("b343fc99"),
+            },
+        }
+        curr = {
+            "computed_at": "2026-06-13T16:00:00+00:00",
+            "schema_version": "2.4",  # NO bump
+            "feeds": {
+                "gas_storage.json": _feed("new"),            # enforced shape change
+                "air_quality_buurt.json": _feed("c30a221a"),  # volatile churn
+            },
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "::error::" in result.stdout
+        assert "without a schema_version bump" in result.stdout
+        # The volatile feed is still surfaced as a warning alongside the error.
+        assert "volatile feed(s)" in result.stdout
+
     def test_combined_feed_source_diff_surfaced(self, tmp_path):
         """A combined wrap that loses a per-collector source is visible
         in the summary output."""

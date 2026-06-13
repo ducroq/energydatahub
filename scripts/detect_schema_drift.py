@@ -71,6 +71,28 @@ CRITICAL_FEEDS = frozenset({
     'weather_forecast_multi_location.json',
 })
 
+# Feeds whose within-feed shape is OPERATIONALLY VOLATILE — their data
+# block is keyed by a set that legitimately varies day-to-day, so the
+# shape signature churns without any schema change. For these, within-feed
+# drift is downgraded to ::warning:: instead of exit 1 (the same reasoning
+# as the catalog-vs-shape split, applied one level deeper — see module
+# docstring). This is the structural analogue of CRITICAL_FEEDS.
+#
+#   air_quality_buurt.json: luchtmeetnet maps each requested location to
+#   the NEAREST ONLINE RIVM station and includes only the pollutants that
+#   station reported. Both the station set and per-station pollutant set
+#   are data, not schema — encoded as dict keys, so the hash flips when a
+#   station goes offline and returns (the 2026-06-13 false-positive CI
+#   failure). Genuine schema changes here are unversioned-but-tolerated;
+#   acceptable since this feed is not an Augur primary input.
+#
+# Keep this curated and narrow — broadening it blinds the tripwire to real
+# shape breaks. Stable buurt feeds (solar_forecast_buurt, weather_forecast_
+# buurt) are keyed by fixed configured coords and must NOT be added.
+VOLATILE_SHAPE_FEEDS = frozenset({
+    'air_quality_buurt.json',
+})
+
 
 def _load_current_sidecar(path: Path) -> Dict[str, Any]:
     if not path.is_file():
@@ -233,8 +255,30 @@ def main() -> int:
             "(transient collector recovery / retirement)."
         )
 
-    if report["feeds_changed"]:
-        changed_count = len(report["feeds_changed"])
+    # Partition within-feed drift: operationally-volatile feeds (data-driven
+    # key churn) warn but never fail; everything else is an enforced shape
+    # diff that must be versioned. See VOLATILE_SHAPE_FEEDS.
+    volatile_changed = [
+        c for c in report["feeds_changed"]
+        if c["feed"] in VOLATILE_SHAPE_FEEDS
+    ]
+    enforced_changed = [
+        c for c in report["feeds_changed"]
+        if c["feed"] not in VOLATILE_SHAPE_FEEDS
+    ]
+
+    if volatile_changed:
+        names = ", ".join(c["feed"] for c in volatile_changed)
+        print(
+            f"::warning::Within-feed shape drift on {len(volatile_changed)} "
+            f"volatile feed(s) ({names}) — data-driven key churn (e.g. the "
+            "RIVM station/pollutant set varies day-to-day), treated as "
+            "operational, not a schema change. See VOLATILE_SHAPE_FEEDS in "
+            "scripts/detect_schema_drift.py."
+        )
+
+    if enforced_changed:
+        changed_count = len(enforced_changed)
         msg = (
             f"Within-feed shape drift on {changed_count} feed(s) "
             f"without a schema_version bump (still "
@@ -262,10 +306,14 @@ def main() -> int:
             )
         return 1
 
-    # Catalog-only drift (added/removed but no within-feed shape diff).
+    # Reached when there is no enforced within-feed drift: catalog-only
+    # drift (added/removed), volatile-only within-feed drift, or both.
+    # catalog_msg is None when the only drift was volatile within-feed —
+    # guard the print so we don't emit "::warning::None".
     # Critical-feed removal upgrades to ::error:: even though catalog
     # drift normally exits 0 (security audit M2).
-    print(f"::warning::{catalog_msg}")
+    if catalog_msg:
+        print(f"::warning::{catalog_msg}")
     if critical_removed:
         print(
             f"::error::Critical feed(s) removed: {critical_removed}. "
