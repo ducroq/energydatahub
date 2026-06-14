@@ -9,13 +9,13 @@ jobs:
   collect-and-publish:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
       with:
         fetch-depth: 0  # Fetch all history for all branches and tags
         token: ${{ secrets.PAT }}  # Personal Access Token (PAT) with repo scope
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: '3.12'
 
@@ -104,8 +104,14 @@ jobs:
     # Fail-mode: any within-feed shape drift without a CURRENT_SCHEMA_VERSION
     # bump aborts the run. Re-add --warn-only to re-enter the bedding-in
     # period if a new false-positive class emerges.
+    #
+    # `if: success()` (the default): the drift comparison is only meaningful
+    # after a clean collection + quality gate. On a failed "Collect data" run
+    # this step would otherwise diff the stale checked-out sidecar against
+    # itself — benign but noisy. Unlike the completeness tripwire above, this
+    # one has no diagnostic value on the failure path.
     - name: Schema-drift tripwire
-      if: always()
+      if: success()
       run: |
         python scripts/detect_schema_drift.py \
           --previous-ref HEAD
