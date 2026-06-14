@@ -519,12 +519,26 @@ class TestPartitionHelper:
         assert [c["feed"] for c in volatile] == ["air_quality_buurt.json"]
         assert [c["feed"] for c in enforced] == ["gas_storage.json"]
 
-    def test_default_volatile_set_matches_production(self):
-        """With no explicit set, the helper uses the curated production
-        VOLATILE_SHAPE_FEEDS (air_quality_buurt.json)."""
-        changed = [self._c("air_quality_buurt.json"), self._c("gas_storage.json")]
+    def test_production_volatile_set_is_pinned(self):
+        """Pin the exact curated production set so any addition/removal is a
+        deliberate, reviewed change. Each entry is a confirmed data-driven
+        false-positive source (see VOLATILE_SHAPE_FEEDS comment)."""
+        assert detect_schema_drift.VOLATILE_SHAPE_FEEDS == frozenset({
+            "air_quality_buurt.json",   # RIVM station/pollutant key churn (06-13)
+            "cross_border_flows.json",  # per-hour border key churn (06-14)
+            "calendar_features.json",   # upcoming_holidays empty<->populated (06-14)
+        })
+
+    def test_default_volatile_set_partitions_all_production_feeds(self):
+        """With no explicit set, the helper uses the production
+        VOLATILE_SHAPE_FEEDS — every member partitions to volatile, and a
+        non-member partitions to enforced."""
+        changed = [self._c(f) for f in sorted(detect_schema_drift.VOLATILE_SHAPE_FEEDS)]
+        changed.append(self._c("gas_storage.json"))  # non-volatile control
         volatile, enforced = detect_schema_drift._partition_within_feed_drift(changed)
-        assert [c["feed"] for c in volatile] == ["air_quality_buurt.json"]
+        assert set(c["feed"] for c in volatile) == set(
+            detect_schema_drift.VOLATILE_SHAPE_FEEDS
+        )
         assert [c["feed"] for c in enforced] == ["gas_storage.json"]
 
     def test_critical_and_volatile_sets_are_disjoint(self):

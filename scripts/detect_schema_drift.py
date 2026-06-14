@@ -86,6 +86,17 @@ CRITICAL_FEEDS = frozenset({
 #   failure). Genuine schema changes here are unversioned-but-tolerated;
 #   acceptable since this feed is not an Augur primary input.
 #
+#   cross_border_flows.json: the per-hour `data.flows` map only contains a
+#   border key (e.g. NL->GB) for hours where that interconnector reported a
+#   flow. The shape signature samples one representative hour, so a border
+#   absent in the sampled hour drops from the shape (the 2026-06-14 false
+#   positive: NL->GB missing). The border SET is data, not schema.
+#
+#   calendar_features.json: metadata.upcoming_holidays is an empty list on
+#   most days (shape `value_shape: null`) and becomes a list-of-dicts the
+#   moment a holiday enters the lookahead window (the other half of the
+#   2026-06-14 false positive). Empty<->populated is data, not schema.
+#
 # ACCEPTED RISK: a feed listed here has its within-feed shape hash IGNORED
 # for fail purposes. A genuine *structural* schema change to that feed (e.g.
 # its `data` block changing from a per-location dict to a list, or a new
@@ -100,6 +111,8 @@ CRITICAL_FEEDS = frozenset({
 # buurt) are keyed by fixed configured coords and must NOT be added.
 VOLATILE_SHAPE_FEEDS = frozenset({
     'air_quality_buurt.json',
+    'cross_border_flows.json',
+    'calendar_features.json',
 })
 
 # A feed cannot be both critical (its removal fails CI) and volatile (its
