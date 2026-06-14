@@ -27,6 +27,17 @@ Catalog vs shape drift:
   surface as warnings, never failures. Without this split, the
   tripwire would fire on every transient collector miss-and-recover.
 
+Volatile feeds (within-feed data-driven churn):
+  Some feeds legitimately change their within-feed shape day-to-day because
+  their data block is keyed by a set that varies (e.g. cross_border_flows'
+  per-hour border keys, calendar_features' upcoming_holidays list, the RIVM
+  station set). These warn instead of failing. Membership is the UNION of a
+  hand-curated seed set (VOLATILE_SHAPE_FEEDS) and a history-derived set
+  (`derive_volatile_feeds()`), the latter auto-classifying any feed that has
+  wobbled in committed history without a version bump. The derivation makes
+  the classification self-maintaining, so a recurring false positive stops
+  paging without an allowlist edit.
+
 Usage:
     python scripts/detect_schema_drift.py
     python scripts/detect_schema_drift.py --warn-only        # never fail
@@ -77,6 +88,17 @@ CRITICAL_FEEDS = frozenset({
 # drift is downgraded to ::warning:: instead of exit 1 (the same reasoning
 # as the catalog-vs-shape split, applied one level deeper — see module
 # docstring). This is the structural analogue of CRITICAL_FEEDS.
+#
+# NOTE: this hand-curated set is no longer the primary mechanism. main()
+# UNIONS it with `derive_volatile_feeds()`, which auto-classifies any feed
+# that has wobbled in committed history without a version bump. So you do NOT
+# need to add a feed here just because it had a recurring false positive —
+# history handles that automatically. This set now serves three narrower
+# purposes: (1) a documented record of the originally-diagnosed churn sources,
+# (2) an explicit override, and (3) a fallback when history is thin (shallow
+# clone, first runs after deploy). The entries below could be pruned once
+# their volatility is well-established in history; they are kept as the
+# documented baseline.
 #
 #   air_quality_buurt.json: luchtmeetnet maps each requested location to
 #   the NEAREST ONLINE RIVM station and includes only the pollutants that
@@ -180,6 +202,75 @@ def _load_previous_sidecar(
         return None
 
 
+def derive_volatile_feeds(
+    sidecar_relpath: str,
+    ref: str = "HEAD",
+    window: int = 60,
+    repo_root: Path = REPO_ROOT,
+) -> frozenset:
+    """Classify feeds as shape-volatile from their committed shape history.
+
+    Walks the last `window` commits of `sidecar_relpath` reachable from `ref`
+    and records, per feed, the set of shape_hash values seen AT EACH
+    schema_version. A feed is volatile if any single schema_version shows more
+    than one distinct shape_hash — i.e. its shape changed without a version
+    bump, the signature of data-driven churn. A versioned migration moves the
+    schema_version too, so its hashes land under different versions and are
+    NOT counted (that path is already a clean pass via schema_version_changed).
+
+    This is the self-maintaining counterpart to the hand-curated
+    VOLATILE_SHAPE_FEEDS: a feed that has ever wobbled in committed history is
+    auto-classified, so a *recurring* data-driven false positive warns instead
+    of failing CI with no allowlist edit. main() unions this with the declared
+    set, which remains the explicit seed/override and the fallback when history
+    is thin (shallow clone, first runs after deploy).
+
+    KNOWN LIMIT: history can only record variation that was committed. A feed's
+    very first unversioned deviation cannot be distinguished from a real break
+    by history alone (it has one prior hash) — that case still relies on the
+    declared set or a one-time human call. Derivation eliminates the RECURRING
+    failures, which is the actual operational pain.
+
+    Returns a frozenset of feed names. Any git/parse failure degrades to an
+    empty set (caller falls back to the declared set).
+    """
+    # feed -> schema_version -> set(shape_hash)
+    seen: Dict[str, Dict[Any, set]] = {}
+    try:
+        log = subprocess.run(
+            ["git", "log", f"-n{window}", "--format=%H", ref,
+             "--", sidecar_relpath],
+            capture_output=True, text=True, check=False, cwd=repo_root,
+        )
+    except FileNotFoundError:
+        return frozenset()
+    if log.returncode != 0:
+        return frozenset()
+    for commit in (c for c in log.stdout.split() if c):
+        show = subprocess.run(
+            ["git", "show", f"{commit}:{sidecar_relpath}"],
+            capture_output=True, text=True, check=False, cwd=repo_root,
+        )
+        if show.returncode != 0:
+            continue
+        try:
+            payload = json.loads(show.stdout)
+        except json.JSONDecodeError:
+            continue
+        version = payload.get("schema_version")
+        for feed, info in (payload.get("feeds") or {}).items():
+            if not isinstance(info, dict):
+                continue
+            h = info.get("shape_hash")
+            if h is None:
+                continue
+            seen.setdefault(feed, {}).setdefault(version, set()).add(h)
+    return frozenset(
+        feed for feed, by_version in seen.items()
+        if any(len(hashes) > 1 for hashes in by_version.values())
+    )
+
+
 def _emit_summary(report: Dict[str, Any], current_path: Path) -> None:
     """Human-readable summary for the Actions run log."""
     print(f"Schema-drift report (current sidecar: {current_path})")
@@ -241,6 +332,14 @@ def main() -> int:
         action="store_true",
         help="Print findings but always exit 0. Use during the bedding-in period "
              "before flipping to fail-mode.",
+    )
+    parser.add_argument(
+        "--volatility-window",
+        type=int,
+        default=60,
+        help="How many recent sidecar commits to scan when auto-deriving "
+             "shape-volatile feeds from committed history (default 60). "
+             "Set 0 to disable derivation and use only the declared set.",
     )
     args = parser.parse_args()
 
@@ -307,21 +406,38 @@ def main() -> int:
             "(transient collector recovery / retirement)."
         )
 
-    # Partition within-feed drift: operationally-volatile feeds (data-driven
-    # key churn) warn but never fail; everything else is an enforced shape
-    # diff that must be versioned. See VOLATILE_SHAPE_FEEDS.
+    # Effective volatile set = declared (explicit seed/override + fallback)
+    # UNION history-derived (feeds that have wobbled in committed history
+    # without a version bump). The derived half makes the classification
+    # self-maintaining: a recurring data-driven false positive warns instead
+    # of failing CI without anyone editing the allowlist.
+    derived_volatile = (
+        derive_volatile_feeds(args.sidecar, args.previous_ref,
+                              args.volatility_window)
+        if args.volatility_window > 0 else frozenset()
+    )
+    effective_volatile = VOLATILE_SHAPE_FEEDS | derived_volatile
+    auto_only = sorted(derived_volatile - VOLATILE_SHAPE_FEEDS)
+    if auto_only:
+        print(
+            f"::notice::Auto-classified {len(auto_only)} feed(s) as shape-"
+            f"volatile from committed history (warn, not fail): {auto_only}"
+        )
+
+    # Partition within-feed drift: volatile feeds (data-driven shape churn)
+    # warn but never fail; everything else is an enforced shape diff that must
+    # be versioned. See VOLATILE_SHAPE_FEEDS + derive_volatile_feeds().
     volatile_changed, enforced_changed = _partition_within_feed_drift(
-        report["feeds_changed"]
+        report["feeds_changed"], effective_volatile
     )
 
     if volatile_changed:
         names = ", ".join(c["feed"] for c in volatile_changed)
         print(
             f"::warning::Within-feed shape drift on {len(volatile_changed)} "
-            f"volatile feed(s) ({names}) — data-driven key churn (e.g. the "
-            "RIVM station/pollutant set varies day-to-day), treated as "
-            "operational, not a schema change. See VOLATILE_SHAPE_FEEDS in "
-            "scripts/detect_schema_drift.py."
+            f"volatile feed(s) ({names}) — data-driven shape churn (declared in "
+            "VOLATILE_SHAPE_FEEDS or auto-derived from committed history), "
+            "treated as operational, not a schema change."
         )
 
     if enforced_changed:

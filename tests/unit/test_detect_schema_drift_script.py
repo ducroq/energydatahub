@@ -92,6 +92,40 @@ def _feed(hash_val: str, sources=None, data_type="gas_storage"):
     }
 
 
+def _sidecar(version: str, feed_hashes: dict) -> dict:
+    """Build a minimal sidecar payload mapping feed_name -> shape_hash."""
+    return {
+        "computed_at": "2026-06-14T16:00:00+00:00",
+        "schema_version": version,
+        "feeds": {name: _feed(h) for name, h in feed_hashes.items()},
+    }
+
+
+def _make_repo_with_commit_history(
+    tmp_path: Path, committed: list, working: dict, copy_code: bool = True
+) -> Path:
+    """Init a git repo committing each sidecar in `committed` in order, then
+    leave `working` as an uncommitted change to the sidecar (the script's
+    "current" run). HEAD is the last committed sidecar; `--previous-ref HEAD~1`
+    is the second-to-last. Used to exercise history-derived volatility, which
+    needs more than two commits of shape history.
+    """
+    repo = tmp_path / "repo"
+    (repo / "data").mkdir(parents=True)
+    if copy_code:
+        import shutil
+        shutil.copytree(REPO_ROOT / "scripts", repo / "scripts")
+        shutil.copytree(REPO_ROOT / "utils", repo / "utils")
+    sidecar = repo / "data" / "_shape_signatures.json"
+    _git(["init"], cwd=repo)
+    for i, sc in enumerate(committed):
+        sidecar.write_text(json.dumps(sc))
+        _git(["add", "." if i == 0 else "data/_shape_signatures.json"], cwd=repo)
+        _git(["commit", "--allow-empty", "-m", f"commit {i}"], cwd=repo)
+    sidecar.write_text(json.dumps(working))  # uncommitted "current" run
+    return repo
+
+
 class TestEndToEnd:
     def test_no_drift_exits_0(self, tmp_path):
         sidecar = {
@@ -547,3 +581,94 @@ class TestPartitionHelper:
         assert detect_schema_drift.CRITICAL_FEEDS.isdisjoint(
             detect_schema_drift.VOLATILE_SHAPE_FEEDS
         )
+
+
+class TestDeriveVolatileFeeds:
+    """Unit tests for the history-derived volatility classifier — the
+    self-maintaining mechanism that replaces hand-editing the allowlist."""
+
+    def test_feed_with_two_hashes_same_version_is_volatile(self, tmp_path):
+        """A feed that shows >1 shape_hash at the SAME schema_version in
+        committed history is data-driven churn → volatile. A feed constant
+        across history is not."""
+        committed = [
+            _sidecar("2.4", {"flapper.json": "A", "steady.json": "S"}),
+            _sidecar("2.4", {"flapper.json": "B", "steady.json": "S"}),
+            _sidecar("2.4", {"flapper.json": "A", "steady.json": "S"}),
+        ]
+        repo = _make_repo_with_commit_history(
+            tmp_path, committed, committed[-1], copy_code=False
+        )
+        derived = detect_schema_drift.derive_volatile_feeds(
+            "data/_shape_signatures.json", "HEAD", 10, repo_root=repo
+        )
+        assert "flapper.json" in derived
+        assert "steady.json" not in derived
+
+    def test_versioned_change_is_not_volatile(self, tmp_path):
+        """A feed whose hash changed ACROSS a schema_version bump is a
+        legitimate versioned migration, not churn — must NOT be classified
+        volatile (else it would mask a later real break)."""
+        committed = [
+            _sidecar("2.3", {"migrated.json": "old"}),
+            _sidecar("2.4", {"migrated.json": "new"}),  # changed WITH bump
+        ]
+        repo = _make_repo_with_commit_history(
+            tmp_path, committed, committed[-1], copy_code=False
+        )
+        derived = detect_schema_drift.derive_volatile_feeds(
+            "data/_shape_signatures.json", "HEAD", 10, repo_root=repo
+        )
+        assert "migrated.json" not in derived
+
+    def test_git_failure_degrades_to_empty_set(self, tmp_path):
+        """A non-repo directory (git failure) returns an empty set rather
+        than raising — caller falls back to the declared set."""
+        plain = tmp_path / "notarepo"
+        plain.mkdir()
+        derived = detect_schema_drift.derive_volatile_feeds(
+            "data/_shape_signatures.json", "HEAD", 10, repo_root=plain
+        )
+        assert derived == frozenset()
+
+
+class TestHistoryDerivedEndToEnd:
+    """End-to-end: the script auto-classifies a history-volatile feed via the
+    CLI without it being in the declared VOLATILE_SHAPE_FEEDS."""
+
+    def test_history_volatile_undeclared_feed_warns(self, tmp_path):
+        """A feed NOT in VOLATILE_SHAPE_FEEDS that wobbled in committed history
+        is auto-derived volatile → drift warns, exit 0."""
+        base = lambda h: _sidecar("2.4", {"flapper.json": h, "steady.json": "S"})
+        # flapper shows both A and B in history (c0,c1) → derived volatile.
+        committed = [base("A"), base("B"), base("A"), base("A")]
+        working = base("B")  # current run: flapper A->B vs HEAD~1
+        repo = _make_repo_with_commit_history(tmp_path, committed, working)
+        result = _run_script(repo)  # default --previous-ref HEAD~1
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "flapper.json" in result.stdout
+        assert "Auto-classified" in result.stdout
+        assert "::error::" not in result.stdout
+
+    def test_history_stable_feed_real_break_still_fails(self, tmp_path):
+        """A feed constant across all history that suddenly changes is a real
+        break, not churn → enforced, exit 1 (derivation must not mask it)."""
+        base = lambda h: _sidecar("2.4", {"newcomer.json": h, "steady.json": "S"})
+        committed = [base("X"), base("X"), base("X"), base("X")]
+        working = base("Y")  # newcomer X->Y, never varied before
+        repo = _make_repo_with_commit_history(tmp_path, committed, working)
+        result = _run_script(repo)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "newcomer.json" in result.stdout
+        assert "::error::" in result.stdout
+
+    def test_volatility_window_zero_disables_derivation(self, tmp_path):
+        """--volatility-window 0 turns off history derivation; a feed volatile
+        only by history (not declared) then fails as an enforced change."""
+        base = lambda h: _sidecar("2.4", {"flapper.json": h, "steady.json": "S"})
+        committed = [base("A"), base("B"), base("A"), base("A")]
+        working = base("B")
+        repo = _make_repo_with_commit_history(tmp_path, committed, working)
+        result = _run_script(repo, "--volatility-window", "0")
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "::error::" in result.stdout
