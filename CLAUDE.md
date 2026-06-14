@@ -16,7 +16,7 @@ Automated energy market data collection platform for electricity price predictio
 | Starting any session | Compare `framework:` version above against [CHANGELOG](https://github.com/ducroq/agent-ready-projects/blob/master/CHANGELOG.md). If behind, surface drift before starting work — adopting changes is your call. |
 | Adding a new collector | `collectors/base.py` — BaseCollector pattern, `collectors/entsoe_generation.py` — good example, `collectors/entsoe_hydro.py` — minimal example. Also see `collectors/_http_classifier.py` for the HTTP-status bail-out pattern (raise_if_permanent) — use it from `_fetch_raw_data` to skip retries on permanent client errors (422/400/401/403/404). |
 | Changing data output format | `utils/data_types.py` — EnhancedDataSet/CombinedDataSet, `utils/schema_registry.py` — versioning + migration chain. **Any shape change requires bumping `CURRENT_SCHEMA_VERSION` + adding a `_migrate_X_to_Y` function + a SCHEMA_CHANGELOG entry**. The CI tripwire (`scripts/detect_schema_drift.py`) enforces this. |
-| Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (fail-mode since 2026-06-10). |
+| Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (fail-mode since 2026-06-10; auto-classifies data-volatile feeds from committed history since 2026-06-14). Actions are SHA-pinned + Dependabot-managed (`.github/dependabot.yml`). |
 | Working with encryption/publish | `utils/secure_data_handler.py`, `docs/CI_CD_SETUP.md` |
 | Debugging data quality issues | `utils/data_quality.py` — FMEA validation. Per-dataset config via `get_dataset_validation_config()`. Missing-dataset severity via `DATASET_MISSING_SEVERITY` dict (single source of truth). |
 | Adding a published dataset | `memory/project_published_dataset_checklist.md` — 8-touchpoint checklist across `data_fetcher.py`, `utils/data_quality.py`, and `.github/workflows/collect-data.yml`. **Missing one silently breaks publishing** (BLOCKER on c40a53b). Read before wiring a new collector into the publish set. |
@@ -28,7 +28,7 @@ Automated energy market data collection platform for electricity price predictio
 
 - All timestamps normalized to Europe/Amsterdam timezone
 - All published data encrypted with AES-CBC + HMAC-SHA256 (keys in secrets.ini / GitHub Secrets)
-- Never commit secrets.ini or API keys — use environment variables in CI
+- Never commit secrets.ini or API keys — use environment variables in CI (enforced by GitHub secret-scanning push protection since 2026-06-14; secrets.ini is gitignored)
 - Schema changes must be backward-compatible (see `utils/schema_registry.py` migration chain)
 - Collectors must inherit from BaseCollector — provides retry, circuit breaker, validation
 - Never claim tests pass without running them (`python -m pytest tests/ -x`)
@@ -67,7 +67,7 @@ utils/
                              # EXPECTED_DATA_TYPE (MITM defense), get_dataset_validation_config(),
                              # validate_load_cross_field_consistency (#30, ratio threshold 0.40),
                              # depth-walking _count_data_points / _extract_timestamp_keys (#32)
-  schema_registry.py         # Version detection + migration (v1.0 → v2.0 → v2.1 → v2.2 → v2.3).
+  schema_registry.py         # Version detection + migration (v1.0 → v2.0 → v2.1 → v2.2 → v2.3 → v2.4).
                              # stamp_metadata embeds the version's changelog slice (Layer B).
   shape_signature.py         # Structural fingerprint for schema-drift detection (#27)
   secure_data_handler.py     # AES-CBC + HMAC-SHA256 encryption
@@ -76,7 +76,11 @@ scripts/
   detect_schema_drift.py     # CI tripwire diffing data/_shape_signatures.json against HEAD (#27).
                              # Splits within-feed shape drift (fail) from catalog drift (warn)
                              # per the 2026-06-08 buurt-drift fix; CRITICAL_FEEDS escalates
-                             # removed-critical-feed catalog drift to ::error::.
+                             # removed-critical-feed catalog drift to ::error::. Data-volatile
+                             # feeds warn (not fail): membership = VOLATILE_SHAPE_FEEDS (declared
+                             # seed/override) UNION derive_volatile_feeds() (auto-derived from
+                             # committed shape history, so a recurring data-driven false positive
+                             # self-classifies without an allowlist edit). --volatility-window N.
   backfill_entsoe.py / archive_to_monthly.py / backfill_gas_storage.py
   sample_observed_ranges.py  # One-shot diagnostic: sample data/ files per feed, compute observed
                              # min/max per field. Used to derive #28's SOLAR_FIELD_RANGES /
@@ -86,11 +90,15 @@ scripts/
 data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + current copies +
                              # _shape_signatures.json sidecar (unencrypted, committed)
 docs/                        # GitHub Pages: encrypted JSON + project documentation
-.github/workflows/
-  collect-data.yml           # Daily 16:00 UTC collection + publish. Includes completeness
+.github/
+  dependabot.yml             # github-actions ecosystem, weekly grouped — auto-bumps the
+                             # SHA-pinned action versions so the pins don't rot (added 2026-06-14)
+  workflows/
+    collect-data.yml         # Daily 16:00 UTC collection + publish. Includes completeness
                              # tripwire (warn on missing files) + schema-drift tripwire
                              # (fail-mode since 2026-06-10; was --warn-only during bedding-in).
-  test.yml                   # PR/push test pipeline (path-filtered, Python 3.12 only)
+                             # Actions SHA-pinned (Node-24 since 2026-06-14).
+    test.yml                 # PR/push test pipeline (path-filtered, Python 3.12 only)
 ```
 
 ## Key Paths
@@ -102,13 +110,13 @@ docs/                        # GitHub Pages: encrypted JSON + project documentat
 | `collectors/_http_classifier.py` | Shared HTTP status classifier (`raise_if_permanent`) — adopt this when adding a new API collector |
 | `collectors/__init__.py` | All collector exports |
 | `utils/data_types.py` | EnhancedDataSet / CombinedDataSet classes (canonical envelope since v2.2) |
-| `utils/schema_registry.py` | Schema versioning + migration chain (currently v2.3). `stamp_metadata` embeds changelog slice. |
+| `utils/schema_registry.py` | Schema versioning + migration chain (currently v2.4). `stamp_metadata` embeds changelog slice. |
 | `utils/shape_signature.py` | Structural fingerprint for the schema-drift CI tripwire |
 | `utils/data_quality.py` | FMEA quality validation. `DATASET_MISSING_SEVERITY` registry + `get_dataset_validation_config()` lookup. |
 | `settings.ini` | Public config (location, encryption flag) |
 | `secrets.ini` | API keys (gitignored) |
 | `.github/workflows/collect-data.yml` | Daily CI/CD pipeline (collect → sidecar → completeness tripwire → schema-drift tripwire → quality gate → publish) |
-| `scripts/detect_schema_drift.py` | CI tripwire — diffs `data/_shape_signatures.json` against `git show HEAD:` |
+| `scripts/detect_schema_drift.py` | CI tripwire — diffs `data/_shape_signatures.json` against `git show HEAD:`. Data-volatile feeds (declared + history-derived) warn instead of failing. |
 | `scripts/backfill_entsoe.py` | Backfill missing ENTSO-E prices into historical files |
 | `scripts/archive_to_monthly.py` | Decrypt `data/` files into `05. Data/YYYY-MM/` monthly archive (idempotent) |
 | `tests/backtest_data_quality.py` | Run FMEA quality framework against all historical files |
