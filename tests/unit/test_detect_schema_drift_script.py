@@ -19,6 +19,16 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "detect_schema_drift.py"
 
+# Import the script as a module so its pure helpers (e.g.
+# _partition_within_feed_drift) and constants can be unit-tested directly,
+# alongside the subprocess CLI tests below. scripts/ is not a package, so
+# load it by file path.
+import importlib.util  # noqa: E402
+
+_spec = importlib.util.spec_from_file_location("detect_schema_drift", SCRIPT)
+detect_schema_drift = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(detect_schema_drift)
+
 
 def _git(args, cwd):
     """Run a git command in a temp repo, raising on failure."""
@@ -353,12 +363,18 @@ class TestEndToEnd:
         repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
         result = _run_script(repo)
         assert result.returncode == 0, result.stdout + result.stderr
-        assert "volatile feed(s)" in result.stdout
-        assert "air_quality_buurt.json" in result.stdout
-        assert "::warning::" in result.stdout
+        # Pin the exact volatile-warning message, not loose substrings, and
+        # confirm it is the ONLY warning emitted (no stray catalog warning).
+        assert (
+            "Within-feed shape drift on 1 volatile feed(s) "
+            "(air_quality_buurt.json)" in result.stdout
+        )
         assert "::error::" not in result.stdout
-        # No catalog drift here → must not emit a stray "::warning::None".
-        assert "None" not in result.stdout
+        assert result.stdout.count("::warning::") == 1
+        # Guard the specific "::warning::None" regression (catalog_msg is None
+        # on a volatile-only run). Narrower than a blanket "None" check, which
+        # the summary can legitimately print for a None hash/data_type.
+        assert "::warning::None" not in result.stdout
 
     def test_volatile_change_plus_enforced_change_still_fails(self, tmp_path):
         """A volatile feed changing does NOT mask a real shape break on a
@@ -387,6 +403,58 @@ class TestEndToEnd:
         assert "without a schema_version bump" in result.stdout
         # The volatile feed is still surfaced as a warning alongside the error.
         assert "volatile feed(s)" in result.stdout
+
+    def test_volatile_change_plus_catalog_drift_exits_0_with_both_warnings(self, tmp_path):
+        """Volatile within-feed churn co-occurring with catalog drift (a new
+        non-critical feed appears) must still exit 0, surfacing BOTH the
+        volatile warning and the catalog-drift warning — exercises the
+        catalog_msg path when there is no enforced change."""
+        prev = {
+            "computed_at": "2026-06-12T16:00:00+00:00",
+            "schema_version": "2.4",
+            "feeds": {
+                "gas_storage.json": _feed("abc"),
+                "air_quality_buurt.json": _feed("b343fc99"),
+            },
+        }
+        curr = {
+            "computed_at": "2026-06-13T16:00:00+00:00",
+            "schema_version": "2.4",  # NO bump
+            "feeds": {
+                "gas_storage.json": _feed("abc"),
+                "air_quality_buurt.json": _feed("c30a221a"),  # volatile churn
+                "nordic_hydro.json": _feed("new"),            # catalog: feed added
+            },
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "volatile feed(s)" in result.stdout
+        assert "Catalog drift" in result.stdout
+        assert "nordic_hydro.json" in result.stdout
+        assert "::error::" not in result.stdout
+        assert "::warning::None" not in result.stdout
+
+    def test_volatile_only_under_warn_only_exits_0(self, tmp_path):
+        """Volatile-only drift under --warn-only behaves identically to the
+        default mode: exit 0 with the volatile warning, no error, no stray
+        None."""
+        prev = {
+            "computed_at": "2026-06-12T16:00:00+00:00",
+            "schema_version": "2.4",
+            "feeds": {"air_quality_buurt.json": _feed("b343fc99")},
+        }
+        curr = {
+            "computed_at": "2026-06-13T16:00:00+00:00",
+            "schema_version": "2.4",
+            "feeds": {"air_quality_buurt.json": _feed("c30a221a")},
+        }
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo, "--warn-only")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "volatile feed(s)" in result.stdout
+        assert "::error::" not in result.stdout
+        assert "::warning::None" not in result.stdout
 
     def test_combined_feed_source_diff_surfaced(self, tmp_path):
         """A combined wrap that loses a per-collector source is visible
@@ -418,3 +486,50 @@ class TestEndToEnd:
         assert result.returncode == 1, result.stdout + result.stderr
         assert "epex" in result.stdout  # dropped source visible
         assert "- collectors:" in result.stdout
+
+
+class TestPartitionHelper:
+    """Direct unit tests for _partition_within_feed_drift and the set
+    invariants. These reach the multi-feed split that the subprocess CLI
+    tests can't exercise with only one production volatile feed."""
+
+    @staticmethod
+    def _c(name):
+        return {"feed": name, "previous_hash": "a", "current_hash": "b"}
+
+    def test_multiple_volatile_feeds_all_partition_to_volatile(self):
+        changed = [self._c("air_quality_buurt.json"), self._c("weather_buurt.json")]
+        volatile, enforced = detect_schema_drift._partition_within_feed_drift(
+            changed,
+            volatile_feeds=frozenset(
+                {"air_quality_buurt.json", "weather_buurt.json"}
+            ),
+        )
+        assert [c["feed"] for c in volatile] == [
+            "air_quality_buurt.json",
+            "weather_buurt.json",
+        ]
+        assert enforced == []
+
+    def test_mixed_volatile_and_enforced_split(self):
+        changed = [self._c("air_quality_buurt.json"), self._c("gas_storage.json")]
+        volatile, enforced = detect_schema_drift._partition_within_feed_drift(
+            changed, volatile_feeds=frozenset({"air_quality_buurt.json"})
+        )
+        assert [c["feed"] for c in volatile] == ["air_quality_buurt.json"]
+        assert [c["feed"] for c in enforced] == ["gas_storage.json"]
+
+    def test_default_volatile_set_matches_production(self):
+        """With no explicit set, the helper uses the curated production
+        VOLATILE_SHAPE_FEEDS (air_quality_buurt.json)."""
+        changed = [self._c("air_quality_buurt.json"), self._c("gas_storage.json")]
+        volatile, enforced = detect_schema_drift._partition_within_feed_drift(changed)
+        assert [c["feed"] for c in volatile] == ["air_quality_buurt.json"]
+        assert [c["feed"] for c in enforced] == ["gas_storage.json"]
+
+    def test_critical_and_volatile_sets_are_disjoint(self):
+        """A feed must never be both critical and volatile (contradictory
+        signals). The module also asserts this at import time."""
+        assert detect_schema_drift.CRITICAL_FEEDS.isdisjoint(
+            detect_schema_drift.VOLATILE_SHAPE_FEEDS
+        )

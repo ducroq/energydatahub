@@ -47,13 +47,15 @@ jobs:
         METEO_API_KEY: ${{ secrets.METEO_API_KEY }}
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       run: |
-        python -m pytest tests/ -v -m "not manual" --cov=utils --cov=energy_data_fetchers --cov=weather_data_fetchers --cov-report=term --cov-report=xml
+        python -m pytest tests/ -v -m "not manual" --cov=utils --cov=collectors --cov-report=term --cov-report=xml
 
     - name: Upload coverage to Codecov
       if: matrix.python-version == '3.12'
       uses: codecov/codecov-action@v6
       with:
-        files: ./coverage.xml  # renamed from `file` in codecov-action v5
+        # v5 skipped: it internally pinned github-script@v7 (node20); v6 uses
+        # github-script@v8 (node24). The `file` -> `files` rename landed in v5.
+        files: ./coverage.xml
         fail_ci_if_error: false
         verbose: true
 

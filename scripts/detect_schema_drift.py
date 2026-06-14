@@ -86,12 +86,30 @@ CRITICAL_FEEDS = frozenset({
 #   failure). Genuine schema changes here are unversioned-but-tolerated;
 #   acceptable since this feed is not an Augur primary input.
 #
+# ACCEPTED RISK: a feed listed here has its within-feed shape hash IGNORED
+# for fail purposes. A genuine *structural* schema change to that feed (e.g.
+# its `data` block changing from a per-location dict to a list, or a new
+# top-level envelope key) will warn but NEVER fail CI — the tripwire is
+# permanently blind to it. This is consciously accepted for secondary,
+# non-Augur feeds whose key set is data-driven. Do NOT add a feed that any
+# downstream consumer relies on for structural stability; for those, a real
+# shape change must go through a CURRENT_SCHEMA_VERSION bump + migration.
+#
 # Keep this curated and narrow — broadening it blinds the tripwire to real
 # shape breaks. Stable buurt feeds (solar_forecast_buurt, weather_forecast_
 # buurt) are keyed by fixed configured coords and must NOT be added.
 VOLATILE_SHAPE_FEEDS = frozenset({
     'air_quality_buurt.json',
 })
+
+# A feed cannot be both critical (its removal fails CI) and volatile (its
+# within-feed shape change is ignored) — those are contradictory signals.
+# Enforce the invariant at import time so a future edit to either set can't
+# silently violate it.
+assert CRITICAL_FEEDS.isdisjoint(VOLATILE_SHAPE_FEEDS), (
+    "A feed cannot be both critical and volatile — overlap: "
+    f"{sorted(CRITICAL_FEEDS & VOLATILE_SHAPE_FEEDS)}"
+)
 
 
 def _load_current_sidecar(path: Path) -> Dict[str, Any]:
@@ -161,7 +179,13 @@ def _emit_summary(report: Dict[str, Any], current_path: Path) -> None:
     if report["feeds_changed"]:
         print("  feeds CHANGED:")
         for c in report["feeds_changed"]:
-            print(f"    - {c['feed']}: {c['previous_hash']} -> {c['current_hash']}")
+            # Mark volatile feeds so the CHANGED list reconciles with the
+            # downstream ::error:: count (which excludes volatile feeds).
+            tag = " [volatile]" if c["feed"] in VOLATILE_SHAPE_FEEDS else ""
+            print(
+                f"    - {c['feed']}{tag}: "
+                f"{c['previous_hash']} -> {c['current_hash']}"
+            )
             if c.get("sources_diff"):
                 sd = c["sources_diff"]
                 if sd["added"]:
@@ -170,6 +194,21 @@ def _emit_summary(report: Dict[str, Any], current_path: Path) -> None:
                     print(f"        - collectors: {sd['removed']}")
     else:
         print("  feeds CHANGED:  (none)")
+
+
+def _partition_within_feed_drift(feeds_changed, volatile_feeds=VOLATILE_SHAPE_FEEDS):
+    """Split changed feeds into ``(volatile, enforced)`` by membership in
+    ``volatile_feeds``.
+
+    Volatile feeds (VOLATILE_SHAPE_FEEDS) warn but never fail; everything
+    else is an enforced shape diff that must be versioned. Extracted as a
+    pure helper so the split — including the multi-feed case — is unit-
+    testable with an arbitrary feed set, independent of the git/subprocess
+    harness in main().
+    """
+    volatile = [c for c in feeds_changed if c["feed"] in volatile_feeds]
+    enforced = [c for c in feeds_changed if c["feed"] not in volatile_feeds]
+    return volatile, enforced
 
 
 def main() -> int:
@@ -258,14 +297,9 @@ def main() -> int:
     # Partition within-feed drift: operationally-volatile feeds (data-driven
     # key churn) warn but never fail; everything else is an enforced shape
     # diff that must be versioned. See VOLATILE_SHAPE_FEEDS.
-    volatile_changed = [
-        c for c in report["feeds_changed"]
-        if c["feed"] in VOLATILE_SHAPE_FEEDS
-    ]
-    enforced_changed = [
-        c for c in report["feeds_changed"]
-        if c["feed"] not in VOLATILE_SHAPE_FEEDS
-    ]
+    volatile_changed, enforced_changed = _partition_within_feed_drift(
+        report["feeds_changed"]
+    )
 
     if volatile_changed:
         names = ", ".join(c["feed"] for c in volatile_changed)
