@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-06-13T19:06:16+00:00",
+  "computed_at": "2026-06-14T07:09:27+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -673,7 +673,7 @@
       ]
     },
     "air_quality_buurt.json": {
-      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
+      "shape_hash": "6b2b4b01d7ec97b990afb801a296e140",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -688,15 +688,6 @@
                     "AQI": "int",
                     "PM10": "float",
                     "PM25": "float"
-                  }
-                }
-              },
-              "Elsweide_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int"
                   }
                 }
               }
@@ -727,22 +718,6 @@
                 "_kind": "dict",
                 "keys": {
                   "Elderveld_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  },
-                  "Elsweide_Arnhem_NL": {
                     "_kind": "dict",
                     "keys": {
                       "city": "str",
@@ -1919,7 +1894,7 @@
       "sources": null
     },
     "cross_border_flows.json": {
-      "shape_hash": "ef0cf1145d5f3200a47db6865cf8f6a7",
+      "shape_hash": "53e0c8c2d947351bb4f868646b0dc191",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -1942,7 +1917,6 @@
                     "NL\u2192BE": "float",
                     "NL\u2192DE": "float",
                     "NL\u2192DK": "float",
-                    "NL\u2192GB": "float",
                     "NL\u2192NO": "float",
                     "NO\u2192NL": "float",
                     "total_net_position": "float"
@@ -2341,7 +2315,7 @@
       "sources": null
     },
     "calendar_features.json": {
-      "shape_hash": "032b4980f3430acfe13fa2684c9c7149",
+      "shape_hash": "0ed9b8506dc94c2ab28494f16a233862",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -2408,7 +2382,15 @@
               "start_time": "str",
               "upcoming_holidays": {
                 "_kind": "list",
-                "value_shape": null
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "country": "str",
+                    "date": "str",
+                    "day_of_week": "str",
+                    "name": "str"
+                  }
+                }
               }
             }
           }
