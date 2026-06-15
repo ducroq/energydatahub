@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-14T17:14:57.956510+00:00",
-  "overall_status": "error",
-  "total_issues": 4,
+  "timestamp": "2026-06-15T19:41:12.250787+00:00",
+  "overall_status": "warning",
+  "total_issues": 2,
   "datasets_collected": 24,
   "datasets_missing": [],
   "dataset_reports": [
@@ -176,15 +176,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "41 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "19 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 41,
+            "count": 19,
             "examples": [
-              "NL/2026-06-14T08:15:00+02:00: forecast_error=2844.6, load_actual=6344.886, ratio=0.45",
-              "NL/2026-06-14T08:30:00+02:00: forecast_error=3069.9, load_actual=6318.386, ratio=0.49",
-              "NL/2026-06-14T08:45:00+02:00: forecast_error=3241.7, load_actual=6356.426, ratio=0.51",
-              "NL/2026-06-14T09:00:00+02:00: forecast_error=3535.2, load_actual=6317.466, ratio=0.56",
-              "NL/2026-06-14T09:15:00+02:00: forecast_error=4007.1, load_actual=6013.616, ratio=0.67"
+              "NL/2026-06-15T14:30:00+02:00: forecast_error=2409.1, load_actual=5729.446, ratio=0.42",
+              "NL/2026-06-15T14:45:00+02:00: forecast_error=3017.5, load_actual=5314.846, ratio=0.57",
+              "NL/2026-06-15T15:00:00+02:00: forecast_error=3329.5, load_actual=5117.736, ratio=0.65",
+              "NL/2026-06-15T15:15:00+02:00: forecast_error=3682.9, load_actual=4873.326, ratio=0.76",
+              "NL/2026-06-15T15:30:00+02:00: forecast_error=3747.7, load_actual=4675.136, ratio=0.80"
             ],
             "threshold": 0.4
           }
@@ -196,7 +196,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 84,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -226,7 +226,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 510,
+      "data_points": 540,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -235,43 +235,21 @@
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "error",
-      "data_points": 26,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 65.2h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-06-12T00:00:00+00:00",
-            "age_hours": 65.2,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 27,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "error",
-      "data_points": 88,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 65.2h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-06-12T00:00:00+00:00",
-            "age_hours": 65.2,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 89,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "gas_storage",

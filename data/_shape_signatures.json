@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-06-14T17:14:57+00:00",
+  "computed_at": "2026-06-15T19:41:12+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -1919,7 +1919,7 @@
       "sources": null
     },
     "cross_border_flows.json": {
-      "shape_hash": "53e0c8c2d947351bb4f868646b0dc191",
+      "shape_hash": "371864f28ce78767edeb5fd0005530b4",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -1934,7 +1934,6 @@
                     "BE\u2192NL": "float",
                     "DE\u2192NL": "float",
                     "DK\u2192NL": "float",
-                    "GB\u2192NL": "float",
                     "NL_BE_net": "float",
                     "NL_DE_net": "float",
                     "NL_DK_net": "float",
@@ -1942,7 +1941,7 @@
                     "NL\u2192BE": "float",
                     "NL\u2192DE": "float",
                     "NL\u2192DK": "float",
-                    "NL\u2192NO": "float",
+                    "NL\u2192GB": "float",
                     "NO\u2192NL": "float",
                     "total_net_position": "float"
                   }

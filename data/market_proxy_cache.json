@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-06-14T19:14:15.557011+02:00",
+  "cached_at": "2026-06-15T21:40:37.365760+02:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -19,25 +19,25 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 46.77,
-      "date": "2026-06-12",
-      "open": 47.0,
-      "high": 48.51,
-      "low": 46.5,
-      "volume": 109,
-      "prev_close": 49.69,
-      "change_pct": -5.87,
+      "price": 41.98,
+      "date": "2026-06-15",
+      "open": 44.39,
+      "high": 44.45,
+      "low": 41.98,
+      "volume": 152,
+      "prev_close": 46.77,
+      "change_pct": -10.25,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
       "name": "Dutch TTF Natural Gas Futures",
       "note": "Primary European natural gas price benchmark, traded on ICE",
       "currency": "EUR",
-      "price_lag1": 49.69,
-      "price_lag2": 49.99,
-      "price_lag7": 48.86,
-      "mean_7d": 48.9,
-      "volatility_7d": 1.03,
+      "price_lag1": 46.77,
+      "price_lag2": 49.69,
+      "price_lag7": 48.75,
+      "mean_7d": 47.93,
+      "volatility_7d": 2.64,
       "trend_7d": "down",
       "history": {
         "2026-05-11": 46.23,
@@ -63,7 +63,8 @@
         "2026-06-09": 48.74,
         "2026-06-10": 49.99,
         "2026-06-11": 49.69,
-        "2026-06-12": 46.77
+        "2026-06-12": 46.77,
+        "2026-06-15": 41.98
       }
     },
     "gas": {
@@ -84,5 +85,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "661d2d012180bfe8ea9166aaf58bb9f19d5d8b332daa0fe16238b5f4005c8c35"
+  "signature": "4ac73524505c053e5f48a7767138f85f822b74c858046b1b860b22f5f7cc37ee"
 }
