@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-06-17T18:12:03+00:00",
+  "computed_at": "2026-06-18T18:24:08+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -896,85 +896,6 @@
         }
       },
       "data_type": "demand_weather",
-      "sources": null
-    },
-    "grid_imbalance.json": {
-      "shape_hash": "200f27c65561b1f5fb7c3c47415ef5e5",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "balance_delta": {
-                "_kind": "timestamp_map",
-                "value_shape": "float"
-              },
-              "direction": {
-                "_kind": "timestamp_map",
-                "value_shape": "str"
-              },
-              "imbalance_price": {
-                "_kind": "timestamp_map",
-                "value_shape": "float"
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_version": "str",
-              "balance_delta_status": "str",
-              "collection_timestamp": "str",
-              "collector": "str",
-              "collector_quality_issues": {
-                "_kind": "list",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "check_name": "str",
-                    "details": {
-                      "_kind": "dict",
-                      "keys": {
-                        "reason": "str"
-                      }
-                    },
-                    "message": "str",
-                    "severity": "str"
-                  }
-                }
-              },
-              "country": "str",
-              "country_code": "str",
-              "data_fields": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "data_points": "int",
-              "data_type": "str",
-              "end_time": "str",
-              "market": "str",
-              "resolution": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "grid_imbalance",
       "sources": null
     },
     "ned_production.json": {
@@ -2330,7 +2251,7 @@
       "sources": null
     },
     "market_proxies.json": {
-      "shape_hash": "e5231b062e10a6aba4721e9f781c4133",
+      "shape_hash": "5cb5451783cc5c3e79ea91bc882a081a",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -2345,14 +2266,25 @@
                   "date": "str",
                   "description": "str",
                   "high": "float",
+                  "history": {
+                    "_kind": "timestamp_map",
+                    "value_shape": "float"
+                  },
                   "low": "float",
+                  "mean_30d": "float",
+                  "mean_7d": "float",
                   "name": "str",
                   "open": "float",
                   "prev_close": "float",
                   "price": "float",
+                  "price_lag1": "float",
+                  "price_lag2": "float",
+                  "price_lag7": "float",
                   "source": "str",
                   "ticker": "str",
+                  "trend_7d": "str",
                   "units": "str",
+                  "volatility_7d": "float",
                   "volume": "int"
                 }
               },
