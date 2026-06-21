@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-06-19T17:51:47+00:00",
+  "computed_at": "2026-06-21T17:23:39+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -673,7 +673,7 @@
       ]
     },
     "air_quality_buurt.json": {
-      "shape_hash": "6b2b4b01d7ec97b990afb801a296e140",
+      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -688,6 +688,15 @@
                     "AQI": "int",
                     "PM10": "float",
                     "PM25": "float"
+                  }
+                }
+              },
+              "Elsweide_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "AQI": "int"
                   }
                 }
               }
@@ -718,6 +727,22 @@
                 "_kind": "dict",
                 "keys": {
                   "Elderveld_Arnhem_NL": {
+                    "_kind": "dict",
+                    "keys": {
+                      "city": "str",
+                      "components": {
+                        "_kind": "list",
+                        "value_shape": "str"
+                      },
+                      "requested_latitude": "float",
+                      "requested_longitude": "float",
+                      "station": "str",
+                      "station_latitude": "float",
+                      "station_location": "str",
+                      "station_longitude": "float"
+                    }
+                  },
+                  "Elsweide_Arnhem_NL": {
                     "_kind": "dict",
                     "keys": {
                       "city": "str",

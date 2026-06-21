@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-19T17:51:47.550167+00:00",
-  "overall_status": "warning",
-  "total_issues": 2,
+  "timestamp": "2026-06-21T17:23:39.927278+00:00",
+  "overall_status": "error",
+  "total_issues": 4,
   "datasets_collected": 24,
   "datasets_missing": [],
   "dataset_reports": [
@@ -90,7 +90,7 @@
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -176,15 +176,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "34 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "35 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 34,
+            "count": 35,
             "examples": [
-              "NL/2026-06-19T09:15:00+02:00: forecast_error=3320.6, load_actual=7133.966, ratio=0.47",
-              "NL/2026-06-19T09:30:00+02:00: forecast_error=3705.7, load_actual=6613.966, ratio=0.56",
-              "NL/2026-06-19T09:45:00+02:00: forecast_error=4181.3, load_actual=5969.146, ratio=0.70",
-              "NL/2026-06-19T10:00:00+02:00: forecast_error=4349.0, load_actual=5549.606, ratio=0.78",
-              "NL/2026-06-19T10:15:00+02:00: forecast_error=4756.5, load_actual=5027.306, ratio=0.95"
+              "NL/2026-06-21T09:45:00+02:00: forecast_error=2746.8, load_actual=5413.316, ratio=0.51",
+              "NL/2026-06-21T10:00:00+02:00: forecast_error=3205.2, load_actual=4988.676, ratio=0.64",
+              "NL/2026-06-21T10:15:00+02:00: forecast_error=3200.3, load_actual=4969.916, ratio=0.64",
+              "NL/2026-06-21T10:30:00+02:00: forecast_error=3796.9, load_actual=4592.311, ratio=0.83",
+              "NL/2026-06-21T10:45:00+02:00: forecast_error=4096.9, load_actual=4483.348, ratio=0.91"
             ],
             "threshold": 0.4
           }
@@ -226,7 +226,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 516,
+      "data_points": 513,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -235,28 +235,50 @@
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "info",
-      "data_points": 28,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
+      "status": "error",
+      "data_points": 27,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "error",
+          "message": "Newest data is 65.4h old (threshold: 48h)",
+          "details": {
+            "newest_timestamp": "2026-06-19T00:00:00+00:00",
+            "age_hours": 65.4,
+            "threshold_hours": 48
+          }
+        }
+      ]
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "info",
+      "status": "error",
       "data_points": 115,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "error",
+          "message": "Newest data is 65.4h old (threshold: 48h)",
+          "details": {
+            "newest_timestamp": "2026-06-19T00:00:00+00:00",
+            "age_hours": 65.4,
+            "threshold_hours": 48
+          }
+        }
+      ]
     },
     {
       "dataset_name": "gas_storage",
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 8,
+      "data_points": 7,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
