@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-06-24T19:49:25.724329+02:00",
+  "cached_at": "2026-06-25T20:05:33.033794+02:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -19,14 +19,14 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 41.15,
+      "price": 40.88,
       "date": "2026-06-24",
-      "open": 41.69,
-      "high": 41.7,
-      "low": 41.15,
-      "volume": 27,
+      "open": 41.53,
+      "high": 41.53,
+      "low": 40.88,
+      "volume": 89,
       "prev_close": 42.01,
-      "change_pct": -2.06,
+      "change_pct": -2.71,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
@@ -36,11 +36,10 @@
       "price_lag1": 42.01,
       "price_lag2": 41.89,
       "price_lag7": 46.77,
-      "mean_7d": 41.68,
-      "volatility_7d": 0.6,
+      "mean_7d": 41.64,
+      "volatility_7d": 0.64,
       "trend_7d": "down",
       "history": {
-        "2026-05-19": 51.82,
         "2026-05-20": 49.42,
         "2026-05-21": 49.41,
         "2026-05-22": 48.68,
@@ -64,20 +63,20 @@
         "2026-06-18": 40.52,
         "2026-06-22": 41.89,
         "2026-06-23": 42.01,
-        "2026-06-24": 41.15
+        "2026-06-24": 40.88
       }
     },
     "gas": {
       "ticker": "UNG",
-      "price": 11.5,
-      "date": "2026-06-23",
-      "open": 11.58,
-      "high": 11.66,
-      "low": 11.41,
-      "volume": 5614848,
-      "prev_close": 11.77,
-      "change": -0.27,
-      "change_pct": -2.29,
+      "price": 11.73,
+      "date": "2026-06-24",
+      "open": 11.52,
+      "high": 11.76,
+      "low": 11.48,
+      "volume": 4699866,
+      "prev_close": 11.5,
+      "change": 0.23,
+      "change_pct": 2.0,
       "source": "alpha_vantage",
       "description": "Natural Gas proxy (US benchmark, correlates with EU)",
       "units": "USD/share",
@@ -85,5 +84,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "da25a9221564307293c9c05cbdd15180d492d8a20ae3963b0dfb733d7e06b750"
+  "signature": "06b594f0d05baa7792fdbc81581fc05922f2a6b1a0273399b595807c40f7eecb"
 }
