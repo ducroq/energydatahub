@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-26T17:43:12.724201+00:00",
+  "timestamp": "2026-06-27T17:03:57.007811+00:00",
   "overall_status": "warning",
   "total_issues": 1,
   "datasets_collected": 24,
@@ -179,7 +179,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 72,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -209,7 +209,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 516,
+      "data_points": 507,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
