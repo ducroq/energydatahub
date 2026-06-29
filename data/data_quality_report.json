@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-28T17:03:27.433636+00:00",
-  "overall_status": "error",
-  "total_issues": 5,
+  "timestamp": "2026-06-29T18:06:07.957713+00:00",
+  "overall_status": "warning",
+  "total_issues": 2,
   "datasets_collected": 24,
   "datasets_missing": [],
   "dataset_reports": [
@@ -10,7 +10,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -20,7 +20,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -69,24 +69,11 @@
       "dataset_name": "weather_forecast_buurt",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
+      "status": "info",
       "data_points": 768,
-      "checks_passed": 4,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "warning",
-          "message": "2 weather field values outside their specific ranges",
-          "details": {
-            "count": 2,
-            "examples": [
-              "cape=-2.5 (range 0.0-6000.0)",
-              "cape=-2.5 (range 0.0-6000.0)"
-            ]
-          }
-        }
-      ]
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "solar_forecast_buurt",
@@ -189,15 +176,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "29 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "35 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 29,
+            "count": 35,
             "examples": [
-              "NL/2026-06-28T09:00:00+02:00: forecast_error=2713.9, load_actual=5890.596, ratio=0.46",
-              "NL/2026-06-28T09:15:00+02:00: forecast_error=3048.4, load_actual=5404.946, ratio=0.56",
-              "NL/2026-06-28T09:30:00+02:00: forecast_error=3246.4, load_actual=5007.296, ratio=0.65",
-              "NL/2026-06-28T09:45:00+02:00: forecast_error=3326.5, load_actual=4818.626, ratio=0.69",
-              "NL/2026-06-28T10:00:00+02:00: forecast_error=3682.8, load_actual=4332.7, ratio=0.85"
+              "NL/2026-06-29T09:30:00+02:00: forecast_error=2691.4, load_actual=6668.426, ratio=0.40",
+              "NL/2026-06-29T09:45:00+02:00: forecast_error=3039.7, load_actual=6094.566, ratio=0.50",
+              "NL/2026-06-29T10:00:00+02:00: forecast_error=3350.2, load_actual=5606.806, ratio=0.60",
+              "NL/2026-06-29T10:15:00+02:00: forecast_error=3875.4, load_actual=4815.706, ratio=0.80",
+              "NL/2026-06-29T10:30:00+02:00: forecast_error=4251.9, load_actual=4377.537, ratio=0.97"
             ],
             "threshold": 0.4
           }
@@ -209,7 +196,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 72,
+      "data_points": 76,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -239,7 +226,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 507,
+      "data_points": 519,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -248,43 +235,21 @@
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "error",
+      "status": "info",
       "data_points": 26,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 65.1h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-06-26T00:00:00+00:00",
-            "age_hours": 65.1,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "error",
-      "data_points": 120,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 65.1h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-06-26T00:00:00+00:00",
-            "age_hours": 65.1,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 121,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "gas_storage",
