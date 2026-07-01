@@ -397,8 +397,12 @@ async def main() -> None:
         # yields ~10 fresh weekly points per zone after lag.
         hydro_start = today - timedelta(weeks=12)
 
-        # Initialize collectors with new architecture
+        # Initialize collectors with new architecture.
+        # Separate ENTSO-E instances for NL and DE_LU: they run concurrently
+        # and each carries its own `last_run_no_upstream_data` flag, which we
+        # read afterwards to tell an upstream gap from a collector failure.
         entsoe_collector = EntsoeCollector(api_key=entsoe_api_key)
+        entsoe_collector_de = EntsoeCollector(api_key=entsoe_api_key)
         energy_zero_collector = EnergyZeroCollector()
         epex_collector = EpexCollector()
         elspot_collector = ElspotCollector()
@@ -569,7 +573,7 @@ async def main() -> None:
         # after gather, so adding/removing a task requires no index accounting.
         task_specs: list[tuple[str, Awaitable]] = [
             ('entsoe_nl', entsoe_collector.collect(today, tomorrow, country_code=country_code)),
-            ('entsoe_de', entsoe_collector.collect(today, tomorrow, country_code='DE_LU')),  # German prices (coupled market)
+            ('entsoe_de', entsoe_collector_de.collect(today, tomorrow, country_code='DE_LU')),  # German prices (coupled market)
             ('energy_zero', energy_zero_collector.collect(today, tomorrow)),
             ('epex', epex_collector.collect(today, tomorrow)),
             ('strategic_weather', openmeteo_strategic_collector.collect(today, ten_days_ahead)),  # 10-day, strategic CWE+DK
@@ -644,11 +648,15 @@ async def main() -> None:
         # --- Retry failed critical collectors ---
         # ENTSO-E price data is critical for Augur's forecast. If the API was
         # temporarily unavailable (503), a delayed retry often succeeds.
+        # An *upstream gap* (UpstreamNoDataError → last_run_no_upstream_data)
+        # is different: the source is healthy but simply has no data for the
+        # window, so retrying the same window won't help. We skip retry rounds
+        # for those and let the run continue with the fallback price sources.
         for retry_round in range(1, MAX_RETRY_ROUNDS + 1):
             failed_critical = []
-            if entsoe_data is None:
+            if entsoe_data is None and not entsoe_collector.last_run_no_upstream_data:
                 failed_critical.append('entsoe_nl')
-            if entsoe_de_data is None:
+            if entsoe_de_data is None and not entsoe_collector_de.last_run_no_upstream_data:
                 failed_critical.append('entsoe_de')
 
             if not failed_critical:
@@ -661,12 +669,12 @@ async def main() -> None:
             await asyncio.sleep(RETRY_DELAY_SECONDS)
 
             retry_tasks = {}
-            if entsoe_data is None:
+            if 'entsoe_nl' in failed_critical:
                 retry_tasks['entsoe_nl'] = entsoe_collector.collect(
                     today, tomorrow, country_code=country_code
                 )
-            if entsoe_de_data is None:
-                retry_tasks['entsoe_de'] = entsoe_collector.collect(
+            if 'entsoe_de' in failed_critical:
+                retry_tasks['entsoe_de'] = entsoe_collector_de.collect(
                     today, tomorrow, country_code='DE_LU'
                 )
 
@@ -1041,7 +1049,21 @@ async def main() -> None:
             'gas_storage': gie_storage_data,
             'gas_flows': entsog_flows_data,
         }
-        quality_report = validate_pipeline(quality_datasets)
+        # Datasets absent because ENTSO-E published no data (upstream gap),
+        # not because the collector failed. These are downgraded from
+        # 'critical' to 'warning' in the quality report and do not fail the
+        # run — the fallback day-ahead price sources (EnergyZero/EPEX/Elspot)
+        # cover NL prices, and every other feed still publishes.
+        # (2026-06-30 ENTSO-E NL+DE day-ahead outage.)
+        upstream_empty_datasets = set()
+        if entsoe_data is None and entsoe_collector.last_run_no_upstream_data:
+            upstream_empty_datasets.add('entsoe')
+        if entsoe_de_data is None and entsoe_collector_de.last_run_no_upstream_data:
+            upstream_empty_datasets.add('entsoe_de')
+
+        quality_report = validate_pipeline(
+            quality_datasets, upstream_empty=upstream_empty_datasets
+        )
         quality_report_path = os.path.join(output_path, "data_quality_report.json")
         with open(quality_report_path, 'w') as f:
             json.dump(quality_report.to_dict(), f, indent=2)
@@ -1050,14 +1072,28 @@ async def main() -> None:
                      f"saved to {quality_report_path}")
 
         # --- Final validation: fail the workflow if critical data is still missing ---
+        # Distinguish a genuine collector/API failure (fail the run) from an
+        # upstream data gap (source healthy, no data yet — publish the healthy
+        # feeds and let Augur fall back to the other price sources).
         missing_critical = [
             name for name in CRITICAL_DATASETS
             if quality_datasets.get(name) is None
         ]
-        if missing_critical:
+        missing_upstream = [n for n in missing_critical if n in upstream_empty_datasets]
+        missing_failed = [n for n in missing_critical if n not in upstream_empty_datasets]
+
+        if missing_upstream:
+            logging.warning(
+                f"Critical dataset(s) {missing_upstream} absent because ENTSO-E "
+                f"published no data for the window (upstream gap, not a failure). "
+                f"Publishing available feeds; NL day-ahead falls back to "
+                f"EnergyZero/EPEX/Elspot where present."
+            )
+
+        if missing_failed:
             logging.error(
                 f"CRITICAL DATA MISSING after {MAX_RETRY_ROUNDS} retry rounds: "
-                f"{missing_critical}. Downstream forecasts (Augur) will be degraded."
+                f"{missing_failed}. Downstream forecasts (Augur) will be degraded."
             )
             raise SystemExit(1)
 

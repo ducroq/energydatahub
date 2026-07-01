@@ -30,9 +30,12 @@ from datetime import datetime
 from typing import Any, Dict
 import pandas as pd
 from entsoe import EntsoePandasClient
+from entsoe.exceptions import NoMatchingDataError
 from functools import partial
 
-from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
+from collectors.base import (
+    BaseCollector, RetryConfig, CircuitBreakerConfig, UpstreamNoDataError
+)
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 
@@ -105,11 +108,28 @@ class EntsoeCollector(BaseCollector):
             end=end_timestamp
         )
 
-        # Execute in thread pool to not block event loop
-        data = await loop.run_in_executor(None, query_func)
+        # Execute in thread pool to not block event loop.
+        # entsoe-py raises NoMatchingDataError when the Transparency Platform
+        # responds successfully but has no day-ahead prices for the window
+        # (a real upstream gap — happens when ENTSO-E hasn't published yet or
+        # is having a publication incident). That is NOT a collector/API
+        # failure, so translate it into UpstreamNoDataError: fast-fail (no
+        # retry-burn), and let the orchestrator keep publishing healthy feeds
+        # + fall back to the other day-ahead price sources (EnergyZero/EPEX/
+        # Elspot). Root-caused during the 2026-06-30 NL+DE day-ahead outage (#38).
+        try:
+            data = await loop.run_in_executor(None, query_func)
+        except NoMatchingDataError as e:
+            raise UpstreamNoDataError(
+                f"ENTSO-E published no day-ahead prices for {country_code} "
+                f"in window {start_timestamp} .. {end_timestamp} (UTC)"
+            ) from e
 
         if data is None or data.empty:
-            raise ValueError("No data returned from ENTSO-E API")
+            raise UpstreamNoDataError(
+                f"ENTSO-E returned an empty day-ahead price series for "
+                f"{country_code} in window {start_timestamp} .. {end_timestamp} (UTC)"
+            )
 
         return data
 
