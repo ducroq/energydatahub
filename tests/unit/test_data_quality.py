@@ -32,6 +32,9 @@ from utils.data_quality import (
     validate_pipeline,
     get_dataset_validation_config,
     EXPECTED_DATA_TYPE,
+    update_upstream_empty_streaks,
+    escalated_upstream_feeds,
+    UPSTREAM_EMPTY_ESCALATION_RUNS,
 )
 from utils.data_types import EnhancedDataSet
 
@@ -1218,6 +1221,58 @@ class TestUpstreamEmptyDowngrade:
         d = validate_pipeline(datasets, upstream_empty={'entsoe'}).to_dict()
         assert 'datasets_upstream_empty' in d
         assert 'entsoe' in d['datasets_upstream_empty']
+
+    def test_nl_and_de_both_upstream_empty_is_warning(self):
+        """The actual 2026-06-30 scenario: NL+DE both upstream-empty while the
+        fallback price sources are present → warning, run still publishes."""
+        datasets = {
+            'entsoe': None,
+            'entsoe_de': None,
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'epex': _make_dataset(_make_price_data(24)),
+        }
+        report = validate_pipeline(
+            datasets, upstream_empty={'entsoe', 'entsoe_de'}
+        )
+        assert 'entsoe' in report.upstream_empty_datasets
+        assert 'entsoe_de' in report.upstream_empty_datasets
+        assert report.status == 'warning'
+
+
+class TestUpstreamEmptyStreakEscalation:
+    """#38 review follow-up — a sustained upstream gap escalates from warning
+    to a hard failure so it doesn't degrade silently forever."""
+
+    FEEDS = {'entsoe', 'entsoe_de'}
+
+    def test_streak_increments_when_empty(self):
+        s = update_upstream_empty_streaks({'entsoe': 1}, {'entsoe'}, self.FEEDS)
+        assert s['entsoe'] == 2
+        assert s['entsoe_de'] == 0  # not empty this run → reset
+
+    def test_streak_resets_when_not_empty(self):
+        s = update_upstream_empty_streaks({'entsoe': 2}, set(), self.FEEDS)
+        assert s['entsoe'] == 0
+
+    def test_streak_starts_from_zero_when_absent(self):
+        s = update_upstream_empty_streaks({}, {'entsoe_de'}, self.FEEDS)
+        assert s['entsoe_de'] == 1
+
+    def test_escalation_fires_at_threshold(self):
+        streaks = {'entsoe': UPSTREAM_EMPTY_ESCALATION_RUNS, 'entsoe_de': 1}
+        assert escalated_upstream_feeds(streaks) == {'entsoe'}
+
+    def test_no_escalation_below_threshold(self):
+        streaks = {'entsoe': UPSTREAM_EMPTY_ESCALATION_RUNS - 1}
+        assert escalated_upstream_feeds(streaks) == set()
+
+    def test_escalated_feed_report_stays_critical(self):
+        """When a feed has escalated, the orchestrator withholds it from the
+        report's upstream_empty set → it keeps critical severity (not warning)."""
+        datasets = {'entsoe': None, 'energy_zero': _make_dataset(_make_price_data(24))}
+        # Simulate the orchestrator excluding an escalated feed:
+        report = validate_pipeline(datasets, upstream_empty=set())
+        assert report.status == 'critical'
 
 
 class TestDatasetMissingSeverityRegistry:

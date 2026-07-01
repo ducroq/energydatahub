@@ -198,6 +198,21 @@ class EntsoeCollector(BaseCollector):
         except Exception as e:
             self.logger.warning(f"Error parsing ENTSO-E response: {e}")
 
+        # Fetch returned rows but none fell inside the requested window after
+        # parsing → a window/timezone bug in our own code, NOT an upstream gap.
+        # Surface it as a genuine failure (retried; escalates to a hard fail if
+        # persistent) instead of silently publishing an empty price series —
+        # which would evade both the retry loop and the missing-critical gate
+        # (#38, review follow-up). A real upstream gap never reaches here:
+        # query_day_ahead_prices raises NoMatchingDataError first, translated
+        # to UpstreamNoDataError in _fetch_raw_data.
+        if not data and len(raw_data) > 0:
+            raise ValueError(
+                f"ENTSO-E returned {len(raw_data)} rows but none fell within "
+                f"[{start_time}, {end_time}) after parsing — likely a window/"
+                f"timezone bug, not an upstream gap."
+            )
+
         self.logger.debug(f"Parsed {len(data)} data points from ENTSO-E response")
         return data
 

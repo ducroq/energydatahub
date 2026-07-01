@@ -129,3 +129,27 @@ class TestEntsoeUpstreamGap:
 
         assert result is not None
         assert collector.last_run_no_upstream_data is False
+
+
+class TestEntsoeParseGuard:
+    """#38 review follow-up — if the API returns rows but none fall inside the
+    requested window after parsing (a window/timezone bug), that must surface
+    as a genuine failure, NOT a silently-published empty price series and NOT
+    an upstream gap."""
+
+    def test_all_rows_out_of_window_raises(self):
+        import pandas as pd
+        collector = EntsoeCollector(api_key="test")
+        # Series entirely BEFORE the requested window → parse yields zero points.
+        idx = pd.date_range('2026-06-01T00:00', periods=24, freq='h', tz=AMS)
+        series = pd.Series([50.0] * 24, index=idx)
+        with pytest.raises(ValueError, match="none fell within"):
+            collector._parse_response(series, START, END)
+
+    def test_in_window_rows_parse_normally(self):
+        import pandas as pd
+        collector = EntsoeCollector(api_key="test")
+        idx = pd.date_range('2026-06-30T00:00', periods=24, freq='h', tz=AMS)
+        series = pd.Series([50.0] * 24, index=idx)
+        parsed = collector._parse_response(series, START, END)
+        assert len(parsed) == 24

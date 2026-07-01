@@ -431,6 +431,44 @@ WARNING_IF_MISSING_DATASETS = [
 ]
 
 
+# Consecutive-upstream-empty escalation (#38 review follow-up). An upstream
+# data gap is downgraded critical->warning so the pipeline keeps publishing —
+# but a *sustained* gap must not degrade silently forever. After this many
+# consecutive runs with no upstream data for a feed, it escalates back to a
+# hard failure (loud CI alert) instead of a warning.
+UPSTREAM_EMPTY_ESCALATION_RUNS = 3
+
+
+def update_upstream_empty_streaks(
+    prior_streaks: Dict[str, int],
+    upstream_empty_now: set,
+    tracked_feeds,
+) -> Dict[str, int]:
+    """Advance the consecutive-upstream-empty counters for a run.
+
+    For each tracked feed: increment its streak if it was upstream-empty this
+    run, otherwise reset to 0. Pure — the caller handles persistence. Feeds
+    that genuinely failed (vs upstream-empty) reset to 0; that case already
+    fails the run through the normal missing-critical path.
+    """
+    new_streaks: Dict[str, int] = {}
+    for feed in tracked_feeds:
+        if feed in upstream_empty_now:
+            new_streaks[feed] = int(prior_streaks.get(feed, 0)) + 1
+        else:
+            new_streaks[feed] = 0
+    return new_streaks
+
+
+def escalated_upstream_feeds(
+    streaks: Dict[str, int],
+    threshold: int = UPSTREAM_EMPTY_ESCALATION_RUNS,
+) -> set:
+    """Feeds whose upstream-empty streak has reached the escalation threshold —
+    a sustained gap that should fail the run loudly rather than warn."""
+    return {feed for feed, count in streaks.items() if count >= threshold}
+
+
 def _is_timestamp_str(s: Any) -> bool:
     """True if `s` is a string that parses as ISO date or datetime."""
     try:

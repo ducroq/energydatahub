@@ -71,7 +71,12 @@ import base64
 import platform
 
 from utils.helpers import ensure_output_directory, load_settings, load_secrets, save_data_file, load_data_file
-from utils.data_quality import validate_pipeline
+from utils.data_quality import (
+    validate_pipeline,
+    update_upstream_empty_streaks,
+    escalated_upstream_feeds,
+    UPSTREAM_EMPTY_ESCALATION_RUNS,
+)
 from utils.data_types import CombinedDataSet, EnhancedDataSet
 from utils.timezone_helpers import get_timezone_and_country
 from utils.secure_data_handler import SecureDataHandler
@@ -116,7 +121,20 @@ output_path = os.path.join(os.getcwd(), OUTPUT_FOLDER_NAME)
 RETRY_DELAY_SECONDS = 300  # 5 minutes between retry rounds
 MAX_RETRY_ROUNDS = 3       # Up to 3 retry rounds for failed critical collectors
 
-# Critical datasets — if these are missing, Augur's forecast breaks
+# Critical datasets — if these are still missing (as a genuine failure, not an
+# upstream gap) after the retry rounds, fail the run (SystemExit(1)).
+#
+# NOTE — this set is INTENTIONALLY distinct from the quality-report's
+# `'critical'` severity in utils.data_quality.DATASET_MISSING_SEVERITY
+# (= {entsoe, energy_zero}, a "stable contract" locked by a test):
+#   - CRITICAL_DATASETS = the run-failing / retry set here (NL + DE day-ahead:
+#     the ENTSO-E feeds we actively retry and hard-gate on).
+#   - DATASET_MISSING_SEVERITY 'critical' = the set whose absence makes the CI
+#     quality gate block publish (NL ENTSO-E + EnergyZero fallback).
+# They overlap only on 'entsoe'. entsoe_de hard-fails the run but is 'info' in
+# the quality report by design (German day-ahead is a coupled/secondary signal,
+# not a CI-publish blocker); energy_zero blocks the CI gate but has no retry
+# machinery here. Keep the two lists deliberately separate — do not "unify".
 CRITICAL_DATASETS = {'entsoe', 'entsoe_de'}
 
 
@@ -1061,8 +1079,39 @@ async def main() -> None:
         if entsoe_de_data is None and entsoe_collector_de.last_run_no_upstream_data:
             upstream_empty_datasets.add('entsoe_de')
 
+        # Consecutive-upstream-empty escalation: a benign 1-day gap must not
+        # degrade silently forever. Track the streak per critical price feed in
+        # a committed sidecar (like _shape_signatures.json), and once a feed has
+        # had no upstream data for UPSTREAM_EMPTY_ESCALATION_RUNS consecutive
+        # runs, escalate it back to a hard failure (loud CI alert) instead of a
+        # warning — a multi-day ENTSO-E outage is worth failing on.
+        streak_path = os.path.join(output_path, "_upstream_empty_streak.json")
+        prior_streaks = {}
+        if os.path.exists(streak_path):
+            try:
+                with open(streak_path) as f:
+                    prior_streaks = json.load(f)
+            except (json.JSONDecodeError, OSError):
+                prior_streaks = {}
+        streaks = update_upstream_empty_streaks(
+            prior_streaks, upstream_empty_datasets, CRITICAL_DATASETS
+        )
+        with open(streak_path, 'w') as f:
+            json.dump(streaks, f, indent=2)
+        escalated = escalated_upstream_feeds(streaks)
+        if escalated:
+            logging.error(
+                f"Upstream-empty streak escalation: {sorted(escalated)} have had "
+                f"no upstream data for >= {UPSTREAM_EMPTY_ESCALATION_RUNS} "
+                f"consecutive runs — escalating from warning to hard failure."
+            )
+
+        # Feeds still within the grace window are downgraded to 'warning' in the
+        # quality report; escalated feeds keep their full severity (and fail the
+        # run below), so a sustained gap is not laundered into a warning.
+        report_upstream_empty = upstream_empty_datasets - escalated
         quality_report = validate_pipeline(
-            quality_datasets, upstream_empty=upstream_empty_datasets
+            quality_datasets, upstream_empty=report_upstream_empty
         )
         quality_report_path = os.path.join(output_path, "data_quality_report.json")
         with open(quality_report_path, 'w') as f:
@@ -1079,8 +1128,16 @@ async def main() -> None:
             name for name in CRITICAL_DATASETS
             if quality_datasets.get(name) is None
         ]
-        missing_upstream = [n for n in missing_critical if n in upstream_empty_datasets]
-        missing_failed = [n for n in missing_critical if n not in upstream_empty_datasets]
+        # An upstream gap only stays benign while within the grace window;
+        # once escalated it joins missing_failed and fails the run.
+        missing_upstream = [
+            n for n in missing_critical
+            if n in upstream_empty_datasets and n not in escalated
+        ]
+        missing_failed = [
+            n for n in missing_critical
+            if n not in upstream_empty_datasets or n in escalated
+        ]
 
         if missing_upstream:
             logging.warning(
