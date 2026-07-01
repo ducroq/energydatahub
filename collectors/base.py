@@ -55,6 +55,7 @@ class CollectorStatus(Enum):
     FAILED = "failed"
     PARTIAL = "partial"  # Some data retrieved but incomplete
     SKIPPED = "skipped"
+    NO_DATA = "no_data"  # API responded OK but published no data for the window
 
 
 class NonRetryableError(Exception):
@@ -76,6 +77,24 @@ class NonRetryableError(Exception):
       - 5xx (server errors), 429 (rate-limited), timeouts, connection
         resets — these are transient and may succeed on retry. Let them
         propagate as their native exception types.
+    """
+    pass
+
+
+class UpstreamNoDataError(NonRetryableError):
+    """
+    Raised by a collector when the upstream API responded successfully but
+    published *no data* for the requested window (e.g. ENTSO-E returning a
+    "no matching data" acknowledgement / entsoe-py's NoMatchingDataError).
+
+    This is distinct from a genuine collector/service failure: the source is
+    healthy, it simply has nothing for these dates yet. As a NonRetryableError
+    it fast-fails (no backoff burn — retrying the same window won't conjure
+    data). `collect()` records it via `CollectorStatus.NO_DATA` and the
+    `last_run_no_upstream_data` flag, and does NOT trip the circuit breaker.
+    The orchestrator uses the flag to skip pointless retry rounds and to keep
+    publishing the healthy feeds instead of failing the whole run. See #38
+    (the 2026-06-30 ENTSO-E NL+DE day-ahead outage that motivated this).
     """
     pass
 
@@ -191,6 +210,14 @@ class BaseCollector(ABC):
         # the pipeline DQ gate's worst-case-wins ladder sees them uniformly.
         # Refactoring-guide H1 finding consolidated the two prior dialects.
         self._collector_quality_issues: List[Dict[str, Any]] = []
+
+        # Set True by collect() when the most recent run failed with an
+        # UpstreamNoDataError (source healthy, but no data for the window).
+        # Read by the orchestrator to distinguish "upstream gap" from
+        # "collector broke" — see UpstreamNoDataError. Reset at the top of
+        # every collect(). Use one collector instance per logical feed if you
+        # read this after concurrent collect() calls (the flag is per-instance).
+        self.last_run_no_upstream_data: bool = False
 
     @abstractmethod
     async def _fetch_raw_data(
@@ -636,6 +663,7 @@ class BaseCollector(ABC):
         # Reset per-run quality signals so a prior run's state cannot leak
         # into this one even if the prior collect() raised before _validate_data.
         self._reset_quality_issues()
+        self.last_run_no_upstream_data = False
 
         # Check circuit breaker
         if not self._check_circuit_breaker():
@@ -719,6 +747,24 @@ class BaseCollector(ABC):
 
             self._metrics_history.append(metrics)
             return dataset
+
+        except UpstreamNoDataError as e:
+            # Source is healthy but published no data for this window. Not a
+            # failure of the collector or the service — so we neither trip the
+            # circuit breaker nor log an error. The flag lets the orchestrator
+            # skip retry rounds and keep publishing the healthy feeds.
+            metrics.duration_seconds = time.time() - start_timestamp
+            metrics.status = CollectorStatus.NO_DATA
+            metrics.warnings.append(f"{type(e).__name__}: {e}")
+            self.last_run_no_upstream_data = True
+
+            self.logger.warning(
+                f"[{collection_id}] No upstream data after "
+                f"{metrics.duration_seconds:.2f}s: {e}"
+            )
+
+            self._metrics_history.append(metrics)
+            return None
 
         except Exception as e:
             # Collection failed

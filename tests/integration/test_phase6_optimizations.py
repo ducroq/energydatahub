@@ -107,12 +107,21 @@ async def test_circuit_breaker_real_api():
 
     # Test passes if either:
     # 1. API succeeds (circuit stays closed, no blocked requests)
-    # 2. API fails enough to open circuit (circuit opens, requests get blocked)
+    # 2. Upstream data gap (circuit stays closed — not a service failure)
+    # 3. API fails enough to open circuit (circuit opens, requests get blocked)
     if success_count > 0:
         # API is working - circuit should remain closed
         assert collector._circuit_breaker.state == CircuitState.CLOSED, \
             "Circuit should stay closed when API succeeds"
         print("\n[PASS] API working - circuit remained closed")
+    elif collector.last_run_no_upstream_data:
+        # Upstream gap: ENTSO-E responded OK but published no data
+        # for the window. This is NOT a service failure, so the breaker must
+        # stay CLOSED — a real request must not be blocked once data returns.
+        assert collector._circuit_breaker.state == CircuitState.CLOSED, \
+            "Circuit must stay closed on an upstream data gap (not a failure)"
+        assert blocked_count == 0, "Upstream gaps must not trip the breaker"
+        print("\n[PASS] Upstream data gap - circuit correctly stayed closed")
     else:
         # API is failing - circuit should open after threshold
         assert collector._circuit_breaker.state == CircuitState.OPEN, \

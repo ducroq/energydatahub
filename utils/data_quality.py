@@ -97,17 +97,27 @@ class PipelineQualityReport:
     timestamp: str
     dataset_reports: List[DatasetQualityReport] = field(default_factory=list)
     missing_datasets: List[str] = field(default_factory=list)
+    # Subset of missing_datasets whose absence is an upstream data gap (the
+    # source responded OK but published nothing), not a collector failure.
+    # A critical dataset that is merely upstream-empty is downgraded to a
+    # 'warning' contribution so a temporary source outage doesn't block
+    # publishing the healthy feeds. See collectors.base.UpstreamNoDataError.
+    upstream_empty_datasets: List[str] = field(default_factory=list)
 
     @property
     def status(self) -> str:
         statuses = [r.status for r in self.dataset_reports]
         # Per-name severity contribution from missing datasets — single
         # registry consulted instead of three parallel lists (tier-2
-        # reviewer finding on 7c0de64).
-        missing_severities = {
-            DATASET_MISSING_SEVERITY.get(name, 'info')
-            for name in self.missing_datasets
-        }
+        # reviewer finding on 7c0de64). An upstream-empty critical dataset
+        # contributes only a 'warning' (source healthy, no data yet).
+        _upstream_empty = set(self.upstream_empty_datasets)
+        missing_severities = set()
+        for name in self.missing_datasets:
+            sev = DATASET_MISSING_SEVERITY.get(name, 'info')
+            if name in _upstream_empty and sev == 'critical':
+                sev = 'warning'
+            missing_severities.add(sev)
 
         # Worst-case wins ladder: critical > error > warning > info.
         if 'critical' in missing_severities or "critical" in statuses:
@@ -129,6 +139,7 @@ class PipelineQualityReport:
             'total_issues': self.total_issues,
             'datasets_collected': len(self.dataset_reports),
             'datasets_missing': self.missing_datasets,
+            'datasets_upstream_empty': self.upstream_empty_datasets,
             'dataset_reports': [r.to_dict() for r in self.dataset_reports],
         }
 
@@ -1263,16 +1274,24 @@ def validate_dataset(
 
 def validate_pipeline(
     datasets: Dict[str, Optional[EnhancedDataSet]],
+    upstream_empty: Optional[set] = None,
 ) -> PipelineQualityReport:
     """
     Run quality checks on all datasets from a pipeline run.
 
     Args:
         datasets: Dict mapping dataset names to EnhancedDataSet (or None if failed)
+        upstream_empty: Optional set of dataset names that are missing because
+            the upstream source published no data for the window (as opposed to
+            a collector/API failure). A critical dataset that is merely
+            upstream-empty is downgraded to a 'warning' so a temporary source
+            outage doesn't block publishing the healthy feeds. See
+            collectors.base.UpstreamNoDataError.
 
     Returns:
         PipelineQualityReport with all findings
     """
+    upstream_empty = set(upstream_empty or ())
     report = PipelineQualityReport(
         timestamp=datetime.now().astimezone().isoformat(),
     )
@@ -1280,7 +1299,8 @@ def validate_pipeline(
     # Single pass over the consolidated severity registry. Log level
     # tracks severity so an absent critical dataset is flagged as a
     # warning in the operator log, while an info-severity flake is
-    # quietly noted.
+    # quietly noted. Upstream-empty datasets are logged distinctly so the
+    # operator sees "source gap" rather than "collector broke".
     _missing_log = {
         'critical': logger.warning,
         'warning':  logger.warning,
@@ -1290,6 +1310,14 @@ def validate_pipeline(
         if name in datasets and datasets[name] is not None:
             continue
         report.missing_datasets.append(name)
+        if name in upstream_empty:
+            report.upstream_empty_datasets.append(name)
+            logger.warning(
+                f"[DQ:pipeline] Dataset '{name}' is missing — upstream "
+                f"published no data for the window (severity={severity}, "
+                f"downgraded to warning; healthy feeds still publish)"
+            )
+            continue
         log_fn = _missing_log.get(severity, logger.info)
         log_fn(
             f"[DQ:pipeline] Dataset '{name}' is missing "

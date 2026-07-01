@@ -1171,6 +1171,55 @@ class TestValidatePipeline:
         assert report.total_issues > 0
 
 
+class TestUpstreamEmptyDowngrade:
+    """Upstream data gap (source healthy, no data for the
+    window) must not block publishing the healthy feeds. A critical dataset
+    that is upstream-empty is downgraded to a 'warning' contribution."""
+
+    def test_upstream_empty_critical_downgraded_to_warning(self):
+        """entsoe missing due to upstream gap → warning, not critical."""
+        datasets = {
+            'entsoe': None,
+            'energy_zero': _make_dataset(_make_price_data(24)),  # fallback present
+            'epex': _make_dataset(_make_price_data(24)),
+        }
+        report = validate_pipeline(datasets, upstream_empty={'entsoe'})
+        assert 'entsoe' in report.missing_datasets
+        assert 'entsoe' in report.upstream_empty_datasets
+        assert report.status == 'warning'  # downgraded, publish proceeds
+
+    def test_missing_without_upstream_flag_still_critical(self):
+        """Same missing dataset, but a genuine failure → still critical."""
+        datasets = {
+            'entsoe': None,
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'epex': _make_dataset(_make_price_data(24)),
+        }
+        report = validate_pipeline(datasets)  # no upstream_empty
+        assert report.status == 'critical'
+
+    def test_other_critical_failure_still_wins_over_upstream_gap(self):
+        """entsoe upstream-empty but energy_zero genuinely failed → critical."""
+        datasets = {
+            'entsoe': None,          # upstream gap (downgraded)
+            'energy_zero': None,     # genuine failure (stays critical)
+            'epex': _make_dataset(_make_price_data(24)),
+        }
+        report = validate_pipeline(datasets, upstream_empty={'entsoe'})
+        assert report.status == 'critical'
+
+    def test_upstream_empty_surfaced_in_to_dict(self):
+        """The report serialization exposes the upstream-empty set."""
+        datasets = {
+            'entsoe': None,
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'epex': _make_dataset(_make_price_data(24)),
+        }
+        d = validate_pipeline(datasets, upstream_empty={'entsoe'}).to_dict()
+        assert 'datasets_upstream_empty' in d
+        assert 'entsoe' in d['datasets_upstream_empty']
+
+
 class TestDatasetMissingSeverityRegistry:
     """Reviewer tier-2 finding (refactoring-guide OVER-ENGINEERED):
     the three parallel registries collapsed into a single
