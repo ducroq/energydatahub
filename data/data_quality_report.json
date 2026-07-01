@@ -1,9 +1,10 @@
 {
-  "timestamp": "2026-06-29T18:06:07.957713+00:00",
+  "timestamp": "2026-07-01T13:08:47.915922+00:00",
   "overall_status": "warning",
   "total_issues": 2,
-  "datasets_collected": 24,
+  "datasets_collected": 23,
   "datasets_missing": [],
+  "datasets_upstream_empty": [],
   "dataset_reports": [
     {
       "dataset_name": "entsoe",
@@ -86,16 +87,6 @@
       "issues": []
     },
     {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
@@ -119,7 +110,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 624,
+      "data_points": 432,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -176,15 +167,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "35 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "23 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 35,
+            "count": 23,
             "examples": [
-              "NL/2026-06-29T09:30:00+02:00: forecast_error=2691.4, load_actual=6668.426, ratio=0.40",
-              "NL/2026-06-29T09:45:00+02:00: forecast_error=3039.7, load_actual=6094.566, ratio=0.50",
-              "NL/2026-06-29T10:00:00+02:00: forecast_error=3350.2, load_actual=5606.806, ratio=0.60",
-              "NL/2026-06-29T10:15:00+02:00: forecast_error=3875.4, load_actual=4815.706, ratio=0.80",
-              "NL/2026-06-29T10:30:00+02:00: forecast_error=4251.9, load_actual=4377.537, ratio=0.97"
+              "NL/2026-07-01T08:45:00+02:00: forecast_error=3134.9, load_actual=7617.666, ratio=0.41",
+              "NL/2026-07-01T09:00:00+02:00: forecast_error=3392.1, load_actual=7233.966, ratio=0.47",
+              "NL/2026-07-01T09:15:00+02:00: forecast_error=3835.5, load_actual=6611.136, ratio=0.58",
+              "NL/2026-07-01T09:30:00+02:00: forecast_error=4014.0, load_actual=6176.606, ratio=0.65",
+              "NL/2026-07-01T09:45:00+02:00: forecast_error=4309.6, load_actual=5694.746, ratio=0.76"
             ],
             "threshold": 0.4
           }
@@ -196,7 +187,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 56,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -226,7 +217,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 519,
+      "data_points": 459,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -236,7 +227,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 26,
+      "data_points": 27,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -246,7 +237,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 121,
+      "data_points": 123,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
