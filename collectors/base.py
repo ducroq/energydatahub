@@ -446,9 +446,17 @@ class BaseCollector(ABC):
                 # Permanent failure for this request — don't burn further
                 # attempts. Subclasses raise this when they classify an
                 # error (e.g. HTTP 422) as non-transient (issue #25).
-                self.logger.error(
-                    f"Attempt {attempt} failed with permanent error: "
-                    f"{type(e).__name__}: {e}. Not retrying."
+                # UpstreamNoDataError is a benign sub-type ("source healthy,
+                # no data for the window", #38) — log it at WARNING so it
+                # doesn't masquerade as an error in operator alerting.
+                log = (
+                    self.logger.warning
+                    if isinstance(e, UpstreamNoDataError)
+                    else self.logger.error
+                )
+                log(
+                    f"Attempt {attempt} stopped (permanent, not retrying): "
+                    f"{type(e).__name__}: {e}"
                 )
                 raise
 
