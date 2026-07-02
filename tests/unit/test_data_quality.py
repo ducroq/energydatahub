@@ -767,6 +767,49 @@ class TestLoadCrossFieldConsistency:
         issues = validate_load_cross_field_consistency(data, 'load_forecast')
         assert issues == []
 
+    def test_provisional_recent_edge_not_flagged(self):
+        """ENTSO-E actual load at the real-time edge is incomplete (reads far
+        below true load). A bad-ratio record within LOAD_ACTUAL_SETTLE_HOURS of
+        now must be skipped, not flagged — that's the recurring false positive
+        (2026-07-01 NL load). Verified live: those actuals don't settle same-day."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        from datetime import datetime, timedelta
+        recent = (datetime.now().astimezone() - timedelta(hours=1)).isoformat()
+        data = {'NL': {recent: self._sample(
+            load_forecast=10000.0, load_actual=2500.0, forecast_error=7500.0,  # ratio 3.0
+        )}}
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert issues == []
+
+    def test_settled_bad_ratio_still_flagged(self):
+        """A bad-ratio record OLDER than the settle window is genuine (settled
+        actual) and must still flag — the MITM defense stays intact on settled
+        history."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        from datetime import datetime, timedelta
+        settled = (datetime.now().astimezone() - timedelta(hours=24)).isoformat()
+        data = {'NL': {settled: self._sample(
+            load_actual=50000.0, forecast_error=20000.0,  # ratio 0.40
+        )}}
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert len(issues) == 1
+
+    def test_edge_skipped_but_settled_flagged_same_payload(self):
+        """Mixed payload: the provisional edge record is skipped while a
+        settled bad record in the same series is still flagged."""
+        from utils.data_quality import validate_load_cross_field_consistency
+        from datetime import datetime, timedelta
+        now = datetime.now().astimezone()
+        edge = (now - timedelta(hours=1)).isoformat()
+        settled = (now - timedelta(hours=24)).isoformat()
+        data = {'NL': {
+            edge: self._sample(load_forecast=10000.0, load_actual=2500.0, forecast_error=7500.0),
+            settled: self._sample(load_actual=50000.0, forecast_error=20000.0),
+        }}
+        issues = validate_load_cross_field_consistency(data, 'load_forecast')
+        assert len(issues) == 1
+        assert issues[0].details['count'] == 1  # only the settled one
+
 
 class TestCompleteness:
     """Tests for validate_completeness."""
@@ -1310,6 +1353,26 @@ class TestDatasetMissingSeverityRegistry:
         """The #25 soft-gate is preserved through the refactor."""
         from utils.data_quality import DATASET_MISSING_SEVERITY
         assert DATASET_MISSING_SEVERITY['grid_imbalance'] == 'warning'
+
+    def test_air_quality_buurt_tracked_as_info(self):
+        """air_quality_buurt is transiently flaky (RIVM/Luchtmeetnet). It's
+        registered as 'info' so its absence is logged in the quality report
+        instead of being silently skipped (a stale copy is otherwise
+        republished with no signal)."""
+        from utils.data_quality import DATASET_MISSING_SEVERITY
+        assert DATASET_MISSING_SEVERITY['air_quality_buurt'] == 'info'
+
+    def test_missing_air_quality_buurt_tracked_not_promoted(self):
+        """When absent, air_quality_buurt lands in missing_datasets but does
+        NOT promote overall status (info severity)."""
+        datasets = {
+            'entsoe': _make_dataset(_make_price_data(24)),
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'air_quality_buurt': None,
+        }
+        report = validate_pipeline(datasets)
+        assert 'air_quality_buurt' in report.missing_datasets
+        assert report.status != 'critical'
 
     def test_critical_datasets_are_entsoe_and_energy_zero(self):
         """Stable contract: the two critical datasets are the day-ahead
