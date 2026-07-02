@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-07-01T17:50:01.175430+00:00",
+  "timestamp": "2026-07-02T17:42:01.214394+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
+  "total_issues": 1,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -11,7 +11,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +21,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -91,7 +91,7 @@
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 48,
+      "data_points": 47,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -169,35 +169,18 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
+      "status": "info",
       "data_points": 384,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "40 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 40,
-            "examples": [
-              "NL/2026-07-01T08:45:00+02:00: forecast_error=3134.9, load_actual=7617.666, ratio=0.41",
-              "NL/2026-07-01T09:00:00+02:00: forecast_error=3392.1, load_actual=7233.966, ratio=0.47",
-              "NL/2026-07-01T09:15:00+02:00: forecast_error=3835.5, load_actual=6611.136, ratio=0.58",
-              "NL/2026-07-01T09:30:00+02:00: forecast_error=4014.0, load_actual=6176.606, ratio=0.65",
-              "NL/2026-07-01T09:45:00+02:00: forecast_error=4309.6, load_actual=5694.746, ratio=0.76"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 72,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -247,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 123,
+      "data_points": 124,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
