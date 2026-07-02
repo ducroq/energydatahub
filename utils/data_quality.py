@@ -415,6 +415,9 @@ DATASET_MISSING_SEVERITY: Dict[str, str] = {
     'elspot':         'info',
     'grid_imbalance': 'warning',  # TenneT 422 cascade per #25
     'nordic_hydro':   'info',     # #3 — leading indicator, not gate-critical
+    'air_quality_buurt': 'info',  # transient RIVM/Luchtmeetnet flakiness — track
+                                  # so its absence is logged, not silent (stale
+                                  # copy otherwise republished with no signal)
 }
 
 # Back-compat shims: derive the three named lists from the dict so any
@@ -657,6 +660,21 @@ LOAD_CROSS_FIELD_RATIO_THRESHOLD = 0.4
 # doesn't false-flag.
 LOAD_CROSS_FIELD_ACTUAL_FLOOR = 1000.0
 
+# ENTSO-E actual-load (A67) near the real-time edge is INCOMPLETE: the most
+# recent hours publish only partial metering and read far below true load
+# (observed 2026-07-01: actual ~2.5 GW vs forecast ~8 GW at the edge, tapering
+# back to plausible values ~8h earlier). Those provisional actuals inflate
+# |forecast_error|/load_actual and trip the consistency check every run — a
+# false positive that trains operators to ignore a MITM tripwire. So evaluate
+# the cross-field check only on SETTLED records: those whose timestamp is at
+# least this many hours in the past (wall-clock). Settled history still gets
+# full tamper coverage; only the unreliable real-time edge is skipped. Anchored
+# to now() (not the payload's max timestamp) so a fully-settled backtest over
+# old data is still checked end-to-end. Verified 2026-07-01 — the provisional
+# values do NOT settle within the same day (identical on re-fetch), so this is
+# a data characteristic, not a lag we can wait out.
+LOAD_ACTUAL_SETTLE_HOURS = 8.0
+
 
 def validate_load_cross_field_consistency(
     data: Dict[str, Any],
@@ -684,7 +702,21 @@ def validate_load_cross_field_consistency(
     inconsistent_count = 0
     examples: List[str] = []
 
-    for ts_key, record in _flatten_to_timestamp_records(data).items():
+    records = _flatten_to_timestamp_records(data)
+
+    def _ts_of(ts_key: str):
+        """Parse the datetime out of a flattened key ('NL/<iso>' or '<iso>')."""
+        try:
+            return datetime.fromisoformat(str(ts_key).split('/')[-1].replace('Z', '+00:00'))
+        except ValueError:
+            return None
+
+    # Skip the unreliable, still-filling leading edge: only check records whose
+    # timestamp is at least LOAD_ACTUAL_SETTLE_HOURS in the past. Anchored to
+    # now() so settled history (and backtests over old data) is fully checked.
+    settle_cutoff = datetime.now().astimezone() - timedelta(hours=LOAD_ACTUAL_SETTLE_HOURS)
+
+    for ts_key, record in records.items():
         if not isinstance(record, dict):
             continue
         load_actual = record.get('load_actual')
@@ -692,6 +724,10 @@ def validate_load_cross_field_consistency(
         if not isinstance(load_actual, (int, float)):
             continue
         if not isinstance(forecast_error, (int, float)):
+            continue
+        # Skip provisional near-real-time actuals (see LOAD_ACTUAL_SETTLE_HOURS).
+        dt = _ts_of(ts_key)
+        if dt is not None and dt > settle_cutoff:
             continue
         denom = max(abs(load_actual), LOAD_CROSS_FIELD_ACTUAL_FLOOR)
         ratio = abs(forecast_error) / denom
