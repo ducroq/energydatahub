@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-07-03T17:19:02.400288+00:00",
+  "timestamp": "2026-07-04T16:58:24.060940+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
+  "total_issues": 3,
   "datasets_collected": 23,
   "datasets_missing": [
     "air_quality_buurt"
@@ -72,11 +72,23 @@
       "dataset_name": "weather_forecast_buurt",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "info",
+      "status": "warning",
       "data_points": 768,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "warning",
+          "message": "1 weather field values outside their specific ranges",
+          "details": {
+            "count": 1,
+            "examples": [
+              "cape=-2.5 (range 0.0-6000.0)"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "solar_forecast_buurt",
@@ -169,15 +181,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "13 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "9 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 13,
+            "count": 9,
             "examples": [
-              "NL/2026-07-03T08:15:00+02:00: forecast_error=3287.7, load_actual=7728.266, ratio=0.43",
-              "NL/2026-07-03T08:30:00+02:00: forecast_error=3325.9, load_actual=7530.766, ratio=0.44",
-              "NL/2026-07-03T08:45:00+02:00: forecast_error=3416.8, load_actual=7276.266, ratio=0.47",
-              "NL/2026-07-03T09:00:00+02:00: forecast_error=3581.5, load_actual=6922.246, ratio=0.52",
-              "NL/2026-07-03T09:15:00+02:00: forecast_error=3562.4, load_actual=6607.356, ratio=0.54"
+              "NL/2026-07-04T08:45:00+02:00: forecast_error=3024.1, load_actual=5992.546, ratio=0.50",
+              "NL/2026-07-04T09:00:00+02:00: forecast_error=3205.2, load_actual=5600.266, ratio=0.57",
+              "NL/2026-07-04T09:15:00+02:00: forecast_error=3096.8, load_actual=5285.466, ratio=0.59",
+              "NL/2026-07-04T09:30:00+02:00: forecast_error=3336.3, load_actual=4831.696, ratio=0.69",
+              "NL/2026-07-04T09:45:00+02:00: forecast_error=3403.0, load_actual=4486.855, ratio=0.76"
             ],
             "threshold": 0.4
           }
@@ -189,7 +201,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 72,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -219,7 +231,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 510,
+      "data_points": 507,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
