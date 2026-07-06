@@ -5,6 +5,12 @@ on:
     - cron: '0 16 * * *'  # Runs daily at 16:00 UTC (18:00 CET / 20:00 CEST)
   workflow_dispatch:  # Allows manual triggering
 
+# Serialize Pages deployments so a retrying deploy never races a later run.
+# cancel-in-progress: false — never kill an in-flight data collection.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   collect-and-publish:
     runs-on: ubuntu-latest
@@ -155,6 +161,52 @@ jobs:
       run: |
         curl -X POST -d {} ${{ secrets.NETLIFY_BUILD_HOOK }}
       continue-on-error: true
+
+    # Package docs/ as the Pages artifact. Pages source is "GitHub Actions"
+    # (switched from "Deploy from a branch" on 2026-07-06) so the deploy job
+    # below can retry transient GitHub-side deploy failures — which the
+    # auto-generated pages-build-deployment workflow could not.
+    - name: Configure Pages
+      uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+      with:
+        path: docs
+
+  # Deploy the docs/ artifact to GitHub Pages with a bounded retry. The
+  # actions/deploy-pages step occasionally returns "Deployment failed, try
+  # again later." — a transient GitHub-side fault (observed 2026-07-05).
+  # Three attempts, each a fresh deployment of the same artifact, with a
+  # short backoff. environment.url takes whichever attempt succeeded.
+  deploy:
+    needs: collect-and-publish
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write       # deploy to Pages
+      id-token: write     # OIDC token for deploy-pages
+    environment:
+      name: github-pages
+      url: ${{ steps.d1.outputs.page_url || steps.d2.outputs.page_url || steps.d3.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages (attempt 1)
+      id: d1
+      continue-on-error: true
+      uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0
+    - name: Backoff before attempt 2
+      if: steps.d1.outcome == 'failure'
+      run: sleep 60
+    - name: Deploy to GitHub Pages (attempt 2)
+      id: d2
+      if: steps.d1.outcome == 'failure'
+      continue-on-error: true
+      uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0
+    - name: Backoff before attempt 3
+      if: steps.d1.outcome == 'failure' && steps.d2.outcome == 'failure'
+      run: sleep 120
+    - name: Deploy to GitHub Pages (attempt 3, final)
+      id: d3
+      if: steps.d1.outcome == 'failure' && steps.d2.outcome == 'failure'
+      uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0
 
     # - name: Verify deployment
     #   run: |
