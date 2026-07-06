@@ -109,18 +109,30 @@ python -m pytest -m timezone
 ## Continuous Deployment
 
 ### Current Workflow (`.github/workflows/collect-data.yml`)
-- Runs daily at 16:00 UTC
+- Runs daily at 16:00 UTC (or manual `workflow_dispatch`)
 - Collects energy and weather data
-- Publishes to GitHub Pages
+- Publishes the encrypted JSON to GitHub Pages
 
-### Future Enhancement
-Consider adding deployment step to test workflow:
-```yaml
-- name: Deploy to GitHub Pages (on main only)
-  if: github.ref == 'refs/heads/main' && success()
-  run: |
-    # Deployment steps
-```
+### GitHub Pages deployment (owned + retried)
+Pages source is **"GitHub Actions"** (`build_type: workflow`), *not* "Deploy from
+a branch" — switched 2026-07-06. The workflow owns the deploy in two parts:
+
+1. The `collect-and-publish` job packages `docs/` into the `github-pages`
+   artifact (`actions/upload-pages-artifact`).
+2. A dedicated `deploy` job runs `actions/deploy-pages` with a **bounded retry**
+   (3 attempts, 60s/120s backoff) and `environment.url` taking whichever attempt
+   wins. A workflow-level `concurrency: pages` guard serializes deploys.
+
+Why: `actions/deploy-pages` occasionally returns `##[error]Deployment failed,
+try again later.` — a transient GitHub-side fault. Under the old "Deploy from a
+branch" mode this ran as GitHub's auto-injected `pages-build-deployment`
+workflow, which could not be retried in place (a rerun re-attempts the same
+stuck deployment *version*). Owning the deploy lets a fresh in-run attempt
+recover automatically.
+
+**Consequence:** the auto `pages-build-deployment` workflow no longer runs.
+When debugging a publish, inspect the `deploy` job inside the daily
+`Collect and Publish Data` run — there is no separate Pages workflow.
 
 ## Debugging Failed Workflows
 
