@@ -1,9 +1,11 @@
 {
-  "timestamp": "2026-07-06T08:10:08.468761+00:00",
+  "timestamp": "2026-07-06T09:50:49.278421+00:00",
   "overall_status": "error",
   "total_issues": 3,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "datasets_collected": 23,
+  "datasets_missing": [
+    "air_quality_buurt"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -81,18 +83,8 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 726,
+      "data_points": 730,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -180,7 +172,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 36,
+      "data_points": 44,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -210,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 402,
+      "data_points": 420,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -227,10 +219,10 @@
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 104.2h old (threshold: 48h)",
+          "message": "Newest data is 105.8h old (threshold: 48h)",
           "details": {
             "newest_timestamp": "2026-07-02T00:00:00+00:00",
-            "age_hours": 104.2,
+            "age_hours": 105.8,
             "threshold_hours": 48
           }
         }
@@ -248,10 +240,10 @@
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 80.2h old (threshold: 48h)",
+          "message": "Newest data is 81.8h old (threshold: 48h)",
           "details": {
             "newest_timestamp": "2026-07-03T00:00:00+00:00",
-            "age_hours": 80.2,
+            "age_hours": 81.8,
             "threshold_hours": 48
           }
         }
