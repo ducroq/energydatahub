@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-07-06T09:50:49.278421+00:00",
-  "overall_status": "error",
-  "total_issues": 3,
+  "timestamp": "2026-07-07T06:39:44.187239+00:00",
+  "overall_status": "warning",
+  "total_issues": 1,
   "datasets_collected": 23,
   "datasets_missing": [
     "air_quality_buurt"
@@ -83,7 +83,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 730,
+      "data_points": 706,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -162,7 +162,7 @@
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 384,
+      "data_points": 192,
       "checks_passed": 6,
       "checks_failed": 0,
       "issues": []
@@ -172,7 +172,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 44,
+      "data_points": 32,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -192,7 +192,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 22,
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -202,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 420,
+      "data_points": 384,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -211,43 +211,21 @@
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "error",
-      "data_points": 25,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 105.8h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-07-02T00:00:00+00:00",
-            "age_hours": 105.8,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 26,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "error",
-      "data_points": 125,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 81.8h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-07-03T00:00:00+00:00",
-            "age_hours": 81.8,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 126,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "gas_storage",
