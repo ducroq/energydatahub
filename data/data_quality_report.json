@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-07-07T06:39:44.187239+00:00",
+  "timestamp": "2026-07-07T07:00:29.869452+00:00",
   "overall_status": "warning",
   "total_issues": 1,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -85,6 +83,16 @@
       "status": "info",
       "data_points": 706,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 47,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -202,7 +210,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 384,
+      "data_points": 387,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
