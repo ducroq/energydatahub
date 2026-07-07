@@ -657,6 +657,27 @@ async def main() -> None:
         hydro_data = results['entsoe_hydro']
         buurt_weather_data = results['buurt_weather']
         buurt_solar_data = results['buurt_solar']
+        # Present-but-empty guard for the buurt Open-Meteo feeds. base.collect()
+        # returns a truthy EnhancedDataSet with data={} even when every location
+        # timed out (it builds the dataset regardless of _validate_data), so a
+        # transient all-locations Open-Meteo timeout — the late-wave regression
+        # documented in _openmeteo_shared.py / gotcha-log.md:95 — would otherwise
+        # be *saved* as an empty envelope and then hard-fail the completeness gate
+        # (validate_completeness → CRITICAL on 0 points), aborting the whole daily
+        # publish over two secondary FyE B1 feeds that Augur doesn't consume.
+        # Coerce empty→None so it routes through the (non-blocking, 'info') missing-
+        # dataset path instead — treating present-but-empty identically to absent,
+        # mirroring #38's "keep publishing the healthy feeds on an upstream gap".
+        for _label, _ds in (('weather', buurt_weather_data), ('solar', buurt_solar_data)):
+            if _ds is not None and not _ds.data:
+                logging.warning(
+                    f"buurt {_label}: all locations returned no data "
+                    f"(transient Open-Meteo timeout?) — treating as absent this run"
+                )
+        if buurt_weather_data is not None and not buurt_weather_data.data:
+            buurt_weather_data = None
+        if buurt_solar_data is not None and not buurt_solar_data.data:
+            buurt_solar_data = None
         buurt_aq_data = [results[f'buurt_aq_{i}'] for i in range(len(luchtmeetnet_buurt_collectors))]
         ned_data = results.get('ned')
         market_proxy_data = results.get('market_proxy')

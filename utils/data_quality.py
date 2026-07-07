@@ -418,6 +418,12 @@ DATASET_MISSING_SEVERITY: Dict[str, str] = {
     'air_quality_buurt': 'info',  # transient RIVM/Luchtmeetnet flakiness — track
                                   # so its absence is logged, not silent (stale
                                   # copy otherwise republished with no signal)
+    'weather_forecast_buurt': 'info',  # secondary FyE B1 feed (not consumed by
+    'solar_forecast_buurt':   'info',  # Augur). data_fetcher coerces a present-
+                                  # but-empty envelope (all-locations Open-Meteo
+                                  # timeout, gotcha-log.md:95) to None so it lands
+                                  # here as 'info' rather than hard-failing the
+                                  # completeness gate and aborting the publish.
 }
 
 # Back-compat shims: derive the three named lists from the dict so any

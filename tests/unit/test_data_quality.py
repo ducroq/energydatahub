@@ -1374,6 +1374,31 @@ class TestDatasetMissingSeverityRegistry:
         assert 'air_quality_buurt' in report.missing_datasets
         assert report.status != 'critical'
 
+    def test_buurt_forecast_feeds_tracked_as_info(self):
+        """weather_forecast_buurt / solar_forecast_buurt are secondary FyE B1
+        feeds (not consumed by Augur). Registered as 'info' so a transient
+        all-locations Open-Meteo timeout — which data_fetcher coerces from a
+        present-but-empty envelope to absent — lands in missing_datasets
+        without promoting status or aborting the publish (gotcha-log.md:95)."""
+        from utils.data_quality import DATASET_MISSING_SEVERITY
+        assert DATASET_MISSING_SEVERITY['weather_forecast_buurt'] == 'info'
+        assert DATASET_MISSING_SEVERITY['solar_forecast_buurt'] == 'info'
+
+    def test_missing_buurt_forecast_not_promoted(self):
+        """When absent, the buurt forecast feeds land in missing_datasets but
+        do NOT promote overall status (info severity) — a transient buurt
+        Open-Meteo timeout must not fail the daily publish of the augur feeds."""
+        datasets = {
+            'entsoe': _make_dataset(_make_price_data(24)),
+            'energy_zero': _make_dataset(_make_price_data(24)),
+            'weather_forecast_buurt': None,
+            'solar_forecast_buurt': None,
+        }
+        report = validate_pipeline(datasets)
+        assert 'weather_forecast_buurt' in report.missing_datasets
+        assert 'solar_forecast_buurt' in report.missing_datasets
+        assert report.status != 'critical'
+
     def test_critical_datasets_are_entsoe_and_energy_zero(self):
         """Stable contract: the two critical datasets are the day-ahead
         price feeds that Augur depends on."""
