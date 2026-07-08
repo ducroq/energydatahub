@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-07-07T17:55:28+00:00",
+  "computed_at": "2026-07-08T17:25:07+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -2330,7 +2330,7 @@
       "sources": null
     },
     "market_proxies.json": {
-      "shape_hash": "e5231b062e10a6aba4721e9f781c4133",
+      "shape_hash": "08bcd560ae901c54f4e0235e98f13ef0",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -2373,36 +2373,6 @@
                   "source": "str",
                   "ticker": "str",
                   "units": "str",
-                  "volume": "int"
-                }
-              },
-              "gas_ttf": {
-                "_kind": "dict",
-                "keys": {
-                  "change_pct": "float",
-                  "currency": "str",
-                  "date": "str",
-                  "description": "str",
-                  "high": "float",
-                  "history": {
-                    "_kind": "timestamp_map",
-                    "value_shape": "float"
-                  },
-                  "low": "float",
-                  "mean_7d": "float",
-                  "name": "str",
-                  "note": "str",
-                  "open": "float",
-                  "prev_close": "float",
-                  "price": "float",
-                  "price_lag1": "float",
-                  "price_lag2": "float",
-                  "price_lag7": "float",
-                  "source": "str",
-                  "ticker": "str",
-                  "trend_7d": "str",
-                  "units": "str",
-                  "volatility_7d": "float",
                   "volume": "int"
                 }
               }
@@ -2572,60 +2542,6 @@
         }
       },
       "data_type": "gas_storage",
-      "sources": null
-    },
-    "gas_flows.json": {
-      "shape_hash": "23d3eaa738d751a1d55fd3026ef295c5",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "timestamp_map",
-            "value_shape": {
-              "_kind": "dict",
-              "keys": {
-                "entry_points": "int",
-                "entry_total_gwh": "float",
-                "exit_points": "int",
-                "exit_total_gwh": "float",
-                "net_flow_gwh": "float"
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "api_documentation": "str",
-              "collector": "str",
-              "country_code": "str",
-              "data_frequency": "str",
-              "data_type": "str",
-              "description": "str",
-              "end_time": "str",
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "start_time": "str",
-              "units": "str",
-              "usage_notes": {
-                "_kind": "list",
-                "value_shape": "str"
-              }
-            }
-          }
-        }
-      },
-      "data_type": "gas_flows",
       "sources": null
     }
   }

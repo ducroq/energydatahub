@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-07-07T17:55:28.361786+00:00",
+  "timestamp": "2026-07-08T17:25:07.533394+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
-  "datasets_collected": 23,
+  "total_issues": 1,
+  "datasets_collected": 22,
   "datasets_missing": [
     "air_quality_buurt"
   ],
@@ -161,28 +161,11 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
+      "status": "info",
       "data_points": 384,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "10 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 10,
-            "examples": [
-              "NL/2026-07-07T09:30:00+02:00: forecast_error=3717.1, load_actual=7365.006, ratio=0.50",
-              "NL/2026-07-07T09:45:00+02:00: forecast_error=4252.8, load_actual=6655.976, ratio=0.64",
-              "NL/2026-07-07T10:00:00+02:00: forecast_error=4555.0, load_actual=6075.266, ratio=0.75",
-              "NL/2026-07-07T10:15:00+02:00: forecast_error=4394.0, load_actual=5718.656, ratio=0.77",
-              "NL/2026-07-07T10:30:00+02:00: forecast_error=4400.2, load_actual=5370.426, ratio=0.82"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
@@ -209,7 +192,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 22,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -219,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 519,
+      "data_points": 510,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -229,7 +212,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 27,
+      "data_points": 2,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -251,16 +234,6 @@
       "status": "info",
       "data_points": 8,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "gas_flows",
-      "data_type": "gas_flows",
-      "source": "ENTSOG Transparency Platform",
-      "status": "info",
-      "data_points": 2,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     }
