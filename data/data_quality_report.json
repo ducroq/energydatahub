@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-09T17:51:39.429764+00:00",
+  "timestamp": "2026-07-10T17:44:04.713770+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -177,15 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "6 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 6,
+            "count": 8,
             "examples": [
-              "NL/2026-07-09T10:30:00+02:00: forecast_error=3281.0, load_actual=6892.296, ratio=0.48",
-              "NL/2026-07-09T10:45:00+02:00: forecast_error=3444.0, load_actual=6709.656, ratio=0.51",
-              "NL/2026-07-09T11:00:00+02:00: forecast_error=3799.5, load_actual=6341.296, ratio=0.60",
-              "NL/2026-07-09T11:15:00+02:00: forecast_error=4174.2, load_actual=6003.516, ratio=0.70",
-              "NL/2026-07-09T11:30:00+02:00: forecast_error=4365.3, load_actual=5768.926, ratio=0.76"
+              "NL/2026-07-10T09:45:00+02:00: forecast_error=3004.7, load_actual=6562.576, ratio=0.46",
+              "NL/2026-07-10T10:00:00+02:00: forecast_error=3583.6, load_actual=5830.956, ratio=0.61",
+              "NL/2026-07-10T10:15:00+02:00: forecast_error=3976.2, load_actual=5177.806, ratio=0.77",
+              "NL/2026-07-10T10:30:00+02:00: forecast_error=4344.0, load_actual=4560.263, ratio=0.95",
+              "NL/2026-07-10T10:45:00+02:00: forecast_error=4952.5, load_actual=3918.633, ratio=1.26"
             ],
             "threshold": 0.4
           }
@@ -247,7 +247,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 129,
+      "data_points": 130,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
