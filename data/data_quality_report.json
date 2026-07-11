@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-10T17:44:04.713770+00:00",
+  "timestamp": "2026-07-11T16:49:25.495659+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -177,15 +177,12 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "2 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 8,
+            "count": 2,
             "examples": [
-              "NL/2026-07-10T09:45:00+02:00: forecast_error=3004.7, load_actual=6562.576, ratio=0.46",
-              "NL/2026-07-10T10:00:00+02:00: forecast_error=3583.6, load_actual=5830.956, ratio=0.61",
-              "NL/2026-07-10T10:15:00+02:00: forecast_error=3976.2, load_actual=5177.806, ratio=0.77",
-              "NL/2026-07-10T10:30:00+02:00: forecast_error=4344.0, load_actual=4560.263, ratio=0.95",
-              "NL/2026-07-10T10:45:00+02:00: forecast_error=4952.5, load_actual=3918.633, ratio=1.26"
+              "NL/2026-07-11T10:30:00+02:00: forecast_error=2255.3, load_actual=5324.636, ratio=0.42",
+              "NL/2026-07-11T10:45:00+02:00: forecast_error=2729.6, load_actual=5016.566, ratio=0.54"
             ],
             "threshold": 0.4
           }
@@ -197,7 +194,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 72,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -227,7 +224,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 516,
+      "data_points": 504,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
