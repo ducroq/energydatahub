@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-07-11T16:49:25.495659+00:00",
-  "overall_status": "warning",
-  "total_issues": 2,
+  "timestamp": "2026-07-12T16:53:14.801031+00:00",
+  "overall_status": "error",
+  "total_issues": 4,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -177,12 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "2 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "11 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 2,
+            "count": 11,
             "examples": [
-              "NL/2026-07-11T10:30:00+02:00: forecast_error=2255.3, load_actual=5324.636, ratio=0.42",
-              "NL/2026-07-11T10:45:00+02:00: forecast_error=2729.6, load_actual=5016.566, ratio=0.54"
+              "NL/2026-07-12T08:15:00+02:00: forecast_error=2783.8, load_actual=6751.276, ratio=0.41",
+              "NL/2026-07-12T08:30:00+02:00: forecast_error=3235.6, load_actual=6418.416, ratio=0.50",
+              "NL/2026-07-12T08:45:00+02:00: forecast_error=3777.4, load_actual=6080.176, ratio=0.62",
+              "NL/2026-07-12T09:00:00+02:00: forecast_error=4440.2, load_actual=5675.516, ratio=0.78",
+              "NL/2026-07-12T09:15:00+02:00: forecast_error=5185.4, load_actual=5154.696, ratio=1.01"
             ],
             "threshold": 0.4
           }
@@ -224,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 504,
+      "data_points": 506,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -233,21 +236,43 @@
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "info",
-      "data_points": 27,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
+      "status": "error",
+      "data_points": 26,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "error",
+          "message": "Newest data is 64.9h old (threshold: 48h)",
+          "details": {
+            "newest_timestamp": "2026-07-10T00:00:00+00:00",
+            "age_hours": 64.9,
+            "threshold_hours": 48
+          }
+        }
+      ]
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "info",
+      "status": "error",
       "data_points": 130,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "error",
+          "message": "Newest data is 64.9h old (threshold: 48h)",
+          "details": {
+            "newest_timestamp": "2026-07-10T00:00:00+00:00",
+            "age_hours": 64.9,
+            "threshold_hours": 48
+          }
+        }
+      ]
     },
     {
       "dataset_name": "gas_storage",
