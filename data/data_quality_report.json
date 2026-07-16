@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-15T17:10:51.777384+00:00",
+  "timestamp": "2026-07-16T17:09:05.840525+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -177,15 +177,11 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "11 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "1 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 11,
+            "count": 1,
             "examples": [
-              "NL/2026-07-15T08:30:00+02:00: forecast_error=3362.2, load_actual=7626.576, ratio=0.44",
-              "NL/2026-07-15T08:45:00+02:00: forecast_error=3569.7, load_actual=7388.506, ratio=0.48",
-              "NL/2026-07-15T09:00:00+02:00: forecast_error=3834.0, load_actual=7060.276, ratio=0.54",
-              "NL/2026-07-15T09:15:00+02:00: forecast_error=3976.8, load_actual=6803.276, ratio=0.58",
-              "NL/2026-07-15T09:30:00+02:00: forecast_error=4243.6, load_actual=6501.876, ratio=0.65"
+              "NL/2026-07-16T11:00:00+02:00: forecast_error=3260.1, load_actual=7591.556, ratio=0.43"
             ],
             "threshold": 0.4
           }
@@ -237,7 +233,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 26,
+      "data_points": 27,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -247,7 +243,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 132,
+      "data_points": 134,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
