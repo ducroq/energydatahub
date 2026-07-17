@@ -1,9 +1,11 @@
 {
-  "timestamp": "2026-07-16T17:09:05.840525+00:00",
+  "timestamp": "2026-07-17T17:06:43.856443+00:00",
   "overall_status": "warning",
   "total_issues": 2,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "datasets_collected": 23,
+  "datasets_missing": [
+    "air_quality_buurt"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -83,16 +85,6 @@
       "status": "info",
       "data_points": 730,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -177,11 +169,12 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "1 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "2 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 1,
+            "count": 2,
             "examples": [
-              "NL/2026-07-16T11:00:00+02:00: forecast_error=3260.1, load_actual=7591.556, ratio=0.43"
+              "NL/2026-07-17T10:45:00+02:00: forecast_error=2732.4, load_actual=5623.286, ratio=0.49",
+              "NL/2026-07-17T11:00:00+02:00: forecast_error=2884.1, load_actual=5254.656, ratio=0.55"
             ],
             "threshold": 0.4
           }
@@ -223,7 +216,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 510,
+      "data_points": 506,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -243,7 +236,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 134,
+      "data_points": 135,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
