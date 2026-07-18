@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-07-17T17:06:43.856443+00:00",
+  "timestamp": "2026-07-18T16:51:12.700319+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
+  "total_issues": 1,
   "datasets_collected": 23,
   "datasets_missing": [
     "air_quality_buurt"
@@ -161,25 +161,11 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
+      "status": "info",
       "data_points": 384,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "2 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 2,
-            "examples": [
-              "NL/2026-07-17T10:45:00+02:00: forecast_error=2732.4, load_actual=5623.286, ratio=0.49",
-              "NL/2026-07-17T11:00:00+02:00: forecast_error=2884.1, load_actual=5254.656, ratio=0.55"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
@@ -216,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 506,
+      "data_points": 504,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
