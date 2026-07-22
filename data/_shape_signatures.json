@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-07-21T17:10:20+00:00",
+  "computed_at": "2026-07-22T17:11:05+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -2341,7 +2341,7 @@
       "sources": null
     },
     "calendar_features.json": {
-      "shape_hash": "1a8e65fc0bd93cb73f6a80197cb8ee85",
+      "shape_hash": "0ed9b8506dc94c2ab28494f16a233862",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -2355,8 +2355,8 @@
                 "day_of_year": "int",
                 "dst_utc_offset_hours": "int",
                 "holiday_count": "int",
-                "holiday_impact": "float",
-                "holiday_name_be": "str",
+                "holiday_impact": "int",
+                "holiday_name_be": "null",
                 "holiday_name_de": "null",
                 "holiday_name_fr": "null",
                 "holiday_name_nl": "null",
