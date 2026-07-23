@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-22T17:11:05.972659+00:00",
+  "timestamp": "2026-07-23T17:14:32.930500+00:00",
   "overall_status": "warning",
   "total_issues": 1,
   "datasets_collected": 24,
@@ -91,7 +91,7 @@
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -180,7 +180,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 72,
+      "data_points": 76,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -230,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 138,
+      "data_points": 139,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
