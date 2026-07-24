@@ -1,9 +1,11 @@
 {
-  "timestamp": "2026-07-23T17:14:32.930500+00:00",
+  "timestamp": "2026-07-24T17:24:43.478312+00:00",
   "overall_status": "warning",
   "total_issues": 1,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "datasets_collected": 23,
+  "datasets_missing": [
+    "air_quality_buurt"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -83,16 +85,6 @@
       "status": "info",
       "data_points": 730,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 24,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -210,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 510,
+      "data_points": 512,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -230,7 +222,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 139,
+      "data_points": 140,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
