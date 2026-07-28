@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-07-27T17:38:36.357938+00:00",
+  "timestamp": "2026-07-28T17:23:10.420390+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
+  "total_issues": 2,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -169,11 +169,28 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "9 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 9,
+            "examples": [
+              "NL/2026-07-28T09:15:00+02:00: forecast_error=2857.7, load_actual=6562.506, ratio=0.44",
+              "NL/2026-07-28T09:30:00+02:00: forecast_error=3055.8, load_actual=6194.806, ratio=0.49",
+              "NL/2026-07-28T09:45:00+02:00: forecast_error=3398.8, load_actual=5656.936, ratio=0.60",
+              "NL/2026-07-28T10:00:00+02:00: forecast_error=3734.3, load_actual=5177.516, ratio=0.72",
+              "NL/2026-07-28T10:15:00+02:00: forecast_error=4242.3, load_actual=4467.901, ratio=0.95"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
@@ -200,7 +217,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 21,
+      "data_points": 19,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -210,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 516,
+      "data_points": 512,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -230,7 +247,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 141,
+      "data_points": 142,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
