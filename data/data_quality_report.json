@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-08-02T16:53:47.865137+00:00",
-  "overall_status": "error",
-  "total_issues": 4,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "timestamp": "2026-08-04T17:39:31.881381+00:00",
+  "overall_status": "warning",
+  "total_issues": 2,
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -85,6 +83,16 @@
       "status": "info",
       "data_points": 730,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -169,15 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "11 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 11,
+            "count": 8,
             "examples": [
-              "NL/2026-08-02T08:15:00+02:00: forecast_error=3242.3, load_actual=7298.316, ratio=0.44",
-              "NL/2026-08-02T08:30:00+02:00: forecast_error=4019.1, load_actual=6648.436, ratio=0.60",
-              "NL/2026-08-02T08:45:00+02:00: forecast_error=4845.8, load_actual=6038.436, ratio=0.80",
-              "NL/2026-08-02T09:00:00+02:00: forecast_error=5320.9, load_actual=5669.006, ratio=0.94",
-              "NL/2026-08-02T09:15:00+02:00: forecast_error=6041.3, load_actual=5137.806, ratio=1.18"
+              "NL/2026-08-04T09:45:00+02:00: forecast_error=2867.7, load_actual=6785.006, ratio=0.42",
+              "NL/2026-08-04T10:00:00+02:00: forecast_error=3109.9, load_actual=6318.866, ratio=0.49",
+              "NL/2026-08-04T10:15:00+02:00: forecast_error=3212.7, load_actual=5849.976, ratio=0.55",
+              "NL/2026-08-04T10:30:00+02:00: forecast_error=3592.1, load_actual=5342.486, ratio=0.67",
+              "NL/2026-08-04T10:45:00+02:00: forecast_error=3911.2, load_actual=4734.536, ratio=0.83"
             ],
             "threshold": 0.4
           }
@@ -189,7 +197,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 72,
+      "data_points": 76,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -209,7 +217,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 21,
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -219,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 505,
+      "data_points": 516,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -228,43 +236,21 @@
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "error",
-      "data_points": 26,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 64.9h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-07-31T00:00:00+00:00",
-            "age_hours": 64.9,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 27,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "error",
-      "data_points": 145,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 64.9h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-07-31T00:00:00+00:00",
-            "age_hours": 64.9,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 147,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "gas_storage",
