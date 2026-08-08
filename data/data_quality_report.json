@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-07T16:47:51.051275+00:00",
+  "timestamp": "2026-08-08T16:26:00.138510+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -177,15 +177,14 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "5 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "4 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 5,
+            "count": 4,
             "examples": [
-              "NL/2026-08-07T09:45:00+02:00: forecast_error=3275.8, load_actual=8074.876, ratio=0.41",
-              "NL/2026-08-07T10:00:00+02:00: forecast_error=3338.8, load_actual=7773.196, ratio=0.43",
-              "NL/2026-08-07T10:15:00+02:00: forecast_error=3129.9, load_actual=7573.946, ratio=0.41",
-              "NL/2026-08-07T10:30:00+02:00: forecast_error=3319.0, load_actual=7316.076, ratio=0.45",
-              "NL/2026-08-07T10:45:00+02:00: forecast_error=3538.6, load_actual=6989.236, ratio=0.51"
+              "NL/2026-08-08T09:30:00+02:00: forecast_error=2134.6, load_actual=4926.016, ratio=0.43",
+              "NL/2026-08-08T09:45:00+02:00: forecast_error=2308.4, load_actual=4514.814, ratio=0.51",
+              "NL/2026-08-08T10:00:00+02:00: forecast_error=2418.0, load_actual=4070.675, ratio=0.59",
+              "NL/2026-08-08T10:15:00+02:00: forecast_error=2454.6, load_actual=3682.199, ratio=0.67"
             ],
             "threshold": 0.4
           }
@@ -227,7 +226,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 504,
+      "data_points": 499,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
