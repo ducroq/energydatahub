@@ -76,6 +76,7 @@ from utils.data_quality import (
     update_upstream_empty_streaks,
     escalated_upstream_feeds,
     UPSTREAM_EMPTY_ESCALATION_RUNS,
+    PRESENT_EMPTY_GRACE_FEEDS,
 )
 from utils.data_types import CombinedDataSet, EnhancedDataSet
 from utils.timezone_helpers import get_timezone_and_country
@@ -657,26 +658,75 @@ async def main() -> None:
         hydro_data = results['entsoe_hydro']
         buurt_weather_data = results['buurt_weather']
         buurt_solar_data = results['buurt_solar']
-        # Present-but-empty guard for the buurt Open-Meteo feeds. base.collect()
-        # returns a truthy EnhancedDataSet with data={} even when every location
-        # timed out (it builds the dataset regardless of _validate_data), so a
-        # transient all-locations Open-Meteo timeout — the late-wave regression
-        # documented in _openmeteo_shared.py / gotcha-log.md:95 — would otherwise
-        # be *saved* as an empty envelope and then hard-fail the completeness gate
-        # (validate_completeness → CRITICAL on 0 points), aborting the whole daily
-        # publish over two secondary FyE B1 feeds that Augur doesn't consume.
-        # Coerce empty→None so it routes through the (non-blocking, 'info') missing-
-        # dataset path instead — treating present-but-empty identically to absent,
-        # mirroring #38's "keep publishing the healthy feeds on an upstream gap".
-        for _label, _ds in (('weather', buurt_weather_data), ('solar', buurt_solar_data)):
-            if _ds is not None and not _ds.data:
-                logging.warning(
-                    f"buurt {_label}: all locations returned no data "
-                    f"(transient Open-Meteo timeout?) — treating as absent this run"
+        # Present-but-empty guard for the Open-Meteo feeds (#42, generalised from
+        # the buurt-only guard of 2026-07-07). base.collect() returns a truthy
+        # EnhancedDataSet with data={} even when every location timed out (it
+        # builds the dataset regardless of _validate_data), so a transient
+        # all-locations Open-Meteo timeout — the late-wave regression documented
+        # in _openmeteo_shared.py / gotcha-log.md — would otherwise be *saved* as
+        # an empty envelope and then hard-fail the completeness gate
+        # (validate_completeness → CRITICAL on 0 points), aborting the whole
+        # daily publish. Run 30838120578 (2026-08-03) showed every offshore
+        # location timing out in one wave, so this is not hypothetical.
+        #
+        # The grace is time-boxed. For the first UPSTREAM_EMPTY_ESCALATION_RUNS
+        # consecutive runs a feed is coerced empty→None and routes through the
+        # (non-blocking) missing-dataset path. After that the coercion stops and
+        # the completeness gate fails the run loudly — a sustained outage must
+        # not be laundered into silence, which is the whole point of #38's
+        # counter for the price feeds. Streaks are read here and persisted with
+        # the #38 ones further down.
+        _openmeteo_now = {
+            'weather_forecast_multi_location': strategic_weather_data,
+            'solar_forecast':                  solar_data,
+            'demand_weather_forecast':         demand_weather_data,
+            'offshore_wind':                   offshore_wind_data,
+            'weather_forecast_buurt':          buurt_weather_data,
+            'solar_forecast_buurt':            buurt_solar_data,
+        }
+        present_empty_datasets = {
+            name for name, ds in _openmeteo_now.items()
+            if ds is not None and not ds.data
+        }
+        _prior_streaks_early = {}
+        _streak_path_early = os.path.join(output_path, "_upstream_empty_streak.json")
+        if os.path.exists(_streak_path_early):
+            try:
+                with open(_streak_path_early) as f:
+                    _prior_streaks_early = json.load(f)
+            except (json.JSONDecodeError, OSError):
+                _prior_streaks_early = {}
+        # A feed already at the threshold has exhausted its grace: leave it
+        # present-but-empty so the completeness gate fails on it this run.
+        present_empty_past_grace = {
+            name for name in present_empty_datasets
+            if int(_prior_streaks_early.get(name, 0)) + 1 >= UPSTREAM_EMPTY_ESCALATION_RUNS
+        }
+        for _name in sorted(present_empty_datasets):
+            _streak = int(_prior_streaks_early.get(_name, 0)) + 1
+            if _name in present_empty_past_grace:
+                logging.error(
+                    f"{_name}: no data for {_streak} consecutive runs — grace "
+                    f"exhausted, failing the run instead of treating as absent"
                 )
-        if buurt_weather_data is not None and not buurt_weather_data.data:
+            else:
+                logging.warning(
+                    f"{_name}: all locations returned no data (transient "
+                    f"Open-Meteo timeout?) — treating as absent this run "
+                    f"({_streak}/{UPSTREAM_EMPTY_ESCALATION_RUNS} before escalation)"
+                )
+        _coerce = present_empty_datasets - present_empty_past_grace
+        if 'weather_forecast_multi_location' in _coerce:
+            strategic_weather_data = None
+        if 'solar_forecast' in _coerce:
+            solar_data = None
+        if 'demand_weather_forecast' in _coerce:
+            demand_weather_data = None
+        if 'offshore_wind' in _coerce:
+            offshore_wind_data = None
+        if 'weather_forecast_buurt' in _coerce:
             buurt_weather_data = None
-        if buurt_solar_data is not None and not buurt_solar_data.data:
+        if 'solar_forecast_buurt' in _coerce:
             buurt_solar_data = None
         buurt_aq_data = [results[f'buurt_aq_{i}'] for i in range(len(luchtmeetnet_buurt_collectors))]
         ned_data = results.get('ned')
@@ -1117,6 +1167,13 @@ async def main() -> None:
         streaks = update_upstream_empty_streaks(
             prior_streaks, upstream_empty_datasets, CRITICAL_DATASETS
         )
+        # #42: the Open-Meteo present-but-empty counters share this sidecar. Keys
+        # are dataset names and do not collide with the #38 price-feed keys. The
+        # decision they drive (coerce vs let it fail) was already taken above
+        # using the prior values; this only advances them.
+        streaks.update(update_upstream_empty_streaks(
+            prior_streaks, present_empty_datasets, PRESENT_EMPTY_GRACE_FEEDS
+        ))
         with open(streak_path, 'w') as f:
             json.dump(streaks, f, indent=2)
         escalated = escalated_upstream_feeds(streaks)

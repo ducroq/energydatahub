@@ -55,11 +55,16 @@
 
 The position above ("deferring is correct, growth is linear and predictable") is the part now in doubt: 1 GB is roughly one quarter away at this rate, and the *cost* the threshold was proxying for — checkout time — has already arrived. Not resolving this here; it needs the engineer's call on #9. What changed is that it is no longer a someday problem.
 
-### H6 — The `cryptography<44` pin will block a venv rebuild on current Python
+### H6 — [RESOLVED 2026-08-08, position confirmed] The `cryptography<44` pin will block a venv rebuild on current Python
 **Position**: `requirements.txt` pins `cryptography>=41.0.0,<44.0.0`, an upper bound that predates Python 3.13/3.14. The venv is uv-managed on 3.12.13 while the system interpreter is 3.14.4, so anyone recreating the venv from system Python lands on an untested combination, and `cryptography` — the AES-CBC/HMAC dependency named in Hard Constraints — is the most likely thing to fail to resolve or build.
 **Counter-position**: The pin is deliberate and nothing forces a rebuild; uv reproduces 3.12.13 from `pyvenv.cfg`, and CI pins 3.12 explicitly in both workflows. This may be a non-problem that only bites on a machine migration.
 **Method**: `uv venv --python 3.14 && uv pip install -r requirements.txt` in a throwaway directory. If it resolves, raise the bound and add 3.13/3.14 to `test.yml`'s matrix (currently `['3.12']`, a single entry, so nothing tests above 3.12). If it does not, record the floor explicitly — there is no `requires-python` declared anywhere today, so "we support 3.12" is convention rather than something enforced.
 **Revisit trigger**: any venv rebuild, a machine migration, or Dependabot proposing a `cryptography` major bump.
+**Outcome (2026-08-08) — confirmed, and fixed:**
+- On 3.14, `<44` resolves to `cryptography` 43.0.3 → `cffi` 1.17.1, which ships **no 3.14 wheel**. uv falls back to a source build and dies on `fatal error: ffi.h: No such file or directory`. So the pin did block a rebuild, exactly as posited.
+- Unpinned on 3.14 resolves cleanly to `cryptography` 50.0.0 + `cffi` 2.1.1 (prebuilt wheels), and `SecureDataHandler` round-trips correctly on 3.14.4.
+- Raised the bound to `<51.0.0`. Validated on the **production** interpreter (3.12): resolves to `cryptography` 46.0.0, full suite **714 passed**. This also lifts a security-sensitive dependency that was seven majors behind, which matters more than the version-skew question that started this.
+- **Did NOT add 3.13/3.14 to `test.yml`'s matrix.** `memory/project_actions_optimization.md` records that 3.13 was deliberately *dropped* on 2026-03-30 to save ~90 min/month after the account hit the 3,000 min/month GitHub Actions limit. Re-adding it would silently reverse a live cost decision. The floor stays convention-enforced rather than matrix-enforced; if that becomes unacceptable, the cheap fix is a `requires-python` in a `pyproject.toml`, not a second CI job.
 
 ## Resolved
 

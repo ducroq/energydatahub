@@ -447,6 +447,28 @@ WARNING_IF_MISSING_DATASETS = [
 # hard failure (loud CI alert) instead of a warning.
 UPSTREAM_EMPTY_ESCALATION_RUNS = 3
 
+# Feeds eligible for the present-but-empty grace (#42). All six are backed by
+# Open-Meteo and collected in one late request wave, so a CDN cooldown or
+# connection timeout can empty any of them at once. base.collect() returns a
+# truthy EnhancedDataSet with data={} in that case, which validate_completeness
+# scores CRITICAL (0 points) and which aborts the whole publish — even though a
+# genuinely *absent* feed here is a non-event.
+#
+# The grace is deliberately time-boxed, not unconditional. Coercing empty→absent
+# forever would let a real, sustained outage degrade silently, which is exactly
+# what #38's streak counter exists to prevent for the price feeds. So: coerce for
+# the first UPSTREAM_EMPTY_ESCALATION_RUNS consecutive runs, then stop coercing
+# and let the completeness gate fail the run loudly. Streaks live in the same
+# committed data/_upstream_empty_streak.json sidecar as the #38 counters.
+PRESENT_EMPTY_GRACE_FEEDS = (
+    'weather_forecast_multi_location',
+    'solar_forecast',
+    'demand_weather_forecast',
+    'offshore_wind',
+    'weather_forecast_buurt',
+    'solar_forecast_buurt',
+)
+
 
 def update_upstream_empty_streaks(
     prior_streaks: Dict[str, int],
