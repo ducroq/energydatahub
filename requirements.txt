@@ -20,3 +20,4 @@ holidays>=0.40
 gie-py>=0.3.0
 yfinance>=0.2.40,<0.3.0
 tzdata>=2024.1
+PyYAML>=6.0,<7.0

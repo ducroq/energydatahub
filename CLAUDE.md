@@ -2,7 +2,7 @@
 stack: Python 3.12, asyncio/aiohttp, pandas, GitHub Actions CI/CD
 status: Production (daily automated collection since Oct 2024)
 repo: github.com/ducroq/energydatahub
-framework: agent-ready-projects v1.10.1
+framework: agent-ready-projects v1.17.0
 ---
 
 # energyDataHub
@@ -21,7 +21,11 @@ Automated energy market data collection platform for electricity price predictio
 | Debugging data quality issues | `utils/data_quality.py` — FMEA validation. Per-dataset config via `get_dataset_validation_config()`. Missing-dataset severity via `DATASET_MISSING_SEVERITY` dict (single source of truth). A critical feed that is *upstream-empty* (source healthy, published no data for the window — `UpstreamNoDataError`) is downgraded `critical`→`warning` so the run still publishes the healthy feeds; the orchestrator passes `validate_pipeline(upstream_empty=…)` and only `SystemExit(1)`s on a genuine collector failure. A *sustained* gap (≥`UPSTREAM_EMPTY_ESCALATION_RUNS`=3 consecutive runs, tracked in the committed `data/_upstream_empty_streak.json`) escalates back to a hard failure so it can't degrade silently forever (#38). Separately, a *present-but-empty* dataset (collector returned a truthy `EnhancedDataSet` with `data={}` — e.g. an all-locations Open-Meteo timeout) would otherwise hard-fail the completeness gate (`validate_completeness` → `CRITICAL` on 0 points) and abort the whole publish; `data_fetcher` coerces the empty buurt feeds to `None` so they route through the (non-blocking, `'info'`) missing path instead — treating present-empty as absent (2026-07-07). |
 | Adding a published dataset | `memory/project_published_dataset_checklist.md` — 8-touchpoint checklist across `data_fetcher.py`, `utils/data_quality.py`, and `.github/workflows/collect-data.yml`. **Missing one silently breaks publishing** (BLOCKER on c40a53b). Read before wiring a new collector into the publish set. |
 | Stuck or debugging something weird | `memory/gotcha-log.md` — problem-fix archive |
-| Ending a session | Run `/curate` — reviews gotcha log, promotes patterns, syncs docs, surfaces stale memory |
+| About to act on "it's probably transient" / "that's probably safe" | `memory/hypothesis-log.md` — open positions (H1–H5) with the method that would settle each. Check before treating a recurring failure as known-benign; `/curate` surfaces overdue entries. |
+| Picking up work that spans sessions | `memory/work-items/` — savepoints for in-flight work (what is decided, what is still open). Create one at the *start* of anything spanning >2 sessions; see `memory/work-items/README.md`. Distinct from `memory/project_session_*.md`, which are retrospectives. |
+| Before committing | Run `/review-changes` — picks review lenses from what changed (one adversarial pass for a small diff, up to the full 5-lens battery for `collectors/`, `utils/`, `scripts/`, CI, `.claude/**`, `.gitignore`, or `settings.ini`). Project-local skill, never install it globally. |
+| Bumping the published data schema | Run `/release` — classifies the bump, verifies preconditions, writes the SCHEMA_CHANGELOG entry, syncs version references, **stops before the run that publishes**. User-typed only. |
+| Ending a session | Run `/curate` — reviews gotcha log, promotes patterns, syncs docs, surfaces stale memory. New gotcha entries are 2-3 lines: the lesson and the action, not the narrative of the session that found it. The 24 pre-2026-08-08 entries use an older four-field long form — read them, don't imitate them; the budget is restated in the log's own header. |
 | Monthly or after major restructuring | Run `/audit-context` — structural audit (duplication, wrong-layer placement, broken refs) |
 
 ## Hard Constraints
@@ -31,7 +35,9 @@ Automated energy market data collection platform for electricity price predictio
 - Never commit secrets.ini or API keys — use environment variables in CI (enforced by GitHub secret-scanning push protection since 2026-06-14; secrets.ini is gitignored)
 - Schema changes must be backward-compatible (see `utils/schema_registry.py` migration chain)
 - Collectors must inherit from BaseCollector — provides retry, circuit breaker, validation
-- Never claim tests pass without running them (`python -m pytest tests/ -x`)
+- Never claim tests pass without running them (`venv/bin/python -m pytest tests/ -x`). Use `venv/bin/python` unless the venv is activated — the system interpreter lacks `pytest-cov` and `pytest.ini`'s `addopts` makes it fail with `unrecognized arguments: --cov=.`, which looks like a broken config rather than a missing dependency. The venv is uv-managed and has no `pip`; install with `uv pip install --python venv/bin/python -r requirements.txt`.
+- **Tests are not modified to make them pass.** If a test is wrong, say so and stop. This exists because `.claude/hooks/verify_edit.py` puts a failing test in front of the agent after an in-scope edit, and that pressure is exactly what produces a loosened assertion or a `@pytest.mark.skip`. The single documented exception is a schema bump updating a version literal — see `/release`, which spells out exactly how narrow that carve-out is.
+- **The hook is a backstop, not a guarantee.** It fires on `Edit`/`Write`/`MultiEdit` only, so a file rewritten through Bash (`sed -i`, a heredoc, `patch`, `git checkout`) is never verified. It covers `collectors/ utils/ scripts/ tests/ data_fetcher.py` + workflow YAML and nothing else — notably not `pytest.ini`, `conftest.py`, `requirements.txt`, or the hook itself. And a file with no mapped test falls back to the full unit suite, which may not import it at all — `utils/secure_data_handler.py` was that case until it got `tests/unit/test_secure_data_handler.py` on 2026-08-08. Exit 0 from the hook is never a coverage claim. Run the full suite before committing.
 
 ## Architecture
 
@@ -93,6 +99,19 @@ scripts/
 data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + current copies +
                              # _shape_signatures.json sidecar (unencrypted, committed)
 docs/                        # GitHub Pages: encrypted JSON + project documentation
+  work-items/                # Savepoints for in-flight multi-session work (agent-ready-projects
+                             # work-item template). Temporary — deleted once the Outcome's
+                             # residue is promoted to an ADR / gotcha log / CLAUDE.md.
+.claude/                     # Agent harness config (committed). `curate` + `audit-context` are
+                             # user-global and deliberately NOT here.
+  settings.json              # PostToolUse verification hook wiring
+  hooks/verify_edit.py       # Runs py_compile + the unit tests mapped to the edited file, and
+                             # exits 2 so the failure reaches the agent (exit 0 = silent hook).
+                             # Scoped to collectors/ utils/ scripts/ tests/ data_fetcher.py
+                             # + workflow YAML. Test mapping is derived by glob, not hand-listed.
+  skills/review-changes/     # /review-changes — pre-commit lens battery (project-local by design:
+                             # its risk tiers name files in this tree)
+  skills/release/            # /release — published-schema version cut. User-typed only.
 .github/
   dependabot.yml             # github-actions ecosystem, weekly grouped — auto-bumps the
                              # SHA-pinned action versions so the pins don't rot (added 2026-06-14)
@@ -127,38 +146,56 @@ docs/                        # GitHub Pages: encrypted JSON + project documentat
 | `scripts/backfill_entsoe.py` | Backfill missing ENTSO-E prices into historical files |
 | `scripts/archive_to_monthly.py` | Decrypt `data/` files into `05. Data/YYYY-MM/` monthly archive (idempotent) |
 | `tests/backtest_data_quality.py` | Run FMEA quality framework against all historical files |
-| `tests/` | Unit + integration tests <!-- verify: python -m pytest tests/ --collect-only -q \| tail -1 --> |
+| `tests/` | Unit + integration tests <!-- verify: venv/bin/python -m pytest tests/ --collect-only -q \| tail -1 --> |
+| `.claude/settings.json` | Verification-hook wiring (PostToolUse on Edit/Write/MultiEdit) |
+| `.claude/hooks/verify_edit.py` | The hook itself — compile check + mapped unit tests. Silent exit 0 on pass, exit 2 + stderr on failure. Needs PyYAML for the workflow branch. <!-- verify: echo '{"tool_input":{"file_path":"collectors/base.py"}}' \| .claude/hooks/verify_edit.py; echo $?   # expect 0 --> |
+| `.claude/skills/` | `/review-changes` and `/release` — project-local by design; `curate` + `audit-context` are user-global |
+| `memory/work-items/` | Savepoints for in-flight multi-session work (deliberately NOT under `docs/`, which is the Pages publish root) |
+| `memory/hypothesis-log.md` | Open positions the project acts on but has not established |
 
 ## How to Work Here
 
 ```bash
 # Run all tests
-python -m pytest tests/ -x
+venv/bin/python -m pytest tests/ -x
 
 # Run specific test file
-python -m pytest tests/unit/test_base_collector.py -v
+venv/bin/python -m pytest tests/unit/test_base_collector.py -v
 
 # Run data collection locally (needs secrets.ini)
-python data_fetcher.py
+venv/bin/python data_fetcher.py
 
 # Backfill missing ENTSO-E data (idempotent, safe to re-run)
-python scripts/backfill_entsoe.py --dry-run  # report only
-python scripts/backfill_entsoe.py            # patch files
+venv/bin/python scripts/backfill_entsoe.py --dry-run  # report only
+venv/bin/python scripts/backfill_entsoe.py            # patch files
 
 # Archive decrypted data into 05. Data/<YYYY-MM>/ (idempotent)
-python scripts/archive_to_monthly.py --since 260201
+venv/bin/python scripts/archive_to_monthly.py --since 260201
 
 # Run data quality backtest on historical files
-python tests/backtest_data_quality.py
+venv/bin/python tests/backtest_data_quality.py
 
-# Check schema drift locally (after a `python data_fetcher.py` run)
-python scripts/detect_schema_drift.py --previous-ref HEAD --warn-only
+# Check schema drift locally (after a `venv/bin/python data_fetcher.py` run)
+venv/bin/python scripts/detect_schema_drift.py --previous-ref HEAD --warn-only
 
 # Check GitHub Actions status
 gh run list --limit 5
 
 # Trigger a manual collection run (requires PAT secret in workflow)
 gh workflow run "Collect and Publish Data"
+
+# Exercise the verification hook by hand. A healthy file exits 0 and prints nothing —
+# that is the pass, not a no-op:
+echo '{"tool_input":{"file_path":"collectors/base.py"}}' | .claude/hooks/verify_edit.py; echo $?
+
+# Then confirm it still FAILS on a real break — exit 2 + stderr. A hook you have not seen
+# fail is a hook you cannot trust, and exit 0 is what a disabled hook also looks like:
+cp collectors/base.py /tmp/base.bak && printf '\nnot valid python(\n' >> collectors/base.py
+echo '{"tool_input":{"file_path":"collectors/base.py"}}' | .claude/hooks/verify_edit.py; echo $?
+cp /tmp/base.bak collectors/base.py && rm /tmp/base.bak   # always restore
+
+# Re-derive the user-global skills after pulling agent-ready-projects
+cd ~/repos/agent-ready-projects && ./scripts/install-global-skills.sh --check ~/repos
 ```
 
 ## Commit Conventions

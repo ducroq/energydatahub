@@ -4,9 +4,21 @@
 secrets.ini
 secrets.local.ini
 
-# Claude Code: ignore local config, but track project-shared skills
+# Claude Code: ignore local/personal config, but track the project-shared harness.
+# settings.local.json stays ignored on purpose — it is the personal-override file.
+#
+# Read the negations carefully, they are not uniform:
+#   !.claude/settings.json  un-ignores ONE file.
+#   !.claude/skills/  and  !.claude/hooks/  un-ignore WHOLE SUBTREES — anything
+#   dropped in either directory becomes committable to a PUBLIC repo with no
+#   further gitignore backstop. If a hook ever writes a log, a cache, or a token
+#   beside itself, add an explicit re-ignore below, as done for __pycache__.
+# Everything under .claude/ NOT reached by a negation stays ignored via `.claude/*`.
 .claude/*
 !.claude/skills/
+!.claude/settings.json
+!.claude/hooks/
+.claude/hooks/__pycache__/
 tmpclaude-*
 
 # Log files
