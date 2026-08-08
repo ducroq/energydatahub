@@ -48,6 +48,18 @@
 **Counter-position**: Clone time and Actions checkout cost degrade well before the 1 GB headline number, and the migration gets harder the longer it waits.
 **Method**: Record `git count-objects -vH` size at each monthly archive. If growth is superlinear, or checkout time in the daily run exceeds ~60s, re-plan.
 **Revisit trigger**: repo > 700 MB, or daily-run checkout > 60s.
+**⚠ TRIGGERED 2026-08-08 — both clauses, on the first check after this entry was written:**
+- `git count-objects -vH` → **size-pack 797.09 MiB** (threshold 700 MB), `.git` 799 MB on disk.
+- Checkout step in run `31199044747` (08-07, a *successful* run) → **101s** (threshold 60s). That is ~half the total wall-clock of a healthy 3m26s collect, spent before any data is fetched.
+- `data/` now holds **4,974** JSON files; MEMORY.md's #9 note said 3,909 as of 2026-06-14 — ~1,065 added in eight weeks.
+
+The position above ("deferring is correct, growth is linear and predictable") is the part now in doubt: 1 GB is roughly one quarter away at this rate, and the *cost* the threshold was proxying for — checkout time — has already arrived. Not resolving this here; it needs the engineer's call on #9. What changed is that it is no longer a someday problem.
+
+### H6 — The `cryptography<44` pin will block a venv rebuild on current Python
+**Position**: `requirements.txt` pins `cryptography>=41.0.0,<44.0.0`, an upper bound that predates Python 3.13/3.14. The venv is uv-managed on 3.12.13 while the system interpreter is 3.14.4, so anyone recreating the venv from system Python lands on an untested combination, and `cryptography` — the AES-CBC/HMAC dependency named in Hard Constraints — is the most likely thing to fail to resolve or build.
+**Counter-position**: The pin is deliberate and nothing forces a rebuild; uv reproduces 3.12.13 from `pyvenv.cfg`, and CI pins 3.12 explicitly in both workflows. This may be a non-problem that only bites on a machine migration.
+**Method**: `uv venv --python 3.14 && uv pip install -r requirements.txt` in a throwaway directory. If it resolves, raise the bound and add 3.13/3.14 to `test.yml`'s matrix (currently `['3.12']`, a single entry, so nothing tests above 3.12). If it does not, record the floor explicitly — there is no `requires-python` declared anywhere today, so "we support 3.12" is convention rather than something enforced.
+**Revisit trigger**: any venv rebuild, a machine migration, or Dependabot proposing a `cryptography` major bump.
 
 ## Resolved
 

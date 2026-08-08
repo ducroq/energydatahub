@@ -77,6 +77,35 @@ Filed as a GitHub issue; recorded as H3 in the hypothesis log, because the obvio
 (commit the sidecar pre-gate) risks poisoning the baseline with a genuinely broken shape —
 exactly what the 2026-06-10 fail-mode flip existed to stop.
 
+## Post-adoption: `/audit-context` and a second `/curate`
+
+**The audit found the memory index had outgrown the project file.** MEMORY.md was 24,053
+chars against CLAUDE.md's 19,145, with `Current State` at 49% and one `- **Pipeline**`
+bullet running 5,174 chars across 12 sessions — eight of which had dedicated session files
+already indexed two sections above. Trimmed to 20,944 (`69d4114`); the Pipeline bullet lost
+57% with no pointer dropped. The mechanism is worth remembering: `/curate` step 3 says
+"update Current State" and nothing says "prune", so every session appended and none
+truncated.
+
+Reference integrity produced 26 raw hits and exactly **one** real defect (a `conftest.py`
+that does not exist, introduced earlier the same day). The other 25 were structural
+`data/`-vs-`docs/` filename pairs, glob patterns, cross-repo references, and basename
+house style — enumerated in the audit report so the next run doesn't re-derive them.
+
+**H5 fired on its first check.** Written that morning with thresholds of 700 MB and 60s
+checkout, both were already exceeded when measured hours later: size-pack **797 MiB**,
+checkout **101s** on a healthy 08-07 run, `data/` at **4,974** files against a
+last-recorded 3,909 from eight weeks earlier. Measurements posted to #9. The lesson is
+about the instrument, not the repo — the belief had never been measured, and writing the
+revisit condition *as a number* is the only reason it surfaced.
+
+**Python versions, since it came up twice**: venv 3.12.13 (uv-managed), system 3.14.4, CI
+and production both pinned 3.12. The system interpreter is *newer*, not older; the
+`unrecognized arguments: --cov=.` trap is a missing `pytest-cov`, not an old Python. 3.12
+has security support to Oct 2028 and dev/CI/prod agree, which is what matters for an
+unattended pipeline. Recorded as H6: `cryptography>=41,<44` predates 3.13/3.14, nothing
+tests above 3.12, and no `requires-python` floor is declared.
+
 ## Open / next
 
 - **#42** present-empty rollout — still not started, decision pending (H1).

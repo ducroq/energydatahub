@@ -36,6 +36,16 @@
 | Guard signal integrity — always-red is as corrosive as always-green (inverse of the 3-incident silent-skip pattern; new instance 2026-08-08: verification hook's YAML branch failed 100% of the time on a valid workflow). Prescription: exercise BOTH paths — known-good passes, known-bad fails — before shipping any guard | `memory/MEMORY.md` → Active Decisions | 2026-08-08 |
 | History-derived classifiers only learn from recorded observations (limit found on the 06-14 decision itself: drift tripwire runs before the commit step, so a failing run teaches `derive_volatile_feeds()` nothing) | `memory/MEMORY.md` → Active Decisions + `memory/hypothesis-log.md` H3 | 2026-08-08 |
 
+### The memory index outgrew the project file it indexes (2026-08-08)
+**Problem**: `/audit-context` found MEMORY.md at 24,053 chars — larger than CLAUDE.md (19,145) — despite its own header saying "keep lean, navigational index only". One `- **Pipeline**` bullet was 5,174 chars recapping 12 sessions.
+**Root cause**: `/curate` step 3 says "update Current State to reflect what shipped" with no matching instruction to prune. Every session appended; none truncated. Eight of those sessions already had dedicated session files, themselves indexed two sections above — the same content in three layers.
+**Fix**: Trimmed to 20,944 (Pipeline bullet −57%). When a curation step tells you to append to an auto-loaded file, it is also telling you to check what can leave.
+
+### A hypothesis log earns its keep on the first check (2026-08-08)
+**Problem**: H5 ("git-as-archive is viable until ~1 GB") was written with thresholds of 700 MB / 60s checkout. Both were **already exceeded** when checked hours later: 797 MiB, 101s.
+**Root cause**: The belief was never measured, only assumed — the last recorded figure (3,909 files) was eight weeks old, and nothing re-checked it because the issue was tagged "defer".
+**Fix**: Writing the trigger *as a number* is what surfaced it. A deferred decision needs a measurable revisit condition, not a "revisit later".
+
 ### Schema-drift fail-mode starves the volatility classifier that would have prevented it (2026-08-08)
 **Problem**: Run `30838120578` (08-03) failed the drift tripwire on `ned_production` + `wind_forecast`; five days on, `derive_volatile_feeds()` still does not classify either, so the same transient will fail the same way.
 **Root cause**: The tripwire (`collect-data.yml:119`) runs *before* the commit step (`:149`), so a failing run never commits its sidecar — and the classifier learns only from committed history. Drift that fails is invisible to the thing designed to learn from it; only drift that *warns* teaches.
