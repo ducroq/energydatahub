@@ -106,6 +106,36 @@ has security support to Oct 2028 and dev/CI/prod agree, which is what matters fo
 unattended pipeline. Recorded as H6: `cryptography>=41,<44` predates 3.13/3.14, nothing
 tests above 3.12, and no `requires-python` floor is declared.
 
+## Late session: #42 shipped, #9 reframed, H6 closed
+
+**#42 landed (`7ff9623`, unpushed).** The present-empty guard now covers all six
+Open-Meteo feeds and is **time-boxed** — coerce for two runs, then let the completeness
+gate fail loudly. That resolves H1: neither the position nor the counter-position won,
+the answer was to take the coercion *and* bound it. Unblocking evidence was run
+`30838120578`, where every offshore location timed out in one wave, retiring the "only
+buurt has ever failed this way" objection. 10 tests; suite 704 → 714.
+
+**H6 confirmed and fixed.** `cryptography<44` resolves to 43.0.3 → `cffi` 1.17.1, which
+has no 3.14 wheel and dies building from source. Raised to `<51`, validated on the
+production 3.12 interpreter (resolves 46.0.0, full suite green). Declined the CI-matrix
+half of my own plan: `memory/project_actions_optimization.md` records 3.13 being dropped
+on 2026-03-30 for the Actions budget, and re-adding it would have silently reversed a live
+cost decision. One of the "stale" topic files earning its keep.
+
+**A recommendation I withdrew after measuring it.** I proposed bounding `fetch-depth` as
+the cheap fix for the 101s checkout. Measured: depth-250 clone is 784 MB against 792 MB
+full, no time saved. `data/` is 1,029 MB of write-once files *at HEAD* (5,163 blobs,
+1,187 commits), so there is no churn for history truncation to skip. The useful
+consequence for #9 is that moving the archive out and *then* bounding depth makes checkout
+cheap **without** the history rewrite everyone assumed was required — recorded on the
+issue and in H5.
+
+**Corrected a false alarm**: `offshore_wind.json` missing from the docs publish list is
+not a parallel-registry defect — offshore wind is merged into `wind_forecast.json` via a
+`CombinedDataSet`. But chasing it surfaced a real interaction, recorded in the work item:
+coercing offshore to `None` changes `wind_forecast.json`'s shape fingerprint, and that feed
+is one of the two that failed the drift tripwire on 08-03.
+
 ## Open / next
 
 - **#42** present-empty rollout — still not started, decision pending (H1).

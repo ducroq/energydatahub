@@ -16,12 +16,13 @@
 
 ## Open
 
-### H1 — Extending the present-empty coercion to all late-wave OpenMeteo feeds is safe
+### H1 — [RESOLVED 2026-08-08 — position accepted with the counter-position's guardrail] Extending the present-empty coercion to all late-wave OpenMeteo feeds is safe
 **Position**: The `data_fetcher` present-but-empty → `None` coercion applied to the two buurt feeds (`ad008df`) can be extended to `demand_weather_forecast`, strategic weather/solar, and `offshore_wind` without losing a real failure signal, because a 0-point feed is strictly less informative than an absent one either way.
 **Counter-position**: Those feeds are closer to Augur's consumption path than buurt is. Silently downgrading them to `'info'` could mask a sustained outage the way #38 was specifically built to prevent.
 **Method**: Decide between the three options written up in `memory/work-items/present-empty-guard-rollout.md`. The #38 streak-counter mechanism (`data/_upstream_empty_streak.json`) already exists and is the obvious middle path — coerce, but escalate after N consecutive runs.
 **Status**: Issue #42 open, work item written, decision pending. Not started.
 **Review by**: 2026-09-01, or sooner if a late-wave timeout aborts a publish.
+**Outcome (2026-08-08, commit `7ff9623`)**: Neither position won outright, which is why the entry was worth writing. The coercion was extended to all six feeds (the position), but **time-boxed** to two runs before the completeness gate is allowed to fail loudly (the counter-position's objection, that these feeds sit closer to Augur than buurt does and could mask a sustained outage). The deciding evidence arrived after the entry was written: run `30838120578` showed every offshore location timing out at once, so "only buurt has ever failed this way" stopped being true. Residual risk, unchanged: the escalation branch has never fired in production. See `memory/work-items/present-empty-guard-rollout.md`.
 
 ### H2 — The daily-run failure rate is dominated by transient upstream/runner faults, not defects
 **Position**: Recent failures are environmental, not regressions. Evidence: run `31123856009` (08-06) failed with "job was not acquired by Runner" (pure GitHub infrastructure); run `30838120578` (08-03) failed the drift tripwire on transient-driven shape churn, and the three surrounding runs were green with no code change.
@@ -54,6 +55,21 @@
 - `data/` now holds **4,974** JSON files; MEMORY.md's #9 note said 3,909 as of 2026-06-14 — ~1,065 added in eight weeks.
 
 The position above ("deferring is correct, growth is linear and predictable") is the part now in doubt: 1 GB is roughly one quarter away at this rate, and the *cost* the threshold was proxying for — checkout time — has already arrived. Not resolving this here; it needs the engineer's call on #9. What changed is that it is no longer a someday problem.
+
+**Follow-up measurement, same day — this reframes the fix and kills the obvious one.**
+The intuitive mitigation is to bound `fetch-depth` in `collect-data.yml` (currently `0`, "all history for all branches and tags"). **Measured: it does nothing.** A local depth-250 clone is 784 MB against 792 MB for a full clone, with no time saved. The reason:
+
+| | |
+|---|---|
+| `data/` timestamped archive | **1,029 MB, 4,947 files** |
+| `data/` current copies | 3.9 MB, 27 files |
+| everything else (code, docs, memory) | 9.5 MB |
+
+The files are **write-once**: 5,163 blobs reachable from HEAD's tree against 1,187 commits, so there is almost no churn and truncating history frees almost nothing. ~99% of the repo is the archive *at HEAD*, not in history.
+
+Consequence for #9: the two mitigations are not independent, and neither works alone. `fetch-depth` alone is void (blobs are reachable from HEAD). Deleting old files alone leaves `fetch-depth: 0` still pulling all history. **Moving the archive out of the repo, and only then bounding fetch-depth, is what makes checkout cheap** — and it does *not* require the history rewrite previously assumed, because unreferenced history you never fetch costs nothing at checkout time. That is a substantially cheaper path than "migrate or rewrite" and should be weighed before either.
+
+Also note `derive_volatile_feeds()` needs ~86 commits of sidecar history for its 60-commit window, so any depth bound must clear that — see H3, which depends on the same history.
 
 ### H6 — [RESOLVED 2026-08-08, position confirmed] The `cryptography<44` pin will block a venv rebuild on current Python
 **Position**: `requirements.txt` pins `cryptography>=41.0.0,<44.0.0`, an upper bound that predates Python 3.13/3.14. The venv is uv-managed on 3.12.13 while the system interpreter is 3.14.4, so anyone recreating the venv from system Python lands on an untested combination, and `cryptography` — the AES-CBC/HMAC dependency named in Hard Constraints — is the most likely thing to fail to resolve or build.

@@ -36,6 +36,16 @@
 | Guard signal integrity — always-red is as corrosive as always-green (inverse of the 3-incident silent-skip pattern; new instance 2026-08-08: verification hook's YAML branch failed 100% of the time on a valid workflow). Prescription: exercise BOTH paths — known-good passes, known-bad fails — before shipping any guard | `memory/MEMORY.md` → Active Decisions | 2026-08-08 |
 | History-derived classifiers only learn from recorded observations (limit found on the 06-14 decision itself: drift tripwire runs before the commit step, so a failing run teaches `derive_volatile_feeds()` nothing) | `memory/MEMORY.md` → Active Decisions + `memory/hypothesis-log.md` H3 | 2026-08-08 |
 
+### `fetch-depth` was the obvious fix for a slow checkout, and it does nothing (2026-08-08)
+**Problem**: The daily run's checkout takes 101s on a 797 MiB repo with `fetch-depth: 0`. Bounding the depth looks like a one-line win.
+**Root cause**: `data/` is 1,029 MB of write-once timestamped files sitting *at HEAD* — 5,163 blobs against 1,187 commits, so there is no churn for history truncation to skip. Measured: depth-250 clone 784 MB vs full 792 MB, no time saved.
+**Fix**: None applied — the change was withdrawn before shipping. Bound `fetch-depth` only *after* the archive leaves the working tree; alone it is a no-op. Measure a size fix before shipping it, because "smaller history" and "smaller checkout" are different problems.
+
+### An unbounded grace is a suppressed error wearing a nicer name (2026-08-08)
+**Problem**: The 2026-07-07 buurt guard coerced present-but-empty feeds to absent *unconditionally*, so a sustained Open-Meteo outage would have degraded silently forever — the same failure #38's streak counter exists to prevent for the price feeds.
+**Root cause**: The guard was written to stop a transient aborting the publish, and "stop it aborting" was implemented as "stop it mattering".
+**Fix** (`7ff9623`, #42): time-box it — coerce for N-1 runs, then let the gate fail loudly. If you catch a transient by ignoring it, bound how long you will ignore it.
+
 ### The memory index outgrew the project file it indexes (2026-08-08)
 **Problem**: `/audit-context` found MEMORY.md at 24,053 chars — larger than CLAUDE.md (19,145) — despite its own header saying "keep lean, navigational index only". One `- **Pipeline**` bullet was 5,174 chars recapping 12 sessions.
 **Root cause**: `/curate` step 3 says "update Current State to reflect what shipped" with no matching instruction to prune. Every session appended; none truncated. Eight of those sessions already had dedicated session files, themselves indexed two sections above — the same content in three layers.

@@ -39,7 +39,8 @@
 
 <!-- One line per active work item. Empty is a valid state — do not invent entries. -->
 
-- Roll the present-but-empty guard beyond the buurt feeds (#42) → `memory/work-items/present-empty-guard-rollout.md` [not started — three options written up, decision pending; see H1 in `memory/hypothesis-log.md`]
+- ⚠ **UNPUSHED COMMIT — do this first.** `7ff9623` (#42 present-empty grace + `cryptography<51`) is committed **locally only**; `main` is 1 ahead of `origin/main`. It was held deliberately: it changes the encryption dependency and the publish gate, and the 2026-08-08 scheduled run had not yet fired (GitHub cron has been lagging 45–105 min). **Next session: confirm the 08-08 run went green on the old code, then `git push origin main`.** After one production run exercises it, delete `memory/work-items/present-empty-guard-rollout.md` and close #42.
+- Roll the present-but-empty guard beyond the buurt feeds (#42) → `memory/work-items/present-empty-guard-rollout.md` [**code landed** in `7ff9623`, Outcome written; awaiting push + one production run before close. H1 resolved]
 
 ## Current State
 
