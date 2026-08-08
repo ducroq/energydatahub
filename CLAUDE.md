@@ -80,7 +80,13 @@ utils/
                              # depth-walking _count_data_points / _extract_timestamp_keys (#32)
   schema_registry.py         # Version detection + migration (v1.0 → v2.0 → v2.1 → v2.2 → v2.3 → v2.4).
                              # stamp_metadata embeds the version's changelog slice (Layer B).
-  shape_signature.py         # Structural fingerprint for schema-drift detection (#27)
+  shape_signature.py         # Structural fingerprint for schema-drift detection (#27).
+                             # Also the append-only observation log (#43):
+                             # append_shape_observation / volatile_feeds_from_observations.
+                             # _shape_signatures.json is the tripwire's BASELINE (advances
+                             # only on a passing run); _shape_observations.jsonl is the
+                             # HISTORY the volatility classifier learns from (every run,
+                             # pass or fail). Do not conflate them — that was the #43 bug.
   secure_data_handler.py     # AES-CBC + HMAC-SHA256 encryption
   calendar_features.py       # Holiday/DST features
 scripts/
@@ -99,7 +105,11 @@ scripts/
   probe_tennet_windows.py    # One-shot diagnostic: probe TenneT API across windows to identify
                              # endpoint availability. Used for #25 root-cause analysis.
 data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + current copies +
-                             # _shape_signatures.json sidecar (unencrypted, committed)
+                             # _shape_signatures.json sidecar (unencrypted, committed) +
+                             # _shape_observations.jsonl learning record (#43, committed
+                             # by its own workflow step BEFORE the drift gate so a failing
+                             # run still teaches the classifier) +
+                             # _upstream_empty_streak.json (#38 + #42 counters)
 docs/                        # GitHub Pages: encrypted JSON + project documentation
   work-items/                # Savepoints for in-flight multi-session work (agent-ready-projects
                              # work-item template). Temporary — deleted once the Outcome's
@@ -144,7 +154,8 @@ docs/                        # GitHub Pages: encrypted JSON + project documentat
 | `settings.ini` | Public config (location, encryption flag) |
 | `secrets.ini` | API keys (gitignored) |
 | `.github/workflows/collect-data.yml` | Daily CI/CD pipeline (collect → sidecar → completeness tripwire → schema-drift tripwire → quality gate → publish → upload Pages artifact → `deploy` job with retry) |
-| `scripts/detect_schema_drift.py` | CI tripwire — diffs `data/_shape_signatures.json` against `git show HEAD:`. Data-volatile feeds (declared + history-derived) warn instead of failing. |
+| `scripts/detect_schema_drift.py` | CI tripwire — diffs `data/_shape_signatures.json` against `git show HEAD:`. Data-volatile feeds (declared + history-derived) warn instead of failing. Volatility is derived from `data/_shape_observations.jsonl` (#43), falling back to the sidecar's git history when that log has <2 records. |
+| `data/_shape_observations.jsonl` | Append-only learning record — one compact line per run (feed → shape_hash + schema_version). Written every run, committed *before* the drift gate. Never diff against it; it is history, not a baseline. |
 | `scripts/backfill_entsoe.py` | Backfill missing ENTSO-E prices into historical files |
 | `scripts/archive_to_monthly.py` | Decrypt `data/` files into `05. Data/YYYY-MM/` monthly archive (idempotent) |
 | `tests/backtest_data_quality.py` | Run FMEA quality framework against all historical files |

@@ -116,6 +116,40 @@ jobs:
     # this step would otherwise diff the stale checked-out sidecar against
     # itself — benign but noisy. Unlike the completeness tripwire above, this
     # one has no diagnostic value on the failure path.
+    # #43: commit the learning record BEFORE the tripwire can fail the job.
+    # data/_shape_signatures.json is the tripwire's BASELINE and must only
+    # advance on a passing run, or a broken shape becomes the new normal.
+    # data/_shape_observations.jsonl is the append-only HISTORY the volatility
+    # classifier learns from. It records every run that reaches this step —
+    # which is the drift-tripwire failures this was built for, but NOT runs
+    # that died in collection or the quality gate (`if: success()` skips those).
+    # Committing it after the tripwire is precisely why ned_production and
+    # wind_forecast failed on 2026-08-03 and were still unclassified five days
+    # later — the classifier could only ever learn from its own near-misses.
+    # This commit deliberately stages ONLY the .jsonl, so `git show HEAD:` in
+    # the tripwire below still resolves to the previous sidecar.
+    # continue-on-error: this record is a diagnostic. data_fetcher deliberately
+    # never fails a run over it, and neither should CI — a push race here must
+    # not cost a day's publish. Without this, a rejected push aborts the drift
+    # check, the data commit, and the Pages deploy.
+    - name: Commit shape observation (learning record)
+      if: success()
+      continue-on-error: true
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        # Guard the add: data_fetcher swallows an OSError when writing this
+        # file, so it can legitimately be absent, and `git add` on a missing
+        # pathspec exits 128 under bash -e.
+        if [ -f data/_shape_observations.jsonl ]; then
+          git add -f data/_shape_observations.jsonl
+          git diff --staged --quiet || (git commit -m "Record shape observation" && git push)
+        else
+          echo "::warning::no shape observation written this run — classifier learns nothing"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+
     - name: Schema-drift tripwire
       if: success()
       run: |

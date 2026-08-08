@@ -424,6 +424,18 @@ DATASET_MISSING_SEVERITY: Dict[str, str] = {
                                   # timeout, gotcha-log.md:95) to None so it lands
                                   # here as 'info' rather than hard-failing the
                                   # completeness gate and aborting the publish.
+    # The other four PRESENT_EMPTY_GRACE_FEEDS (#42). Registered explicitly at
+    # 'warning', NOT left to the implicit 'info' default: unlike the buurt pair
+    # these ARE consumed by Augur, and during the grace window their absence
+    # means yesterday's file is silently re-copied to docs/ as current. 'info'
+    # would make three days of stale weather indistinguishable from a healthy
+    # run in the quality report. 'warning' surfaces it without blocking the
+    # publish; the streak counter still hard-fails at
+    # UPSTREAM_EMPTY_ESCALATION_RUNS.
+    'weather_forecast_multi_location': 'warning',
+    'solar_forecast':                  'warning',
+    'demand_weather_forecast':         'warning',
+    'offshore_wind':                   'warning',
 }
 
 # Back-compat shims: derive the three named lists from the dict so any

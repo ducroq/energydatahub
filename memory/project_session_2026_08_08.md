@@ -136,6 +136,34 @@ not a parallel-registry defect — offshore wind is merged into `wind_forecast.j
 coercing offshore to `None` changes `wind_forecast.json`'s shape fingerprint, and that feed
 is one of the two that failed the drift tripwire on 08-03.
 
+## #43 built — splitting baseline from history
+
+The drift tripwire's `_shape_signatures.json` was serving two roles with opposite
+durability rules: the gate's **baseline** (advance only on a passing run, or a break
+becomes the new normal) and the classifier's **history** (record every run, or it cannot
+learn from failures). Because the tripwire runs before the commit step, "baseline" won by
+accident and `derive_volatile_feeds()` could only ever learn from its own near-misses.
+
+Split them. `data/_shape_observations.jsonl` is append-only, one compact line per run
+(feed → `shape_hash` + `schema_version`), capped at 400 lines, written by `data_fetcher`
+regardless of outcome and committed by its own workflow step placed **before** the gate —
+staging only the `.jsonl`, so the tripwire's `git show HEAD:` still resolves to the prior
+baseline. `derive_volatile_feeds()` prefers the log, falling back to git history below 2
+records. Backfilled 75 records from existing sidecar history. 15 tests; suite 714 → 729.
+
+**The fix is prospective only, and that is worth stating plainly.** The backfill reproduces
+the *same* classification as before, because it is rebuilt from the same committed sidecars
+that never contained the failing runs' drift. The 08-03 observations are unrecoverable.
+What changed: appending one drifted record now flips `ned_production` to volatile, where
+previously no number of failing runs ever could. Verified by simulation.
+
+Consequently the `VOLATILE_SHAPE_FEEDS` seed stopgap was **not** taken — it would have
+loosened the gate for two feeds a week before #43 made it unnecessary.
+
+The verification hook earned its place here: it caught a `NameError` from a missing import
+in `detect_schema_drift.py` on the edit that introduced it, before any test run I'd have
+done by hand.
+
 ## Open / next
 
 - **#42** present-empty rollout — still not started, decision pending (H1).

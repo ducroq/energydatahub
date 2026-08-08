@@ -83,7 +83,11 @@ from utils.timezone_helpers import get_timezone_and_country
 from utils.secure_data_handler import SecureDataHandler
 from utils.calendar_features import get_calendar_features_for_range, get_upcoming_holidays
 from utils.schema_registry import CURRENT_SCHEMA_VERSION
-from utils.shape_signature import signatures_for_published_feeds
+from utils.shape_signature import (
+    signatures_for_published_feeds,
+    append_shape_observation,
+    OBSERVATIONS_FILENAME,
+)
 # New collector architecture imports
 from collectors import (
     EntsoeCollector,
@@ -1109,6 +1113,20 @@ async def main() -> None:
             f"Shape-signature sidecar written: {len(sidecar['feeds'])} feeds, "
             f"schema_version={CURRENT_SCHEMA_VERSION} → {sidecar_path}"
         )
+
+        # #43: the learning record. The sidecar above is the drift tripwire's
+        # BASELINE and must only advance on a passing run; this is the HISTORY
+        # the volatility classifier learns from and must record every run,
+        # including ones the tripwire fails. Keeping both roles in one file
+        # meant a failing run taught the classifier nothing, so a transient that
+        # tripped the gate would trip it again forever.
+        observations_path = os.path.join(output_path, OBSERVATIONS_FILENAME)
+        try:
+            append_shape_observation(observations_path, sidecar)
+            logging.info(f"Shape observation appended → {observations_path}")
+        except OSError as e:
+            # Never fail a collection over the learning record.
+            logging.warning(f"Could not append shape observation: {e}")
 
         # --- Data Quality Report ---
         # Run FMEA-based quality checks on all collected datasets

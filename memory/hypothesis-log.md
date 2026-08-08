@@ -30,12 +30,19 @@
 **Method**: Tabulate the last 30 scheduled runs by failure class (runner-acquisition / drift tripwire / quality gate / collector). If any *non-infrastructure* class exceeds ~1 in 10, treat it as a defect and open an issue rather than re-running.
 **Revisit trigger**: Two consecutive failures, or any failure whose cause is not one of the two classes above.
 
-### H3 — Committing the shape sidecar before the drift tripwire would let volatility self-classification work as designed
+### H3 — [RESOLVED 2026-08-08 — counter-position was right; built the third option] Committing the shape sidecar before the drift tripwire would let volatility self-classification work as designed
 **Position**: `derive_volatile_feeds()` cannot learn from a run that fails, because the tripwire (`collect-data.yml:119`) precedes the commit step (`:149`) and a failing run commits nothing. Committing the sidecar *before* the gate would close the loop, so a recurring transient self-classifies after its second occurrence instead of never.
 **Counter-position**: Committing pre-gate means a drifted (possibly genuinely broken) shape enters the baseline, so the *next* run diffs against a bad reference and the break becomes the new normal — precisely the silent-drift failure the fail-mode flip was introduced to end on 2026-06-10. A separate learning-only record, not the gate's baseline, may be the right shape.
 **Method**: Prototype against the committed history of `ned_production` / `wind_forecast`, whose 08-03 drift is the known-good test case. Check whether a "would have been classified volatile" replay reaches the right verdict without the baseline poisoning above.
 **Status**: Filed as a GitHub issue 2026-08-08. Not started — this needs the engineer's judgement on the baseline trade-off before any code.
 **Review by**: 2026-09-08, or immediately if the tripwire fails again on a transient.
+**Outcome (2026-08-08)**: The position's *mechanism* was wrong and the counter-position's objection was decisive — committing the sidecar pre-gate really would poison the baseline. The entry's own closing line ("a separate learning-only record, not the gate's baseline, may be the right shape") turned out to be the answer, so the fix was built that way:
+- `data/_shape_observations.jsonl` — append-only, one compact line per run (feed → `shape_hash`, plus `schema_version`), written by `data_fetcher` every run regardless of outcome, capped at 400 lines.
+- A new workflow step commits **only** that file, placed *before* the tripwire, so the gate's `git show HEAD:data/_shape_signatures.json` still resolves to the previous baseline.
+- `derive_volatile_feeds()` prefers the log and falls back to the sidecar's git history when it holds <2 records.
+- Backfilled 75 records from existing sidecar history so the classifier behaves identically from day one rather than going blind for two runs.
+
+**Honest limit, worth keeping:** the fix is **prospective only**. The backfill reproduces the same classification as before, because it is rebuilt from the same committed sidecars that never contained the failing runs' drift. The 2026-08-03 `ned_production`/`wind_forecast` observations are gone for good. What changed is that the *next* occurrence gets recorded instead of discarded — verified by simulation: appending one drifted record flips `ned_production` to volatile, where previously no number of failing runs ever could.
 
 ### H4 — `STALENESS_OVERRIDES` with a weekend-spanning floor fully fixes the weekend `error` (#36)
 **Position**: Adding `market_proxies` / `market_history` at ~96h (matching `gas_storage`) removes the spurious weekend `error` without hiding a real market-data outage, because a genuine outage exceeds 96h by Monday.

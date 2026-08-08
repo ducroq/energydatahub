@@ -36,6 +36,11 @@
 | Guard signal integrity — always-red is as corrosive as always-green (inverse of the 3-incident silent-skip pattern; new instance 2026-08-08: verification hook's YAML branch failed 100% of the time on a valid workflow). Prescription: exercise BOTH paths — known-good passes, known-bad fails — before shipping any guard | `memory/MEMORY.md` → Active Decisions | 2026-08-08 |
 | History-derived classifiers only learn from recorded observations (limit found on the 06-14 decision itself: drift tripwire runs before the commit step, so a failing run teaches `derive_volatile_feeds()` nothing) | `memory/MEMORY.md` → Active Decisions + `memory/hypothesis-log.md` H3 | 2026-08-08 |
 
+### One file serving as both baseline and history will silently pick one (2026-08-08)
+**Problem**: `_shape_signatures.json` was the drift gate's baseline *and* the volatility classifier's history. The two roles need opposite commit rules — baseline only on pass, history on every run — and the tripwire running before the commit step meant "baseline" quietly won.
+**Root cause**: Nobody chose; the ordering chose. The classifier could only learn from runs that passed, i.e. from its own near-misses.
+**Fix** (#43): split them — `_shape_observations.jsonl` is append-only, committed by its own step *before* the gate. When one artefact has two consumers with conflicting durability rules, it is two artefacts.
+
 ### `fetch-depth` was the obvious fix for a slow checkout, and it does nothing (2026-08-08)
 **Problem**: The daily run's checkout takes 101s on a 797 MiB repo with `fetch-depth: 0`. Bounding the depth looks like a one-line win.
 **Root cause**: `data/` is 1,029 MB of write-once timestamped files sitting *at HEAD* — 5,163 blobs against 1,187 commits, so there is no churn for history truncation to skip. Measured: depth-250 clone 784 MB vs full 792 MB, no time saved.

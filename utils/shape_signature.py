@@ -283,3 +283,143 @@ def diff_signatures(
         "feeds_changed": feeds_changed,
         "feeds_unchanged": feeds_unchanged,
     }
+
+
+# ---------------------------------------------------------------------------
+# Shape observations — the learning record (#43)
+# ---------------------------------------------------------------------------
+#
+# `_shape_signatures.json` plays two roles that pull in opposite directions:
+#
+#   1. BASELINE — what the drift tripwire diffs against. It must advance only
+#      on a run that PASSED, or a genuinely broken shape becomes the new normal
+#      and the break goes silent. That is what the 2026-06-10 fail-mode flip
+#      exists to prevent.
+#   2. HISTORY — what `derive_volatile_feeds()` learns from. It must record
+#      EVERY run, including failing ones, or the classifier can never learn
+#      about the drift that tripped the gate.
+#
+# Before #43 the sidecar tried to be both, and role 1 won by accident: the
+# tripwire runs before the commit step, so a failing run committed nothing and
+# taught the classifier nothing. `ned_production` and `wind_forecast` failed on
+# 2026-08-03 and were still unclassified five days later — the classifier could
+# only ever learn from its own near-misses.
+#
+# Splitting the roles fixes it. Observations are append-only, written every run
+# regardless of outcome, and carry only what classification needs (feed ->
+# shape_hash, plus the schema_version they were seen at). They are NOT a
+# baseline and must never be diffed against.
+
+OBSERVATIONS_FILENAME = "_shape_observations.jsonl"
+
+# ~1.3 KB per record, and the whole file is rewritten on every append, so each
+# daily commit stores a fresh blob of the entire log. The cap therefore governs
+# repo growth (issue #9), not just file size. Keep it a small multiple of the
+# default 60-run classification window — records beyond the window are never
+# read, so a larger cap is pure dead weight committed daily.
+OBSERVATIONS_KEEP_LINES = 150
+
+
+def observation_from_sidecar(sidecar: Dict[str, Any]) -> Dict[str, Any]:
+    """Reduce a full sidecar to the compact record classification needs.
+
+    Drops `shape_signature` (the full nested structure, kilobytes per feed) and
+    keeps only the hash — volatility is "did this hash change at a fixed
+    schema_version", so the structure itself is never consulted.
+    """
+    feeds = {}
+    raw_feeds = sidecar.get("feeds")
+    # Defensive: a malformed sidecar must degrade to an empty record, never
+    # raise. This runs after collection but before the quality report, so an
+    # exception here would discard a completed run's work.
+    if isinstance(raw_feeds, dict):
+        for feed, info in raw_feeds.items():
+            if isinstance(info, dict) and info.get("shape_hash") is not None:
+                feeds[feed] = info["shape_hash"]
+    return {
+        "observed_at": sidecar.get("computed_at"),
+        "schema_version": sidecar.get("schema_version"),
+        "feeds": feeds,
+    }
+
+
+def append_shape_observation(
+    path: str,
+    sidecar: Dict[str, Any],
+    keep: int = OBSERVATIONS_KEEP_LINES,
+) -> Dict[str, Any]:
+    """Append one observation, trimming to the newest `keep` records.
+
+    Never raises on a malformed existing file — a corrupt learning record must
+    not take down a collection run. Returns the record written.
+    """
+    record = observation_from_sidecar(sidecar)
+    lines: List[str] = []
+    try:
+        with open(path) as f:
+            lines = [ln for ln in f.read().splitlines() if ln.strip()]
+    except (OSError, UnicodeDecodeError):
+        lines = []
+    lines.append(json.dumps(record, sort_keys=True))
+    with open(path, "w") as f:
+        f.write("\n".join(lines[-keep:]) + "\n")
+    return record
+
+
+def load_shape_observations(path: str) -> List[Dict[str, Any]]:
+    """Read the observation log, skipping unparseable lines."""
+    out: List[Dict[str, Any]] = []
+    try:
+        with open(path) as f:
+            raw = f.read().splitlines()
+    except (OSError, UnicodeDecodeError):
+        return out
+    for ln in raw:
+        if not ln.strip():
+            continue
+        try:
+            rec = json.loads(ln)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(rec, dict) and isinstance(rec.get("feeds"), dict):
+            out.append(rec)
+    return out
+
+
+def volatile_feeds_from_observations(
+    observations: List[Dict[str, Any]],
+    window: int = 60,
+    exclude_observed_at: Optional[str] = None,
+) -> frozenset:
+    """Feeds showing >1 shape_hash at the SAME schema_version in `window` runs.
+
+    Same rule as the git-history derivation, applied to the append-only record
+    so a run that FAILED the gate still counts. A versioned migration moves the
+    schema_version, so its hashes land under different versions and are not
+    mistaken for data-driven churn.
+
+    `exclude_observed_at` MUST be set to the current run's `computed_at` by any
+    caller that classifies the current run. This is not an optimisation — it is
+    the difference between a gate and a rubber stamp. `data_fetcher` appends the
+    current record before the tripwire reads the file, so without this filter a
+    feed's FIRST EVER break supplies its own second hash, classifies itself as
+    volatile, and is downgraded from ::error:: to ::warning::. Reproduced on the
+    real log: a fabricated break in `load_forecast` (a CRITICAL_FEED, one hash
+    across 75 runs) flipped the verdict to volatile and exit 0. Evidence for
+    "this feed churns" has to be strictly PRIOR to the run being judged.
+    """
+    if exclude_observed_at is not None:
+        observations = [
+            r for r in observations if r.get("observed_at") != exclude_observed_at
+        ]
+    seen: Dict[str, Dict[Any, set]] = {}
+    for rec in observations[-window:] if window else observations:
+        version = rec.get("schema_version")
+        for feed, h in (rec.get("feeds") or {}).items():
+            if h is None:
+                continue
+            seen.setdefault(feed, {}).setdefault(version, set()).add(h)
+    return frozenset(
+        feed for feed, by_version in seen.items()
+        if any(len(hashes) > 1 for hashes in by_version.values())
+    )

@@ -67,7 +67,24 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from utils.shape_signature import diff_signatures  # noqa: E402
+from utils.shape_signature import (  # noqa: E402
+    diff_signatures,
+    load_shape_observations,
+    volatile_feeds_from_observations,
+    OBSERVATIONS_FILENAME,
+)
+
+# The append-only learning record (#43), relative to the repo root. Written
+# every run by data_fetcher; read here instead of the sidecar's git history so
+# a run that FAILS this tripwire still teaches the volatility classifier.
+OBSERVATIONS_PATH = os.path.join("data", OBSERVATIONS_FILENAME)
+
+# Minimum number of PRIOR runs (excluding the one being judged) before the
+# observation log is trusted over the git-history fallback. Guards against
+# classifying a feed as churn-prone from a sample of one or two, which would
+# downgrade a genuine break to a warning on thin history — a fresh clone, the
+# first runs after this lands, or a truncated log.
+MIN_PRIOR_OBSERVATIONS = 10
 
 # Feeds whose disappearance from the publish set is operationally
 # critical — silent retirement is the threat security audit M2 flagged.
@@ -207,6 +224,7 @@ def derive_volatile_feeds(
     ref: str = "HEAD",
     window: int = 60,
     repo_root: Path = REPO_ROOT,
+    current_observed_at: Optional[str] = None,
 ) -> frozenset:
     """Classify feeds as shape-volatile from their committed shape history.
 
@@ -225,15 +243,51 @@ def derive_volatile_feeds(
     set, which remains the explicit seed/override and the fallback when history
     is thin (shallow clone, first runs after deploy).
 
-    KNOWN LIMIT: history can only record variation that was committed. A feed's
+    SOURCE OF HISTORY (#43, 2026-08-08). Prefers the append-only observation
+    log `data/_shape_observations.jsonl`, falling back to the sidecar's git
+    history when the log is absent or too thin. The distinction is the whole
+    point of #43: the sidecar is the tripwire's BASELINE and is committed only
+    by a run that passed, so deriving from it means a feed that FAILS the gate
+    is never learned from. `ned_production` and `wind_forecast` failed on
+    2026-08-03 and were still unclassified five days later for exactly that
+    reason. The observation log is written every run, pass or fail.
+
+    The current run is EXCLUDED from its own evidence via `current_observed_at`
+    (and CRITICAL_FEEDS are never derived-volatile at all — see main()). Both
+    guards exist because `data_fetcher` appends the current record before this
+    runs: without them a feed's first ever break supplies its own second hash
+    and downgrades itself from ::error:: to ::warning::, which silently undoes
+    the 2026-06-10 fail-mode flip. Evidence must be strictly prior.
+
+    KNOWN LIMIT: history can only record variation that was recorded. A feed's
     very first unversioned deviation cannot be distinguished from a real break
     by history alone (it has one prior hash) — that case still relies on the
     declared set or a one-time human call. Derivation eliminates the RECURRING
-    failures, which is the actual operational pain.
+    failures, which is the actual operational pain. This limit is deliberate:
+    it is what makes a genuine first break still fail.
 
     Returns a frozenset of feed names. Any git/parse failure degrades to an
     empty set (caller falls back to the declared set).
     """
+    observations = load_shape_observations(str(repo_root / OBSERVATIONS_PATH))
+    if current_observed_at is not None:
+        prior = [r for r in observations if r.get("observed_at") != current_observed_at]
+    else:
+        prior = observations
+    # Threshold is on PRIOR runs, not total records, and is deliberately well
+    # above 2. Classifying "this feed churns" off one or two prior samples is
+    # weaker evidence than the git fallback would have used (which walks up to
+    # `window` commits), and it errs in the unsafe direction — a wrong volatile
+    # call downgrades a real break to a warning. Below the threshold, defer to
+    # the git history path instead.
+    if len(prior) >= MIN_PRIOR_OBSERVATIONS:
+        return volatile_feeds_from_observations(
+            observations, window=window, exclude_observed_at=current_observed_at
+        )
+
+    # Fallback: derive from the sidecar's git history. Still correct, just
+    # blind to failing runs — this is the pre-#43 behaviour, kept for a thin
+    # or missing log (shallow clone, first runs after deploy).
     # feed -> schema_version -> set(shape_hash)
     seen: Dict[str, Dict[Any, set]] = {}
     try:
@@ -271,7 +325,8 @@ def derive_volatile_feeds(
     )
 
 
-def _emit_summary(report: Dict[str, Any], current_path: Path) -> None:
+def _emit_summary(report: Dict[str, Any], current_path: Path,
+                  effective_volatile: frozenset = frozenset()) -> None:
     """Human-readable summary for the Actions run log."""
     print(f"Schema-drift report (current sidecar: {current_path})")
     print(f"  previous schema_version: {report['previous_schema_version']!r}")
@@ -285,7 +340,12 @@ def _emit_summary(report: Dict[str, Any], current_path: Path) -> None:
         for c in report["feeds_changed"]:
             # Mark volatile feeds so the CHANGED list reconciles with the
             # downstream ::error:: count (which excludes volatile feeds).
-            tag = " [volatile]" if c["feed"] in VOLATILE_SHAPE_FEEDS else ""
+            # Tag from the EFFECTIVE set (declared + derived), not the
+            # declared one — otherwise an auto-classified feed prints
+            # untagged while being treated as volatile, and the CHANGED
+            # list stops reconciling with the ::error:: count, which is
+            # the one thing this tag exists to do.
+            tag = " [volatile]" if c["feed"] in effective_volatile else ""
             print(
                 f"    - {c['feed']}{tag}: "
                 f"{c['previous_hash']} -> {c['current_hash']}"
@@ -413,9 +473,16 @@ def main() -> int:
     # of failing CI without anyone editing the allowlist.
     derived_volatile = (
         derive_volatile_feeds(args.sidecar, args.previous_ref,
-                              args.volatility_window)
+                              args.volatility_window,
+                              current_observed_at=current.get("computed_at"))
         if args.volatility_window > 0 else frozenset()
     )
+    # A CRITICAL_FEED is never auto-downgraded. Derivation is a heuristic over
+    # observed churn, and on the feeds Augur depends on, a wrong heuristic turns
+    # a hard failure into a warning nobody reads. Declaring one volatile stays
+    # possible, but it must be a human edit to VOLATILE_SHAPE_FEEDS — which the
+    # assert above already forbids, so in practice a critical feed always fails.
+    derived_volatile = frozenset(derived_volatile) - CRITICAL_FEEDS
     effective_volatile = VOLATILE_SHAPE_FEEDS | derived_volatile
     auto_only = sorted(derived_volatile - VOLATILE_SHAPE_FEEDS)
     if auto_only:
