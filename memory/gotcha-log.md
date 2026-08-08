@@ -11,7 +11,18 @@
 
      ARCHIVE (added 2026-06-08 /audit-context): pre-2026-05-01 [RESOLVED]
      entries live in `memory/gotcha-log-archive.md`. Grep there if a
-     symptom matches a historical incident this active log doesn't cover. -->
+     symptom matches a historical incident this active log doesn't cover.
+
+     ENTRY BUDGET (2026-08-08): NEW entries are 2-3 lines — the lesson and
+     the action, not the narrative of the session that found it. Keep the
+     `### Title (date)` heading; drop the Problem/Root cause/Fix/Lesson
+     scaffold. This file is re-read in full every session, so length here is
+     a recurring cost paid by every future session, not a one-time write.
+
+     The 24 entries below PREDATE that budget and use the old four-field
+     long form. They are correct, just verbose — leave them alone unless you
+     are doing the retrofit deliberately. Do not treat them as the format to
+     copy; this comment is the format to copy. -->
 
 ## Promoted
 
@@ -22,6 +33,28 @@
 | Silent quality-gate skip (3-incident pattern, broadened 2026-06-08: GoogleWeather `API_KEY_INVALID` silent-success for 7 months; `validate_value_ranges` 2-level nesting silent-skip for ~3 months; TenneT custom `collect()` override silently dropped `balance_delta_status` + `collector_quality_issues` at publish boundary, ab3dcd4) | `memory/MEMORY.md` → Active Decisions | 2026-06-07 (broadened 2026-06-08) |
 | Warn-only bedding-in periods swallow real findings (2-incident pattern: catalog-vs-shape conflation warning unread on 2026-06-08; `_TS_PATTERN` date-only false-positive class swallowed until the 2026-06-10 fail-mode flip) | `memory/MEMORY.md` → Active Decisions | 2026-06-12 |
 | Data-driven within-feed shape churn → schema-drift false positives (3-incident pattern: `air_quality_buurt` station/pollutant keys 06-13; `cross_border_flows` per-hour border key 06-14; `calendar_features` empty→populated `upcoming_holidays` 06-14). Hand-allowlist was reactive whack-a-mole; fixed structurally via history-derived volatility classification | `memory/MEMORY.md` → Active Decisions + `scripts/detect_schema_drift.py::derive_volatile_feeds` | 2026-06-14 |
+| Guard signal integrity — always-red is as corrosive as always-green (inverse of the 3-incident silent-skip pattern; new instance 2026-08-08: verification hook's YAML branch failed 100% of the time on a valid workflow). Prescription: exercise BOTH paths — known-good passes, known-bad fails — before shipping any guard | `memory/MEMORY.md` → Active Decisions | 2026-08-08 |
+| History-derived classifiers only learn from recorded observations (limit found on the 06-14 decision itself: drift tripwire runs before the commit step, so a failing run teaches `derive_volatile_feeds()` nothing) | `memory/MEMORY.md` → Active Decisions + `memory/hypothesis-log.md` H3 | 2026-08-08 |
+
+### Schema-drift fail-mode starves the volatility classifier that would have prevented it (2026-08-08)
+**Problem**: Run `30838120578` (08-03) failed the drift tripwire on `ned_production` + `wind_forecast`; five days on, `derive_volatile_feeds()` still does not classify either, so the same transient will fail the same way.
+**Root cause**: The tripwire (`collect-data.yml:119`) runs *before* the commit step (`:149`), so a failing run never commits its sidecar — and the classifier learns only from committed history. Drift that fails is invisible to the thing designed to learn from it; only drift that *warns* teaches.
+**Fix**: None yet — filed as an issue. The self-classification decision below now records this limit.
+
+### A guard that fires 100% of the time is worse than no guard (2026-08-08)
+**Problem**: The new verification hook's workflow-YAML branch reported the valid, shipping `collect-data.yml` as "not valid YAML — the daily run would fail to start" on every single edit.
+**Root cause**: PyYAML was in neither the venv nor `requirements.txt`, and `run()` could not tell `ModuleNotFoundError` from a parse error, so it printed the parse-error message and blamed the file.
+**Fix**: Added PyYAML to `requirements.txt`; the hook now distinguishes the two. Lesson: an always-red guard trains you to disable it just as surely as an always-green one trains you to trust it — both destroy the signal.
+
+### `git diff` cannot see untracked files, so a review skill saw 0 of 645 new lines (2026-08-08)
+**Problem**: `/review-changes` Step 1 prescribed only `git diff --stat/--cached/--summary`. On the commit that introduced it, all three returned empty for 6 new files — 645 of 695 lines.
+**Root cause**: No `git diff` variant reports untracked files, and the skill's own magnitude gate declares "a new file in a HIGH path" always-full-depth — a carve-out its procedure could not observe.
+**Fix**: Step 1 now runs `git status --porcelain --untracked-files=all`. Any diff-classification step that omits it is reviewing nothing on a new-file change.
+
+### Work items were created inside the GitHub Pages publish root (2026-08-08)
+**Problem**: `docs/work-items/` held a live inventory of an unfixed availability weakness (which feeds can abort the daily publish, and how). `collect-data.yml` uploads all of `docs/` as the Pages artifact.
+**Root cause**: Followed the upstream template path without checking that this repo's `docs/` *is* the published web root.
+**Fix**: Moved to `memory/work-items/` before anything published. Before placing a new *kind* of content under `docs/`, ask whether it should be world-readable.
 
 ### Transient buurt Open-Meteo timeout aborted the whole publish — present-but-empty ≠ absent (2026-07-07) [RESOLVED]
 **Problem**: The 2026-07-06 16:00 UTC scheduled collect (run `28812717911`, commit `028de46`) failed with `overall_status=critical`, aborting publish. The only failing datasets were the two secondary FyE B1 buurt feeds — `weather_forecast_buurt` and `solar_forecast_buurt` — both reporting `completeness: No data points collected (expected >= 24)`. Every augur-consumed feed collected fine. Daily failure emails to the maintainer; this is the recurring late-wave Open-Meteo timeout class (see gotcha-log.md entry "OpenMeteo shared-Semaphore late-collector timeouts", the 2026-06-07 regression).
@@ -29,7 +62,7 @@
 **Fix** (commit `ad008df`): coerce a present-but-empty buurt dataset to `None` in `data_fetcher.py` right after unpacking `results['buurt_weather']`/`['buurt_solar']` (with a warning log), so it routes through the non-blocking missing-dataset path instead of the completeness gate — treating present-empty identically to absent, mirroring #38's "keep publishing the healthy feeds on an upstream gap". Registered `weather_forecast_buurt`/`solar_forecast_buurt` as `'info'` in `DATASET_MISSING_SEVERITY` (like `air_quality_buurt`) so absence is logged without promoting status. The committed current-copy (buurt `.json`) stays on disk and re-publishes (soft verify tripwire tolerates it). Added 2 contract tests; critical set stays `{entsoe, energy_zero}`; 681 tests pass. Smoke run `28846743856` green end-to-end (deploy attempt 1), but buurt collected fine that run so the empty-path fix was exercised by unit test, not the live run.
 **Lesson**: `base.collect()` returning a truthy-but-empty dataset creates a third state — *present-but-empty* — that the quality gate treated as strictly worse than *absent*, even though empty is the *less* informative of the two. Any "is it there?" guard (`if ds:`) that doesn't also check `ds.data` will misclassify it. The severity of a 0-point feed should track the feed's importance (the `DATASET_MISSING_SEVERITY` registry already encodes that for the absent case) — a hardcoded `CRITICAL` in the completeness check ignores that per-feed intent. Latent-but-unfixed: the same truthy-empty behavior affects the other late-wave OpenMeteo feeds (`demand_weather_forecast`, strategic weather/solar, `offshore_wind`) — scoped out because only buurt has been failing, but the next timeout on one of *those* would abort publish the same way.
 
-### GitHub Pages "Deployment failed, try again later." — transient service error, not a repo fault (2026-07-04)
+### GitHub Pages "Deployment failed, try again later." — transient service error, not a repo fault (2026-07-04) [RESOLVED 2026-07-06]
 **Problem**: The auto-triggered `pages-build-deployment` run following the 2026-07-03 16:00 UTC collect failed (run `28674750245`). The GitHub notification made it look like a broken publish.
 **Root cause**: Nothing in the repo. The `Collect and Publish Data` run succeeded (data committed), the Pages *build* succeeded (artifact `github-pages` found, 1 artifact), and only the final `actions/deploy-pages@v5` step failed with `##[error]Deployment failed, try again later.` — that message originates from GitHub's Pages deployment API, a server-side transient. The build payload and OIDC token were both fine; the deploy API just rejected it.
 **Fix**: `gh run rerun <id>` — the re-run succeeded with no code change. Distinguish the three stages before touching anything: collect (repo job) → build (packages `docs/` into an artifact) → deploy (GitHub service call). Only the last failed, and it's the one the repo can't influence.
