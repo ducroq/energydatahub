@@ -2,7 +2,7 @@
 stack: Python 3.12, asyncio/aiohttp, pandas, GitHub Actions CI/CD
 status: Production (daily automated collection since Oct 2024)
 repo: github.com/ducroq/energydatahub
-framework: agent-ready-projects v1.17.0
+framework: agent-ready-projects v1.18.0
 ---
 
 # energyDataHub
@@ -13,7 +13,7 @@ Automated energy market data collection platform for electricity price predictio
 
 | When | Read |
 |------|------|
-| Starting any session | Compare `framework:` version above against [CHANGELOG](https://github.com/ducroq/agent-ready-projects/blob/master/CHANGELOG.md). If behind, surface drift before starting work — adopting changes is your call. |
+| Starting any session | Run `/update-drift` — finds every framework stamp, lists the intervening releases, and triages each as adopt / decline-with-reason / not-applicable / already-in-force. It stops before editing anything normative; adopting is your call. (Was a manual CHANGELOG comparison until v1.18.0 made it a skill.) |
 | Adding a new collector | `collectors/base.py` — BaseCollector pattern, `collectors/entsoe_generation.py` — good example, `collectors/entsoe_hydro.py` — minimal example. Also see `collectors/_http_classifier.py` for the HTTP-status bail-out pattern (raise_if_permanent) — use it from `_fetch_raw_data` to skip retries on permanent client errors (422/400/401/403/404). |
 | Changing data output format | `utils/data_types.py` — EnhancedDataSet/CombinedDataSet, `utils/schema_registry.py` — versioning + migration chain. **Any shape change requires bumping `CURRENT_SCHEMA_VERSION` + adding a `_migrate_X_to_Y` function + a SCHEMA_CHANGELOG entry**. The CI tripwire (`scripts/detect_schema_drift.py`) enforces this. |
 | Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (fail-mode since 2026-06-10; auto-classifies data-volatile feeds from committed history since 2026-06-14). Actions are SHA-pinned + Dependabot-managed (`.github/dependabot.yml`). Owns the GitHub Pages deploy (source = "GitHub Actions"): a `deploy` job runs `actions/deploy-pages` with a 3-attempt retry for transient GitHub-side deploy faults — the auto `pages-build-deployment` workflow no longer runs (see `docs/CI_CD_SETUP.md`). |
@@ -110,12 +110,19 @@ data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + curre
                              # by its own workflow step BEFORE the drift gate so a failing
                              # run still teaches the classifier) +
                              # _upstream_empty_streak.json (#38 + #42 counters)
-docs/                        # GitHub Pages: encrypted JSON + project documentation
+docs/                        # GitHub Pages PUBLISH ROOT — the whole directory is uploaded as
+                             # the Pages artifact and served verbatim. Encrypted JSON +
+                             # project documentation. Do not put internal notes here.
+memory/                      # Layered agent memory (tracked). MEMORY.md index, gotcha-log.md,
+                             # hypothesis-log.md (open positions + revisit triggers),
+                             # project_session_*.md retrospectives, project_*.md topic files.
   work-items/                # Savepoints for in-flight multi-session work (agent-ready-projects
                              # work-item template). Temporary — deleted once the Outcome's
                              # residue is promoted to an ADR / gotcha log / CLAUDE.md.
-.claude/                     # Agent harness config (committed). `curate` + `audit-context` are
-                             # user-global and deliberately NOT here.
+                             # Under memory/, NOT docs/ — a work item describes what is not
+                             # yet fixed, and docs/ is world-readable (moved 2026-08-08).
+.claude/                     # Agent harness config (committed). `curate`, `audit-context` +
+                             # `update-drift` are user-global and deliberately NOT here.
   settings.json              # PostToolUse verification hook wiring
   hooks/verify_edit.py       # Runs py_compile + the unit tests mapped to the edited file, and
                              # exits 2 so the failure reaches the agent (exit 0 = silent hook).
@@ -162,7 +169,7 @@ docs/                        # GitHub Pages: encrypted JSON + project documentat
 | `tests/` | Unit + integration tests <!-- verify: venv/bin/python -m pytest tests/ --collect-only -q \| tail -1 --> |
 | `.claude/settings.json` | Verification-hook wiring (PostToolUse on Edit/Write/MultiEdit) |
 | `.claude/hooks/verify_edit.py` | The hook itself — compile check + mapped unit tests. Silent exit 0 on pass, exit 2 + stderr on failure. Needs PyYAML for the workflow branch. <!-- verify: echo '{"tool_input":{"file_path":"collectors/base.py"}}' \| .claude/hooks/verify_edit.py; echo $?   # expect 0 --> |
-| `.claude/skills/` | `/review-changes` and `/release` — project-local by design; `curate` + `audit-context` are user-global |
+| `.claude/skills/` | `/review-changes` and `/release` — project-local by design; `curate`, `audit-context` + `update-drift` are user-global |
 | `memory/work-items/` | Savepoints for in-flight multi-session work (deliberately NOT under `docs/`, which is the Pages publish root) |
 | `memory/hypothesis-log.md` | Open positions the project acts on but has not established |
 
