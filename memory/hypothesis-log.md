@@ -51,7 +51,7 @@
 **Status**: Issue #36 open since 2026-06-14. Recurs every weekend, non-blocking.
 **Review by**: 2026-10-01 — low urgency while it stays non-blocking, but it erodes the meaning of `overall_status=error` every single week.
 
-### H5 — Git-as-archive remains viable until the repo approaches ~1 GB (#9)
+### H5 — [RESOLVED 2026-08-09 — accepted by the maintainer, with retuned triggers] Git-as-archive remains viable until the repo approaches ~1 GB (#9)
 **Position**: Deferring the storage migration is correct; `data/` growth is linear and predictable, and the monthly archive to `05. Data/` bounds the working set.
 **Counter-position**: Clone time and Actions checkout cost degrade well before the 1 GB headline number, and the migration gets harder the longer it waits.
 **Method**: Record `git count-objects -vH` size at each monthly archive. If growth is superlinear, or checkout time in the daily run exceeds ~60s, re-plan.
@@ -76,7 +76,21 @@ The files are **write-once**: 5,163 blobs reachable from HEAD's tree against 1,1
 
 Consequence for #9: the two mitigations are not independent, and neither works alone. `fetch-depth` alone is void (blobs are reachable from HEAD). Deleting old files alone leaves `fetch-depth: 0` still pulling all history. **Moving the archive out of the repo, and only then bounding fetch-depth, is what makes checkout cheap** — and it does *not* require the history rewrite previously assumed, because unreferenced history you never fetch costs nothing at checkout time. That is a substantially cheaper path than "migrate or rewrite" and should be weighed before either.
 
-Also note `derive_volatile_feeds()` needs ~86 commits of sidecar history for its 60-commit window, so any depth bound must clear that — see H3, which depends on the same history.
+Also note `derive_volatile_feeds()` needed ~86 commits of sidecar history for its 60-commit window. **No longer true after #43** — it reads a working-tree file, and the tripwire itself only needs `git show HEAD:`, i.e. depth 1. So a shallow checkout became possible as a side effect of #43.
+
+**Maintainer decision, 2026-08-09 — ACCEPTED, do not re-raise.**
+Git-as-archive is kept deliberately. The reasoning is *storage*, not speed: GitHub provides durable, free, versioned hosting for the collected dataset, and that is a feature of the current design rather than an accident to be engineered away. The 101s checkout is explicitly acceptable at current volumes.
+
+This closes the question the follow-up measurement opened. The migration work in #9 stays on the backlog as a someday item, not a pending decision.
+
+**The old triggers (700 MB / 60s checkout) are retired — they fired on exactly what has now been accepted, and a check that re-derives an accepted non-finding every session is the "cries wolf" failure this framework exists to catch.** Replaced with the constraints that would genuinely change the answer:
+
+- **Repo > 4 GB.** GitHub's guidance is a soft recommendation around 1 GB and a strong one around 5 GB; 797 MiB today, growing ~1,065 files / 8 weeks. Crossing the soft line is a nag, not a failure, so it is not the trigger — approaching the strong one is.
+- **A push or clone actually fails**, or GitHub contacts the account about repo size.
+- **Checkout exceeds ~50% of total run wall-clock** on a run that is otherwise healthy. Today it is ~70% of a 2m23s run, which sounds alarming and is not — the run is short. The signal is only meaningful if the *absolute* cost starts blocking the daily window.
+- **A second consumer needs the archive** (an ML job, a dashboard) and cannot afford a full clone. That changes the cost/benefit rather than the size.
+
+Nothing else here needs revisiting. If a future audit surfaces repo size again without one of the above, the correct response is to close it citing this entry.
 
 ### H6 — [RESOLVED 2026-08-08, position confirmed] The `cryptography<44` pin will block a venv rebuild on current Python
 **Position**: `requirements.txt` pins `cryptography>=41.0.0,<44.0.0`, an upper bound that predates Python 3.13/3.14. The venv is uv-managed on 3.12.13 while the system interpreter is 3.14.4, so anyone recreating the venv from system Python lands on an untested combination, and `cryptography` — the AES-CBC/HMAC dependency named in Hard Constraints — is the most likely thing to fail to resolve or build.
