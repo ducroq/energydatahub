@@ -42,6 +42,8 @@
 - `derive_volatile_feeds()` prefers the log and falls back to the sidecar's git history when it holds <2 records.
 - Backfilled 75 records from existing sidecar history so the classifier behaves identically from day one rather than going blind for two runs.
 
+**Verified in production 2026-08-09**, dispatched run `31297706013` — the first to execute the new step. Commit `b94b9c5` (pre-gate) contained exactly 1 file, the `.jsonl`, with zero occurrences of `_shape_signatures.json`; the baseline advanced only afterwards in `04c201d`. Log grew 76→77; both jobs green; Pages deployed. The ordering that makes the whole thing work — observation, then gate, then baseline — held exactly as designed. #43 closed.
+
 **Honest limit, worth keeping:** the fix is **prospective only**. The backfill reproduces the same classification as before, because it is rebuilt from the same committed sidecars that never contained the failing runs' drift. The 2026-08-03 `ned_production`/`wind_forecast` observations are gone for good. What changed is that the *next* occurrence gets recorded instead of discarded — verified by simulation: appending one drifted record flips `ned_production` to volatile, where previously no number of failing runs ever could.
 
 ### H4 — `STALENESS_OVERRIDES` with a weekend-spanning floor fully fixes the weekend `error` (#36)

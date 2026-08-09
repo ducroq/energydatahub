@@ -164,6 +164,39 @@ The verification hook earned its place here: it caught a `NameError` from a miss
 in `detect_schema_drift.py` on the edit that introduced it, before any test run I'd have
 done by hand.
 
+## Continued into 2026-08-09
+
+**Framework v1.17.0 → v1.18.0, triaged as "already in force."** `/update-drift` (itself the
+v1.18.0 release) found one stamp, one release of drift, and the skill already installed
+user-global with a clean estate. Nothing functional changed here — only documentation that
+had gone wrong: the "Starting any session" row still prescribed a manual CHANGELOG
+comparison, and two places listed the user-global set as two skills rather than three.
+Incidentally caught a stale architecture-tree entry still showing `work-items/` under
+`docs/`, and `memory/` missing from that tree entirely.
+
+**#9 decided: keep git-as-archive.** The maintainer's reason is *storage*, not speed —
+GitHub provides durable free versioned hosting for the collected dataset, and the 101s
+checkout is acceptable at current volumes. The 700 MB / 60s triggers written the previous
+day were retired: they fired on precisely what had just been accepted, which is the
+cry-wolf failure the framework exists to catch. Replaced with ~4 GB, an actual push/clone
+failure, checkout dominating a *long* run, or a second consumer needing the archive.
+
+**#43 verified in production and closed.** Dispatched smoke run `31297706013`:
+
+```
+b94b9c5  Record shape observation     <- pre-gate, 1 file, 0 sidecar occurrences
+         Schema-drift tripwire        <- warned on air_quality_buurt + market_proxies
+04c201d  Update energy data           <- post-gate, advances the baseline
+```
+
+Log grew 76→77, both jobs green, Pages deployed in 8s. The ordering is the fix, and it
+held. The same run exercised the volatility path on real drift without either feed being
+a `CRITICAL_FEED` — which the previous day's guards now make impossible anyway.
+
+**#42 remains unverified and that is not fixable by smoke-testing.** Its coercion only
+fires on an actual all-locations Open-Meteo timeout; every feed collected fine. A green
+run says nothing about it. Waiting on a real transient.
+
 ## Open / next
 
 - **#42** present-empty rollout — still not started, decision pending (H1).
