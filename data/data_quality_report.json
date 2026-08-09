@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-09T05:56:26.658335+00:00",
+  "timestamp": "2026-08-09T16:27:29.607176+00:00",
   "overall_status": "error",
-  "total_issues": 3,
+  "total_issues": 4,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -11,7 +11,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +21,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -31,7 +31,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -41,7 +41,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 24,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 706,
+      "data_points": 730,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -120,7 +120,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 312,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -169,18 +169,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
-      "data_points": 192,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "status": "warning",
+      "data_points": 384,
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 8,
+            "examples": [
+              "NL/2026-08-09T08:30:00+02:00: forecast_error=2751.0, load_actual=6674.576, ratio=0.41",
+              "NL/2026-08-09T08:45:00+02:00: forecast_error=2973.7, load_actual=6336.626, ratio=0.47",
+              "NL/2026-08-09T09:00:00+02:00: forecast_error=3250.6, load_actual=6101.736, ratio=0.53",
+              "NL/2026-08-09T09:15:00+02:00: forecast_error=3836.8, load_actual=5601.536, ratio=0.68",
+              "NL/2026-08-09T09:30:00+02:00: forecast_error=4219.2, load_actual=5231.516, ratio=0.81"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 28,
+      "data_points": 72,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -210,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 373,
+      "data_points": 499,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -227,10 +244,10 @@
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 53.9h old (threshold: 48h)",
+          "message": "Newest data is 64.5h old (threshold: 48h)",
           "details": {
             "newest_timestamp": "2026-08-07T00:00:00+00:00",
-            "age_hours": 53.9,
+            "age_hours": 64.5,
             "threshold_hours": 48
           }
         }
@@ -248,10 +265,10 @@
         {
           "check_name": "staleness",
           "severity": "error",
-          "message": "Newest data is 53.9h old (threshold: 48h)",
+          "message": "Newest data is 64.5h old (threshold: 48h)",
           "details": {
             "newest_timestamp": "2026-08-07T00:00:00+00:00",
-            "age_hours": 53.9,
+            "age_hours": 64.5,
             "threshold_hours": 48
           }
         }
