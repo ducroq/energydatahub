@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-12T16:51:58.060734+00:00",
+  "timestamp": "2026-08-13T16:50:46.989531+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
+  "total_issues": 3,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -70,11 +70,23 @@
       "dataset_name": "weather_forecast_buurt",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "info",
+      "status": "warning",
       "data_points": 768,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "warning",
+          "message": "1 weather field values outside their specific ranges",
+          "details": {
+            "count": 1,
+            "examples": [
+              "cape=-2.5 (range 0.0-6000.0)"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "solar_forecast_buurt",
@@ -181,11 +193,11 @@
           "details": {
             "count": 7,
             "examples": [
-              "NL/2026-08-12T09:15:00+02:00: forecast_error=2780.9, load_actual=6593.906, ratio=0.42",
-              "NL/2026-08-12T09:30:00+02:00: forecast_error=2809.7, load_actual=6242.506, ratio=0.45",
-              "NL/2026-08-12T09:45:00+02:00: forecast_error=3063.6, load_actual=5714.946, ratio=0.54",
-              "NL/2026-08-12T10:00:00+02:00: forecast_error=3088.0, load_actual=5345.996, ratio=0.58",
-              "NL/2026-08-12T10:15:00+02:00: forecast_error=3317.4, load_actual=4700.286, ratio=0.71"
+              "NL/2026-08-13T09:15:00+02:00: forecast_error=2817.4, load_actual=6889.136, ratio=0.41",
+              "NL/2026-08-13T09:30:00+02:00: forecast_error=3060.0, load_actual=6313.786, ratio=0.48",
+              "NL/2026-08-13T09:45:00+02:00: forecast_error=3232.2, load_actual=5816.936, ratio=0.56",
+              "NL/2026-08-13T10:00:00+02:00: forecast_error=3228.5, load_actual=5525.216, ratio=0.58",
+              "NL/2026-08-13T10:15:00+02:00: forecast_error=3437.4, load_actual=5036.796, ratio=0.68"
             ],
             "threshold": 0.4
           }
@@ -257,7 +269,7 @@
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 8,
+      "data_points": 7,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
