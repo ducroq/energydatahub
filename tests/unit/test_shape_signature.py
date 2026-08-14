@@ -16,6 +16,7 @@ Created: 2026-06-07
 import pytest
 
 from utils.shape_signature import (
+    classify_data_member_drift,
     compute_shape_signature,
     signature_hash,
     signatures_for_published_feeds,
@@ -452,3 +453,303 @@ class TestDailyChurnImmunity:
         }
         assert signature_hash(compute_shape_signature(day1)) == \
                signature_hash(compute_shape_signature(day7))
+
+
+class TestClassifyDataMemberDrift:
+    """A location/source dropping out of a multi-member feed is a data-catalog
+    change, not a schema change (2026-08-14: one dropped buurt location failed
+    the drift tripwire and blocked the publish of 18 healthy feeds).
+
+    The classifier must be narrow: it downgrades ONLY when every surviving
+    member is structurally identical and the envelope is otherwise untouched.
+    """
+
+    @staticmethod
+    def _buurt_payload(members):
+        """Envelope shaped like weather_forecast_buurt: {metadata, data}."""
+        return {
+            "metadata": {
+                "data_type": "weather_forecast",
+                "schema_version": "2.4",
+                "location_count": len(members),
+                "locations": list(members),
+                "units": {"temperature_2m": "C"},
+            },
+            "data": {
+                name: {
+                    "2026-08-14T00:00:00+02:00": {
+                        "temperature_2m": 18.4,
+                        "cloud_cover": 55.0,
+                    },
+                }
+                for name in members
+            },
+        }
+
+    def _sig(self, members):
+        return compute_shape_signature(self._buurt_payload(members))
+
+    def test_dropped_member_classified_as_member_drift(self):
+        prev = self._sig(["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"])
+        curr = self._sig(["Elderveld_Arnhem_NL"])
+        verdict = classify_data_member_drift(prev, curr)
+        assert verdict is not None
+        assert verdict["removed"] == ["Elsweide_Arnhem_NL"]
+        assert verdict["added"] == []
+        assert verdict["retained"] == ["Elderveld_Arnhem_NL"]
+
+    def test_recovered_member_classified_as_member_drift(self):
+        """The symmetric case: yesterday's baseline was the degraded shape."""
+        prev = self._sig(["Elderveld_Arnhem_NL"])
+        curr = self._sig(["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"])
+        verdict = classify_data_member_drift(prev, curr)
+        assert verdict is not None
+        assert verdict["added"] == ["Elsweide_Arnhem_NL"]
+        assert verdict["removed"] == []
+
+    def test_field_change_in_surviving_member_is_not_member_drift(self):
+        """The whole point of the narrowness: a real structural break that
+        happens to ALSO drop a member must still enforce."""
+        prev = self._sig(["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"])
+        degraded = self._buurt_payload(["Elderveld_Arnhem_NL"])
+        # Surviving member loses a field — a genuine shape break.
+        for record in degraded["data"]["Elderveld_Arnhem_NL"].values():
+            del record["cloud_cover"]
+        assert classify_data_member_drift(
+            prev, compute_shape_signature(degraded)
+        ) is None
+
+    def test_metadata_shape_change_is_not_member_drift(self):
+        prev = self._sig(["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"])
+        changed = self._buurt_payload(["Elderveld_Arnhem_NL"])
+        changed["metadata"]["new_envelope_key"] = "x"
+        assert classify_data_member_drift(
+            prev, compute_shape_signature(changed)
+        ) is None
+
+    def test_member_dropout_does_not_change_metadata_shape(self):
+        """Guards the assumption the classifier rests on: `locations` is a
+        list-of-str and `location_count` an int no matter how many members
+        there are, so a dropout leaves metadata's SHAPE identical. This is
+        what made the 2026-08-14 failing hash reproducible by deleting the
+        data key alone."""
+        two = compute_shape_signature(
+            self._buurt_payload(["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"])
+        )
+        one = compute_shape_signature(
+            self._buurt_payload(["Elderveld_Arnhem_NL"])
+        )
+        assert two["keys"]["metadata"] == one["keys"]["metadata"]
+        assert two["keys"]["data"] != one["keys"]["data"]
+
+    def test_all_members_gone_is_not_member_drift(self):
+        """An emptied member map never legitimately reaches here — the six
+        Open-Meteo feeds are coerced to absent upstream by
+        PRESENT_EMPTY_GRACE_FEEDS, and every other feed fails the completeness
+        gate. Either way it must not be laundered into a warning."""
+        prev = self._sig(["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"])
+        empty = self._buurt_payload(["Elsweide_Arnhem_NL"])
+        empty["data"] = {}
+        assert classify_data_member_drift(
+            prev, compute_shape_signature(empty)
+        ) is None
+
+    def test_identical_signatures_return_none(self):
+        sig = self._sig(["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"])
+        assert classify_data_member_drift(sig, sig) is None
+
+    def test_timestamp_keyed_data_block_never_matches(self):
+        """A feed whose `data` is timestamp-keyed collapses to a
+        timestamp_map node, so the member rule cannot fire on it."""
+        prev = compute_shape_signature({
+            "metadata": {"data_type": "gas_storage"},
+            "data": {"2026-08-13T00:00:00+02:00": {"fill_level_pct": 15.2}},
+        })
+        curr = compute_shape_signature({
+            "metadata": {"data_type": "gas_storage"},
+            "data": {"2026-08-14T00:00:00+02:00": {"fill_level_pct": 15.2,
+                                                   "extra": 1}},
+        })
+        assert classify_data_member_drift(prev, curr) is None
+
+    def test_malformed_signatures_return_none(self):
+        """Existing tripwire tests carry `shape_signature: {}` — those must
+        keep enforcing, so junk input must never downgrade."""
+        assert classify_data_member_drift({}, {}) is None
+        assert classify_data_member_drift(None, None) is None
+        assert classify_data_member_drift("str", "str") is None
+        assert classify_data_member_drift(
+            {"_kind": "dict", "keys": {"data": {"_kind": "dict", "keys": {}}}},
+            {"_kind": "dict", "keys": {"other": "str"}},
+        ) is None
+
+
+class TestMemberHomogeneity:
+    """The homogeneity rule: a member catalog is a map of LIKE things.
+
+    Defence in depth behind `MEMBER_MAPPED_FEEDS`. It rejects field-keyed
+    `data` blocks on structure alone, and validates members that appear only
+    on the current side — the two holes the /review-changes battery found in
+    the first draft.
+    """
+
+    def test_field_keyed_block_rejected_on_structure_alone(self):
+        """grid_imbalance's `data` keys are field names, and one of them is a
+        str-map next to two float-maps. Even without the eligibility gate,
+        dropping `imbalance_price` must not read as a member dropout."""
+        def payload(fields):
+            return {
+                "metadata": {"data_type": "grid_imbalance"},
+                "data": {
+                    name: {"2026-08-14T00:00:00+02:00":
+                           "up" if name == "direction" else 1.5}
+                    for name in fields
+                },
+            }
+        prev = compute_shape_signature(
+            payload(["balance_delta", "direction", "imbalance_price"]))
+        curr = compute_shape_signature(payload(["balance_delta", "direction"]))
+        assert classify_data_member_drift(prev, curr) is None
+
+    def test_added_member_with_foreign_shape_rejected(self):
+        """A new key must match its peers, not arrive carrying anything."""
+        prev = compute_shape_signature({
+            "metadata": {"m": 1},
+            "data": {"A": {"2026-08-14T00:00:00+02:00": {"t": 1.0}}},
+        })
+        curr = compute_shape_signature({
+            "metadata": {"m": 1},
+            "data": {
+                "A": {"2026-08-14T00:00:00+02:00": {"t": 1.0}},
+                "B": "just a string",
+            },
+        })
+        assert classify_data_member_drift(prev, curr) is None
+
+    def test_homogeneous_added_member_accepted(self):
+        """A recovering location arrives with its peers' shape — allowed."""
+        prev = compute_shape_signature({
+            "metadata": {"m": 1},
+            "data": {"A": {"2026-08-14T00:00:00+02:00": {"t": 1.0}}},
+        })
+        curr = compute_shape_signature({
+            "metadata": {"m": 1},
+            "data": {
+                "A": {"2026-08-14T00:00:00+02:00": {"t": 1.0}},
+                "B": {"2026-08-14T00:00:00+02:00": {"t": 2.0}},
+            },
+        })
+        verdict = classify_data_member_drift(prev, curr)
+        assert verdict is not None and verdict["added"] == ["B"]
+
+
+class TestDiagnosticEnvelopeKeys:
+    """`metadata['collector_quality_issues']` is attached only when a run
+    raised an issue, so it appears on exactly the degraded runs member drift
+    exists to let through — the collectors' `location_completeness` issue now
+    guarantees it on a dropout.
+
+    Without the exemption these runs fail the gate for the act of reporting
+    their own degradation, restoring the 2026-08-14 publish block. Verified by
+    mutation: replacing `_without_diagnostic_keys` with the identity function
+    left the whole suite green before these tests existed.
+    """
+
+    QUALITY_ISSUES = [{
+        "check_name": "location_completeness",
+        "severity": "warning",
+        "message": "1 of 2 location(s) returned no data",
+        "details": {"requested": ["A", "B"], "delivered": ["B"],
+                    "missing": ["A"]},
+    }]
+
+    def _payload(self, members, *, issues=False, extra_meta=None):
+        meta = {"data_type": "weather_forecast", "location_count": len(members),
+                "locations": list(members)}
+        if issues:
+            meta["collector_quality_issues"] = self.QUALITY_ISSUES
+        if extra_meta:
+            meta.update(extra_meta)
+        return {
+            "metadata": meta,
+            "data": {m: {"2026-08-14T00:00:00+02:00": {"t": 1.0}}
+                     for m in members},
+        }
+
+    def test_dropout_with_new_quality_issue_is_member_drift(self):
+        """The case the collectors now produce on every dropout."""
+        prev = compute_shape_signature(self._payload(["A", "B"]))
+        curr = compute_shape_signature(self._payload(["B"], issues=True))
+        verdict = classify_data_member_drift(prev, curr)
+        assert verdict is not None, (
+            "a degraded run that reports its own degradation must still "
+            "classify as member drift"
+        )
+        assert verdict["removed"] == ["A"]
+
+    def test_real_metadata_break_alongside_the_diagnostic_key_still_fails(self):
+        """The exemption must be surgical: it excuses the diagnostic key and
+        nothing travelling with it."""
+        prev = compute_shape_signature(self._payload(["A", "B"]))
+        curr = compute_shape_signature(
+            self._payload(["B"], issues=True, extra_meta={"brand_new": "x"})
+        )
+        assert classify_data_member_drift(prev, curr) is None
+
+    def test_field_loss_alongside_the_diagnostic_key_still_fails(self):
+        prev = compute_shape_signature(self._payload(["A", "B"]))
+        broken = self._payload(["B"], issues=True)
+        for record in broken["data"]["B"].values():
+            record["t"] = "now a string"
+        assert classify_data_member_drift(
+            prev, compute_shape_signature(broken)) is None
+
+    def test_diagnostic_key_disappearing_on_recovery_is_also_excused(self):
+        """Symmetric: the run after a dropout drops the key again."""
+        prev = compute_shape_signature(self._payload(["B"], issues=True))
+        curr = compute_shape_signature(self._payload(["A", "B"]))
+        verdict = classify_data_member_drift(prev, curr)
+        assert verdict is not None and verdict["added"] == ["A"]
+
+
+class TestMagnitudeFloor:
+    """A majority of previous members must survive for a member-set change to
+    read as routine. `demand_weather_forecast` losing 10 of 11 locations
+    satisfied the old "at least one retained" rule and exited 0 on the real
+    sidecar, with nothing downstream catching it."""
+
+    @staticmethod
+    def _payload(members):
+        return {
+            "metadata": {"data_type": "weather_forecast"},
+            "data": {m: {"2026-08-14T00:00:00+02:00": {"t": 1.0}}
+                     for m in members},
+        }
+
+    def _verdict(self, prev_members, curr_members):
+        return classify_data_member_drift(
+            compute_shape_signature(self._payload(prev_members)),
+            compute_shape_signature(self._payload(curr_members)),
+        )
+
+    def test_mass_dropout_is_not_member_drift(self):
+        eleven = [f"loc{i}" for i in range(11)]
+        assert self._verdict(eleven, ["loc0"]) is None
+
+    def test_exactly_half_retained_is_allowed(self):
+        """The buurt pair is 2 members losing 1 — the motivating case must
+        survive the floor, so the boundary is majority-inclusive."""
+        verdict = self._verdict(["A", "B"], ["B"])
+        assert verdict is not None and verdict["removed"] == ["A"]
+
+    def test_just_under_half_is_rejected(self):
+        seven = [f"loc{i}" for i in range(7)]
+        assert self._verdict(seven, seven[:4]) is not None   # 4 of 7 kept
+        assert self._verdict(seven, seven[:3]) is None       # 3 of 7 kept
+
+    def test_recovery_is_not_limited_by_the_floor(self):
+        """The floor bounds LOSS. A feed recovering from a degraded baseline
+        adds members, and must not be blocked by it."""
+        verdict = self._verdict(["A"], ["A", "B", "C", "D"])
+        assert verdict is not None
+        assert verdict["added"] == ["B", "C", "D"]

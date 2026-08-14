@@ -56,7 +56,15 @@ collectors/
   _http_classifier.py        # Shared HTTP status classifier (raise_if_permanent) for
                              # 422/400/401/403/404 → NonRetryableError. Used by tennet.py;
                              # available for adoption by any collector that hits 4xx cascades.
-  _openmeteo_shared.py       # Shared Semaphore + per-location retry/backoff for OpenMeteo*
+  _openmeteo_shared.py       # Shared Semaphore + per-location retry/backoff for OpenMeteo*.
+                             # Also record_location_delivery() / published_locations()
+                             # (2026-08-14): a location whose fetch exhausts its retries
+                             # drops out of `data`, so metadata publishes the DELIVERED
+                             # set — never the configured one — and a `location_completeness`
+                             # quality issue routes the dropout through the DQ gate into the
+                             # committed quality report. Before this the envelope claimed
+                             # locations `data` did not carry and only the drift tripwire
+                             # noticed, by failing the whole publish.
   entsoe*.py                 # ENTSO-E family (prices, wind, flows, load, generation, hydro)
   entsoe_hydro.py            # Nordic hydro reservoirs (A72, weekly cadence, NO+SE) — #3 closed c40a53b
   energyzero.py / epex.py / elspot.py  # Day-ahead price collectors (NL/EU)
@@ -87,6 +95,10 @@ utils/
                              # only on a passing run); _shape_observations.jsonl is the
                              # HISTORY the volatility classifier learns from (every run,
                              # pass or fail). Do not conflate them — that was the #43 bug.
+                             # classify_data_member_drift: is a shape diff purely a
+                             # member-set change of the data block (a location/source
+                             # dropped or recovered, survivors identical)? Powers the
+                             # member-drift downgrade in the tripwire (2026-08-14).
   secure_data_handler.py     # AES-CBC + HMAC-SHA256 encryption
   calendar_features.py       # Holiday/DST features
 scripts/
@@ -98,6 +110,15 @@ scripts/
                              # seed/override) UNION derive_volatile_feeds() (auto-derived from
                              # committed shape history, so a recurring data-driven false positive
                              # self-classifies without an allowlist edit). --volatility-window N.
+                             # Member drift (2026-08-14) warns too, behind TWO gates: the
+                             # feed is declared in MEMBER_MAPPED_FEEDS (its data keys are
+                             # location names) AND the diff is purely a member-set change
+                             # with every member sharing one shape. The registry is load-
+                             # bearing — grid_imbalance/market_history/ned_production key
+                             # `data` by FIELD name, where a vanished key IS the break.
+                             # Classified BEFORE volatility, and MEMBER_MAPPED_FEEDS are
+                             # excluded from derived volatility, so the blunt rule cannot
+                             # pre-empt the precise one. CRITICAL_FEEDS always fail.
   backfill_entsoe.py / archive_to_monthly.py / backfill_gas_storage.py
   sample_observed_ranges.py  # One-shot diagnostic: sample data/ files per feed, compute observed
                              # min/max per field. Used to derive #28's SOLAR_FIELD_RANGES /
@@ -161,7 +182,7 @@ memory/                      # Layered agent memory (tracked). MEMORY.md index, 
 | `settings.ini` | Public config (location, encryption flag) |
 | `secrets.ini` | API keys (gitignored) |
 | `.github/workflows/collect-data.yml` | Daily CI/CD pipeline (collect → sidecar → completeness tripwire → schema-drift tripwire → quality gate → publish → upload Pages artifact → `deploy` job with retry) |
-| `scripts/detect_schema_drift.py` | CI tripwire — diffs `data/_shape_signatures.json` against `git show HEAD:`. Data-volatile feeds (declared + history-derived) warn instead of failing. Volatility is derived from `data/_shape_observations.jsonl` (#43), falling back to the sidecar's git history when that log has <2 records. |
+| `scripts/detect_schema_drift.py` | CI tripwire — diffs `data/_shape_signatures.json` against `git show HEAD:`. Data-volatile feeds (declared + history-derived) warn instead of failing. Volatility is derived from `data/_shape_observations.jsonl` (#43), falling back to the sidecar's git history when that log has <2 records. **Member drift** (a location dropping out of a feed declared in `MEMBER_MAPPED_FEEDS`, all members sharing one shape) also warns — see `classify_data_member_drift`. Classified before volatility; `MEMBER_MAPPED_FEEDS` are excluded from derived volatility; `CRITICAL_FEEDS` never downgrade. |
 | `data/_shape_observations.jsonl` | Append-only learning record — one compact line per run (feed → shape_hash + schema_version). Written every run, committed *before* the drift gate. Never diff against it; it is history, not a baseline. |
 | `scripts/backfill_entsoe.py` | Backfill missing ENTSO-E prices into historical files |
 | `scripts/archive_to_monthly.py` | Decrypt `data/` files into `05. Data/YYYY-MM/` monthly archive (idempotent) |

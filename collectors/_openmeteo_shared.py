@@ -142,3 +142,71 @@ async def fetch_location_with_retry(
         f"final error: {str(last_response.get('error', '?'))[:120]}"
     )
     return last_response
+
+
+def record_location_delivery(collector, delivered: dict) -> None:
+    """Record which configured locations actually returned data this run.
+
+    Why this exists
+    ---------------
+    A per-location fetch that exhausts its retries simply omits that location
+    from the results dict. Before this, the omission was visible only as a
+    `logger.warning` in the run log: `_get_metadata` built `locations` and
+    `location_count` from `self.locations` — the CONFIGURED list — so a
+    degraded feed published an envelope asserting a location that was not in
+    `data`. Nothing downstream could tell. `validate_completeness` passed
+    comfortably (768 points → 384 is still far above the floor), no quality
+    issue was raised, and Augur saw a self-consistent-looking feed with half
+    its locations missing.
+
+    That went unnoticed until 2026-08-14, when `Elsweide_Arnhem_NL` dropped
+    out of both buurt feeds and the schema-drift tripwire — which compares
+    `data` key sets and knows nothing about weather — turned out to be the
+    only thing in the pipeline that noticed at all. It failed the publish of
+    18 healthy feeds to say so.
+
+    This routes the signal properly: the collector records what was delivered,
+    `_get_metadata` publishes the delivered set, and `_add_quality_issue`
+    surfaces the dropout through the existing DQ gate into the committed
+    quality report. No new state file, no new registry.
+
+    Sets `collector._delivered_locations` (list of names, sorted by the
+    configured order) for `_get_metadata` to consume.
+
+    Args:
+        collector: the OpenMeteo* collector instance (needs `.locations` and
+            BaseCollector's `_add_quality_issue`).
+        delivered: the results mapping location_name -> data built by
+            `_fetch_raw_data`.
+    """
+    configured = [loc['name'] for loc in collector.locations]
+    collector._delivered_locations = [n for n in configured if n in delivered]
+    missing = [n for n in configured if n not in delivered]
+    if not missing:
+        return
+    collector._add_quality_issue(
+        check_name='location_completeness',
+        severity='warning',
+        message=(
+            f"{len(missing)} of {len(configured)} location(s) returned no data "
+            f"after {MAX_RETRIES} attempts: {', '.join(missing)}"
+        ),
+        details={
+            'requested': configured,
+            'delivered': list(collector._delivered_locations),
+            'missing': missing,
+        },
+    )
+
+
+def published_locations(collector) -> list:
+    """The location names to publish in metadata: DELIVERED, not configured.
+
+    Falls back to the configured list when `record_location_delivery` has not
+    run — `_get_metadata` is reachable without a fetch (direct calls, tests),
+    and the configured list is the correct answer there.
+    """
+    delivered = getattr(collector, '_delivered_locations', None)
+    if delivered is None:
+        return [loc['name'] for loc in collector.locations]
+    return list(delivered)

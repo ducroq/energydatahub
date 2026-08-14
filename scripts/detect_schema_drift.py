@@ -11,7 +11,10 @@ Exit codes:
   0 — no drift detected, OR drift detected but schema_version was
       bumped (the change is properly versioned), OR --warn-only is set,
       OR only catalog drift (feeds added/removed) without a within-feed
-      shape change — see "Catalog vs shape drift" below.
+      shape change — see "Catalog vs shape drift" below — OR the only
+      within-feed drift was on volatile feeds, OR on declared member-mapped
+      feeds whose member set changed but whose shape did not (see "Member
+      drift" below).
   1 — within-feed shape drift AND schema_version did NOT change. The
       pipeline shipped a new shape without bumping the version — exactly
       the class of bug this tripwire exists to catch.
@@ -26,6 +29,25 @@ Catalog vs shape drift:
   diffs with no version bump. `feeds_added` and `feeds_removed` always
   surface as warnings, never failures. Without this split, the
   tripwire would fire on every transient collector miss-and-recover.
+
+Member drift (a location dropping out of one feed):
+  A member-mapped feed keys its `data` block by location name. When one
+  member's fetch exhausts its retries it drops out of the payload, which the
+  shape signature reports as a within-feed change indistinguishable from a real
+  break. Two gates separate them, and BOTH are required:
+
+    1. the feed is declared in MEMBER_MAPPED_FEEDS — a field-keyed `data` block
+       (grid_imbalance, market_history) is not a member catalog, and a key
+       vanishing from one IS the break this tripwire exists to catch;
+    2. `classify_data_member_drift()` finds the diff is purely a member-set
+       change, with every member on both sides sharing one shape.
+
+  Narrower than declaring the feed volatile (which ignores the hash outright),
+  so a member gaining or losing a field still fails. Member drift is classified
+  BEFORE volatility, and MEMBER_MAPPED_FEEDS are excluded from derived
+  volatility, so the blunt rule cannot pre-empt the precise one. CRITICAL_FEEDS
+  are exempt and always enforce. Added 2026-08-14 after a single dropped buurt
+  location blocked the publish of 18 healthy feeds.
 
 Volatile feeds (within-feed data-driven churn):
   Some feeds legitimately change their within-feed shape day-to-day because
@@ -68,6 +90,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from utils.shape_signature import (  # noqa: E402
+    classify_data_member_drift,
     diff_signatures,
     load_shape_observations,
     volatile_feeds_from_observations,
@@ -154,6 +177,42 @@ VOLATILE_SHAPE_FEEDS = frozenset({
     'calendar_features.json',
 })
 
+# Feeds whose `data` block is keyed by MEMBER NAME (a location), so that a
+# vanished key is a per-member fetch failure rather than a schema change. Only
+# these are eligible for the member-drift downgrade — see
+# `classify_data_member_drift`, which is deliberately not self-gating.
+#
+# This set exists because "the data dict is keyed by something" is NOT enough.
+# 15 of the 20 published feeds have a plain-dict `data` block, and several key
+# it by FIELD name, where a vanished key is exactly the unversioned break this
+# tripwire exists to catch:
+#
+#   grid_imbalance.json  {balance_delta, direction, imbalance_price}
+#   market_history.json  {carbon_eua, gas_ttf}
+#   ned_production.json  {solar, wind_onshore, wind_offshore}
+#   wind_forecast.json   {entsoe_wind_generation, offshore_wind}
+#
+# Without this gate, `grid_imbalance` silently dropping `imbalance_price`
+# downgraded to a warning and published — found by the /review-changes battery
+# on the first draft of this change, reproduced end-to-end against the live
+# sidecar. Keep the set to feeds whose members are genuinely interchangeable
+# per-location records; when in doubt, leave a feed out and let it fail loudly.
+#
+# weather_forecast_multi_location.json is listed for intent even though it is
+# also a CRITICAL_FEED and so can never actually downgrade — protected feeds
+# short-circuit first in `_partition_member_drift`.
+#
+# air_quality_buurt.json is deliberately ABSENT despite being location-keyed:
+# luchtmeetnet varies the per-station pollutant set, so its members are not
+# homogeneous and it is already handled by the declared VOLATILE_SHAPE_FEEDS.
+MEMBER_MAPPED_FEEDS = frozenset({
+    'weather_forecast_buurt.json',
+    'solar_forecast_buurt.json',
+    'demand_weather_forecast.json',
+    'solar_forecast.json',
+    'weather_forecast_multi_location.json',
+})
+
 # A feed cannot be both critical (its removal fails CI) and volatile (its
 # within-feed shape change is ignored) — those are contradictory signals.
 # Enforce the invariant at import time so a future edit to either set can't
@@ -161,6 +220,15 @@ VOLATILE_SHAPE_FEEDS = frozenset({
 assert CRITICAL_FEEDS.isdisjoint(VOLATILE_SHAPE_FEEDS), (
     "A feed cannot be both critical and volatile — overlap: "
     f"{sorted(CRITICAL_FEEDS & VOLATILE_SHAPE_FEEDS)}"
+)
+
+# Member-mapped and volatile are likewise contradictory: the point of declaring
+# a feed member-mapped is that its member-set churn is classified PRECISELY, so
+# anything the precise rule rejects must still fail. Declaring it volatile too
+# would ignore its hash outright and undo that.
+assert MEMBER_MAPPED_FEEDS.isdisjoint(VOLATILE_SHAPE_FEEDS), (
+    "A feed cannot be both member-mapped and volatile — overlap: "
+    f"{sorted(MEMBER_MAPPED_FEEDS & VOLATILE_SHAPE_FEEDS)}"
 )
 
 
@@ -326,7 +394,8 @@ def derive_volatile_feeds(
 
 
 def _emit_summary(report: Dict[str, Any], current_path: Path,
-                  effective_volatile: frozenset = frozenset()) -> None:
+                  effective_volatile: frozenset = frozenset(),
+                  member_drift_feeds: frozenset = frozenset()) -> None:
     """Human-readable summary for the Actions run log."""
     print(f"Schema-drift report (current sidecar: {current_path})")
     print(f"  previous schema_version: {report['previous_schema_version']!r}")
@@ -345,7 +414,12 @@ def _emit_summary(report: Dict[str, Any], current_path: Path,
             # untagged while being treated as volatile, and the CHANGED
             # list stops reconciling with the ::error:: count, which is
             # the one thing this tag exists to do.
-            tag = " [volatile]" if c["feed"] in effective_volatile else ""
+            if c["feed"] in effective_volatile:
+                tag = " [volatile]"
+            elif c["feed"] in member_drift_feeds:
+                tag = " [member-drift]"
+            else:
+                tag = ""
             print(
                 f"    - {c['feed']}{tag}: "
                 f"{c['previous_hash']} -> {c['current_hash']}"
@@ -373,6 +447,52 @@ def _partition_within_feed_drift(feeds_changed, volatile_feeds=VOLATILE_SHAPE_FE
     volatile = [c for c in feeds_changed if c["feed"] in volatile_feeds]
     enforced = [c for c in feeds_changed if c["feed"] not in volatile_feeds]
     return volatile, enforced
+
+
+def _partition_member_drift(
+    feeds_changed,
+    previous: Dict[str, Any],
+    current: Dict[str, Any],
+    protected: frozenset = CRITICAL_FEEDS,
+    eligible: frozenset = MEMBER_MAPPED_FEEDS,
+):
+    """Split changed feeds into ``(member_drift, enforced)``.
+
+    A feed lands in ``member_drift`` only when it is DECLARED member-mapped
+    (`eligible`) and the only structural difference is which members its `data`
+    block contains — a location that dropped out of (or recovered into) the
+    payload, with every member on both sides sharing one shape. See
+    `classify_data_member_drift()`.
+
+    The `eligible` gate is what keeps this from applying to field-keyed feeds,
+    where a vanished `data` key is a real schema break. `classify_data_member_
+    drift` cannot make that call on structure alone and does not try.
+
+    ``protected`` feeds are never downgraded, mirroring the CRITICAL_FEEDS
+    carve-out in the derived-volatility path: on the feeds Augur depends on,
+    a member vanishing is operationally severe enough to warrant the hard
+    stop even though it is not, strictly, a schema change.
+
+    Each downgraded entry carries a ``member_drift`` key with the added /
+    removed / retained member names, so the warning can name what moved.
+    """
+    prev_feeds = (previous.get("feeds") or {}) if isinstance(previous, dict) else {}
+    curr_feeds = (current.get("feeds") or {}) if isinstance(current, dict) else {}
+    member_drift, enforced = [], []
+    for c in feeds_changed:
+        name = c["feed"]
+        if name in protected or name not in eligible:
+            enforced.append(c)
+            continue
+        verdict = classify_data_member_drift(
+            (prev_feeds.get(name) or {}).get("shape_signature"),
+            (curr_feeds.get(name) or {}).get("shape_signature"),
+        )
+        if verdict is None:
+            enforced.append(c)
+        else:
+            member_drift.append({**c, "member_drift": verdict})
+    return member_drift, enforced
 
 
 def main() -> int:
@@ -420,16 +540,17 @@ def main() -> int:
         return 0
 
     report = diff_signatures(previous, current)
-    _emit_summary(report, current_path)
 
     # No change → clean pass
     if not report["feeds_changed"] and not report["feeds_added"] \
             and not report["feeds_removed"]:
+        _emit_summary(report, current_path)
         print("::notice::No schema drift detected.")
         return 0
 
     # Drift accompanied by a version bump → expected, properly versioned
     if report["schema_version_changed"]:
+        _emit_summary(report, current_path)
         print(
             f"::notice::Schema drift detected AND schema_version bumped "
             f"({report['previous_schema_version']} -> "
@@ -482,21 +603,60 @@ def main() -> int:
     # a hard failure into a warning nobody reads. Declaring one volatile stays
     # possible, but it must be a human edit to VOLATILE_SHAPE_FEEDS — which the
     # assert above already forbids, so in practice a critical feed always fails.
-    derived_volatile = frozenset(derived_volatile) - CRITICAL_FEEDS
+    # A MEMBER_MAPPED_FEED is never auto-downgraded to blunt volatility either.
+    # Its member-set churn is exactly what the precise classifier below handles,
+    # so letting derivation mark it volatile would ignore its shape hash
+    # outright and blind the tripwire to the real breaks the precise rule is
+    # meant to keep failing. This is not hypothetical: the single transient
+    # dropout of 2026-08-14 put two hashes in the observation log for both buurt
+    # feeds, and the very next run auto-classified them volatile — the outcome
+    # VOLATILE_SHAPE_FEEDS' own comment says must never happen to them.
+    derived_volatile = (
+        frozenset(derived_volatile) - CRITICAL_FEEDS - MEMBER_MAPPED_FEEDS
+    )
     effective_volatile = VOLATILE_SHAPE_FEEDS | derived_volatile
     auto_only = sorted(derived_volatile - VOLATILE_SHAPE_FEEDS)
+
+    # Member drift is classified FIRST, before volatility. Both downgrade to a
+    # warning, but member drift is the narrower and more informative verdict —
+    # it names what moved and still fails on anything else. Letting the blunt
+    # rule win first would discard that signal.
+    member_changed, remaining_changed = _partition_member_drift(
+        report["feeds_changed"], previous, current
+    )
+
+    # Partition what member drift did not explain: volatile feeds (data-driven
+    # shape churn) warn but never fail; everything else is an enforced shape
+    # diff that must be versioned.
+    volatile_changed, enforced_changed = _partition_within_feed_drift(
+        remaining_changed, effective_volatile
+    )
+
+    # Summary is emitted here, after classification, so each CHANGED line can
+    # carry its [volatile] / [member-drift] tag and the list reconciles with
+    # the ::error:: count below.
+    _emit_summary(report, current_path, effective_volatile,
+                  frozenset(c["feed"] for c in member_changed))
+
     if auto_only:
         print(
             f"::notice::Auto-classified {len(auto_only)} feed(s) as shape-"
             f"volatile from committed history (warn, not fail): {auto_only}"
         )
 
-    # Partition within-feed drift: volatile feeds (data-driven shape churn)
-    # warn but never fail; everything else is an enforced shape diff that must
-    # be versioned. See VOLATILE_SHAPE_FEEDS + derive_volatile_feeds().
-    volatile_changed, enforced_changed = _partition_within_feed_drift(
-        report["feeds_changed"], effective_volatile
-    )
+    for c in member_changed:
+        md = c["member_drift"]
+        parts = []
+        if md["removed"]:
+            parts.append(f"members dropped: {', '.join(md['removed'])}")
+        if md["added"]:
+            parts.append(f"members recovered: {', '.join(md['added'])}")
+        print(
+            f"::warning::{c['feed']}: {'; '.join(parts)} "
+            f"({len(md['retained'])} retained, all structurally unchanged). "
+            "Member-set change in the data block — treated as operational "
+            "(a per-member fetch failure or recovery), not a schema change."
+        )
 
     if volatile_changed:
         names = ", ".join(c["feed"] for c in volatile_changed)

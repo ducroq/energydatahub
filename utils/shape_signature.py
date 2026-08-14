@@ -130,6 +130,187 @@ def compute_shape_signature(data: Any, _depth: int = 0) -> Union[Dict[str, Any],
     return f"unknown:{type(data).__name__}"
 
 
+def _is_dict_signature(sig: Any) -> bool:
+    """True for a plain-dict shape node (not a collapsed timestamp map)."""
+    return isinstance(sig, dict) and sig.get("_kind") == "dict"
+
+
+# Envelope keys that appear EXACTLY WHEN something went wrong, and are absent
+# on a clean run. `BaseCollector.collect()` attaches
+# `metadata['collector_quality_issues']` only when the run raised at least one
+# issue, so its presence is a diagnostic signal, not a schema change.
+#
+# This matters directly for member drift. The same dropout that removes a
+# location from `data` now also makes the collector raise a
+# `location_completeness` issue — so a degraded run changes `metadata`'s shape
+# too, the envelope guard rejects it, and the feed fails the gate for the very
+# act of reporting its own degradation. Verified before this was added: the
+# member-drift verdict on a realistic degraded buurt payload was None.
+DIAGNOSTIC_ENVELOPE_KEYS = frozenset({"collector_quality_issues"})
+
+
+def _without_diagnostic_keys(sig: Any) -> Any:
+    """Strip `DIAGNOSTIC_ENVELOPE_KEYS` from a dict shape node, if present."""
+    if not _is_dict_signature(sig):
+        return sig
+    keys = sig.get("keys")
+    if not isinstance(keys, dict):
+        return sig
+    pruned = {k: v for k, v in keys.items() if k not in DIAGNOSTIC_ENVELOPE_KEYS}
+    if len(pruned) == len(keys):
+        return sig
+    return {"_kind": "dict", "keys": pruned}
+
+
+def classify_data_member_drift(
+    previous_signature: Any,
+    current_signature: Any,
+    container_key: str = "data",
+) -> Optional[Dict[str, List[str]]]:
+    """Classify a shape diff as a pure MEMBER-SET change of the data block.
+
+    Member-mapped feeds key their `data` block by a member name — a location
+    (`weather_forecast_buurt`: Elsweide_Arnhem_NL / Elderveld_Arnhem_NL,
+    `demand_weather_forecast`: eleven population centres). That key set is a
+    DATA CATALOG, not schema: when a per-location fetch fails its retries the
+    member simply drops out of the payload, and the feed publishes valid data
+    for the members that did answer.
+
+    NOT every dict-keyed `data` block is a member map. Several feeds key `data`
+    by FIELD name — `grid_imbalance` is `{balance_delta, direction,
+    imbalance_price}`, `market_history` is `{carbon_eua, gas_ttf}` — where a
+    vanished key is a genuine unversioned schema break, precisely what the
+    tripwire exists to catch. Telling the two apart is the whole difficulty,
+    and this function alone does NOT do it: callers MUST also gate on a
+    declared eligibility set (`MEMBER_MAPPED_FEEDS` in
+    `scripts/detect_schema_drift.py`). The homogeneity rule below is defence in
+    depth, not the gate — it rejects `grid_imbalance` on structure alone,
+    because a `str`-valued map next to two `float`-valued maps is not a map of
+    like things, but it cannot reject a field map whose fields happen to share
+    a shape.
+
+    The shape signature cannot tell that apart from a real structural break —
+    both show up as "the `data` dict's keys changed" — so a single transient
+    location dropout failed the drift tripwire and aborted the whole publish
+    (2026-08-14: `Elsweide_Arnhem_NL` dropped from BOTH buurt feeds in one run;
+    18 healthy feeds went unpublished as a result).
+
+    This is the feed-level catalog-vs-shape split (see `scripts/
+    detect_schema_drift.py`) applied one level deeper, and it is deliberately
+    narrower than declaring the feed volatile: a volatile feed has its shape
+    hash ignored outright, whereas this returns non-None ONLY when the members
+    that SURVIVED are structurally identical. A member gaining or losing a
+    field, or the envelope changing anywhere outside the data block, still
+    reads as a real break and still fails.
+
+    Returns None (→ "not a member-set change, enforce normally") unless ALL of:
+      - both signatures are plain-dict envelopes with the same top-level keys;
+      - every envelope key other than `container_key` is byte-identical
+        (so `metadata` moving is a real break — note that a member dropout
+        leaves metadata's SHAPE untouched, since `locations` is a list-of-str
+        and `location_count` an int regardless of how many there are);
+      - the container is a plain dict on both sides (a timestamp-keyed data
+        block collapses to `_kind: timestamp_map` and never matches here);
+      - at least one member is retained — a feed emptied completely never
+        reaches here: the six Open-Meteo feeds in `PRESENT_EMPTY_GRACE_FEEDS`
+        are coerced to absent upstream in `data_fetcher`, and every other feed
+        fails `validate_completeness` before publish. Either way an empty
+        member map must not be laundered into a warning;
+      - ALL members on BOTH sides share one identical signature. This is the
+        homogeneity rule: a member catalog is a map of like things, so every
+        member — retained, dropped, or newly arrived — has the same shape. It
+        subsumes "retained members unchanged" (a survivor that lost a field no
+        longer matches its peers), and it validates ADDED members too, closing
+        the case where a new key arrives carrying arbitrary structure.
+
+    KNOWN LIMIT — an added key of matching shape is accepted unconditionally.
+    A genuinely new, non-member `data` key whose shape happens to match the
+    members (say a `_national_aggregate` series added to `solar_forecast`)
+    reports as `members recovered: _national_aggregate` and passes. It is
+    structurally indistinguishable from a member returning, so this is not
+    fixable here — the eligibility registry and code review are what catch it.
+    Do not read the narrowness claim above as covering additions: it bounds
+    what can CHANGE or VANISH, not what can appear.
+
+    Args:
+        previous_signature: `shape_signature` of the feed at the baseline.
+        current_signature: `shape_signature` of the feed this run.
+        container_key: envelope key holding the member map (default 'data').
+
+    Returns:
+        `{"added": [...], "removed": [...], "retained": [...]}` when the diff
+        is purely a member-set change, else None.
+    """
+    if not (_is_dict_signature(previous_signature)
+            and _is_dict_signature(current_signature)):
+        return None
+
+    prev_keys = previous_signature.get("keys")
+    curr_keys = current_signature.get("keys")
+    if not isinstance(prev_keys, dict) or not isinstance(curr_keys, dict):
+        return None
+    if set(prev_keys) != set(curr_keys) or container_key not in prev_keys:
+        return None
+
+    # Everything outside the data block must be structurally identical, except
+    # that a diagnostic key appearing or disappearing does not count — see
+    # DIAGNOSTIC_ENVELOPE_KEYS.
+    for key in prev_keys:
+        if key == container_key:
+            continue
+        if _without_diagnostic_keys(prev_keys[key]) != \
+                _without_diagnostic_keys(curr_keys[key]):
+            return None
+
+    prev_data = prev_keys[container_key]
+    curr_data = curr_keys[container_key]
+    if not (_is_dict_signature(prev_data) and _is_dict_signature(curr_data)):
+        return None
+    prev_members = prev_data.get("keys")
+    curr_members = curr_data.get("keys")
+    if not isinstance(prev_members, dict) or not isinstance(curr_members, dict):
+        return None
+
+    retained = set(prev_members) & set(curr_members)
+    if not retained:
+        return None
+
+    # Magnitude floor: a MAJORITY of the previous members must survive.
+    #
+    # "At least one retained" is too weak to mean anything. On the real
+    # sidecar, `demand_weather_forecast` losing 10 of its 11 locations
+    # satisfied it and exited 0 — and nothing downstream catches that either,
+    # since one surviving location still supplies ~168 records against an
+    # EXPECTED_MIN_POINTS floor of 24, and `location_completeness` is a
+    # 'warning', which the workflow quality gate does not fail on.
+    #
+    # It also ratchets: the baseline advances on the passing run, so the next
+    # run compares degraded-to-degraded and reports no drift at all. The
+    # directly analogous grace in this project (PRESENT_EMPTY_GRACE_FEEDS, #42)
+    # is time-boxed by UPSTREAM_EMPTY_ESCALATION_RUNS for exactly this reason.
+    # A majority floor is the cheap half of that guard — it bounds how much can
+    # vanish in one step, not how long it may stay vanished. The duration half
+    # is deliberately not built here; tracked as issue #47.
+    if len(retained) * 2 < len(prev_members):
+        return None
+
+    # Homogeneity: every member on both sides must share one signature. A
+    # survivor that changed shape no longer matches its peers, so this also
+    # covers the "retained members unchanged" requirement, and it validates
+    # members that only appear on the current side.
+    all_member_sigs = list(prev_members.values()) + list(curr_members.values())
+    reference = all_member_sigs[0]
+    if any(sig != reference for sig in all_member_sigs):
+        return None
+
+    added = sorted(set(curr_members) - set(prev_members))
+    removed = sorted(set(prev_members) - set(curr_members))
+    if not added and not removed:
+        return None
+
+    return {"added": added, "removed": removed, "retained": sorted(retained)}
+
+
 def signature_hash(signature: Union[Dict[str, Any], str]) -> str:
     """
     Stable SHA-256 hash of a shape signature.

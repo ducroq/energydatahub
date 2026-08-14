@@ -53,6 +53,8 @@ from collectors._openmeteo_shared import (
     OPENMETEO_SEMAPHORE,
     OPENMETEO_GAP_SECONDS,
     fetch_location_with_retry,
+    record_location_delivery,
+    published_locations,
 )
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
@@ -196,6 +198,10 @@ class OpenMeteoSolarCollector(BaseCollector):
                 else:
                     self.logger.warning(f"{location_name}: No data - {response.get('error', 'unknown')}")
 
+        # Record delivered-vs-requested and raise a DQ warning on any dropout,
+        # so a half-populated feed is visible downstream instead of publishing
+        # metadata that claims locations `data` does not contain.
+        record_location_delivery(self, results)
         return results
 
     def _parse_response(
@@ -357,8 +363,10 @@ class OpenMeteoSolarCollector(BaseCollector):
         metadata = super()._get_metadata(start_time, end_time)
 
         metadata.update({
-            'locations': [loc['name'] for loc in self.locations],
-            'location_count': len(self.locations),
+            # Delivered, not configured — a location whose fetch failed must
+            # not appear here claiming data that `data` does not carry.
+            'locations': published_locations(self),
+            'location_count': len(published_locations(self)),
             'forecast_days': self.forecast_days,
             'variables': {
                 'ghi': 'Global Horizontal Irradiance (W/m²)',

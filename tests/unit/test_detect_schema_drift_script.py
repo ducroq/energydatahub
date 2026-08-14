@@ -672,3 +672,322 @@ class TestHistoryDerivedEndToEnd:
         result = _run_script(repo, "--volatility-window", "0")
         assert result.returncode == 1, result.stdout + result.stderr
         assert "::error::" in result.stdout
+
+
+# --- Member drift: a location/source dropping out of one feed ---------------
+#
+# 2026-08-14: `Elsweide_Arnhem_NL` exhausted its Open-Meteo retries and dropped
+# from both buurt feeds in one run. The data block's key set changed, the
+# tripwire read it as an unversioned shape break, and the publish of 18 healthy
+# feeds was aborted. These tests pin the downgrade AND its narrowness.
+
+from utils.shape_signature import compute_shape_signature  # noqa: E402
+
+
+def _buurt_payload(members):
+    return {
+        "metadata": {
+            "data_type": "weather_forecast",
+            "location_count": len(members),
+            "locations": list(members),
+        },
+        "data": {
+            name: {"2026-08-14T00:00:00+02:00": {"temperature_2m": 18.4,
+                                                 "cloud_cover": 55.0}}
+            for name in members
+        },
+    }
+
+
+def _sig_feed(payload, hash_val, data_type="weather_forecast"):
+    """A sidecar feed entry carrying a REAL shape_signature."""
+    return {
+        "shape_hash": hash_val,
+        "data_type": data_type,
+        "sources": None,
+        "shape_signature": compute_shape_signature(payload),
+    }
+
+
+def _sidecar_with_feeds(version, feeds):
+    return {
+        "computed_at": "2026-08-14T16:45:36+00:00",
+        "schema_version": version,
+        "feeds": feeds,
+    }
+
+
+BOTH = ["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"]
+ONE = ["Elderveld_Arnhem_NL"]
+
+
+class TestMemberDriftEndToEnd:
+    def test_dropped_location_exits_0_with_warning(self, tmp_path):
+        prev = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(ONE), "h2"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0
+        assert "::warning::" in result.stdout
+        assert "Elsweide_Arnhem_NL" in result.stdout      # names what dropped
+        assert "[member-drift]" in result.stdout          # tagged in summary
+        assert "::error::" not in result.stdout
+
+    def test_recovered_location_exits_0(self, tmp_path):
+        """Symmetric: the baseline was the degraded shape, the member returns."""
+        prev = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(ONE), "h2"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0
+        assert "members recovered" in result.stdout
+
+    def test_surviving_member_field_change_still_exits_1(self, tmp_path):
+        """The narrowness that makes the downgrade safe: a member dropping out
+        AND the survivor losing a field is a real break, not member drift."""
+        broken = _buurt_payload(ONE)
+        for record in broken["data"]["Elderveld_Arnhem_NL"].values():
+            del record["cloud_cover"]
+        prev = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(broken, "h3"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1
+        assert "::error::" in result.stdout
+
+    def test_critical_feed_member_dropout_still_exits_1(self, tmp_path):
+        """CRITICAL_FEEDS are never downgraded — same carve-out as derived
+        volatility. Augur depends on these; a vanished member is severe."""
+        assert "load_forecast.json" in detect_schema_drift.CRITICAL_FEEDS
+        prev = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_buurt_payload(ONE), "h2"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1
+        assert "::error::" in result.stdout
+
+    def test_member_drift_plus_real_break_still_exits_1(self, tmp_path):
+        """A downgraded feed must not mask an enforced one in the same run."""
+        prev = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+            "gas_storage.json": _feed("g1"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(ONE), "h2"),
+            "gas_storage.json": _feed("g2"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1
+        assert "Within-feed shape drift on 1 feed(s)" in result.stdout
+
+    def test_the_2026_08_14_regression(self, tmp_path):
+        """Both buurt feeds losing the same location in one run — the exact
+        shape of the run that blocked the 2026-08-14 publish."""
+        prev = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(
+                _buurt_payload(BOTH), "0965ed96fb3058ab238d42bf109f8bff"),
+            "solar_forecast_buurt.json": _sig_feed(
+                _buurt_payload(BOTH), "49a96e1dee4d3b61387fc2baa842a8e4"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(
+                _buurt_payload(ONE), "6c0768270ce3b5ecb48050e33e923f4a"),
+            "solar_forecast_buurt.json": _sig_feed(
+                _buurt_payload(ONE), "85b2a352000b0a7d86ae9f4aa12c16b0"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0, (
+            "the 2026-08-14 publish-blocking run must now pass:\n"
+            + result.stdout
+        )
+
+
+class TestPartitionMemberDrift:
+    """Direct tests for the pure partition helper."""
+
+    def _sidecars(self):
+        prev = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(ONE), "h2"),
+        })
+        return prev, curr
+
+    def test_splits_member_drift_from_enforced(self):
+        prev, curr = self._sidecars()
+        changed = [{"feed": "weather_forecast_buurt.json"},
+                   {"feed": "gas_storage.json"}]
+        member, enforced = detect_schema_drift._partition_member_drift(
+            changed, prev, curr
+        )
+        assert [c["feed"] for c in member] == ["weather_forecast_buurt.json"]
+        assert [c["feed"] for c in enforced] == ["gas_storage.json"]
+        assert member[0]["member_drift"]["removed"] == ["Elsweide_Arnhem_NL"]
+
+    def test_protected_feed_never_downgraded(self):
+        prev, curr = self._sidecars()
+        changed = [{"feed": "weather_forecast_buurt.json"}]
+        member, enforced = detect_schema_drift._partition_member_drift(
+            changed, prev, curr,
+            protected=frozenset({"weather_forecast_buurt.json"}),
+        )
+        assert member == []
+        assert [c["feed"] for c in enforced] == ["weather_forecast_buurt.json"]
+
+    def test_feed_missing_from_a_sidecar_is_enforced(self):
+        prev, curr = self._sidecars()
+        changed = [{"feed": "not_present.json"}]
+        member, enforced = detect_schema_drift._partition_member_drift(
+            changed, prev, curr
+        )
+        assert member == []
+        assert len(enforced) == 1
+
+
+# --- The two blockers the /review-changes battery found in the first draft ---
+
+
+def _field_keyed_payload(fields):
+    """grid_imbalance-shaped: `data` keyed by FIELD name, not member name."""
+    return {
+        "metadata": {"data_type": "grid_imbalance"},
+        "data": {
+            name: {"2026-08-14T00:00:00+02:00":
+                   "up" if name == "direction" else 1.5}
+            for name in fields
+        },
+    }
+
+
+def _write_observations(repo: Path, records):
+    path = repo / "data" / "_shape_observations.jsonl"
+    path.write_text("\n".join(json.dumps(r, sort_keys=True) for r in records) + "\n")
+
+
+class TestFieldKeyedFeedsNeverDowngrade:
+    """BLOCKER 1: the first draft downgraded ANY dict-keyed `data` block, so
+    `grid_imbalance.json` silently dropping the `imbalance_price` field exited
+    0 with a warning calling it a fetch failure."""
+
+    def test_grid_imbalance_losing_a_field_exits_1(self, tmp_path):
+        prev = _sidecar_with_feeds("2.4", {
+            "grid_imbalance.json": _sig_feed(
+                _field_keyed_payload(
+                    ["balance_delta", "direction", "imbalance_price"]),
+                "h1", data_type="grid_imbalance"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "grid_imbalance.json": _sig_feed(
+                _field_keyed_payload(["balance_delta", "direction"]),
+                "h2", data_type="grid_imbalance"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1, result.stdout
+        assert "::error::" in result.stdout
+        assert "member-drift" not in result.stdout
+
+    def test_undeclared_feed_is_never_eligible(self, tmp_path):
+        """Even a perfectly member-shaped diff fails if the feed is not
+        declared in MEMBER_MAPPED_FEEDS. The registry is the gate."""
+        assert "nordic_hydro.json" not in detect_schema_drift.MEMBER_MAPPED_FEEDS
+        prev = _sidecar_with_feeds("2.4", {
+            "nordic_hydro.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "nordic_hydro.json": _sig_feed(_buurt_payload(ONE), "h2"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1, result.stdout
+
+    def test_registries_are_disjoint_where_required(self):
+        assert detect_schema_drift.MEMBER_MAPPED_FEEDS.isdisjoint(
+            detect_schema_drift.VOLATILE_SHAPE_FEEDS)
+
+
+class TestVolatilityDoesNotPreemptMemberDrift:
+    """BLOCKER 2: the buurt feeds self-promote to derived-volatile from the
+    observation log the moment they drift once, and volatility used to be
+    partitioned first — so the blunt rule ignored their hash outright and the
+    precise rule became unreachable on the feeds it was written for.
+
+    `_make_repo_with_two_sidecars` writes no observation log, so the earlier
+    tests never engage this path. Production has 80+ records.
+    """
+
+    def _log_with_prior_churn(self):
+        """12 prior records; weather_forecast_buurt shows two hashes at 2.4 —
+        enough for derive_volatile_feeds to call it volatile."""
+        recs = []
+        for i in range(11):
+            recs.append({
+                "observed_at": f"2026-08-{i + 1:02d}T16:00:00+00:00",
+                "schema_version": "2.4",
+                "feeds": {"weather_forecast_buurt.json": "h1",
+                          "gas_storage.json": "g1"},
+            })
+        recs.append({
+            "observed_at": "2026-08-13T16:00:00+00:00",
+            "schema_version": "2.4",
+            "feeds": {"weather_forecast_buurt.json": "h2",   # the churn
+                      "gas_storage.json": "g1"},
+        })
+        return recs
+
+    def test_member_mapped_feed_is_not_auto_volatile(self, tmp_path):
+        """A real break on a feed the log would call volatile must still fail,
+        because MEMBER_MAPPED_FEEDS are subtracted from derived volatility."""
+        broken = _buurt_payload(ONE)
+        for record in broken["data"]["Elderveld_Arnhem_NL"].values():
+            del record["cloud_cover"]
+        prev = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(broken, "h3"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        _write_observations(repo, self._log_with_prior_churn())
+        result = _run_script(repo)
+        assert result.returncode == 1, (
+            "derived volatility must not excuse a real break on a "
+            "member-mapped feed:\n" + result.stdout
+        )
+        assert "[volatile]" not in result.stdout
+
+    def test_dropout_still_reports_as_member_drift_not_volatile(self, tmp_path):
+        """The precise verdict must win: named members, not a vague
+        'volatile feed' warning."""
+        prev = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "weather_forecast_buurt.json": _sig_feed(_buurt_payload(ONE), "h2"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        _write_observations(repo, self._log_with_prior_churn())
+        result = _run_script(repo)
+        assert result.returncode == 0, result.stdout
+        assert "[member-drift]" in result.stdout
+        assert "Elsweide_Arnhem_NL" in result.stdout
+        assert "[volatile]" not in result.stdout
