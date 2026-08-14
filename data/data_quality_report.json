@@ -1,9 +1,11 @@
 {
-  "timestamp": "2026-08-13T16:50:46.989531+00:00",
+  "timestamp": "2026-08-14T17:41:57.960733+00:00",
   "overall_status": "warning",
   "total_issues": 3,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "datasets_collected": 23,
+  "datasets_missing": [
+    "air_quality_buurt"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -78,11 +80,12 @@
         {
           "check_name": "value_range",
           "severity": "warning",
-          "message": "1 weather field values outside their specific ranges",
+          "message": "2 weather field values outside their specific ranges",
           "details": {
-            "count": 1,
+            "count": 2,
             "examples": [
-              "cape=-2.5 (range 0.0-6000.0)"
+              "cape=-10.0 (range 0.0-6000.0)",
+              "cape=-10.0 (range 0.0-6000.0)"
             ]
           }
         }
@@ -95,16 +98,6 @@
       "status": "info",
       "data_points": 730,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -189,15 +182,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "7 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "9 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 7,
+            "count": 9,
             "examples": [
-              "NL/2026-08-13T09:15:00+02:00: forecast_error=2817.4, load_actual=6889.136, ratio=0.41",
-              "NL/2026-08-13T09:30:00+02:00: forecast_error=3060.0, load_actual=6313.786, ratio=0.48",
-              "NL/2026-08-13T09:45:00+02:00: forecast_error=3232.2, load_actual=5816.936, ratio=0.56",
-              "NL/2026-08-13T10:00:00+02:00: forecast_error=3228.5, load_actual=5525.216, ratio=0.58",
-              "NL/2026-08-13T10:15:00+02:00: forecast_error=3437.4, load_actual=5036.796, ratio=0.68"
+              "NL/2026-08-14T09:30:00+02:00: forecast_error=3043.3, load_actual=6972.146, ratio=0.44",
+              "NL/2026-08-14T09:45:00+02:00: forecast_error=3402.8, load_actual=6446.326, ratio=0.53",
+              "NL/2026-08-14T10:00:00+02:00: forecast_error=3620.5, load_actual=6056.106, ratio=0.60",
+              "NL/2026-08-14T10:15:00+02:00: forecast_error=3891.1, load_actual=5586.476, ratio=0.70",
+              "NL/2026-08-14T10:30:00+02:00: forecast_error=4241.8, load_actual=5170.566, ratio=0.82"
             ],
             "threshold": 0.4
           }
@@ -209,7 +202,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 72,
+      "data_points": 76,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -239,7 +232,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 504,
+      "data_points": 516,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -259,7 +252,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 148,
+      "data_points": 149,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -269,7 +262,7 @@
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 7,
+      "data_points": 8,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
