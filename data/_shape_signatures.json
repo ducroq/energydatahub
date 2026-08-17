@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-08-16T16:17:36+00:00",
+  "computed_at": "2026-08-17T16:21:59+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -671,102 +671,6 @@
         "entsoe_wind_generation",
         "offshore_wind"
       ]
-    },
-    "air_quality_buurt.json": {
-      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int",
-                    "PM10": "float",
-                    "PM25": "float"
-                  }
-                }
-              },
-              "Elsweide_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "data_type": "str",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "stations": {
-                "_kind": "dict",
-                "keys": {
-                  "Elderveld_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  },
-                  "Elsweide_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  }
-                }
-              },
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "air",
-      "sources": null
     },
     "weather_forecast_multi_location.json": {
       "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
@@ -1711,38 +1615,13 @@
       "sources": null
     },
     "weather_forecast_buurt.json": {
-      "shape_hash": "0965ed96fb3058ab238d42bf109f8bff",
+      "shape_hash": "871370b23d9ad8f394eca42d47b00090",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
           "data": {
             "_kind": "dict",
             "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "apparent_temperature": "float",
-                    "cape": "float",
-                    "cdd": "float",
-                    "cloud_cover": "float",
-                    "condition": "str",
-                    "dew_point": "float",
-                    "hdd": "float",
-                    "humidity": "float",
-                    "precipitation": "float",
-                    "precipitation_probability": "float",
-                    "pressure": "float",
-                    "temperature": "float",
-                    "uv_index": "float",
-                    "visibility": "float",
-                    "weather_code": "int",
-                    "wind_direction": "float",
-                    "wind_speed": "float"
-                  }
-                }
-              },
               "Elsweide_Arnhem_NL": {
                 "_kind": "timestamp_map",
                 "value_shape": {
@@ -1775,6 +1654,34 @@
             "keys": {
               "api_rate_limit": "str",
               "collector": "str",
+              "collector_quality_issues": {
+                "_kind": "list",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "check_name": "str",
+                    "details": {
+                      "_kind": "dict",
+                      "keys": {
+                        "delivered": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        },
+                        "missing": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        },
+                        "requested": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        }
+                      }
+                    },
+                    "message": "str",
+                    "severity": "str"
+                  }
+                }
+              },
               "data_type": "str",
               "degree_day_config": {
                 "_kind": "dict",
@@ -1837,26 +1744,13 @@
       "sources": null
     },
     "solar_forecast_buurt.json": {
-      "shape_hash": "49a96e1dee4d3b61387fc2baa842a8e4",
+      "shape_hash": "e16b6cd51927d073e8454d5fce234321",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
           "data": {
             "_kind": "dict",
             "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
               "Elsweide_Arnhem_NL": {
                 "_kind": "timestamp_map",
                 "value_shape": {
@@ -1877,6 +1771,34 @@
             "keys": {
               "api_rate_limit": "str",
               "collector": "str",
+              "collector_quality_issues": {
+                "_kind": "list",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "check_name": "str",
+                    "details": {
+                      "_kind": "dict",
+                      "keys": {
+                        "delivered": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        },
+                        "missing": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        },
+                        "requested": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        }
+                      }
+                    },
+                    "message": "str",
+                    "severity": "str"
+                  }
+                }
+              },
               "data_type": "str",
               "description": "str",
               "end_time": "str",
