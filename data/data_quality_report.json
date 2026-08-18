@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-17T16:21:59.223776+00:00",
+  "timestamp": "2026-08-18T16:24:13.584044+00:00",
   "overall_status": "warning",
-  "total_issues": 3,
+  "total_issues": 1,
   "datasets_collected": 23,
   "datasets_missing": [
     "air_quality_buurt"
@@ -72,57 +72,21 @@
       "dataset_name": "weather_forecast_buurt",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
-      "data_points": 384,
+      "status": "info",
+      "data_points": 768,
       "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "location_completeness",
-          "severity": "warning",
-          "message": "1 of 2 location(s) returned no data after 3 attempts: Elderveld_Arnhem_NL",
-          "details": {
-            "requested": [
-              "Elsweide_Arnhem_NL",
-              "Elderveld_Arnhem_NL"
-            ],
-            "delivered": [
-              "Elsweide_Arnhem_NL"
-            ],
-            "missing": [
-              "Elderveld_Arnhem_NL"
-            ]
-          }
-        }
-      ]
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "solar_forecast_buurt",
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
-      "data_points": 363,
+      "status": "info",
+      "data_points": 726,
       "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "location_completeness",
-          "severity": "warning",
-          "message": "1 of 2 location(s) returned no data after 3 attempts: Elderveld_Arnhem_NL",
-          "details": {
-            "requested": [
-              "Elsweide_Arnhem_NL",
-              "Elderveld_Arnhem_NL"
-            ],
-            "delivered": [
-              "Elsweide_Arnhem_NL"
-            ],
-            "missing": [
-              "Elderveld_Arnhem_NL"
-            ]
-          }
-        }
-      ]
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "grid_imbalance",
@@ -228,7 +192,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 22,
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -238,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 498,
+      "data_points": 499,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -268,7 +232,7 @@
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 7,
+      "data_points": 8,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
