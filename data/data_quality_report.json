@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-08-18T16:24:13.584044+00:00",
+  "timestamp": "2026-08-19T16:24:26.938079+00:00",
   "overall_status": "warning",
   "total_issues": 1,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -83,8 +81,18 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 726,
+      "data_points": 730,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -192,7 +200,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 22,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -212,7 +220,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 27,
+      "data_points": 26,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -222,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 149,
+      "data_points": 148,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []

@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-08-18T18:23:35.877875+02:00",
+  "cached_at": "2026-08-19T18:23:36.298974+02:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -19,14 +19,14 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 63.92,
+      "price": 63.65,
       "date": "2026-08-18",
       "open": 62.58,
       "high": 63.92,
       "low": 62.58,
-      "volume": 743,
+      "volume": 693,
       "prev_close": 61.76,
-      "change_pct": 3.49,
+      "change_pct": 3.06,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
@@ -36,11 +36,10 @@
       "price_lag1": 61.76,
       "price_lag2": 61.42,
       "price_lag7": 55.54,
-      "mean_7d": 61.15,
-      "volatility_7d": 1.45,
+      "mean_7d": 61.11,
+      "volatility_7d": 1.37,
       "trend_7d": "up",
       "history": {
-        "2026-07-15": 54.35,
         "2026-07-16": 54.78,
         "2026-07-17": 57.4,
         "2026-07-20": 58.74,
@@ -64,20 +63,20 @@
         "2026-08-13": 60.4,
         "2026-08-14": 61.42,
         "2026-08-17": 61.76,
-        "2026-08-18": 63.92
+        "2026-08-18": 63.65
       }
     },
     "gas": {
       "ticker": "UNG",
-      "price": 9.83,
-      "date": "2026-08-17",
-      "open": 9.77,
-      "high": 9.85,
-      "low": 9.72,
-      "volume": 8701360,
-      "prev_close": 9.92,
-      "change": -0.09,
-      "change_pct": -0.91,
+      "price": 10.1,
+      "date": "2026-08-18",
+      "open": 9.91,
+      "high": 10.1,
+      "low": 9.84,
+      "volume": 9057092,
+      "prev_close": 9.83,
+      "change": 0.27,
+      "change_pct": 2.75,
       "source": "alpha_vantage",
       "description": "Natural Gas proxy (US benchmark, correlates with EU)",
       "units": "USD/share",
@@ -85,5 +84,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "3578645b75c08f1a033a16001c687c2678095c54bcaced224c91dada962d19b0"
+  "signature": "76cf0a0cd6938f21d63e372b0444ce49da4de0b278caf1990c00ae15aeae83c1"
 }
