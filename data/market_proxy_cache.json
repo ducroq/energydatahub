@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-08-19T18:23:36.298974+02:00",
+  "cached_at": "2026-08-20T18:26:58.775407+02:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -19,28 +19,27 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 63.65,
-      "date": "2026-08-18",
-      "open": 62.58,
-      "high": 63.92,
-      "low": 62.58,
-      "volume": 693,
-      "prev_close": 61.76,
-      "change_pct": 3.06,
+      "price": 65.81,
+      "date": "2026-08-20",
+      "open": 64.46,
+      "high": 65.81,
+      "low": 64.62,
+      "volume": 381,
+      "prev_close": 63.38,
+      "change_pct": 3.82,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
       "name": "Dutch TTF Natural Gas Futures",
       "note": "Primary European natural gas price benchmark, traded on ICE",
       "currency": "EUR",
-      "price_lag1": 61.76,
-      "price_lag2": 61.42,
-      "price_lag7": 55.54,
-      "mean_7d": 61.11,
-      "volatility_7d": 1.37,
+      "price_lag1": 63.38,
+      "price_lag2": 63.65,
+      "price_lag7": 58.74,
+      "mean_7d": 62.49,
+      "volatility_7d": 1.75,
       "trend_7d": "up",
       "history": {
-        "2026-07-16": 54.78,
         "2026-07-17": 57.4,
         "2026-07-20": 58.74,
         "2026-07-21": 59.66,
@@ -63,20 +62,22 @@
         "2026-08-13": 60.4,
         "2026-08-14": 61.42,
         "2026-08-17": 61.76,
-        "2026-08-18": 63.65
+        "2026-08-18": 63.65,
+        "2026-08-19": 63.38,
+        "2026-08-20": 65.81
       }
     },
     "gas": {
       "ticker": "UNG",
-      "price": 10.1,
-      "date": "2026-08-18",
-      "open": 9.91,
-      "high": 10.1,
-      "low": 9.84,
-      "volume": 9057092,
-      "prev_close": 9.83,
-      "change": 0.27,
-      "change_pct": 2.75,
+      "price": 10.01,
+      "date": "2026-08-19",
+      "open": 10.29,
+      "high": 10.33,
+      "low": 10.0,
+      "volume": 11197323,
+      "prev_close": 10.1,
+      "change": -0.09,
+      "change_pct": -0.89,
       "source": "alpha_vantage",
       "description": "Natural Gas proxy (US benchmark, correlates with EU)",
       "units": "USD/share",
@@ -84,5 +85,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "76cf0a0cd6938f21d63e372b0444ce49da4de0b278caf1990c00ae15aeae83c1"
+  "signature": "b2c86c80eea15bc7d19fe18e0021c5bcb65f240dabd6157fd8e2172b817aab30"
 }

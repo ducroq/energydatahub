@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-19T16:24:26.938079+00:00",
+  "timestamp": "2026-08-20T16:27:37.444517+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
+  "total_issues": 2,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -70,11 +70,24 @@
       "dataset_name": "weather_forecast_buurt",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "info",
+      "status": "warning",
       "data_points": 768,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "warning",
+          "message": "2 weather field values outside their specific ranges",
+          "details": {
+            "count": 2,
+            "examples": [
+              "cape=-2.5 (range 0.0-6000.0)",
+              "cape=-2.5 (range 0.0-6000.0)"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "solar_forecast_buurt",
@@ -220,7 +233,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 26,
+      "data_points": 27,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -230,7 +243,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 148,
+      "data_points": 149,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
