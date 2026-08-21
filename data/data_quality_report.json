@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-20T16:27:37.444517+00:00",
+  "timestamp": "2026-08-21T16:25:09.335445+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -78,12 +78,13 @@
         {
           "check_name": "value_range",
           "severity": "warning",
-          "message": "2 weather field values outside their specific ranges",
+          "message": "3 weather field values outside their specific ranges",
           "details": {
-            "count": 2,
+            "count": 3,
             "examples": [
-              "cape=-2.5 (range 0.0-6000.0)",
-              "cape=-2.5 (range 0.0-6000.0)"
+              "cape=-20.0 (range 0.0-6000.0)",
+              "cape=-10.0 (range 0.0-6000.0)",
+              "cape=-10.0 (range 0.0-6000.0)"
             ]
           }
         }
@@ -243,7 +244,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 149,
+      "data_points": 150,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
