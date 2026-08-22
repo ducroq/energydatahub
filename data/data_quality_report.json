@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-21T16:25:09.335445+00:00",
+  "timestamp": "2026-08-22T16:17:34.047237+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -70,25 +70,11 @@
       "dataset_name": "weather_forecast_buurt",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
+      "status": "info",
       "data_points": 768,
-      "checks_passed": 4,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "warning",
-          "message": "3 weather field values outside their specific ranges",
-          "details": {
-            "count": 3,
-            "examples": [
-              "cape=-20.0 (range 0.0-6000.0)",
-              "cape=-10.0 (range 0.0-6000.0)",
-              "cape=-10.0 (range 0.0-6000.0)"
-            ]
-          }
-        }
-      ]
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "solar_forecast_buurt",
@@ -116,9 +102,20 @@
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
       "data_points": 288,
-      "checks_passed": 5,
-      "checks_failed": 1,
+      "checks_passed": 4,
+      "checks_failed": 2,
       "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "warning",
+          "message": "1 values outside range [-500.0, 10000.0] EUR/MWh",
+          "details": {
+            "count": 1,
+            "examples": [
+              "imbalance_price/2026-08-21T15:45:00+02:00: -952.0"
+            ]
+          }
+        },
         {
           "check_name": "balance_delta_synthesised",
           "severity": "warning",
@@ -224,7 +221,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 499,
+      "data_points": 390,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
