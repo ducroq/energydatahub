@@ -5,6 +5,6 @@
   "solar_forecast": 0,
   "demand_weather_forecast": 0,
   "offshore_wind": 0,
-  "weather_forecast_buurt": 0,
-  "solar_forecast_buurt": 0
+  "weather_forecast_buurt": 1,
+  "solar_forecast_buurt": 1
 }

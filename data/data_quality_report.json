@@ -1,9 +1,12 @@
 {
-  "timestamp": "2026-08-24T06:28:47.077678+00:00",
-  "overall_status": "error",
-  "total_issues": 4,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "timestamp": "2026-08-24T16:32:11.438609+00:00",
+  "overall_status": "warning",
+  "total_issues": 3,
+  "datasets_collected": 22,
+  "datasets_missing": [
+    "weather_forecast_buurt",
+    "solar_forecast_buurt"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -11,7 +14,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +24,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -31,7 +34,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -41,7 +44,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 24,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -62,26 +65,6 @@
       "source": "Open-Meteo API (free)",
       "status": "info",
       "data_points": 1440,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "weather_forecast_buurt",
-      "data_type": "weather",
-      "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 768,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "solar_forecast_buurt",
-      "data_type": "solar",
-      "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 706,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -131,7 +114,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 312,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -180,18 +163,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
-      "data_points": 192,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "status": "warning",
+      "data_points": 384,
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "6 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 6,
+            "examples": [
+              "NL/2026-08-24T09:15:00+02:00: forecast_error=3075.1, load_actual=7486.696, ratio=0.41",
+              "NL/2026-08-24T09:30:00+02:00: forecast_error=3641.4, load_actual=6675.546, ratio=0.55",
+              "NL/2026-08-24T09:45:00+02:00: forecast_error=3947.6, load_actual=6117.146, ratio=0.65",
+              "NL/2026-08-24T10:00:00+02:00: forecast_error=4153.7, load_actual=5678.846, ratio=0.73",
+              "NL/2026-08-24T10:15:00+02:00: forecast_error=4351.1, load_actual=5292.016, ratio=0.82"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 32,
+      "data_points": 60,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -221,7 +221,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 285,
+      "data_points": 499,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -230,43 +230,21 @@
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "error",
-      "data_points": 26,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 78.5h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-08-21T00:00:00+00:00",
-            "age_hours": 78.5,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 27,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "error",
-      "data_points": 147,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 78.5h old (threshold: 48h)",
-          "details": {
-            "newest_timestamp": "2026-08-21T00:00:00+00:00",
-            "age_hours": 78.5,
-            "threshold_hours": 48
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 148,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "gas_storage",
