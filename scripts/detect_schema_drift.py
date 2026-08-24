@@ -150,9 +150,14 @@ CRITICAL_FEEDS = frozenset({
 #
 #   cross_border_flows.json: the per-hour `data.flows` map only contains a
 #   border key (e.g. NL->GB) for hours where that interconnector reported a
-#   flow. The shape signature samples one representative hour, so a border
-#   absent in the sampled hour drops from the shape (the 2026-06-14 false
-#   positive: NL->GB missing). The border SET is data, not schema.
+#   flow. The border SET is data, not schema. NOTE the original mechanism
+#   here — "the signature samples one representative hour, so a border absent
+#   in the sampled hour drops from the shape" (the 2026-06-14 false positive:
+#   NL->GB missing) — no longer applies: since 2026-08-23 the timestamp-map
+#   value_shape is the MERGE of every hour, so a border reporting in ANY hour
+#   of the day survives. What remains volatile is the cross-DAY border set: a
+#   border that reports on no hour at all one day and returns the next still
+#   flips the hash, which is data-driven churn and still warrants the warn.
 #
 #   calendar_features.json: metadata.upcoming_holidays is an empty list on
 #   most days (shape `value_shape: null`) and becomes a list-of-dicts the

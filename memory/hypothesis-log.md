@@ -67,6 +67,13 @@ The lesson generalises past this entry: *"the upstream blipped"* and *"we have a
 **Status**: Narrow fix shipped 2026-08-14. Deliberately not generalised in the same change.
 **Review by**: 2026-09-15, or the next time the drift tripwire fails on a feed that raised a quality issue that run.
 
+### H8 — Merging all timestamp-map records (instead of sampling one) ends the sampled-record false-positive class, without needing the diagnostic-key exemption generalised
+**Position**: The 2026-08-23 `load_forecast` failure was the sampled-record defect the tripwire's own comments had documented since June, firing for the first time on a CRITICAL feed it could not downgrade. Merging every record into the `value_shape` (`_merge_signatures`) makes the fingerprint order-independent, so intra-day completeness variance can no longer masquerade as a schema break — a field gone from *every* record still drifts, a field gone from some does not.
+**Counter-position**: The merge is lossy in the tolerant direction: a field surviving in even one record is "present", so a partial removal (191 of 192 records) no longer drifts, and a genuinely removed field is only caught once it leaves the rolling window. That boundary is the FMEA gate's job, not the fingerprint's — but if the DQ gate is itself blind (see the `ned_production` silent-skip gotcha), the union removes the tripwire's last sight of partial-availability drift without a replacement.
+**Method**: Watch the next ~10 scheduled runs: if a partial upstream gap no longer aborts a publish (good) AND no shape break slips through the union uncaught (still-good), the boundary holds. The counter-position's objection is settled only when the DQ presence-check for the `ned_production` `actual` half is built — see follow-up issue.
+**Status**: Shipped 2026-08-23 (uncommitted at session end, to land 2026-08-24). All 20 committed feeds verified byte-identical under the merge; live 08-23 payload confirmed to hash to baseline.
+**Review by**: 2026-09-07, or immediately if the tripwire fails again on a partial-availability shape on a non-member feed.
+
 ### H4 — `STALENESS_OVERRIDES` with a weekend-spanning floor fully fixes the weekend `error` (#36)
 **Position**: Adding `market_proxies` / `market_history` at ~96h (matching `gas_storage`) removes the spurious weekend `error` without hiding a real market-data outage, because a genuine outage exceeds 96h by Monday.
 **Counter-position**: A fixed floor is the same shape as the 48h threshold it replaces — cadence-blind. A long weekend or exchange holiday could still trip it, and 96h is late enough to delay noticing a real outage by a day.

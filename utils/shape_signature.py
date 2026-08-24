@@ -16,6 +16,29 @@ don't influence the signature, only their TYPES. We want stable
 fingerprints day-over-day for unchanged shapes, even when the actual
 prices, temperatures, etc. vary.
 
+Timestamp maps are MERGED, not sampled (2026-08-23). The `value_shape` of a
+`_kind: timestamp_map` node is the union of the shapes of ALL its records, so
+a field present in ANY record contributes to the shape. Before this it was the
+shape of ONE representative record — whichever `next(iter(...))` happened to
+return — which made the fingerprint one record deep and order-dependent. On
+2026-08-23 ENTSO-E published no actual load for DE_LU: its FIRST record lacked
+`load_actual`/`forecast_error` while many later records carried them, the
+signature read "fields removed", and the tripwire aborted the publish of all
+20 feeds. `load_forecast` is in CRITICAL_FEEDS and so is exempt from every
+downgrade path, meaning its hash has to be stable on its own. NL survived the
+same run purely because its 00:00 record happened to be complete.
+
+That run failed on TWO feeds, and the merge addresses only one of them.
+`ned_production` drifted the same day because NED returned no `actual` block
+at all — gone from every source, which is what a real removal looks like, so
+it still drifts here by design. It downgrades instead via history-derived
+volatility. Do not read this change as having fixed the whole incident.
+
+Measured before landing: recomputing all 20 committed feeds under the merge
+gives byte-identical hashes, so this needed no CURRENT_SCHEMA_VERSION bump,
+no migration and no sidecar refresh. See `_merge_signatures` for the union
+rules and `compute_shape_signature` for what is still deliberately sampled.
+
 File: utils/shape_signature.py
 Created: 2026-06-07
 Author: Energy Data Hub Project
@@ -27,6 +50,7 @@ import hashlib
 import json
 import re
 from datetime import datetime
+from functools import reduce
 from typing import Any, Dict, List, Optional, Union
 
 # Loose date/timestamp detector. Matches ISO-8601 date-only keys
@@ -51,9 +75,12 @@ def compute_shape_signature(data: Any, _depth: int = 0) -> Union[Dict[str, Any],
 
     For dicts:
       - If keys are ALL timestamp-like → returned as `{"_kind": "timestamp_map",
-        "value_shape": <signature of one representative value>}`. This
-        collapses the day-over-day timestamp churn so the fingerprint
-        only changes when the per-record value shape changes.
+        "value_shape": <MERGE of the shapes of ALL records>}`. This collapses
+        two different kinds of churn at once: the day-over-day roll of the
+        timestamp keys, and record-to-record completeness variance within a
+        single day. A field present in ANY record survives into the shape, so
+        the fingerprint changes only when the per-record value shape really
+        changes. See `_merge_signatures` for the union rules.
       - Otherwise → returned as `{"_kind": "dict", "keys": {k: signature(v) for k, v in sorted}}`.
 
     For lists:
@@ -79,6 +106,27 @@ def compute_shape_signature(data: Any, _depth: int = 0) -> Union[Dict[str, Any],
 
       Code-reviewer LOW finding on 7c0de64.
 
+    KNOWN DESIGN CONSTRAINT — lists still sample their FIRST element:
+
+      The list branch below returns the shape of `data[0]`, so a list whose
+      elements disagree can report a shape change from element order alone —
+      the same defect the timestamp-map branch had until 2026-08-23.
+
+      Deliberately NOT fixed alongside it, on evidence rather than taste.
+      Measured across all 20 published feeds at the time: 54 non-empty lists,
+      ZERO with heterogeneous elements. There is no observed failure to fix,
+      and a list union has not been measured against the committed baseline,
+      so its hash impact is unknown where the timestamp-map union's is proven
+      neutral. It would also not fix the one known list-driven false positive
+      (`calendar_features.metadata.upcoming_holidays` flipping empty ↔
+      populated), because that is a flip ACROSS days, not disagreement within
+      one list — a within-call union does nothing for it.
+
+      If a list case ever does bite, `_merge_signatures` applies unchanged:
+      `reduce(_merge_signatures, (compute_shape_signature(el, _depth + 1)
+      for el in data))`. Make it its own change, with its own baseline
+      measurement.
+
     Args:
         data: Any JSON-serialisable value
         _depth: Internal recursion guard (default 0, cap 50)
@@ -103,12 +151,17 @@ def compute_shape_signature(data: Any, _depth: int = 0) -> Union[Dict[str, Any],
     if isinstance(data, dict):
         if not data:
             return {"_kind": "dict", "keys": {}}
-        # Timestamp-keyed maps: collapse to one representative value-shape.
+        # Timestamp-keyed maps: collapse to ONE value-shape describing every
+        # record — the MERGE of all of them, not a sampled representative.
+        # `data` is non-empty here (the empty-dict branch returned above), so
+        # `reduce` never sees an empty iterable.
         if all(_is_timestamp_key(k) for k in data.keys()):
-            sample_value = next(iter(data.values()))
+            record_shapes = (
+                compute_shape_signature(v, _depth + 1) for v in data.values()
+            )
             return {
                 "_kind": "timestamp_map",
-                "value_shape": compute_shape_signature(sample_value, _depth + 1),
+                "value_shape": reduce(_merge_signatures, record_shapes),
             }
         return {
             "_kind": "dict",
@@ -133,6 +186,225 @@ def compute_shape_signature(data: Any, _depth: int = 0) -> Union[Dict[str, Any],
 def _is_dict_signature(sig: Any) -> bool:
     """True for a plain-dict shape node (not a collapsed timestamp map)."""
     return isinstance(sig, dict) and sig.get("_kind") == "dict"
+
+
+# The node kinds `_merge_signatures` knows how to combine. Anything else is
+# opaque to the merge and must never be routed back into it — see the
+# recursion note in `_conflict_node`. Keep in step with the branches there.
+_MERGEABLE_KINDS = frozenset({"dict", "timestamp_map", "list"})
+
+
+def _is_conflict(sig: Any) -> bool:
+    """True for a conflict node — records that disagree irreconcilably."""
+    return isinstance(sig, dict) and sig.get("_kind") == "conflict"
+
+
+def _conflict_node(a: Any, b: Any) -> Any:
+    """Deterministic marker for two shape nodes that cannot be reconciled.
+
+    FLATTENS nested conflicts, then NORMALISES the result to a canonical form:
+    at most one member per `_kind`, with the absorption/widening rules of
+    `_merge_signatures` applied inside the set too.
+
+    Both steps exist for one reason: `_merge_signatures` has to be associative,
+    or the fold over a timestamp map's records would depend on their order —
+    the exact defect the merge was introduced to remove. Flattening alone is
+    not enough. Two worked examples that fail without normalisation:
+
+      int, float, str   Folding left first widens int+float to float, giving
+                        conflict{float, str}; folding right first never widens
+                        and gives conflict{int, float, str}. Collapsing int
+                        into float INSIDE the set reconciles them.
+
+      dictA, dictB, str Folding left merges the two dicts, giving
+                        conflict{merged, str}; folding right gives
+                        conflict{dictA, dictB, str}. Merging same-kind members
+                        inside the set reconciles them.
+
+    A set that normalises down to a single member is not a conflict at all and
+    is returned as that bare shape — so `conflict{int, float}` becomes
+    `"float"`, matching what merging the two directly would have produced.
+    """
+    shapes = set()
+    for sig in (a, b):
+        if _is_conflict(sig):
+            shapes.update(sig["shapes"])
+        else:
+            shapes.add(json.dumps(sig, sort_keys=True))
+
+    members = [json.loads(s) for s in shapes]
+
+    # `null` carries no type information, so it never survives beside a
+    # concrete shape — the same absorption `_merge_signatures` applies.
+    #
+    # Python `None` must be filtered here too, not just the `"null"` tag. A
+    # `None` reaching `sorted(scalars)` below raises TypeError (None vs str),
+    # and it gets here disguised: `json.dumps(None)` is the string `"null"`,
+    # which `json.loads` turns back into `None`, sailing past a `!= "null"`
+    # test. Unreachable from `_merge_signatures`, whose `None` absorption runs
+    # before the conflict path — but that is an argument for the guard, not
+    # against it, since it makes the two functions agree on what `None` means.
+    members = [m for m in members if m != "null" and m is not None]
+    if not members:
+        return "null"
+
+    # One member per structural kind: same-kind nodes are mergeable by
+    # definition, so leaving them un-merged is what breaks associativity.
+    #
+    # ONLY the kinds `_merge_signatures` actually dispatches on may be grouped.
+    # Grouping an unrecognised kind would hand it straight back to
+    # `_merge_signatures`, which has no branch for it and returns
+    # `_conflict_node(a, b)` — the same two nodes, unbounded mutual recursion,
+    # RecursionError in a run nobody is watching. Unknown kinds are therefore
+    # kept as opaque distinct members instead. They are already deduplicated,
+    # having come from a set of canonical encodings.
+    by_kind: Dict[str, List[Any]] = {}
+    opaque: List[Any] = []
+    scalars = set()
+    for member in members:
+        if isinstance(member, dict):
+            if member.get("_kind") in _MERGEABLE_KINDS:
+                by_kind.setdefault(member["_kind"], []).append(member)
+            else:
+                opaque.append(member)
+        else:
+            scalars.add(member)
+
+    if "int" in scalars and "float" in scalars:
+        scalars.discard("int")
+
+    normalised = [reduce(_merge_signatures, group) for group in by_kind.values()]
+    normalised.extend(opaque)
+    normalised.extend(sorted(scalars))
+
+    if len(normalised) == 1:
+        return normalised[0]
+    return {
+        "_kind": "conflict",
+        "shapes": sorted(json.dumps(m, sort_keys=True) for m in normalised),
+    }
+
+
+def _merge_signatures(a: Any, b: Any) -> Any:
+    """Union two shape nodes into one that describes both.
+
+    Operates only on the OUTPUT of `compute_shape_signature`, never on raw
+    data, so it needs no depth guard of its own — its inputs are already
+    capped at depth 50 by the caller, which bounds this recursion too.
+
+    Pure: builds new nodes, never mutates `a` or `b`. Commutative and
+    associative, so the fold order over a timestamp map's records cannot
+    change the result (see `_conflict_node` for the one case where that
+    property has to be engineered rather than falling out).
+
+    Absorption and widening rules, and why each exists:
+
+      `None` + x -> x   `None` is an EMPTY LIST's value_shape. A record with
+                        `alerts: []` next to one with `alerts: ['x']` should
+                        describe the populated shape, not erase it.
+
+      "null" + x -> x   A JSON null carries no type information.
+                        `calendar_features.data[*].holiday_name_nl` is null on
+                        ordinary days and a str on holidays; absorbing keeps
+                        the informative shape rather than the empty one.
+
+      int + float       -> "float". JSON has a single number type, so whether
+                        a value serialises as `0` or `0.0` is representation,
+                        not schema. Without widening, one integral value in an
+                        otherwise-float series would read as a conflict and
+                        churn the hash day to day. Note this widens only
+                        WITHIN one map: an all-int map and an all-float map are
+                        still different shapes, so a genuine type flip drifts.
+
+      bool is NOT       `bool` is checked before `int` in the type ladder and
+      widened           is a distinct JSON type; a field that is sometimes
+                        boolean and sometimes numeric is a real disagreement.
+
+    Anything else irreconcilable (dict vs scalar, list vs dict, differing
+    `_kind`) becomes a conflict node, which CHANGES the hash and therefore
+    fails the tripwire loudly. The alternative — first-wins — was rejected
+    twice over: it is not commutative, so it reintroduces the very
+    order-dependence this merge exists to remove, and it hides a genuine
+    record-level disagreement instead of surfacing it. "When in doubt, leave a
+    feed out and let it fail loudly" (scripts/detect_schema_drift.py).
+
+    WHAT THE UNION NO LONGER CATCHES — the exact boundary of the tolerance:
+
+      "Present in ANY record" means a field surviving in even ONE record of a
+      map still counts as present. A field removed from 191 of 192 records
+      hashes identically to one present in all 192. Sampling could catch that,
+      but only by luck — if the sampled record happened to be one of the
+      sparse ones, which is the same coin-flip that failed the publish on
+      2026-08-23.
+
+      This is a deliberate inversion, not an oversight. A genuine schema
+      removal takes the field out of EVERY record and still drifts; what is
+      now invisible here is intra-day completeness, which belongs to the FMEA
+      gate in `utils/data_quality.py`, not to a structural fingerprint. The
+      tripwire's job is "did the shape change", not "is the data complete" —
+      conflating them is what made a partial upstream outage look identical to
+      a schema break.
+
+      Note this applies ONLY inside timestamp maps. A field vanishing from a
+      plain dict — `grid_imbalance`'s field-keyed `data`, or any `metadata`
+      block — is untouched by the merge and drifts exactly as it always did.
+    """
+    # ORDER MATTERS. Absorption and the depth sentinel must be settled BEFORE
+    # the conflict path, or the merge stops being associative: folding
+    # ("null", "int", "str") left-first absorbs the null and yields
+    # conflict{int, str}, while folding right-first would carry the null into
+    # the conflict set. Caught by TestMergeSignatures::test_associative.
+    if a == b:
+        return a
+    if a is None:
+        return b
+    if b is None:
+        return a
+    if a == "null":
+        return b
+    if b == "null":
+        return a
+    if a == "max_depth_exceeded" or b == "max_depth_exceeded":
+        return "max_depth_exceeded"
+    if _is_conflict(a) or _is_conflict(b):
+        return _conflict_node(a, b)
+
+    if isinstance(a, dict) and isinstance(b, dict):
+        kind = a.get("_kind")
+        if kind != b.get("_kind"):
+            return _conflict_node(a, b)
+        if kind == "dict":
+            a_keys, b_keys = a["keys"], b["keys"]
+            merged = {}
+            # `key=str` mirrors compute_shape_signature's own sort. JSON object
+            # keys are always strings so a mixed-type key set cannot arise from
+            # a decoded payload, but the two sorts must not disagree.
+            for key in sorted(set(a_keys) | set(b_keys), key=str):
+                if key not in a_keys:
+                    merged[key] = b_keys[key]
+                elif key not in b_keys:
+                    merged[key] = a_keys[key]
+                else:
+                    merged[key] = _merge_signatures(a_keys[key], b_keys[key])
+            return {"_kind": "dict", "keys": merged}
+        if kind in ("timestamp_map", "list"):
+            return {
+                "_kind": kind,
+                "value_shape": _merge_signatures(a.get("value_shape"),
+                                                 b.get("value_shape")),
+            }
+        return _conflict_node(a, b)
+
+    # One side is a shape node and the other a scalar tag (or an unexpected
+    # type): irreconcilable, and `{a, b}` below would choke on the unhashable
+    # dict anyway.
+    if isinstance(a, dict) or isinstance(b, dict):
+        return _conflict_node(a, b)
+
+    if {a, b} == {"int", "float"}:
+        return "float"
+
+    return _conflict_node(a, b)
 
 
 # Envelope keys that appear EXACTLY WHEN something went wrong, and are absent

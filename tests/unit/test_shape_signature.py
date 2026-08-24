@@ -13,9 +13,14 @@ File: tests/unit/test_shape_signature.py
 Created: 2026-06-07
 """
 
+import itertools
+
 import pytest
 
 from utils.shape_signature import (
+    _conflict_node,
+    _is_dict_signature,
+    _merge_signatures,
     classify_data_member_drift,
     compute_shape_signature,
     signature_hash,
@@ -176,6 +181,284 @@ class TestComputeShapeSignature:
         while isinstance(cur, dict) and "keys" in cur and "next" in cur["keys"]:
             cur = cur["keys"]["next"]
         assert cur == "max_depth_exceeded" or isinstance(cur, dict)
+
+
+class TestTimestampMapUnion:
+    """A timestamp map's value_shape is the MERGE of every record.
+
+    Before 2026-08-23 it was the shape of one sampled record, which made the
+    fingerprint order-dependent and one record deep. See the module docstring
+    of utils/shape_signature.py for the incident.
+    """
+
+    @staticmethod
+    def _map(*records):
+        return {
+            f"2026-08-23T{i:02d}:00:00+02:00": rec
+            for i, rec in enumerate(records)
+        }
+
+    def test_field_in_any_record_survives(self):
+        """THE core guard: {ts1:{a}, ts2:{a,b}} must keep `b`."""
+        sig = compute_shape_signature(
+            self._map({"a": 1.0}, {"a": 2.0, "b": 3.0})
+        )
+        assert sig["_kind"] == "timestamp_map"
+        assert sig["value_shape"] == {
+            "_kind": "dict", "keys": {"a": "float", "b": "float"},
+        }
+
+    def test_sparse_first_record_matches_complete_map(self):
+        """The 2026-08-23 load_forecast incident, reduced.
+
+        ENTSO-E published no actual load for DE_LU, so the FIRST record
+        carried only `load_forecast` while later records were complete. Under
+        first-record sampling that read as "two fields removed" and aborted
+        the whole 20-feed publish. The merge must make it indistinguishable
+        from the all-complete map.
+        """
+        complete = {"load_actual": 1234.5, "load_forecast": 1200.0,
+                    "forecast_error": 34.5}
+        degraded = self._map({"load_forecast": 1200.0}, *([complete] * 73))
+        pristine = self._map(*([complete] * 74))
+        assert signature_hash(compute_shape_signature(degraded)) == \
+            signature_hash(compute_shape_signature(pristine))
+
+    def test_union_is_order_independent(self):
+        """The same record SET in any order yields one signature."""
+        records = [
+            {"a": 1.0, "b": 2.0},
+            {"a": 1.0},
+            {"a": 1.0, "b": 2.0, "c": "x"},
+        ]
+        sigs = {
+            signature_hash(compute_shape_signature(self._map(*perm)))
+            for perm in itertools.permutations(records)
+        }
+        assert len(sigs) == 1
+
+    def test_null_absorbs_into_concrete_type(self):
+        """`calendar_features.data[*].holiday_name_nl` is null on ordinary
+        days and a str on holidays; the informative shape must win, and it
+        must not depend on which record came first."""
+        null_first = self._map({"holiday_name": None},
+                               {"holiday_name": "Tweede Kerstdag"})
+        str_first = self._map({"holiday_name": "Tweede Kerstdag"},
+                              {"holiday_name": None})
+        assert compute_shape_signature(null_first) == \
+            compute_shape_signature(str_first)
+        assert compute_shape_signature(null_first)["value_shape"] == {
+            "_kind": "dict", "keys": {"holiday_name": "str"},
+        }
+
+    def test_all_null_records_stay_null(self):
+        """Absorption must not invent a type that no record ever carried."""
+        sig = compute_shape_signature(
+            self._map({"holiday_name": None}, {"holiday_name": None})
+        )
+        assert sig["value_shape"] == {
+            "_kind": "dict", "keys": {"holiday_name": "null"},
+        }
+
+    def test_int_and_float_widen_within_one_map(self):
+        """JSON has one number type; `0` next to `0.5` is representation."""
+        sig = compute_shape_signature(self._map({"v": 1}, {"v": 1.5}))
+        assert sig["value_shape"]["keys"]["v"] == "float"
+
+    def test_int_vs_float_still_distinct_across_maps(self):
+        """Widening is WITHIN a map — a whole-map type flip still drifts."""
+        assert compute_shape_signature(self._map({"v": 1})) != \
+            compute_shape_signature(self._map({"v": 1.0}))
+
+    def test_field_absent_from_every_record_still_drifts(self):
+        """The detector is not weakened: a real removal takes the field out
+        of every record, so it leaves the union too."""
+        day1 = self._map({"a": 1.0}, {"a": 2.0, "b": 3.0})
+        day2 = self._map({"a": 1.0}, {"a": 2.0})
+        assert compute_shape_signature(day1) != compute_shape_signature(day2)
+
+    def test_field_surviving_in_one_record_is_deliberately_tolerated(self):
+        """Pins the BOUNDARY of the tolerance, not a desirable property.
+
+        A field removed from all-but-one record hashes the same as one present
+        throughout. Sampling could catch this, but only by luck — if the
+        sampled record happened to be a sparse one, the same coin-flip that
+        aborted the 2026-08-23 publish. A genuine schema removal takes the
+        field out of EVERY record and still drifts (see the test above); what
+        is tolerated here is intra-day completeness, which is the FMEA gate's
+        job in utils/data_quality.py, not a structural fingerprint's.
+
+        If you are here because you want this to drift, you are moving the
+        boundary back — read `_merge_signatures`' "WHAT THE UNION NO LONGER
+        CATCHES" note first.
+        """
+        complete = {"a": 1.0, "b": 2.0}
+        all_present = self._map(*([complete] * 3))
+        one_straggler = self._map({"a": 1.0}, {"a": 1.0}, complete)
+        assert signature_hash(compute_shape_signature(all_present)) == \
+            signature_hash(compute_shape_signature(one_straggler))
+
+    def test_empty_list_absorbs_into_populated(self):
+        sig = compute_shape_signature(
+            self._map({"alerts": []}, {"alerts": ["storm"]})
+        )
+        assert sig["value_shape"]["keys"]["alerts"] == {
+            "_kind": "list", "value_shape": "str",
+        }
+
+    def test_bool_versus_numeric_is_a_loud_conflict(self):
+        """bool is a distinct JSON type — not widened into the number tower."""
+        sig = compute_shape_signature(self._map({"v": True}, {"v": 1}))
+        node = sig["value_shape"]["keys"]["v"]
+        assert node["_kind"] == "conflict"
+        assert node["shapes"] == ['"bool"', '"int"']
+
+    def test_dict_versus_scalar_is_a_loud_conflict(self):
+        """Irreconcilable nodes must change the hash, not be silently
+        resolved in favour of whichever record iterated first."""
+        sig = compute_shape_signature(
+            self._map({"v": {"x": 1}}, {"v": "oops"})
+        )
+        node = sig["value_shape"]["keys"]["v"]
+        assert node["_kind"] == "conflict"
+        assert len(node["shapes"]) == 2
+
+    def test_conflicts_are_flat_and_order_independent(self):
+        """Three-way disagreement folds to ONE flat conflict node regardless
+        of record order. Nesting here would break associativity and hand the
+        signature back its order-dependence."""
+        records = [{"v": True}, {"v": 1}, {"v": "s"}]
+        nodes = []
+        for perm in itertools.permutations(records):
+            node = compute_shape_signature(
+                self._map(*perm))["value_shape"]["keys"]["v"]
+            nodes.append(node)
+        assert all(n == nodes[0] for n in nodes)
+        assert nodes[0]["_kind"] == "conflict"
+        assert nodes[0]["shapes"] == ['"bool"', '"int"', '"str"']
+
+    def test_conflict_does_not_leak_into_dict_signature_checks(self):
+        """A conflict node is `_kind: conflict`, so the member-drift and
+        envelope helpers (which gate on `_kind == 'dict'`) can never mistake
+        it for a plain dict node."""
+        sig = compute_shape_signature(self._map({"v": True}, {"v": 1}))
+        assert not _is_dict_signature(sig["value_shape"]["keys"]["v"])
+
+    def test_homogeneous_map_is_byte_identical_to_sampling(self):
+        """The migration guarantee: where every record agrees, the merge
+        returns exactly what sampling returned, so no committed baseline
+        moved when this landed."""
+        rec = {"price": 50.0, "volume": 10}
+        sig = compute_shape_signature(self._map(rec, dict(rec), dict(rec)))
+        assert sig == {
+            "_kind": "timestamp_map",
+            "value_shape": {"_kind": "dict",
+                            "keys": {"price": "float", "volume": "int"}},
+        }
+
+
+class TestMergeSignatures:
+    """`_merge_signatures` directly — the algebraic properties the fold
+    depends on. If these break, record order starts changing hashes."""
+
+    # The pool must include the awkward cases, not just the tidy ones: a
+    # conflict node, conflicts NESTED inside a dict value and inside a
+    # list/timestamp_map value_shape, the depth sentinel, an unknown `_kind`,
+    # and dicts that themselves conflict when merged. A pool of only tidy
+    # nodes would have passed while the two real associativity bugs — null
+    # absorption ordered after the conflict path, and int/float widening
+    # losing the int — were live.
+    _CONFLICT = {"_kind": "conflict", "shapes": ['"bool"', '"int"']}
+    NODES = [
+        "null", "int", "float", "str", "bool", None, "max_depth_exceeded",
+        {"_kind": "dict", "keys": {"x": "int"}},
+        {"_kind": "dict", "keys": {"x": "float", "y": "str"}},
+        {"_kind": "dict", "keys": {"x": "bool"}},
+        {"_kind": "dict", "keys": {"x": _CONFLICT}},
+        {"_kind": "list", "value_shape": "str"},
+        {"_kind": "list", "value_shape": None},
+        {"_kind": "list", "value_shape": _CONFLICT},
+        {"_kind": "timestamp_map", "value_shape": "float"},
+        {"_kind": "timestamp_map", "value_shape": _CONFLICT},
+        {"_kind": "some_future_kind", "z": 1},
+        _CONFLICT,
+    ]
+
+    def test_commutative(self):
+        for a, b in itertools.product(self.NODES, repeat=2):
+            assert _merge_signatures(a, b) == _merge_signatures(b, a), \
+                f"not commutative for {a!r} + {b!r}"
+
+    def test_associative(self):
+        for a, b, c in itertools.product(self.NODES, repeat=3):
+            left = _merge_signatures(_merge_signatures(a, b), c)
+            right = _merge_signatures(a, _merge_signatures(b, c))
+            assert left == right, f"not associative for {a!r},{b!r},{c!r}"
+
+    def test_idempotent(self):
+        for node in self.NODES:
+            assert _merge_signatures(node, node) == node
+
+    def test_does_not_mutate_its_inputs(self):
+        a = {"_kind": "dict", "keys": {"x": "int"}}
+        b = {"_kind": "dict", "keys": {"y": "str"}}
+        _merge_signatures(a, b)
+        assert a == {"_kind": "dict", "keys": {"x": "int"}}
+        assert b == {"_kind": "dict", "keys": {"y": "str"}}
+
+    def test_dict_key_union_recurses(self):
+        merged = _merge_signatures(
+            {"_kind": "dict", "keys": {"x": "int", "shared": "null"}},
+            {"_kind": "dict", "keys": {"y": "str", "shared": "float"}},
+        )
+        assert merged == {"_kind": "dict", "keys": {
+            "x": "int", "y": "str", "shared": "float"}}
+
+    def test_differing_kinds_conflict(self):
+        merged = _merge_signatures(
+            {"_kind": "list", "value_shape": "str"},
+            {"_kind": "timestamp_map", "value_shape": "str"},
+        )
+        assert merged["_kind"] == "conflict"
+
+    def test_unknown_kind_does_not_recurse_forever(self):
+        """Two same-kind nodes whose `_kind` the merge does not dispatch on
+        must NOT be routed back into the merge by conflict normalisation.
+
+        They were, once: `_merge_signatures` had no branch for the kind so it
+        returned `_conflict_node(a, b)`, which grouped them by kind and handed
+        the same pair straight back — unbounded mutual recursion, and a
+        RecursionError in the 16:00 UTC run rather than in a test. Not
+        reachable from `compute_shape_signature`'s own output today, which is
+        exactly why it needs pinning: it would be introduced by adding a new
+        `_kind` there and forgetting `_MERGEABLE_KINDS`.
+        """
+        a = {"_kind": "some_future_kind", "x": 1}
+        b = {"_kind": "some_future_kind", "x": 2}
+        merged = _merge_signatures(a, b)
+        assert merged["_kind"] == "conflict"
+        assert len(merged["shapes"]) == 2
+        assert _merge_signatures(a, b) == _merge_signatures(b, a)
+
+    def test_conflict_node_absorbs_a_bare_none_member(self):
+        """`None` must be filtered by `_conflict_node`, not just the `"null"`
+        tag — they arrive disguised as each other.
+
+        `json.dumps(None)` is the string `"null"`, and `json.loads` turns it
+        back into `None`, so a `!= "null"` test lets it through to
+        `sorted(scalars)`, which raises TypeError comparing None to str.
+        `_merge_signatures` absorbs `None` before the conflict path can be
+        reached, so this is about the two functions agreeing on what `None`
+        means rather than a reachable crash.
+        """
+        assert _conflict_node(None, "str") == "str"
+        assert _conflict_node(None, None) == "null"
+
+    def test_max_depth_sentinel_propagates(self):
+        assert _merge_signatures("max_depth_exceeded", "float") == \
+            "max_depth_exceeded"
+        assert _merge_signatures("float", "max_depth_exceeded") == \
+            "max_depth_exceeded"
 
 
 class TestSignatureHash:
@@ -581,6 +864,70 @@ class TestClassifyDataMemberDrift:
         assert classify_data_member_drift(
             {"_kind": "dict", "keys": {"data": {"_kind": "dict", "keys": {}}}},
             {"_kind": "dict", "keys": {"other": "str"}},
+        ) is None
+
+    @staticmethod
+    def _multi_record_payload(members, sparse_first=()):
+        """Buurt envelope where each member carries TWO records.
+
+        Members named in `sparse_first` have an incomplete FIRST record — the
+        2026-08-23 partial-availability shape, one level down from the feed.
+        """
+        complete = {"temperature_2m": 18.4, "cloud_cover": 55.0}
+        return {
+            "metadata": {
+                "data_type": "weather_forecast",
+                "schema_version": "2.4",
+                "location_count": len(members),
+                "locations": list(members),
+                "units": {"temperature_2m": "C"},
+            },
+            "data": {
+                name: {
+                    "2026-08-23T00:00:00+02:00": (
+                        {"temperature_2m": 18.4} if name in sparse_first
+                        else dict(complete)
+                    ),
+                    "2026-08-23T01:00:00+02:00": dict(complete),
+                }
+                for name in members
+            },
+        }
+
+    def test_member_with_sparse_first_record_stays_homogeneous(self):
+        """A member whose FIRST record is incomplete must still read as the
+        same shape as its peers, so a dropout alongside it still downgrades.
+
+        Under first-record sampling the sparse member looked like a different
+        shape, homogeneity failed, and the dropout was enforced — the
+        2026-08-23 defect reproduced one level down.
+        """
+        prev = compute_shape_signature(
+            self._multi_record_payload(["Elsweide_Arnhem_NL",
+                                        "Elderveld_Arnhem_NL"])
+        )
+        curr = compute_shape_signature(
+            self._multi_record_payload(["Elderveld_Arnhem_NL"],
+                                       sparse_first=("Elderveld_Arnhem_NL",))
+        )
+        verdict = classify_data_member_drift(prev, curr)
+        assert verdict is not None
+        assert verdict["removed"] == ["Elsweide_Arnhem_NL"]
+
+    def test_member_losing_field_from_every_record_still_enforced(self):
+        """The union must not launder a real break: when a field leaves EVERY
+        record of a member it leaves the union too, so the shape genuinely
+        differs and the tripwire keeps enforcing."""
+        prev = compute_shape_signature(
+            self._multi_record_payload(["Elsweide_Arnhem_NL",
+                                        "Elderveld_Arnhem_NL"])
+        )
+        degraded = self._multi_record_payload(["Elderveld_Arnhem_NL"])
+        for records in degraded["data"].values():
+            for record in records.values():
+                record.pop("cloud_cover")
+        assert classify_data_member_drift(
+            prev, compute_shape_signature(degraded)
         ) is None
 
 

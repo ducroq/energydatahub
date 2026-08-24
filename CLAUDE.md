@@ -99,6 +99,12 @@ utils/
                              # member-set change of the data block (a location/source
                              # dropped or recovered, survivors identical)? Powers the
                              # member-drift downgrade in the tripwire (2026-08-14).
+                             # A timestamp map's value_shape is the MERGE of ALL its
+                             # records, not one sampled record (2026-08-23) — a field
+                             # present in ANY record survives, so an intra-day
+                             # completeness gap is no longer a shape change. A field
+                             # gone from EVERY record still drifts. `_merge_signatures`
+                             # documents the boundary; lists still sample element 0.
   secure_data_handler.py     # AES-CBC + HMAC-SHA256 encryption
   calendar_features.py       # Holiday/DST features
 scripts/
