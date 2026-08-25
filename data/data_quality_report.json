@@ -1,12 +1,9 @@
 {
-  "timestamp": "2026-08-24T16:32:11.438609+00:00",
+  "timestamp": "2026-08-25T16:32:30.235274+00:00",
   "overall_status": "warning",
-  "total_issues": 3,
-  "datasets_collected": 22,
-  "datasets_missing": [
-    "weather_forecast_buurt",
-    "solar_forecast_buurt"
-  ],
+  "total_issues": 2,
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -70,6 +67,26 @@
       "issues": []
     },
     {
+      "dataset_name": "weather_forecast_buurt",
+      "data_type": "weather",
+      "source": "Open-Meteo API (free)",
+      "status": "info",
+      "data_points": 768,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "solar_forecast_buurt",
+      "data_type": "solar",
+      "source": "Open-Meteo API (free)",
+      "status": "info",
+      "data_points": 730,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
       "dataset_name": "air_quality_buurt",
       "data_type": "air",
       "source": "Luchtmeetnet API",
@@ -85,20 +102,9 @@
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
       "data_points": 288,
-      "checks_passed": 4,
-      "checks_failed": 2,
+      "checks_passed": 5,
+      "checks_failed": 1,
       "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "warning",
-          "message": "1 values outside range [-500.0, 10000.0] EUR/MWh",
-          "details": {
-            "count": 1,
-            "examples": [
-              "imbalance_price/2026-08-23T14:00:00+02:00: -969.625"
-            ]
-          }
-        },
         {
           "check_name": "balance_delta_synthesised",
           "severity": "warning",
@@ -171,15 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "6 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 6,
+            "count": 8,
             "examples": [
-              "NL/2026-08-24T09:15:00+02:00: forecast_error=3075.1, load_actual=7486.696, ratio=0.41",
-              "NL/2026-08-24T09:30:00+02:00: forecast_error=3641.4, load_actual=6675.546, ratio=0.55",
-              "NL/2026-08-24T09:45:00+02:00: forecast_error=3947.6, load_actual=6117.146, ratio=0.65",
-              "NL/2026-08-24T10:00:00+02:00: forecast_error=4153.7, load_actual=5678.846, ratio=0.73",
-              "NL/2026-08-24T10:15:00+02:00: forecast_error=4351.1, load_actual=5292.016, ratio=0.82"
+              "NL/2026-08-25T08:45:00+02:00: forecast_error=3394.2, load_actual=7920.866, ratio=0.43",
+              "NL/2026-08-25T09:00:00+02:00: forecast_error=3826.5, load_actual=7406.116, ratio=0.52",
+              "NL/2026-08-25T09:15:00+02:00: forecast_error=4116.5, load_actual=6970.176, ratio=0.59",
+              "NL/2026-08-25T09:30:00+02:00: forecast_error=4493.9, load_actual=6482.436, ratio=0.69",
+              "NL/2026-08-25T09:45:00+02:00: forecast_error=4689.7, load_actual=6062.836, ratio=0.77"
             ],
             "threshold": 0.4
           }
@@ -191,7 +197,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 60,
+      "data_points": 72,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -211,7 +217,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 22,
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -241,7 +247,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 148,
+      "data_points": 147,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
