@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-25T16:32:30.235274+00:00",
+  "timestamp": "2026-08-26T16:44:11.472073+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -11,7 +11,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +21,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -177,15 +177,14 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "4 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 8,
+            "count": 4,
             "examples": [
-              "NL/2026-08-25T08:45:00+02:00: forecast_error=3394.2, load_actual=7920.866, ratio=0.43",
-              "NL/2026-08-25T09:00:00+02:00: forecast_error=3826.5, load_actual=7406.116, ratio=0.52",
-              "NL/2026-08-25T09:15:00+02:00: forecast_error=4116.5, load_actual=6970.176, ratio=0.59",
-              "NL/2026-08-25T09:30:00+02:00: forecast_error=4493.9, load_actual=6482.436, ratio=0.69",
-              "NL/2026-08-25T09:45:00+02:00: forecast_error=4689.7, load_actual=6062.836, ratio=0.77"
+              "NL/2026-08-26T09:45:00+02:00: forecast_error=3454.7, load_actual=7740.776, ratio=0.45",
+              "NL/2026-08-26T10:00:00+02:00: forecast_error=3572.0, load_actual=7582.886, ratio=0.47",
+              "NL/2026-08-26T10:15:00+02:00: forecast_error=3538.9, load_actual=7444.716, ratio=0.48",
+              "NL/2026-08-26T10:30:00+02:00: forecast_error=3653.4, load_actual=7251.126, ratio=0.50"
             ],
             "threshold": 0.4
           }
@@ -217,7 +216,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 22,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -227,7 +226,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 499,
+      "data_points": 504,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -247,7 +246,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 147,
+      "data_points": 146,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
