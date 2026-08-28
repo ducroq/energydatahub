@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-26T16:44:11.472073+00:00",
-  "overall_status": "warning",
-  "total_issues": 2,
+  "timestamp": "2026-08-28T00:44:01.100637+00:00",
+  "overall_status": "error",
+  "total_issues": 3,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -31,7 +31,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -41,7 +41,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 47,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -71,7 +71,7 @@
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 768,
+      "data_points": 762,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 730,
+      "data_points": 706,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -102,9 +102,20 @@
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
       "data_points": 288,
-      "checks_passed": 5,
-      "checks_failed": 1,
+      "checks_passed": 4,
+      "checks_failed": 2,
       "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "warning",
+          "message": "1 values outside range [-500.0, 10000.0] EUR/MWh",
+          "details": {
+            "count": 1,
+            "examples": [
+              "imbalance_price/2026-08-27T16:00:00+02:00: -534.21"
+            ]
+          }
+        },
         {
           "check_name": "balance_delta_synthesised",
           "severity": "warning",
@@ -120,7 +131,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 624,
+      "data_points": 312,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -169,37 +180,32 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
-      "data_points": 384,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "4 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 4,
-            "examples": [
-              "NL/2026-08-26T09:45:00+02:00: forecast_error=3454.7, load_actual=7740.776, ratio=0.45",
-              "NL/2026-08-26T10:00:00+02:00: forecast_error=3572.0, load_actual=7582.886, ratio=0.47",
-              "NL/2026-08-26T10:15:00+02:00: forecast_error=3538.9, load_actual=7444.716, ratio=0.48",
-              "NL/2026-08-26T10:30:00+02:00: forecast_error=3653.4, load_actual=7251.126, ratio=0.50"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 192,
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
-      "data_points": 72,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "status": "error",
+      "data_points": 8,
+      "checks_passed": 4,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "completeness",
+          "severity": "error",
+          "message": "Only 8 data points (expected >= 24, 33% complete)",
+          "details": {
+            "actual": 8,
+            "expected_min": 24,
+            "completeness_ratio": 0.33
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_mix",
@@ -226,7 +232,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 504,
+      "data_points": 312,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -246,7 +252,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 146,
+      "data_points": 145,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
