@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-28T00:44:01.100637+00:00",
+  "timestamp": "2026-08-29T00:20:24.446625+00:00",
   "overall_status": "error",
-  "total_issues": 3,
+  "total_issues": 2,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -102,20 +102,9 @@
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
       "data_points": 288,
-      "checks_passed": 4,
-      "checks_failed": 2,
+      "checks_passed": 5,
+      "checks_failed": 1,
       "issues": [
-        {
-          "check_name": "value_range",
-          "severity": "warning",
-          "message": "1 values outside range [-500.0, 10000.0] EUR/MWh",
-          "details": {
-            "count": 1,
-            "examples": [
-              "imbalance_price/2026-08-27T16:00:00+02:00: -534.21"
-            ]
-          }
-        },
         {
           "check_name": "balance_delta_synthesised",
           "severity": "warning",
@@ -232,7 +221,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 312,
+      "data_points": 306,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -252,7 +241,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 145,
+      "data_points": 146,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
