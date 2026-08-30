@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-08-29T00:20:24+00:00",
+  "computed_at": "2026-08-30T19:02:55+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -673,7 +673,7 @@
       ]
     },
     "air_quality_buurt.json": {
-      "shape_hash": "cd842fe37dc5c19b56af540f2db421de",
+      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -696,9 +696,7 @@
                 "value_shape": {
                   "_kind": "dict",
                   "keys": {
-                    "AQI": "int",
-                    "NO": "float",
-                    "NO2": "float"
+                    "AQI": "int"
                   }
                 }
               }
@@ -1076,7 +1074,7 @@
       "sources": null
     },
     "ned_production.json": {
-      "shape_hash": "a27584b93b681f1493e800060146a6d6",
+      "shape_hash": "624ca25bcf28797a299942ab7587a78f",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -1087,18 +1085,6 @@
                 "_kind": "dict",
                 "keys": {
                   "actual": {
-                    "_kind": "timestamp_map",
-                    "value_shape": {
-                      "_kind": "dict",
-                      "keys": {
-                        "capacity_kw": "float",
-                        "co2_kg": "float",
-                        "utilization_pct": "float",
-                        "volume_kwh": "float"
-                      }
-                    }
-                  },
-                  "forecast": {
                     "_kind": "timestamp_map",
                     "value_shape": {
                       "_kind": "dict",
@@ -1921,7 +1907,7 @@
       "sources": null
     },
     "cross_border_flows.json": {
-      "shape_hash": "cc57e9a004ba7077499dd2dce399a517",
+      "shape_hash": "5605edc7d1191c79e236bed8671e62ec",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -1940,12 +1926,9 @@
                     "NL_BE_net": "float",
                     "NL_DE_net": "float",
                     "NL_DK_net": "float",
-                    "NL_GB_net": "float",
-                    "NL_NO_net": "float",
                     "NL\u2192BE": "float",
                     "NL\u2192DE": "float",
                     "NL\u2192DK": "float",
-                    "NL\u2192GB": "float",
                     "NL\u2192NO": "float",
                     "NO\u2192NL": "float",
                     "total_net_position": "float"

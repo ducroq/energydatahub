@@ -1,17 +1,17 @@
 {
-  "cached_at": "2026-08-29T02:19:44.772649+02:00",
+  "cached_at": "2026-08-30T21:00:05.640884+02:00",
   "data": {
     "carbon": {
-      "ticker": "KEUA",
-      "price": 22.82,
-      "date": "2026-03-20",
-      "open": 22.82,
-      "high": 22.82,
-      "low": 22.82,
-      "volume": 0,
-      "prev_close": 22.82,
-      "change": 0.0,
-      "change_pct": 0.0,
+      "ticker": "KRBN",
+      "price": 34.82,
+      "date": "2026-08-28",
+      "open": 34.89,
+      "high": 34.97,
+      "low": 34.35,
+      "volume": 12254,
+      "prev_close": 34.42,
+      "change": 0.4,
+      "change_pct": 1.16,
       "source": "alpha_vantage",
       "description": "EU Carbon Allowance (EUA) proxy",
       "units": "USD/share (correlates to EUR/tonne EUA)",
@@ -19,14 +19,14 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 66.56,
+      "price": 66.98,
       "date": "2026-08-28",
       "open": 68.93,
       "high": 69.01,
       "low": 66.56,
       "volume": 930,
       "prev_close": 68.1,
-      "change_pct": -2.26,
+      "change_pct": -1.64,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
@@ -36,7 +36,7 @@
       "price_lag1": 68.1,
       "price_lag2": 65.63,
       "price_lag7": 63.38,
-      "mean_7d": 66.62,
+      "mean_7d": 66.68,
       "volatility_7d": 1.1,
       "trend_7d": "up",
       "history": {
@@ -64,7 +64,7 @@
         "2026-08-25": 66.59,
         "2026-08-26": 65.63,
         "2026-08-27": 68.1,
-        "2026-08-28": 66.56
+        "2026-08-28": 66.98
       }
     },
     "gas": {
@@ -74,7 +74,7 @@
       "open": 10.39,
       "high": 10.41,
       "low": 10.25,
-      "volume": 8558804,
+      "volume": 8629814,
       "prev_close": 10.43,
       "change": -0.1,
       "change_pct": -0.96,
@@ -85,5 +85,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "253cbb948c2fc341079f0b42d9f5701faf780ebaf0ed182131030ed4f14bf9d1"
+  "signature": "86d0ad69d7a47b7ab13c35e036d7adfe1de6dda2195351f9bb42edf7df0100de"
 }
