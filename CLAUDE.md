@@ -56,6 +56,23 @@ collectors/
   _http_classifier.py        # Shared HTTP status classifier (raise_if_permanent) for
                              # 422/400/401/403/404 → NonRetryableError. Used by tennet.py;
                              # available for adoption by any collector that hits 4xx cascades.
+  _entsoe_shared.py          # Per-zone delivery tracking for the four country-keyed
+                             # ENTSO-E collectors (load, generation, wind, hydro) —
+                             # the zone-level analogue of _openmeteo_shared's
+                             # record_location_delivery. record_zone_request() at the
+                             # top of _fetch_raw_data, record_zone_delivery() from
+                             # _validate_data. Measured against the PARSED data, not
+                             # the fetch: all four gate the per-zone assignment on a
+                             # truthiness check of the parsed records, so a zone can
+                             # fetch and still vanish from `data` (added 2026-08-30
+                             # after the 2026-08-29 ENTSO-E 503 outage produced an
+                             # envelope claiming NL while `data` carried only DE_LU —
+                             # nothing was published; the tripwire aborted first).
+                             # Emits `zone_completeness`. Does NOT unblock the
+                             # publish: on a CRITICAL_FEED a degraded run still
+                             # aborts before the quality report is committed. The
+                             # five zone-keyed feeds are individually accounted for
+                             # in its "Deliberately NOT in scope" section.
   _openmeteo_shared.py       # Shared Semaphore + per-location retry/backoff for OpenMeteo*.
                              # Also record_location_delivery() / published_locations()
                              # (2026-08-14): a location whose fetch exhausts its retries

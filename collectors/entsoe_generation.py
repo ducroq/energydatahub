@@ -45,6 +45,11 @@ from entsoe import EntsoePandasClient
 from functools import partial
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
+from collectors._entsoe_shared import (
+    published_zones,
+    record_zone_delivery,
+    record_zone_request,
+)
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 
@@ -158,6 +163,7 @@ class EntsoeGenerationCollector(BaseCollector):
         Raises:
             Exception: If API call fails
         """
+        record_zone_request(self)
         self.logger.debug(
             f"Fetching generation for {self.country_codes}, types: {self.generation_types}"
         )
@@ -343,6 +349,8 @@ class EntsoeGenerationCollector(BaseCollector):
     ) -> tuple[bool, List[str]]:
         """Validate generation data."""
         warnings = []
+        # Measured against the parsed data — see collectors/_entsoe_shared.py.
+        record_zone_delivery(self, data)
 
         if not data:
             warnings.append("No generation data collected")
@@ -362,8 +370,11 @@ class EntsoeGenerationCollector(BaseCollector):
         """Get metadata for generation dataset."""
         metadata = super()._get_metadata(start_time, end_time)
 
+        # `country_codes` is the DELIVERED set; `zones` stays the full-width
+        # name lookup. They disagree on a degraded run; `country_codes` is
+        # authoritative. See collectors/_entsoe_shared.py.
         metadata.update({
-            'country_codes': self.country_codes,
+            'country_codes': published_zones(self),
             'zones': {code: self.ZONE_NAMES.get(code, code) for code in self.country_codes},
             'generation_types': self.generation_types,
             'type_names': {t: self.TYPE_NAMES.get(t, t) for t in self.generation_types},

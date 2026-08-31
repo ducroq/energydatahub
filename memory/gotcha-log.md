@@ -241,6 +241,10 @@ A per-location Open-Meteo fetch that exhausts its retries drops that location fr
 ### A collector reporting its own degradation broke the gate that noticed it (2026-08-14) [RESOLVED]
 `metadata['collector_quality_issues']` is attached only when a run raises an issue, so making the OpenMeteo collectors emit `location_completeness` changed the envelope shape on exactly the degraded runs the member-drift fix exists to let through — verdict came back `None`, re-blocking the publish. Exempted via `DIAGNOSTIC_ENVELOPE_KEYS`. Any collector using `_add_quality_issue` has this churn; only member drift is fixed (H7).
 
+### The same request-not-response defect recurred in a second collector family 16 days later (2026-08-30)
+The 2026-08-14 fix was applied to `_openmeteo_shared` only. The four ENTSO-E country-keyed collectors had the identical bug — `_get_metadata` built `country_codes`/`zones` from the configured list — and it stayed invisible until the 2026-08-29 ENTSO-E 503 outage dropped NL while the envelope still claimed it. A fix scoped to the collector family that surfaced the bug is a fix that will recur; when closing one, grep for the shape across every family.
+Second lesson from the same change: record delivery against the PARSED data, not the fetch. All four gate `parsed[zone]` on a truthiness check, so a zone can fetch fine and still vanish — an all-NaN series or a frame missing the wanted columns. The first draft recorded at the end of `_fetch_raw_data` and reproduced the very bug it was fixing.
+
 ### Published metadata described the request, not the response (2026-08-14) [RESOLVED]
 `_get_metadata` built `locations`/`location_count` from the *configured* list, so a half-populated feed published an envelope naming a location `data` did not contain, and `validate_completeness` passed comfortably (768→384 points, floor 24). Metadata that restates config cannot detect anything; publish what was delivered.
 

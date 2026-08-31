@@ -45,6 +45,11 @@ from entsoe import EntsoePandasClient
 from functools import partial
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
+from collectors._entsoe_shared import (
+    published_zones,
+    record_zone_delivery,
+    record_zone_request,
+)
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 
@@ -124,6 +129,10 @@ class EntsoeWindCollector(BaseCollector):
         """
         # Determine which countries to fetch
         countries = [country_code] if country_code else self.country_codes
+        # `countries`, not self.country_codes: a single-country override
+        # narrows what this run actually asked for, so getting only that zone
+        # is complete rather than degraded.
+        record_zone_request(self, requested=countries)
 
         self.logger.debug(f"Fetching wind forecasts for: {countries}")
 
@@ -293,6 +302,8 @@ class EntsoeWindCollector(BaseCollector):
         Returns:
             (is_valid, list of warnings)
         """
+        # Measured against the parsed data — see collectors/_entsoe_shared.py.
+        record_zone_delivery(self, data)
         warnings = []
 
         if not data:
@@ -337,8 +348,10 @@ class EntsoeWindCollector(BaseCollector):
         """
         metadata = super()._get_metadata(start_time, end_time)
 
+        # `country_codes` is the DELIVERED set; `zones` stays the full-width
+        # name lookup. See collectors/_entsoe_shared.py.
         metadata.update({
-            'country_codes': self.country_codes,
+            'country_codes': published_zones(self),
             'zones': {code: self.ZONE_NAMES.get(code, code) for code in self.country_codes},
             'forecast_type': 'day-ahead',
             'resolution': 'hourly',

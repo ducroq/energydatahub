@@ -210,6 +210,51 @@ VOLATILE_SHAPE_FEEDS = frozenset({
 # air_quality_buurt.json is deliberately ABSENT despite being location-keyed:
 # luchtmeetnet varies the per-station pollutant set, so its members are not
 # homogeneous and it is already handled by the declared VOLATILE_SHAPE_FEEDS.
+#
+# ZONE-KEYED ENTSO-E FEEDS — EVALUATED 2026-08-30, NONE REGISTERED (yet).
+# The H6 review trigger fired ("immediately when a new per-member feed is
+# added") when collectors/_entsoe_shared.py gave the four country-keyed
+# ENTSO-E collectors per-zone delivery tracking. All five feeds they produce
+# were checked with `classify_data_member_drift` against the live sidecar
+# rather than assumed:
+#
+#   generation_mix.json       None. Zones are NOT homogeneous (BE carries
+#                             nuclear and no hard coal, DE_LU the reverse), so
+#                             the homogeneity gate correctly rejects it.
+#   wind_forecast.json        None. `data` is keyed by collector name; the
+#                             zone map is two levels down at
+#                             data.entsoe_wind_generation.data.*.
+#   load_forecast.json        Classifies cleanly, but is a CRITICAL_FEED and
+#   generation_forecast.json  short-circuits in `_partition_member_drift`
+#                             before eligibility is consulted — inert, exactly
+#                             as weather_forecast_multi_location.json already
+#                             is in the set below.
+#   nordic_hydro.json         Classifies cleanly and is genuinely eligible:
+#                             NO/SE are interchangeable weekly series. It is
+#                             the one real candidate — and it is DEFERRED.
+#
+# Why nordic_hydro is deferred rather than registered. Declaring a feed here
+# also removes it from `derive_volatile_feeds()` (see the subtraction in
+# main()). Registration rescues only the diff where the member SET changes;
+# `classify_data_member_drift` returns None when nothing was added or removed.
+# The likelier drift on this feed is the arrival of
+# `metadata.collector_quality_issues` while both zones are still present —
+# which classifies None and hard-fails. Today that flip would fail ONCE, put a
+# second hash in the observation log, and self-classify volatile thereafter.
+# Registered, nordic_hydro could never enter the derived set, so the same flip
+# would abort the whole publish every run, forever. It has exactly one shape
+# hash across 97 observations, so the hazard is latent, not absent — which is
+# precisely why it was missed on the first pass, when this same argument was
+# correctly applied to generation_mix and not to nordic_hydro.
+#
+# Register it once the diagnostic-key exemption is generalised from
+# `classify_data_member_drift` to the tripwire's envelope comparison
+# (hypothesis-log H7). That change makes this registration correct, and
+# registering nordic_hydro is its natural acceptance test.
+#
+# NOTE for whoever lands H7: `_without_diagnostic_keys` currently applies only
+# to non-`data` top-level keys, and wind_forecast's ENTSO-E metadata sits
+# INSIDE the data block — generalising it has to walk nested envelopes.
 MEMBER_MAPPED_FEEDS = frozenset({
     'weather_forecast_buurt.json',
     'solar_forecast_buurt.json',

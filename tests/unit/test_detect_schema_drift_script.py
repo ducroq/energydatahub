@@ -909,12 +909,18 @@ class TestFieldKeyedFeedsNeverDowngrade:
     def test_undeclared_feed_is_never_eligible(self, tmp_path):
         """Even a perfectly member-shaped diff fails if the feed is not
         declared in MEMBER_MAPPED_FEEDS. The registry is the gate."""
-        assert "nordic_hydro.json" not in detect_schema_drift.MEMBER_MAPPED_FEEDS
+        # A synthetic name rather than a real feed: this test is about the
+        # registry being the gate, not about any particular feed's membership.
+        # It used to use nordic_hydro.json, which nearly rotted on 2026-08-30
+        # when that feed was evaluated for registration — a test of a gate
+        # should not depend on which feeds happen to be behind it.
+        undeclared = "not_a_declared_feed.json"
+        assert undeclared not in detect_schema_drift.MEMBER_MAPPED_FEEDS
         prev = _sidecar_with_feeds("2.4", {
-            "nordic_hydro.json": _sig_feed(_buurt_payload(BOTH), "h1"),
+            undeclared: _sig_feed(_buurt_payload(BOTH), "h1"),
         })
         curr = _sidecar_with_feeds("2.4", {
-            "nordic_hydro.json": _sig_feed(_buurt_payload(ONE), "h2"),
+            undeclared: _sig_feed(_buurt_payload(ONE), "h2"),
         })
         repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
         result = _run_script(repo)

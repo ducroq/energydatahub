@@ -46,7 +46,17 @@ from entsoe import EntsoePandasClient
 from functools import partial
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
+from collectors._entsoe_shared import (
+    drop_issues,
+    published_zones,
+    record_zone_delivery,
+    record_zone_request,
+)
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
+
+
+# Per-zone actual-load completeness signal — see _record_actual_delivery.
+FIELD_COMPLETENESS_CHECK = 'field_completeness'
 
 
 class EntsoeLoadCollector(BaseCollector):
@@ -121,6 +131,7 @@ class EntsoeLoadCollector(BaseCollector):
         Raises:
             Exception: If API call fails
         """
+        record_zone_request(self)
         self.logger.debug(f"Fetching load forecasts for: {self.country_codes}")
 
         # Convert to pandas Timestamp and UTC for API
@@ -276,6 +287,11 @@ class EntsoeLoadCollector(BaseCollector):
     ) -> tuple[bool, List[str]]:
         """Validate load forecast data."""
         warnings = []
+        # Zone + field completeness are measured HERE, against the parsed
+        # data that will actually be published — not against the fetch.
+        # See collectors/_entsoe_shared.py.
+        record_zone_delivery(self, data)
+        self._record_actual_delivery(data)
 
         if not data:
             warnings.append("No load data collected")
@@ -300,12 +316,81 @@ class EntsoeLoadCollector(BaseCollector):
 
         return len(warnings) == 0, warnings
 
+    def _record_actual_delivery(self, data: Dict[str, Dict[str, Any]]) -> None:
+        """Flag zones that published no actual load, when actuals were asked for.
+
+        `include_actual` is a claim about the request, not the envelope. ENTSO-E
+        serves day-ahead forecast and actual load from separate endpoints, so
+        one can fail while the other succeeds — and it does so PER ZONE. The
+        repo calls the actual-load product A67 (see this module's header and
+        `utils/data_quality.py`); entsoe-py's `query_load` issues it on the
+        wire as `documentType=A65&processType=A16`, which is what appears in
+        run logs.
+
+        Observed in a live probe on 2026-08-30, when NL's actuals 503'd and
+        DE_LU published forecast-only records. NOT part of the 2026-08-29 CI
+        incident — that run's `load_forecast` hash flip was pure member drift
+        (DE_LU kept its actuals; only NL vanished). An earlier draft of this
+        docstring conflated the two.
+
+        Deliberately per-zone rather than `any(...)` across the whole feed: a
+        single zone losing its actuals is the more probable outage and the
+        earlier draft's feed-wide `any()` reported nothing for it, while the
+        shape hash still flipped and still blocked the publish — signal-free
+        failure, which is exactly what this is meant to prevent.
+
+        Within a zone the test IS `any(...)` across records: one record
+        carrying `load_actual` marks the zone as delivering actuals. That
+        matches `_merge_signatures`' union semantics (a field present in ANY
+        record survives into the shape), so a zone this check calls healthy is
+        exactly a zone whose published shape still declares the field. An
+        intra-day actuals gap is therefore deliberately NOT reported here.
+
+        Checks the parsed data rather than the raw fetch, for the same reason
+        `record_zone_delivery` does; a zone whose actual series is present but
+        entirely NaN parses to forecast-only records.
+        """
+        drop_issues(self, FIELD_COMPLETENESS_CHECK)
+        if not self.include_actual:
+            return
+        if not data:
+            # Every zone is gone, which `zone_completeness` already reports in
+            # full. Adding a field-level issue here would be redundant noise
+            # about fields of records that do not exist. Explicit so this is a
+            # decision rather than a consequence of `without` being empty.
+            return
+        without = [
+            zone for zone, records in data.items()
+            if not any('load_actual' in point for point in records.values())
+        ]
+        if not without:
+            return
+        self._add_quality_issue(
+            check_name=FIELD_COMPLETENESS_CHECK,
+            severity='warning',
+            message=(
+                f"actual load (A67) was requested but {len(without)} of "
+                f"{len(data)} published zone(s) carry none — load_actual and "
+                f"forecast_error are absent for: {', '.join(without)}"
+            ),
+            details={
+                'missing_fields': ['load_actual', 'forecast_error'],
+                'zones_without_actual': without,
+                'zones_published': list(data),
+            },
+        )
+
     def _get_metadata(self, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
         """Get metadata for load forecast dataset."""
         metadata = super()._get_metadata(start_time, end_time)
 
+        # `country_codes` is the DELIVERED set (list-of-str either way, so the
+        # shape signature is unchanged); `zones` stays the full-width name
+        # lookup so narrowing it cannot introduce fresh shape churn. On a
+        # degraded run they therefore disagree — `country_codes` is
+        # authoritative. See collectors/_entsoe_shared.py.
         metadata.update({
-            'country_codes': self.country_codes,
+            'country_codes': published_zones(self),
             'zones': {code: self.ZONE_NAMES.get(code, code) for code in self.country_codes},
             'include_actual': self.include_actual,
             'forecast_type': 'day-ahead',

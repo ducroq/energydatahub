@@ -59,7 +59,20 @@ from collectors.base import (
     NonRetryableError,
     RetryConfig,
 )
+from collectors._entsoe_shared import (
+    drop_issues,
+    published_zones,
+    record_zone_delivery,
+    record_zone_request,
+)
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
+
+
+# Under-populated-zone signal (#29). Distinct from _entsoe_shared's
+# ZONE_COMPLETENESS_CHECK, which flags a zone that is absent outright.
+# A constant because `drop_issues` filters on it — a bare literal there
+# would silently stop matching if this were renamed.
+PER_ZONE_COMPLETENESS_CHECK = 'completeness_per_zone'
 
 
 class EntsoeHydroCollector(BaseCollector):
@@ -159,6 +172,7 @@ class EntsoeHydroCollector(BaseCollector):
             Exception: For transient errors, propagated to BaseCollector's
                 retry loop.
         """
+        record_zone_request(self)
         start_ts = pd.Timestamp(start_time).tz_convert('UTC')
         end_ts = pd.Timestamp(end_time).tz_convert('UTC')
         self.logger.debug(
@@ -307,12 +321,18 @@ class EntsoeHydroCollector(BaseCollector):
     ) -> tuple[bool, List[str]]:
         """Validate the nested per-country structure."""
         warnings: List[str] = []
-        # Reset per-run structured signals explicitly so callers that
-        # exercise `_validate_data` directly (unit tests, manual scripts)
-        # see clean state. `collect()` also resets at its top, so under
-        # the production flow this is a defensive double-reset rather
-        # than load-bearing.
-        self._reset_quality_issues()
+        # Absent-zone signal, measured against the parsed data. Distinct from
+        # the `completeness_per_zone` signal below, which flags a zone that IS
+        # present but under-populated — neither subsumes the other, and a
+        # degraded run can legitimately carry both.
+        record_zone_delivery(self, data)
+        # Clear only the signal THIS method owns, so callers that exercise
+        # `_validate_data` directly (unit tests, manual scripts) still see
+        # clean state without discarding signals raised earlier in the same
+        # run. It used to be a blanket `_reset_quality_issues()`, described as
+        # a defensive double-reset of `collect()`'s own — harmless while this
+        # was the only producer, but it would now eat `zone_completeness`.
+        drop_issues(self, PER_ZONE_COMPLETENESS_CHECK)
         if not data:
             return False, ["No hydro reservoir data collected"]
         # Iterate `data.items()` rather than `self.country_codes`: if a
@@ -333,7 +353,7 @@ class EntsoeHydroCollector(BaseCollector):
                 warnings.append(f"{country_code}: no data points")
             if n_points < self.EXPECTED_POINTS_PER_ZONE:
                 self._add_quality_issue(
-                    check_name='completeness_per_zone',
+                    check_name=PER_ZONE_COMPLETENESS_CHECK,
                     severity='warning',
                     message=(
                         f"{country_code} has {n_points} weekly points "
@@ -371,10 +391,14 @@ class EntsoeHydroCollector(BaseCollector):
     ) -> Dict[str, Any]:
         """Augment base metadata with hydro-specific fields."""
         metadata = super()._get_metadata(start_time, end_time)
+        # Both are DELIVERED sets and both are lists of str, so narrowing
+        # them leaves the shape signature untouched. Unlike the load/generation/
+        # wind family there is no dict-keyed `zones` table here to keep
+        # full-width. See collectors/_entsoe_shared.py.
         metadata.update({
-            'country_codes': list(self.country_codes),
+            'country_codes': published_zones(self),
             'country_names': [
-                self.ZONE_NAMES.get(c, c) for c in self.country_codes
+                self.ZONE_NAMES.get(c, c) for c in published_zones(self)
             ],
             'resolution': 'weekly',
             'document_type': 'A72 (Reservoir filling)',
