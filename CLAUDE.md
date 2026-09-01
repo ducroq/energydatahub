@@ -157,6 +157,13 @@ data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + curre
 docs/                        # GitHub Pages PUBLISH ROOT — the whole directory is uploaded as
                              # the Pages artifact and served verbatim. Encrypted JSON +
                              # project documentation. Do not put internal notes here.
+storage/                     # UNWIRED. Google Drive archiver (gdrive.py, 2025-10-25) —
+                             # nothing imports it; the only reference is its own docstring
+                             # example. Relevant to #9 (replace git-as-archive): a partial
+                             # implementation already exists here. Do not assume it works.
+legacy/                      # Retired code kept for cold revert. LOW risk tier in
+                             # /review-changes.
+run_script.sh                # Local convenience wrapper for a collection run.
 memory/                      # Layered agent memory (tracked). MEMORY.md index, gotcha-log.md,
                              # hypothesis-log.md (open positions + revisit triggers),
                              # project_session_*.md retrospectives, project_*.md topic files.
