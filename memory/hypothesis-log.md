@@ -125,7 +125,8 @@ This closes the question the follow-up measurement opened. The migration work in
 
 Nothing else here needs revisiting. If a future audit surfaces repo size again without one of the above, the correct response is to close it citing this entry.
 
-### H6 — [RESOLVED 2026-08-08, position confirmed] The `cryptography<44` pin will block a venv rebuild on current Python
+### H9 — [RESOLVED 2026-08-08, position confirmed] The `cryptography<44` pin will block a venv rebuild on current Python
+<!-- Renumbered from H6 on 2026-08-31: the 2026-08-14 session opened a SECOND H6 (MEMBER_MAPPED_FEEDS) without noticing this one, and the collision made every bare "H6" reference ambiguous — including two live source comments. The live entry keeps H6 because `scripts/detect_schema_drift.py` and `collectors/_entsoe_shared.py` cite it; this resolved one moved. -->
 **Position**: `requirements.txt` pins `cryptography>=41.0.0,<44.0.0`, an upper bound that predates Python 3.13/3.14. The venv is uv-managed on 3.12.13 while the system interpreter is 3.14.4, so anyone recreating the venv from system Python lands on an untested combination, and `cryptography` — the AES-CBC/HMAC dependency named in Hard Constraints — is the most likely thing to fail to resolve or build.
 **Counter-position**: The pin is deliberate and nothing forces a rebuild; uv reproduces 3.12.13 from `pyvenv.cfg`, and CI pins 3.12 explicitly in both workflows. This may be a non-problem that only bites on a machine migration.
 **Method**: `uv venv --python 3.14 && uv pip install -r requirements.txt` in a throwaway directory. If it resolves, raise the bound and add 3.13/3.14 to `test.yml`'s matrix (currently `['3.12']`, a single entry, so nothing tests above 3.12). If it does not, record the floor explicitly — there is no `requires-python` declared anywhere today, so "we support 3.12" is convention rather than something enforced.
