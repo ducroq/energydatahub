@@ -1,0 +1,87 @@
+name: Open-Meteo Concurrency Probe
+
+# Settles hypothesis H10 / issue #58: are the Open-Meteo 429 storms caused by
+# our concurrency settings, or by sharing an egress IP with other GitHub-hosted
+# runners? Dispatch this, run `scripts/probe_openmeteo_concurrency.py` locally,
+# and compare the two VERDICT lines. Read the outcome table in that script's
+# docstring first — "both clean" is INCONCLUSIVE, not support for H10.
+#
+# Manual only — deliberately no `schedule`. This exists to answer a question,
+# not to add recurring load to an upstream that is already refusing us.
+# Delete the workflow once H10 is resolved.
+#
+# DO NOT DISPATCH WITHIN ~30 MINUTES OF 16:00 UTC. The daily collection runs
+# then, from the same shared runner egress pool. Under H10's own premise a
+# probe firing alongside it would spend the budget the publish needs — and the
+# resulting storm would read as confirming H10. Closed evidentiary loop.
+#
+# Needs no secrets: the Open-Meteo free API is unauthenticated. Nothing here
+# touches data/, docs/, or the publish path.
+
+on:
+  workflow_dispatch:
+    inputs:
+      cap:
+        description: 'Concurrency cap. Blank = the live OPENMETEO_SEMAPHORE_CAP.'
+        required: false
+        default: ''
+      gap:
+        description: 'Seconds held inside the semaphore. Blank = live OPENMETEO_GAP_SECONDS.'
+        required: false
+        default: ''
+      n:
+        description: 'Locations to fetch (max 200). Blank = the production total.'
+        required: false
+        default: ''
+
+# Its own group, deliberately NOT `pages`. Joining the publish's group would
+# serialize probes against the daily deploy; a separate group still stops two
+# probes from doubling the load on each other.
+concurrency:
+  group: openmeteo-probe
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
+
+    - name: Set up Python
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Probe Open-Meteo
+      # Inputs come through `env:`, never interpolated into the script body:
+      # `${{ }}` expands before bash parses the line, so quoting would not
+      # contain a value like `6"; curl evil.tld; echo "`. No other workflow in
+      # this repo interpolates non-secret user input into a `run:`.
+      #
+      # Blank inputs are omitted entirely so the script's own defaults — read
+      # live from collectors/_openmeteo_shared.py — apply. Hardcoding 6/0.5
+      # here would keep probing the OLD values the moment someone lowers the
+      # cap, which is the exact remediation H10 exists to evaluate.
+      #
+      # No `continue-on-error` and no `|| true`: the probe exits 0 on any
+      # upstream result by design, so a non-zero exit means the probe itself
+      # broke — which must fail the job loudly.
+      env:
+        CAP: ${{ inputs.cap }}
+        GAP: ${{ inputs.gap }}
+        N: ${{ inputs.n }}
+      run: |
+        args=()
+        if [ -n "$CAP" ]; then args+=(--cap "$CAP"); fi
+        if [ -n "$GAP" ]; then args+=(--gap "$GAP"); fi
+        if [ -n "$N" ];   then args+=(--n   "$N");   fi
+        python scripts/probe_openmeteo_concurrency.py "${args[@]}"

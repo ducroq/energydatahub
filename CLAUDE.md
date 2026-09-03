@@ -164,6 +164,11 @@ scripts/
                              # LOAD_FIELD_RANGES. Re-run when adding a new per-field range bound.
   probe_tennet_windows.py    # One-shot diagnostic: probe TenneT API across windows to identify
                              # endpoint availability. Used for #25 root-cause analysis.
+  probe_openmeteo_concurrency.py  # One-shot diagnostic (H10/#58): replays the production
+                             # OpenMeteo shape — 38 locations, MAX_RETRIES, the ungapped head
+                             # burst — and reports the 429 rate plus the source address. Run it
+                             # on a runner and locally to compare egress. LOWER-BOUND: both-clean
+                             # is inconclusive. Always exits 0; never a gate. Delete with H10.
 data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + current copies +
                              # _shape_signatures.json sidecar (unencrypted, committed) +
                              # _shape_observations.jsonl learning record (#43, committed
@@ -211,6 +216,10 @@ memory/                      # Layered agent memory (tracked). MEMORY.md index, 
                              # 3-attempt retry (Pages source = "GitHub Actions", not branch;
                              # the auto pages-build-deployment workflow no longer runs).
     test.yml                 # PR/push test pipeline (path-filtered, Python 3.12 only)
+    openmeteo-probe.yml      # Manual-only (workflow_dispatch) H10/#58 diagnostic. No schedule,
+                             # no secrets, touches nothing in the publish path. Do NOT dispatch
+                             # within ~30 min of 16:00 UTC — it draws on the same shared runner
+                             # egress pool the collection run needs. Delete when H10 resolves.
 ```
 
 ## Key Paths
