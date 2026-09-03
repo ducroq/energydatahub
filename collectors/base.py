@@ -45,6 +45,7 @@ from typing import Dict, Optional, Any, List
 from enum import Enum
 import uuid
 
+from collectors._host_breaker import get_host_breaker
 from utils.data_types import EnhancedDataSet
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
@@ -171,7 +172,8 @@ class BaseCollector(ABC):
         units: str,
         retry_config: Optional[RetryConfig] = None,
         circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
-        logger: Optional[logging.Logger] = None
+        logger: Optional[logging.Logger] = None,
+        host_breaker_key: Optional[str] = None
     ):
         """
         Initialize base collector.
@@ -184,6 +186,12 @@ class BaseCollector(ABC):
             retry_config: Retry configuration
             circuit_breaker_config: Circuit breaker configuration
             logger: Logger instance (creates new if None)
+            host_breaker_key: Host to share a process-wide circuit breaker on
+                (e.g. "web-api.tp.entsoe.eu"). Opt-in: when None, sub-request
+                behaviour is exactly as before. Set it when several collector
+                instances hit the SAME host, because the per-instance breaker
+                above cannot see a host-wide outage — see
+                `collectors/_host_breaker.py` and issue #52.
         """
         self.name = name
         self.data_type = data_type
@@ -192,6 +200,10 @@ class BaseCollector(ABC):
         self.retry_config = retry_config or RetryConfig()
         self.circuit_breaker_config = circuit_breaker_config or CircuitBreakerConfig()
         self.logger = logger or logging.getLogger(f"collectors.{name}")
+
+        # Host shared with sibling collector instances, if any. Consulted per
+        # sub-request in `_retry_single`; None disables the shared breaker.
+        self.host_breaker_key = host_breaker_key
 
         # Metrics tracking
         self._metrics_history: List[CollectionMetrics] = []
@@ -495,6 +507,7 @@ class BaseCollector(ABC):
         *args,
         max_attempts: int = 3,
         initial_delay: float = 2.0,
+        non_host_exceptions: tuple = (),
         **kwargs
     ) -> Any:
         """
@@ -510,23 +523,73 @@ class BaseCollector(ABC):
             *args: Positional arguments for func
             max_attempts: Number of retry attempts
             initial_delay: Initial backoff delay in seconds
+            non_host_exceptions: Exception classes meaning "the source
+                answered correctly and simply has no data for this window"
+                (e.g. entsoe-py's NoMatchingDataError). Treated exactly like
+                NonRetryableError: stop immediately, and never count toward
+                the shared host breaker. Without this a routinely-empty zone
+                would look identical to a dead host — see
+                `collectors/_entsoe_shared.ENTSOE_BENIGN_EXCEPTIONS`.
             **kwargs: Keyword arguments for func
 
         Returns:
-            Result from func, or None if all attempts fail
+            Result from func, or None if all attempts fail, or None without
+            attempting anything if this collector shares a host whose breaker
+            is currently open (issue #52).
         """
         import random
 
+        breaker = (
+            get_host_breaker(self.host_breaker_key)
+            if self.host_breaker_key else None
+        )
+
+        # A permanent 4xx for one query says nothing about the host's health,
+        # so it must not count toward the shared breaker. Track whether any
+        # attempt failed for a reason that DOES implicate the host.
+        host_failure_seen = False
         last_exception = None
+        suppressed = False
+
         for attempt in range(1, max_attempts + 1):
+            if breaker is not None and not breaker.allow():
+                suppressed = True
+                self.logger.warning(
+                    f"Skipping sub-request: shared circuit breaker for "
+                    f"{self.host_breaker_key} is open. This item will be "
+                    "reported as undelivered."
+                )
+                # `break`, not `return`: a probe that failed on attempt 1 and
+                # is refused on attempt 2 must still reach `record_failure`
+                # below, or the failed-probe branch never runs.
+                break
             try:
                 if asyncio.iscoroutinefunction(func):
-                    return await func(*args, **kwargs)
+                    result = await func(*args, **kwargs)
                 else:
                     loop = asyncio.get_running_loop()
-                    return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
+                    result = await loop.run_in_executor(None, lambda: func(*args, **kwargs))
+                if breaker is not None:
+                    breaker.record_success()
+                return result
+            except (NonRetryableError,) + tuple(non_host_exceptions) as e:
+                # Permanent for THIS request and not a statement about the
+                # host: an empty publication window (UpstreamNoDataError, or a
+                # source-specific equivalent named in non_host_exceptions) or a
+                # 4xx classified by `_http_classifier`. Stop immediately rather
+                # than burning the remaining attempts — the same bail-out
+                # `_retry_with_backoff` makes (#25) — and leave the shared host
+                # breaker untouched, or a healthy host with a few empty zones
+                # would trip it (#52 review).
+                last_exception = e
+                self.logger.info(
+                    f"Sub-request stopped (permanent, not retrying): "
+                    f"{type(e).__name__}: {e}"
+                )
+                break
             except Exception as e:
                 last_exception = e
+                host_failure_seen = True
                 if attempt < max_attempts:
                     delay = min(initial_delay * (2 ** (attempt - 1)), 30.0)
                     delay *= (0.5 + random.random() * 0.5)
@@ -536,10 +599,18 @@ class BaseCollector(ABC):
                     )
                     await asyncio.sleep(delay)
 
-        self.logger.warning(
-            f"All {max_attempts} attempts failed: {type(last_exception).__name__}: "
-            f"{last_exception}"
-        )
+        # One exhausted sub-request is one failure for the shared breaker —
+        # not one per HTTP attempt. See `collectors/_host_breaker.py`. A
+        # sub-request suppressed before any attempt teaches us nothing about
+        # the host and is deliberately not recorded.
+        if breaker is not None and host_failure_seen:
+            breaker.record_failure()
+
+        if not suppressed:
+            self.logger.warning(
+                f"All {max_attempts} attempts failed: {type(last_exception).__name__}: "
+                f"{last_exception}"
+            )
         return None
 
     def _check_circuit_breaker(self) -> bool:

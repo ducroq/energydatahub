@@ -114,6 +114,7 @@ from collectors import (
     RetryConfig
 )
 from collectors.openmeteo_offshore_wind import OpenMeteoOffshoreWindCollector
+from collectors._host_breaker import all_breakers
 
 # Constants
 LOGGING_FILE_NAME = 'energy_data_fetcher.log'
@@ -1242,6 +1243,23 @@ async def main() -> None:
                 f"Publishing available feeds; NL day-ahead falls back to "
                 f"EnergyZero/EPEX/Elspot where present."
             )
+
+        # Shared per-host breakers (#52). Only speaks up when one actually
+        # opened, so a healthy run stays quiet. Without this the only witness
+        # to a suppressed host is a scatter of per-sub-request warnings.
+        for host, breaker in all_breakers().items():
+            snapshot = breaker.snapshot()
+            if snapshot["open_events"]:
+                logging.warning(
+                    f"Shared host breaker for {host} opened "
+                    f"{snapshot['open_events']}x and suppressed "
+                    f"{snapshot['suppressed_requests']} sub-requests "
+                    f"(still open at exit: {snapshot['open']}). Zones missing "
+                    "from feeds on this host may be suppressed rather than "
+                    "failed — check the host before attributing this to a "
+                    "collector defect, and check the collectors before "
+                    "attributing it to the host."
+                )
 
         if missing_failed:
             logging.error(

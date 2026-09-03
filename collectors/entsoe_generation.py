@@ -46,6 +46,8 @@ from functools import partial
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
 from collectors._entsoe_shared import (
+    ENTSOE_API_HOST,
+    ENTSOE_BENIGN_EXCEPTIONS,
     published_zones,
     record_zone_delivery,
     record_zone_request,
@@ -126,7 +128,8 @@ class EntsoeGenerationCollector(BaseCollector):
             source="ENTSO-E Transparency Platform API v1.3",
             units="MW",
             retry_config=retry_config,
-            circuit_breaker_config=circuit_breaker_config
+            circuit_breaker_config=circuit_breaker_config,
+            host_breaker_key=ENTSOE_API_HOST,
         )
         self.api_key = api_key
         self.country_codes = country_codes or ['FR']
@@ -192,7 +195,9 @@ class EntsoeGenerationCollector(BaseCollector):
                     psr_type=None  # Get all types
                 )
 
-                actual_df = await self._retry_single(query_func)
+                actual_df = await self._retry_single(
+                    query_func, non_host_exceptions=ENTSOE_BENIGN_EXCEPTIONS
+                )
 
                 if actual_df is not None and not actual_df.empty:
                     # ENTSO-E may return Series or DataFrame depending on query
@@ -224,7 +229,9 @@ class EntsoeGenerationCollector(BaseCollector):
                     end=end_timestamp
                 )
 
-                forecast_df = await self._retry_single(query_func)
+                forecast_df = await self._retry_single(
+                    query_func, non_host_exceptions=ENTSOE_BENIGN_EXCEPTIONS
+                )
 
                 if forecast_df is not None and not forecast_df.empty:
                     # ENTSO-E may return Series or DataFrame depending on country/query

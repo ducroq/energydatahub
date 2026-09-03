@@ -43,6 +43,7 @@ from entsoe import EntsoePandasClient
 from functools import partial
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
+from collectors._entsoe_shared import ENTSOE_API_HOST, ENTSOE_BENIGN_EXCEPTIONS
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 
@@ -101,7 +102,8 @@ class EntsoeFlowsCollector(BaseCollector):
             source="ENTSO-E Transparency Platform API v1.3",
             units="MW",
             retry_config=retry_config,
-            circuit_breaker_config=circuit_breaker_config
+            circuit_breaker_config=circuit_breaker_config,
+            host_breaker_key=ENTSOE_API_HOST,
         )
         self.api_key = api_key
         self.borders = borders or self.NL_BORDERS
@@ -153,7 +155,9 @@ class EntsoeFlowsCollector(BaseCollector):
                 end=end_timestamp
             )
 
-            data = await self._retry_single(query_func)
+            data = await self._retry_single(
+                query_func, non_host_exceptions=ENTSOE_BENIGN_EXCEPTIONS
+            )
 
             if data is not None and not data.empty:
                 results[border_name] = data

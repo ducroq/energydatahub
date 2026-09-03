@@ -14,7 +14,7 @@ Automated energy market data collection platform for electricity price predictio
 | When | Read |
 |------|------|
 | Starting any session | Run `/update-drift` — finds every framework stamp, lists the intervening releases, and triages each as adopt / decline-with-reason / not-applicable / already-in-force. It stops before editing anything normative; adopting is your call. (Was a manual CHANGELOG comparison until v1.18.0 made it a skill.) |
-| Adding a new collector | `collectors/base.py` — BaseCollector pattern, `collectors/entsoe_generation.py` — good example, `collectors/entsoe_hydro.py` — minimal example. Also see `collectors/_http_classifier.py` for the HTTP-status bail-out pattern (raise_if_permanent) — use it from `_fetch_raw_data` to skip retries on permanent client errors (422/400/401/403/404). |
+| Adding a new collector | `collectors/base.py` — BaseCollector pattern, `collectors/entsoe_generation.py` — good example, `collectors/entsoe_hydro.py` — minimal example. Also see `collectors/_http_classifier.py` for the HTTP-status bail-out pattern (raise_if_permanent) — use it from `_fetch_raw_data` to skip retries on permanent client errors (422/400/401/403/404). **If the host is already hit by another collector, pass `host_breaker_key`** so they share one circuit breaker (`collectors/_host_breaker.py`, #52) — per-instance breakers cannot see a host-wide outage. |
 | Changing data output format | `utils/data_types.py` — EnhancedDataSet/CombinedDataSet, `utils/schema_registry.py` — versioning + migration chain. **Any shape change requires bumping `CURRENT_SCHEMA_VERSION` + adding a `_migrate_X_to_Y` function + a SCHEMA_CHANGELOG entry**. The CI tripwire (`scripts/detect_schema_drift.py`) enforces this. |
 | Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (fail-mode since 2026-06-10; auto-classifies data-volatile feeds from committed history since 2026-06-14). Actions are SHA-pinned + Dependabot-managed (`.github/dependabot.yml`). Owns the GitHub Pages deploy (source = "GitHub Actions"): a `deploy` job runs `actions/deploy-pages` with a 3-attempt retry for transient GitHub-side deploy faults — the auto `pages-build-deployment` workflow no longer runs (see `docs/CI_CD_SETUP.md`). |
 | Working with encryption/publish | `utils/secure_data_handler.py`, `docs/CI_CD_SETUP.md` |
@@ -53,6 +53,22 @@ collectors/
                              # `_add_quality_issue()` hook + auto-reset in collect() +
                              # auto-deepcopy injection of metadata['collector_quality_issues']
                              # (refactoring H1, 4c59378). Use the hook — don't roll your own.
+                             # `host_breaker_key` (opt-in) shares one circuit breaker across
+                             # every instance hitting a host; `_retry_single` consults it and
+                             # takes `non_host_exceptions` for "answered fine, no rows" (#52).
+  _host_breaker.py           # PROCESS-WIDE circuit breaker keyed by HOST, shared across
+                             # collector instances (#52). BaseCollector's own breaker is
+                             # per-INSTANCE and consulted once per collect(), so it cannot
+                             # see a host-wide outage: 8 ENTSO-E collectors hit one host and
+                             # none ever reached the threshold (2026-08-31: ~295 requests
+                             # into an API 503-ing every one). Counts EXHAUSTED sub-requests,
+                             # not HTTP attempts; any success closes it; empty-window and
+                             # permanent-4xx errors never count (a healthy host with unpublished
+                             # cable borders would otherwise trip it). One probe per 60s
+                             # cooldown. Terminal-for-the-run for the six zone/border
+                             # collectors (single gather, no retry round); the two price
+                             # collectors consult it inline and DO get 3 rounds 300s apart,
+                             # so the critical feed keeps its recovery path.
   _http_classifier.py        # Shared HTTP status classifier (raise_if_permanent) for
                              # 422/400/401/403/404 → NonRetryableError. Used by tennet.py;
                              # available for adoption by any collector that hits 4xx cascades.
@@ -203,6 +219,7 @@ memory/                      # Layered agent memory (tracked). MEMORY.md index, 
 |------|-----------|
 | `data_fetcher.py` | Main orchestrator — all collector wiring, save logic, shape-signature sidecar emission |
 | `collectors/base.py` | BaseCollector ABC with retry/circuit breaker + `NonRetryableError` |
+| `collectors/_host_breaker.py` | Process-wide per-host circuit breaker (#52) — pass `host_breaker_key` when a host already has another collector |
 | `collectors/_http_classifier.py` | Shared HTTP status classifier (`raise_if_permanent`) — adopt this when adding a new API collector |
 | `collectors/__init__.py` | All collector exports |
 | `utils/data_types.py` | EnhancedDataSet / CombinedDataSet classes (canonical envelope since v2.2) |

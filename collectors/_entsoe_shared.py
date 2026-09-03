@@ -98,10 +98,55 @@ from __future__ import annotations
 
 from typing import Any, Iterable, List, Mapping, Optional
 
+from entsoe.exceptions import NoMatchingDataError
+
 # Check name for the structured signal. A constant because two call sites
 # filter on it to stay idempotent — a bare literal there would silently stop
 # matching if this were ever renamed.
 ZONE_COMPLETENESS_CHECK = 'zone_completeness'
+
+# The host behind every ENTSO-E collector. Passed as `host_breaker_key` so all
+# eight instances share one circuit breaker instead of eight blind ones (#52) —
+# see `collectors/_host_breaker.py`. A constant because the sharing is the whole
+# point: two collectors spelling this differently would silently get separate
+# breakers and reintroduce the bug.
+#
+# NOTE ON SCOPE: this constant and `ENTSOE_BENIGN_EXCEPTIONS` below are used by ALL six
+# ENTSO-E collector modules, including `entsoe.py` and `entsoe_flows.py`, which
+# are not country-keyed and are therefore outside the zone-delivery scope this
+# module's docstring describes. The zone-delivery helpers keep that narrower
+# scope; these two do not.
+#
+# It is a label for breaker-sharing, not derived routing: entsoe-py reads
+# `ENTSOE_ENDPOINT_URL` from the environment, so overriding that would not
+# change this string. Fine for a breaker key, not authoritative for routing.
+ENTSOE_API_HOST = 'web-api.tp.entsoe.eu'
+
+
+# Exceptions that mean "the platform answered correctly and simply has no rows
+# for this window" — the OPPOSITE of a host failure. Passed to
+# `_retry_single(non_host_exceptions=...)` by every per-zone/per-border call
+# site so they neither burn retries nor feed the shared host breaker (#52).
+#
+# Why this is a tuple of classes rather than a wrapper around the query: the
+# call sites pass a `functools.partial`, and callers (including the
+# zone-delivery tests) introspect its `.keywords` to tell which zone is being
+# fetched. Wrapping the callable destroys that; passing exception classes
+# leaves the partial intact.
+#
+# Why it matters: several of these zones are routinely empty — the NL cable
+# borders (`NL↔GB`, `NL↔NO_2`, `NL↔DK_1`) are frequently unpublished, and
+# `NL→GB` is already absent from every record of the current publish. Left
+# unclassified, a handful of routinely-empty borders would exhaust their
+# retries, each count as a host failure, and open the shared breaker on a
+# perfectly healthy host — suppressing every remaining ENTSO-E request in the
+# process. That was the blocker the #52 review caught before it shipped.
+#
+# `entsoe.py:_fetch_raw_data` has translated this to `UpstreamNoDataError`
+# since #38 for the whole-collector case; this is the per-zone analogue, minus
+# the translation, because a single empty zone must drop that zone and let the
+# others through rather than failing the collector.
+ENTSOE_BENIGN_EXCEPTIONS = (NoMatchingDataError,)
 
 # Distinct from EntsoeHydroCollector's pre-existing 'completeness_per_zone',
 # which flags a zone that IS present but under-populated (half-dark). This one

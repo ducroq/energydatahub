@@ -47,6 +47,8 @@ from functools import partial
 
 from collectors.base import BaseCollector, RetryConfig, CircuitBreakerConfig
 from collectors._entsoe_shared import (
+    ENTSOE_API_HOST,
+    ENTSOE_BENIGN_EXCEPTIONS,
     drop_issues,
     published_zones,
     record_zone_delivery,
@@ -101,7 +103,8 @@ class EntsoeLoadCollector(BaseCollector):
             source="ENTSO-E Transparency Platform API v1.3",
             units="MW",
             retry_config=retry_config,
-            circuit_breaker_config=circuit_breaker_config
+            circuit_breaker_config=circuit_breaker_config,
+            host_breaker_key=ENTSOE_API_HOST,
         )
         self.api_key = api_key
         self.country_codes = country_codes or ['NL', 'DE_LU']
@@ -157,7 +160,9 @@ class EntsoeLoadCollector(BaseCollector):
                 end=end_timestamp
             )
 
-            forecast = await self._retry_single(query_func)
+            forecast = await self._retry_single(
+                query_func, non_host_exceptions=ENTSOE_BENIGN_EXCEPTIONS
+            )
 
             if forecast is not None and not forecast.empty:
                 country_data['forecast'] = forecast
@@ -176,7 +181,9 @@ class EntsoeLoadCollector(BaseCollector):
                     end=end_timestamp
                 )
 
-                actual = await self._retry_single(query_func)
+                actual = await self._retry_single(
+                    query_func, non_host_exceptions=ENTSOE_BENIGN_EXCEPTIONS
+                )
 
                 if actual is not None and not actual.empty:
                     country_data['actual'] = actual

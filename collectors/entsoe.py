@@ -36,6 +36,8 @@ from functools import partial
 from collectors.base import (
     BaseCollector, RetryConfig, CircuitBreakerConfig, UpstreamNoDataError
 )
+from collectors._entsoe_shared import ENTSOE_API_HOST
+from collectors._host_breaker import HostBreakerOpenError, get_host_breaker
 from utils.timezone_helpers import normalize_timestamp_to_amsterdam
 
 
@@ -61,7 +63,8 @@ class EntsoeCollector(BaseCollector):
             source="ENTSO-E Transparency Platform API v1.3",
             units="EUR/MWh",
             retry_config=retry_config,
-            circuit_breaker_config=circuit_breaker_config
+            circuit_breaker_config=circuit_breaker_config,
+            host_breaker_key=ENTSOE_API_HOST,
         )
         self.api_key = api_key
 
@@ -117,13 +120,48 @@ class EntsoeCollector(BaseCollector):
         # retry-burn), and let the orchestrator keep publishing healthy feeds
         # + fall back to the other day-ahead price sources (EnergyZero/EPEX/
         # Elspot). Root-caused during the 2026-06-30 NL+DE day-ahead outage (#38).
+        #
+        # This collector makes exactly ONE request per fetch, so it cannot use
+        # `_retry_single`'s per-sub-request breaker hook (and must not: that
+        # helper returns None on failure, which would swallow the
+        # UpstreamNoDataError below that #38's critical-downgrade depends on).
+        # The shared host breaker (#52) is therefore consulted inline. Without
+        # this the two price collectors — the only members of CRITICAL_DATASETS
+        # and the only ones the orchestrator gives retry rounds — would keep
+        # hammering a dead host while their siblings were suppressed, and their
+        # successes would never close the breaker for those siblings.
+        breaker = (
+            get_host_breaker(self.host_breaker_key)
+            if self.host_breaker_key else None
+        )
+        if breaker is not None and not breaker.allow():
+            raise HostBreakerOpenError(
+                f"Shared circuit breaker for {self.host_breaker_key} is open — "
+                f"skipping day-ahead price request for {country_code}"
+            )
+
         try:
             data = await loop.run_in_executor(None, query_func)
         except NoMatchingDataError as e:
+            # The platform answered correctly and simply has no rows. That is
+            # positive evidence the host is alive, so it CLOSES the breaker —
+            # this is often the signal that recovers the run for the siblings.
+            if breaker is not None:
+                breaker.record_success()
             raise UpstreamNoDataError(
                 f"ENTSO-E published no day-ahead prices for {country_code} "
                 f"in window {start_timestamp} .. {end_timestamp} (UTC)"
             ) from e
+        except Exception:
+            # One request per attempt, so one failure per attempt is the
+            # single-request analogue of `_retry_single`'s "one per exhausted
+            # sub-request" accounting.
+            if breaker is not None:
+                breaker.record_failure()
+            raise
+        else:
+            if breaker is not None:
+                breaker.record_success()
 
         if data is None or data.empty:
             raise UpstreamNoDataError(

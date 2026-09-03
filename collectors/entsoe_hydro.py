@@ -60,6 +60,8 @@ from collectors.base import (
     RetryConfig,
 )
 from collectors._entsoe_shared import (
+    ENTSOE_API_HOST,
+    ENTSOE_BENIGN_EXCEPTIONS,
     drop_issues,
     published_zones,
     record_zone_delivery,
@@ -128,6 +130,7 @@ class EntsoeHydroCollector(BaseCollector):
             units="MWh",
             retry_config=retry_config,
             circuit_breaker_config=circuit_breaker_config,
+            host_breaker_key=ENTSOE_API_HOST,
         )
         self.api_key = api_key
         self.country_codes = country_codes or list(self.DEFAULT_COUNTRY_CODES)
@@ -185,10 +188,14 @@ class EntsoeHydroCollector(BaseCollector):
         # Per-country: use `_retry_single` so one failed country doesn't
         # poison the whole collection. The BaseCollector-level retry still
         # wraps the outer call; this is the inner per-source backoff.
-        # NonRetryableError raised by `_retry_single` (e.g. via the HTTP
-        # classifier) propagates naturally out of this loop and up to
-        # BaseCollector's bail-out path — no explicit catch+raise needed
-        # (opus N2 dead-code removal).
+        # `_retry_single` does NOT re-raise: it catches every exception and
+        # returns None, so a per-zone failure — permanent or not — arrives here
+        # as `series is None` and skips that zone. (An earlier version of this
+        # comment claimed NonRetryableError propagates to BaseCollector's
+        # bail-out path; it never did. Corrected during the #52 review.) What
+        # a NonRetryableError or a `non_host_exceptions` member DOES change is
+        # that it stops after one attempt instead of burning all of them, and
+        # never counts toward the shared host breaker.
         results: Dict[str, pd.Series] = {}
         for code in self.country_codes:
             query_func = partial(
@@ -197,7 +204,10 @@ class EntsoeHydroCollector(BaseCollector):
                 start=start_ts,
                 end=end_ts,
             )
-            series = await self._retry_single(query_func, max_attempts=2)
+            series = await self._retry_single(
+                query_func, max_attempts=2,
+                non_host_exceptions=ENTSOE_BENIGN_EXCEPTIONS
+            )
             if series is None:
                 self.logger.warning(
                     f"{code}: query_aggregate_water_reservoirs returned None "
