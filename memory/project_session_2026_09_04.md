@@ -104,6 +104,26 @@ Three gotcha-log entries added (`2b164fc`):
   `wind_forecast` lost enforcement off two excursions in 60 runs against a
   dominant shape in the other 58.
 
+## Known limitation of the alerting — it cannot see a run that never starts
+
+The `alert` job is triggered BY a workflow run, so it covers "the run failed",
+not "the run never fired". #50's title is *"Scheduled publish silently skips
+whole days"*, and a skipped **schedule** is inside that title and outside this
+fix. GitHub drops cron schedules on repos with no recent activity (not a risk
+while the daily commit lands, but it is the classic way this happens), and a
+queue outage or a disabled workflow produces the same silence.
+
+So the alerting is a *failure* detector, not a *liveness* detector. Augur's own
+t0 hold-back — which notices the absence of a fresh vintage rather than the
+presence of a failed run — is the complementary check and must NOT be
+downgraded on the strength of this. Told them so explicitly on 2026-09-04 after
+they recorded "check the EDH issue before inferring an outage", which would be
+wrong for the never-ran case.
+
+A liveness check needs an external heartbeat: something that fires when a
+publish has NOT happened for N hours. Cannot live in this workflow, by
+construction.
+
 ## Next
 
 1. **A span/horizon check** — the missing instrument. Needs a per-source
