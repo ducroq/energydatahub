@@ -773,12 +773,24 @@ OBSERVATIONS_FILENAME = "_shape_observations.jsonl"
 OBSERVATIONS_KEEP_LINES = 150
 
 
-def observation_from_sidecar(sidecar: Dict[str, Any]) -> Dict[str, Any]:
+def observation_from_sidecar(
+    sidecar: Dict[str, Any],
+    spans: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """Reduce a full sidecar to the compact record classification needs.
 
     Drops `shape_signature` (the full nested structure, kilobytes per feed) and
     keeps only the hash — volatility is "did this hash change at a fixed
     schema_version", so the structure itself is never consulted.
+
+    `spans` (#51) is the per-member day count from `utils/span_signature`,
+    carried in the SAME record rather than a parallel log. The observation log
+    is already appended every run — including runs that fail the drift gate,
+    which is #43's whole point — and already committed by its own workflow step
+    before the gate, so a second log would be a second thing to wire and keep
+    in step. This project's gotcha log has two incidents of parallel registries
+    drifting apart. Omitted from the record entirely when absent, so a reader
+    can tell "no spans computed" from "spans were empty".
     """
     feeds = {}
     raw_feeds = sidecar.get("feeds")
@@ -789,24 +801,28 @@ def observation_from_sidecar(sidecar: Dict[str, Any]) -> Dict[str, Any]:
         for feed, info in raw_feeds.items():
             if isinstance(info, dict) and info.get("shape_hash") is not None:
                 feeds[feed] = info["shape_hash"]
-    return {
+    record: Dict[str, Any] = {
         "observed_at": sidecar.get("computed_at"),
         "schema_version": sidecar.get("schema_version"),
         "feeds": feeds,
     }
+    if spans:
+        record["spans"] = spans
+    return record
 
 
 def append_shape_observation(
     path: str,
     sidecar: Dict[str, Any],
     keep: int = OBSERVATIONS_KEEP_LINES,
+    spans: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Append one observation, trimming to the newest `keep` records.
 
     Never raises on a malformed existing file — a corrupt learning record must
     not take down a collection run. Returns the record written.
     """
-    record = observation_from_sidecar(sidecar)
+    record = observation_from_sidecar(sidecar, spans=spans)
     lines: List[str] = []
     try:
         with open(path) as f:

@@ -88,6 +88,11 @@ from utils.shape_signature import (
     append_shape_observation,
     OBSERVATIONS_FILENAME,
 )
+from utils.span_signature import (
+    spans_for_published_feeds,
+    evaluate_spans,
+    describe_shortfalls,
+)
 # New collector architecture imports
 from collectors import (
     EntsoeCollector,
@@ -1107,6 +1112,14 @@ async def main() -> None:
         sidecar = signatures_for_published_feeds(
             published_feeds, schema_version=CURRENT_SCHEMA_VERSION
         )
+        # #51: the span (time-extent) record, computed from the SAME payloads
+        # in the same pass. A shape signature cannot see span — 96 records and
+        # 192 records hash identically — which is how `load_forecast` shipped
+        # half its horizon for four publishes with every gate green. Per-member
+        # day counts, because that outage hit NL and DE_LU unevenly and any
+        # per-feed roll-up would have hidden the short zone behind the healthy
+        # one. See utils/span_signature.py for why days and not points.
+        spans = spans_for_published_feeds(published_feeds)
         sidecar_path = os.path.join(output_path, "_shape_signatures.json")
         with open(sidecar_path, 'w') as f:
             json.dump(sidecar, f, indent=2)
@@ -1122,12 +1135,40 @@ async def main() -> None:
         # meant a failing run taught the classifier nothing, so a transient that
         # tripped the gate would trip it again forever.
         observations_path = os.path.join(output_path, OBSERVATIONS_FILENAME)
+        # Evaluate spans BEFORE appending this run's record, so a first-ever
+        # short span cannot supply its own evidence and normalise itself. Same
+        # trap `volatile_feeds_from_observations` documents, where it was
+        # reproduced turning a genuine first break into a warning.
+        span_shortfall_list = []
         try:
-            append_shape_observation(observations_path, sidecar)
-            logging.info(f"Shape observation appended → {observations_path}")
+            span_shortfall_list = evaluate_spans(spans, observations_path)
+        except Exception as e:  # noqa: BLE001 — diagnostics must never fail a run
+            logging.warning(f"Span evaluation failed (non-fatal): {e}")
+
+        try:
+            append_shape_observation(observations_path, sidecar, spans=spans)
+            logging.info(
+                f"Shape observation appended ({len(spans)} feeds with spans) "
+                f"→ {observations_path}"
+            )
         except OSError as e:
             # Never fail a collection over the learning record.
             logging.warning(f"Could not append shape observation: {e}")
+
+        # Surface span shortfalls to the operator log and to the committed
+        # quality report. Deliberately NOT a gate: the drift tripwire's only
+        # response to a problem is withholding all 20 feeds, and a second
+        # blocking gate on top would cost more availability than the detection
+        # is worth (measured 2026-09-04, see memory/gotcha-log.md). The alert
+        # job raises a tracking issue from the CI reporter instead.
+        if span_shortfall_list:
+            logging.warning(f"SPAN SHORTFALL: {describe_shortfalls(span_shortfall_list)}")
+        span_report_path = os.path.join(output_path, "_span_shortfalls.json")
+        try:
+            with open(span_report_path, 'w') as f:
+                json.dump(span_shortfall_list, f, indent=2)
+        except OSError as e:
+            logging.warning(f"Could not write span shortfall report: {e}")
 
         # --- Data Quality Report ---
         # Run FMEA-based quality checks on all collected datasets

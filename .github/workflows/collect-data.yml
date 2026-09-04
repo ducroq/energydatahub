@@ -156,6 +156,93 @@ jobs:
         python scripts/detect_schema_drift.py \
           --previous-ref HEAD
 
+    # Span (time-extent) check (#51). NOT a gate — always exits 0, and runs
+    # `if: always()` so it still reports when the drift tripwire above has
+    # already failed the job. A feed can lose half its forecast horizon with an
+    # IDENTICAL shape hash (96 records and 192 records hash the same), which is
+    # how load_forecast shipped 1 day instead of 2 for four publishes with
+    # every gate green. This is the fourth gate in the
+    # {presence, structure, span, values} set; the other three existed.
+    #
+    # Deliberately non-blocking: the drift tripwire's only response to a
+    # problem is withholding all 20 feeds, that cost five consecutive publishes
+    # on 2026-08-31..09-03, and stacking a second blocking gate would cost more
+    # availability than this detection is worth. The alert below is the
+    # response instead.
+    - name: Span shortfall check
+      id: span
+      if: always()
+      run: python scripts/report_span_shortfall.py
+
+    # Raise a SEPARATE tracking issue from the publish-failure one. A degraded
+    # span and a failed publish are different conditions with different
+    # remedies, and one issue collecting both would make neither readable.
+    # Same dedup mechanics as the alert job: label, filtered client-side off
+    # the unfiltered list, because both `--search` and `--label` are
+    # eventually consistent and duplicated the issue on back-to-back runs
+    # (measured 2026-09-04).
+    # Only the SCHEDULED run raises the alarm; the reporter above still runs
+    # and logs on every trigger. A manual dispatch before the day-ahead auction
+    # clears (~12:00 CET) genuinely IS short on the price feeds — measured on
+    # both of 2026-09-04's dispatches, which carried entsoe at 1 day instead of
+    # 2 — so alerting on it would be TRUE and useless, and a predictable
+    # recurring false alarm is how an alarm stops being read. The scheduled run
+    # is post-auction and is the one whose span means anything.
+    - name: Alert on span shortfall
+      if: always() && github.event_name == 'schedule' && steps.span.outputs.checked == 'true' && steps.span.outputs.shortfalls != '0'
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ secrets.PAT }}
+        GH_REPO: ${{ github.repository }}
+        SPAN_LABEL: span-shortfall
+        SPAN_TITLE: 'A feed is short of its usual time span'
+        SUMMARY: ${{ steps.span.outputs.summary }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+        body=$(printf '%s\n' \
+          "One or more feeds published FEWER days than they normally carry. The shape-drift tripwire cannot see this — a feed at half its horizon hashes identically to a healthy one (#51)." \
+          "" \
+          "\`\`\`" \
+          "${SUMMARY}" \
+          "\`\`\`" \
+          "" \
+          "Run: ${RUN_URL}" \
+          "" \
+          "This is an alarm, not a gate — the publish went ahead. Check whether the upstream source has changed its publication horizon before assuming a collector bug. This issue closes automatically once every member carries its usual span again.")
+        gh label create "$SPAN_LABEL" --description "Automated: a feed is short of its usual time span (#51)" --color D93F0B 2>/dev/null || true
+        existing=$(gh issue list --state open --limit 200 --json number,labels \
+          --jq "[.[] | select(any(.labels[]; .name == env.SPAN_LABEL))] | .[0].number // empty") \
+          || { echo "::error::span alerting: could not query issues — the shortfall went unrecorded"; exit 1; }
+        if [ -n "$existing" ]; then
+          gh issue comment "$existing" --body "$body" \
+            || { echo "::error::span alerting: could not comment on #${existing}"; exit 1; }
+          echo "::warning::Span shortfall persists — commented on issue #${existing}"
+        else
+          url=$(gh issue create --title "$SPAN_TITLE" --body "$body" --label "$SPAN_LABEL") \
+            || { echo "::error::span alerting: could not open the shortfall issue"; exit 1; }
+          echo "::warning::Span shortfall — opened ${url}"
+        fi
+
+    - name: Close the span-shortfall issue on recovery
+      if: always() && steps.span.outputs.checked == 'true' && steps.span.outputs.shortfalls == '0'
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ secrets.PAT }}
+        GH_REPO: ${{ github.repository }}
+        SPAN_LABEL: span-shortfall
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+        existing=$(gh issue list --state open --limit 200 --json number,labels \
+          --jq "[.[] | select(any(.labels[]; .name == env.SPAN_LABEL))] | .[0].number // empty") \
+          || { echo "::error::span alerting: could not query issues — a stale shortfall issue may still be open"; exit 1; }
+        if [ -n "$existing" ]; then
+          gh issue close "$existing" --comment "Every member is back to its usual span — ${RUN_URL}." \
+            || { echo "::error::span alerting: could not close #${existing}"; exit 1; }
+          echo "::notice::Spans recovered; closed issue #${existing}"
+        fi
+
     - name: Prepare docs folder with only current data
       run: |
         mkdir -p docs
