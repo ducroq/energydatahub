@@ -7,6 +7,12 @@ on:
       - '*.py'
       - 'collectors/**'
       - 'utils/**'
+      # scripts/** was missing until 2026-09-04: a change to
+      # scripts/detect_schema_drift.py (the schema-drift CI tripwire) ran ZERO
+      # tests on push, despite tests/unit/test_detect_schema_drift_script.py
+      # existing. The gap only stayed hidden because edits there usually touch
+      # tests/ in the same commit.
+      - 'scripts/**'
       - 'tests/**'
       - 'requirements.txt'
       - '.github/workflows/test.yml'

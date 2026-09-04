@@ -250,3 +250,121 @@ jobs:
     #     ls -la
     #     echo "Contents of docs directory:"
     #     ls -la docs/
+
+  # Alerting (#50). The 2026-08-31..09-03 window lost five consecutive
+  # publishes and ran four days before anyone noticed: a failed scheduled run
+  # is silent unless someone opens the Actions tab, and GitHub's cron-failure
+  # email goes only to the account that last touched the workflow file — not a
+  # channel anybody here watches. (Of those five, the drift tripwire blocked
+  # three; the other two died earlier, in "Collect data". The gate was not the
+  # whole story — the missing alarm was.)
+  #
+  # `needs` BOTH jobs so this covers both failure surfaces: collect-and-publish
+  # dying at a tripwire, and the Pages deploy failing after a clean collection.
+  # A skipped deploy (which is what happens when collection fails) reads as
+  # not-'success' and is caught by the same condition.
+  #
+  # ONE tracking issue, commented per failure — never a new issue per run. An
+  # alert that files 30 issues a month is an alert nobody reads, which is the
+  # state this exists to fix, not reproduce. The issue is the durable record a
+  # run log is not: it outlives log retention, it is visible from the repo
+  # landing page, and its comment thread answers "blip or streak?" at a glance.
+  # It closes itself on the next fully successful run.
+  #
+  # GH_REPO is REQUIRED, not decoration. `gh` resolves its target repo from the
+  # git remote of the working directory and does NOT read GITHUB_REPOSITORY;
+  # this job deliberately has no actions/checkout (it needs no code), so its
+  # workspace is empty and every gh call would die with "fatal: not a git
+  # repository". Combined with continue-on-error that produced a green job that
+  # alerted nobody — an alerting feature with this project's own three-incident
+  # signature, caught in review on 2026-09-04 before it ever ran. Do not remove
+  # GH_REPO, and do not add a checkout to work around its absence.
+  #
+  # continue-on-error keeps alerting from deciding the pipeline's verdict — a
+  # failed publish must stay failed even if the alert cannot be filed. But the
+  # gh calls are explicitly wrapped to emit ::error:: on failure, because a
+  # silent alerter is indistinguishable from a healthy pipeline, which is the
+  # exact bug class above.
+  #
+  # `!cancelled()` rather than `always()`: a cancelled run leaves both results
+  # as 'cancelled', which is != 'success', so `always()` would file a false
+  # alarm every time someone hits Cancel.
+  alert:
+    needs: [collect-and-publish, deploy]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions: {}          # authenticates with the PAT; GITHUB_TOKEN unused
+    env:
+      GH_TOKEN: ${{ secrets.PAT }}
+      GH_REPO: ${{ github.repository }}
+      TITLE: 'Daily publish is failing'
+      LABEL: publish-failure
+    steps:
+    - name: Open or update the publish-failure issue
+      if: needs.collect-and-publish.result != 'success' || needs.deploy.result != 'success'
+      continue-on-error: true
+      env:
+        COLLECT_RESULT: ${{ needs.collect-and-publish.result }}
+        DEPLOY_RESULT: ${{ needs.deploy.result }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+        body=$(printf '%s\n' \
+          "Publish did not complete — \`docs/\` was not updated, so downstream consumers (Augur) are reading a stale vintage." \
+          "" \
+          "| | |" \
+          "|---|---|" \
+          "| Run | ${RUN_URL} |" \
+          "| Trigger | ${GITHUB_EVENT_NAME} |" \
+          "| collect-and-publish | ${COLLECT_RESULT} |" \
+          "| deploy | ${DEPLOY_RESULT} |" \
+          "" \
+          "This issue closes automatically on the next fully successful run.")
+        # Dedup by label, filtered CLIENT-SIDE off the unfiltered issue list.
+        # Both server-side filters were measured non-viable on 2026-09-04:
+        # `--search "... in:title"` goes through GitHub's search index and
+        # `--label` through its own filter, and BOTH lagged an issue that had
+        # just been created (~4s). The unfiltered list returned it immediately,
+        # twice. Since consecutive failing runs are normally 24h apart the lag
+        # is usually invisible — but a re-run or a manual dispatch straight
+        # after a failed schedule is exactly the back-to-back case, and it
+        # would open a duplicate issue every time.
+        #
+        # Label rather than title so renaming the issue does not break dedup;
+        # --limit 200 against ~21 open issues has ample headroom.
+        #
+        # Worth knowing HOW this was found: five review passes read the
+        # --search version, one of them explicitly "verified" the query, and
+        # none caught it — they all tested against an already-indexed issue.
+        # A six-line smoke test that created one first caught it on the first
+        # run. For anything that talks to an external API, run it.
+        gh label create "$LABEL" --description "Automated: daily publish is failing (#50)" \
+          --color B60205 2>/dev/null || true
+        existing=$(gh issue list --state open --limit 200 --json number,labels \
+          --jq "[.[] | select(any(.labels[]; .name == env.LABEL))] | .[0].number // empty") \
+          || { echo "::error::alerting: could not query issues — the publish-failure alert did NOT fire"; exit 1; }
+        if [ -n "$existing" ]; then
+          gh issue comment "$existing" --body "$body" \
+            || { echo "::error::alerting: could not comment on issue #${existing} — this failure went unrecorded"; exit 1; }
+          echo "::warning::Publish still failing — commented on issue #${existing}"
+        else
+          url=$(gh issue create --title "$TITLE" --body "$body" --label "$LABEL") \
+            || { echo "::error::alerting: could not open the publish-failure issue — this failure went unrecorded"; exit 1; }
+          echo "::warning::Publish failing — opened ${url}"
+        fi
+
+    - name: Close the publish-failure issue on recovery
+      if: needs.collect-and-publish.result == 'success' && needs.deploy.result == 'success'
+      continue-on-error: true
+      env:
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+        existing=$(gh issue list --state open --limit 200 --json number,labels \
+          --jq "[.[] | select(any(.labels[]; .name == env.LABEL))] | .[0].number // empty") \
+          || { echo "::error::alerting: could not query issues — a stale publish-failure issue may still be open"; exit 1; }
+        if [ -n "$existing" ]; then
+          gh issue close "$existing" --comment "Recovered — publish succeeded in ${RUN_URL}." \
+            || { echo "::error::alerting: could not close issue #${existing} — it will now collect comments from unrelated future failures"; exit 1; }
+          echo "::notice::Publish recovered; closed issue #${existing}"
+        fi
