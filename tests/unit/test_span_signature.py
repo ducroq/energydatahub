@@ -181,11 +181,16 @@ class TestIssue51Regression:
 
         degraded = spans_for_published_feeds(
             {'load_forecast.json': _load_payload(['2026-08-28'])})
-        shortfalls = evaluate_spans(degraded, str(log))
+        result = evaluate_spans(degraded, str(log))
+        shortfalls = result['shortfalls']
 
         assert {(s['member'], s['observed'], s['expected']) for s in shortfalls} == \
             {('NL', 1, 2), ('DE_LU', 1, 2)}
         assert 'load_forecast.json:NL 1d of 2d' in describe_shortfalls(shortfalls)
+        # The denominator must say these were genuinely judged, not that the
+        # check had no history and reached no conclusion.
+        assert result['members_with_expectation'] == 2
+        assert result['members_checked'] == 2
 
     def test_shape_hash_really_is_blind_to_this(self):
         """Pin the premise, so this module's reason for existing stays true.
@@ -214,13 +219,17 @@ class TestIssue51Regression:
                                  'spans': {'load_forecast.json': {'NL': 1}}}) + '\n')
 
         current = {'load_forecast.json': {'NL': 1}}
-        assert evaluate_spans(current, str(log), observed_at='today')
+        assert evaluate_spans(current, str(log), observed_at='today')['shortfalls']
         # Without the exclusion the single short record still loses to the mode
         # here, but the caller must pass it — assert the parameter is honoured.
-        assert evaluate_spans(current, str(log), observed_at=None)
+        assert evaluate_spans(current, str(log), observed_at=None)['shortfalls']
 
     def test_missing_log_is_silent_not_crashing(self, tmp_path):
-        assert evaluate_spans({'a.json': {'x': 1}}, str(tmp_path / 'nope.jsonl')) == []
+        result = evaluate_spans({'a.json': {'x': 1}}, str(tmp_path / 'nope.jsonl'))
+        assert result['shortfalls'] == []
+        # And it must be distinguishable from a verified-clean run.
+        assert result['members_with_expectation'] == 0
+        assert result['members_checked'] == 1
 
     def test_malformed_log_lines_are_skipped(self, tmp_path):
         log = tmp_path / 'obs.jsonl'
@@ -229,7 +238,7 @@ class TestIssue51Regression:
                               'spans': {'a.json': {'x': 4}}})
                   for i in range(MIN_SPAN_OBSERVATIONS)]
         log.write_text('\n'.join(lines) + '\n')
-        assert evaluate_spans({'a.json': {'x': 1}}, str(log)) == \
+        assert evaluate_spans({'a.json': {'x': 1}}, str(log))['shortfalls'] == \
             [{'feed': 'a.json', 'member': 'x', 'observed': 1,
               'expected': 4, 'ratio': 0.25}]
 
@@ -242,3 +251,40 @@ class TestDescribeShortfalls:
         out = describe_shortfalls([{'feed': 'calendar_features.json', 'member': '',
                                     'observed': 3, 'expected': 10, 'ratio': 0.3}])
         assert '(root) 3d of 10d' in out
+
+
+class TestNothingVerifiedIsNotClean:
+    """The denominator. `evaluate_spans` returning no shortfalls must be
+    distinguishable from it having had no history to judge against.
+
+    The first production run after the span check shipped reported "every
+    member carries its usual number of days" while ZERO members had enough
+    history — a clean-looking result that verified nothing. Same shape as this
+    project's three logged silent-no-op incidents, produced by the check
+    written to close a gap of that kind.
+    """
+
+    def test_thin_history_reports_zero_judged(self, tmp_path):
+        log = tmp_path / 'obs.jsonl'
+        log.write_text(json.dumps(
+            {'observed_at': 'only-one', 'spans': {'load_forecast.json': {'NL': 2}}}) + '\n')
+        result = evaluate_spans({'load_forecast.json': {'NL': 1}}, str(log))
+        assert result['shortfalls'] == []          # nothing could be judged
+        assert result['members_with_expectation'] == 0
+        assert result['members_checked'] == 1
+
+    def test_full_history_reports_members_judged(self, tmp_path):
+        log = tmp_path / 'obs.jsonl'
+        with log.open('w') as fh:
+            for i in range(MIN_SPAN_OBSERVATIONS):
+                fh.write(json.dumps({'observed_at': f'd{i}',
+                                     'spans': {'load_forecast.json': {'NL': 2}}}) + '\n')
+        result = evaluate_spans({'load_forecast.json': {'NL': 2}}, str(log))
+        assert result['shortfalls'] == []
+        assert result['members_with_expectation'] == 1   # genuinely verified
+
+    def test_members_checked_counts_every_member(self, tmp_path):
+        result = evaluate_spans(
+            {'a.json': {'x': 1, 'y': 2}, 'b.json': {'z': 3}},
+            str(tmp_path / 'absent.jsonl'))
+        assert result['members_checked'] == 3

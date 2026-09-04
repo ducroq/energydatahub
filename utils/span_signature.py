@@ -298,8 +298,24 @@ def evaluate_spans(
     observations_path: str,
     observed_at: Optional[str] = None,
     min_observations: int = MIN_SPAN_OBSERVATIONS,
-) -> List[Dict[str, Any]]:
-    """Convenience: load history, derive expectations, return shortfalls.
+) -> Dict[str, Any]:
+    """Load history, derive expectations, and report BOTH the shortfalls and
+    how many members could be judged at all.
+
+    Returns:
+        {"members_checked": int,           # members in the current run
+         "members_with_expectation": int,  # of those, how many have history
+         "shortfalls": [...]}              # see span_shortfalls
+
+    The denominator is not decoration. On the first run after this shipped the
+    caller reported "No span shortfalls — every member carries its usual number
+    of days" while `members_with_expectation` was ZERO: one observation existed,
+    the minimum is ten, so no member could be judged and no shortfall was
+    reachable. A clean result that cannot distinguish "all verified" from
+    "nothing verifiable" is the failure this project has logged three times
+    (GoogleWeather, validate_value_ranges, TenneT metadata) and it was
+    reproduced here within an hour of shipping the check. Callers MUST surface
+    the denominator; see `scripts/report_span_shortfall.py`.
 
     `observed_at` MUST be the current run's own `observed_at` when the current
     record has already been appended to the log, so a member's first-ever short
@@ -311,4 +327,19 @@ def evaluate_spans(
     if observed_at is not None:
         records = [r for r in records if r.get('observed_at') != observed_at]
     expected = expected_spans(records, min_observations=min_observations)
-    return span_shortfalls(current, expected)
+
+    members_checked = sum(len(m) for m in (current or {}).values()
+                          if isinstance(m, dict))
+    members_with_expectation = sum(
+        1
+        for feed, members in expected.items()
+        for member in members
+        if isinstance((current or {}).get(feed), dict)
+        and member in current[feed]
+    )
+    return {
+        'members_checked': members_checked,
+        'members_with_expectation': members_with_expectation,
+        'min_observations': min_observations,
+        'shortfalls': span_shortfalls(current, expected),
+    }

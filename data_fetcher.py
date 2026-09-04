@@ -1139,11 +1139,13 @@ async def main() -> None:
         # short span cannot supply its own evidence and normalise itself. Same
         # trap `volatile_feeds_from_observations` documents, where it was
         # reproduced turning a genuine first break into a warning.
-        span_shortfall_list = []
+        span_result = {'members_checked': 0, 'members_with_expectation': 0,
+                       'shortfalls': []}
         try:
-            span_shortfall_list = evaluate_spans(spans, observations_path)
+            span_result = evaluate_spans(spans, observations_path)
         except Exception as e:  # noqa: BLE001 — diagnostics must never fail a run
             logging.warning(f"Span evaluation failed (non-fatal): {e}")
+        span_shortfall_list = span_result.get('shortfalls', [])
 
         try:
             append_shape_observation(observations_path, sidecar, spans=spans)
@@ -1163,10 +1165,22 @@ async def main() -> None:
         # job raises a tracking issue from the CI reporter instead.
         if span_shortfall_list:
             logging.warning(f"SPAN SHORTFALL: {describe_shortfalls(span_shortfall_list)}")
+        else:
+            # The DENOMINATOR, not just the verdict. On the first run after the
+            # span check shipped, the CI reporter said "every member carries its
+            # usual number of days" while ZERO members had enough history to be
+            # judged — a clean result that could not be told apart from
+            # "nothing was verifiable". Log which it is.
+            logging.info(
+                f"Span check: {span_result.get('members_with_expectation', 0)} of "
+                f"{span_result.get('members_checked', 0)} members have "
+                f">={span_result.get('min_observations', '?')} prior observations "
+                "and were judged; no shortfalls"
+            )
         span_report_path = os.path.join(output_path, "_span_shortfalls.json")
         try:
             with open(span_report_path, 'w') as f:
-                json.dump(span_shortfall_list, f, indent=2)
+                json.dump(span_result, f, indent=2)
         except OSError as e:
             logging.warning(f"Could not write span shortfall report: {e}")
 

@@ -81,23 +81,58 @@ def main() -> int:
         _set_output("checked", "false")
         return 0
 
-    if not isinstance(shortfalls, list):
-        print(f"::warning::Span report is not a list — spans were NOT checked.")
+    # Accept both the current object form and the bare list written by the very
+    # first version of this feature, so the run that straddles the change does
+    # not report "unreadable".
+    if isinstance(shortfalls, list):
+        report = {"shortfalls": shortfalls, "members_checked": None,
+                  "members_with_expectation": None}
+    elif isinstance(shortfalls, dict):
+        report = shortfalls
+    else:
+        print("::warning::Span report is neither an object nor a list — spans "
+              "were NOT checked this run.")
         _set_output("shortfalls", "0")
         _set_output("checked", "false")
         return 0
 
-    _set_output("checked", "true")
-    _set_output("shortfalls", str(len(shortfalls)))
+    rows = report.get("shortfalls") or []
+    judged = report.get("members_with_expectation")
+    total = report.get("members_checked")
+    floor = report.get("min_observations", "the minimum")
 
-    if not shortfalls:
-        print("::notice::No span shortfalls — every member carries its usual "
-              "number of days.")
+    _set_output("shortfalls", str(len(rows)))
+
+    # THREE states, not two. The first run after this feature shipped printed
+    # "every member carries its usual number of days" while ZERO members had
+    # enough history to be judged — a clean-looking result that had verified
+    # nothing. That is this project's own three-incident pattern (GoogleWeather,
+    # validate_value_ranges, TenneT metadata), reproduced by the very check
+    # written to close a gap of the same kind. `checked` is false whenever
+    # nothing was actually judged, so the workflow cannot treat it as a pass.
+    if not rows and judged == 0:
+        print(f"::warning::Spans were NOT verified: 0 of {total} members have "
+              f">={floor} prior observations yet, so no expectation could be "
+              "derived and no shortfall was reachable. This is not a clean "
+              "result — it becomes one once history accumulates.")
+        _set_output("checked", "false")
+        return 0
+
+    _set_output("checked", "true")
+
+    if not rows:
+        if judged is None:
+            print("::notice::No span shortfalls (legacy report format — the "
+                  "judged-member count is unavailable).")
+        else:
+            print(f"::notice::No span shortfalls — {judged} of {total} members "
+                  "were judged against their history and all carry their usual "
+                  "number of days.")
         return 0
 
     # Worst first; data_fetcher already sorted by ratio, but do not rely on the
     # producer's ordering for an operator-facing message.
-    rows = sorted(shortfalls, key=lambda s: s.get("ratio", 1))
+    rows = sorted(rows, key=lambda s: s.get("ratio", 1))
     print(f"::error::{len(rows)} member(s) are short of their usual span. A feed "
           "can lose half its forecast horizon with an IDENTICAL shape hash, so "
           "the drift tripwire cannot see this (#51).")
