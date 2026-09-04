@@ -16,8 +16,9 @@ Automated energy market data collection platform for electricity price predictio
 | Starting any session | Run `/update-drift` — finds every framework stamp, lists the intervening releases, and triages each as adopt / decline-with-reason / not-applicable / already-in-force. It stops before editing anything normative; adopting is your call. (Was a manual CHANGELOG comparison until v1.18.0 made it a skill.) |
 | Adding a new collector | `collectors/base.py` — BaseCollector pattern, `collectors/entsoe_generation.py` — good example, `collectors/entsoe_hydro.py` — minimal example. Also see `collectors/_http_classifier.py` for the HTTP-status bail-out pattern (raise_if_permanent) — use it from `_fetch_raw_data` to skip retries on permanent client errors (422/400/401/403/404). **If the host is already hit by another collector, pass `host_breaker_key`** so they share one circuit breaker (`collectors/_host_breaker.py`, #52) — per-instance breakers cannot see a host-wide outage. |
 | Changing data output format | `utils/data_types.py` — EnhancedDataSet/CombinedDataSet, `utils/schema_registry.py` — versioning + migration chain. **Any shape change requires bumping `CURRENT_SCHEMA_VERSION` + adding a `_migrate_X_to_Y` function + a SCHEMA_CHANGELOG entry**. The CI tripwire (`scripts/detect_schema_drift.py`) enforces this. |
-| Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (fail-mode since 2026-06-10; auto-classifies data-volatile feeds from committed history since 2026-06-14). Actions are SHA-pinned + Dependabot-managed (`.github/dependabot.yml`). Owns the GitHub Pages deploy (source = "GitHub Actions"): a `deploy` job runs `actions/deploy-pages` with a 3-attempt retry for transient GitHub-side deploy faults — the auto `pages-build-deployment` workflow no longer runs (see `docs/CI_CD_SETUP.md`). |
+| Modifying CI/CD pipeline | `.github/workflows/collect-data.yml` — daily collection workflow. Includes completeness tripwire + schema-drift tripwire (fail-mode since 2026-06-10; auto-classifies data-volatile feeds from committed history since 2026-06-14), the **span check** (`scripts/report_span_shortfall.py`, #53 — reports and alerts, never blocks), and an **`alert` job** that opens one tracking issue when a publish fails and closes it on recovery (#50). **The drift tripwire runs BEFORE the publish step, so its exit 1 costs a whole day's publish including every healthy feed** — measured, not theoretical: 2026-08-31..09-03 lost five consecutive publishes. **Do not add a second blocking gate.** A time box on the drift gate was designed, reviewed and abandoned on 2026-09-04 (its only reachable domain was `CRITICAL_FEEDS` ∪ `MEMBER_MAPPED_FEEDS`, and it would have relented on zero of the five runs); tightening derived volatility to a 90% share floor was measured at ~1 blocked publish every 6 days and declined. New detection lands as warn + alert. Actions are SHA-pinned + Dependabot-managed (`.github/dependabot.yml`). Owns the GitHub Pages deploy (source = "GitHub Actions"): a `deploy` job runs `actions/deploy-pages` with a 3-attempt retry for transient GitHub-side deploy faults — the auto `pages-build-deployment` workflow no longer runs (see `docs/CI_CD_SETUP.md`). |
 | Working with encryption/publish | `utils/secure_data_handler.py`, `docs/CI_CD_SETUP.md` |
+| Adding or changing a gate | **Name which of {presence, structure, span, values} it covers, and never let a registry of "important" feeds imply the rest.** `utils/data_quality.py` = presence + values, `utils/shape_signature.py` = structure, `utils/span_signature.py` = span (#53). The taxonomy exists because three gates read like four for months: `load_forecast` halved its horizon for four publishes with every gate green, since 96 records and 192 records hash *identically*. Decide detection and blocking separately — see the CI/CD row. |
 | Debugging data quality issues | `utils/data_quality.py` — FMEA validation. Per-dataset config via `get_dataset_validation_config()`. Missing-dataset severity via `DATASET_MISSING_SEVERITY` dict (single source of truth). A critical feed that is *upstream-empty* (source healthy, published no data for the window — `UpstreamNoDataError`) is downgraded `critical`→`warning` so the run still publishes the healthy feeds; the orchestrator passes `validate_pipeline(upstream_empty=…)` and only `SystemExit(1)`s on a genuine collector failure. A *sustained* gap (≥`UPSTREAM_EMPTY_ESCALATION_RUNS`=3 consecutive runs, tracked in the committed `data/_upstream_empty_streak.json`) escalates back to a hard failure so it can't degrade silently forever (#38). Separately, a *present-but-empty* dataset (collector returned a truthy `EnhancedDataSet` with `data={}` — e.g. an all-locations Open-Meteo timeout) would otherwise hard-fail the completeness gate (`validate_completeness` → `CRITICAL` on 0 points) and abort the whole publish. `data_fetcher` coerces such a feed to `None` so it routes through the (non-blocking) missing path instead — treating present-empty as absent. Applies to all six Open-Meteo feeds in `PRESENT_EMPTY_GRACE_FEEDS` (generalised from buurt-only on 2026-08-08, #42) and is **time-boxed**: after `UPSTREAM_EMPTY_ESCALATION_RUNS` consecutive empty runs the coercion stops and the gate fails the publish loudly, so a sustained outage cannot degrade silently. Streaks share `data/_upstream_empty_streak.json` with the #38 counters (disjoint keys). |
 | Adding a published dataset | `memory/project_published_dataset_checklist.md` — 8-touchpoint checklist across `data_fetcher.py`, `utils/data_quality.py`, and `.github/workflows/collect-data.yml`. **Missing one silently breaks publishing** (BLOCKER on c40a53b). Read before wiring a new collector into the publish set. |
 | Stuck or debugging something weird | `memory/gotcha-log.md` — problem-fix archive |
@@ -121,6 +122,19 @@ utils/
                              # depth-walking _count_data_points / _extract_timestamp_keys (#32)
   schema_registry.py         # Version detection + migration (v1.0 → v2.0 → v2.1 → v2.2 → v2.3 → v2.4).
                              # stamp_metadata embeds the version's changelog slice (Layer B).
+  span_signature.py          # SPAN (time-extent) fingerprint — the fourth gate (#53).
+                             # Per-member distinct-DAY counts: point counts are noisy by
+                             # construction (ned_production carries forecast at 95 points
+                             # and actual at 39 in the same day), and the #51 outage hit
+                             # NL and DE_LU unevenly so any per-feed roll-up hides the
+                             # short member. Expectations derived from
+                             # data/_shape_observations.jsonl with a minimum-observations
+                             # floor (10) and a modal-agreement floor (0.6, measured over
+                             # 30 vintages). Reports a SHORTFALL only — market_history
+                             # grows every run, so "the span changed" would fire forever.
+                             # evaluate_spans returns the DENOMINATOR beside the verdict;
+                             # a run with no history reports "not verified", never
+                             # "clean" — that exact lie shipped for one run on 2026-09-04.
   shape_signature.py         # Structural fingerprint for schema-drift detection (#27).
                              # Also the append-only observation log (#43):
                              # append_shape_observation / volatile_feeds_from_observations.
@@ -162,6 +176,18 @@ scripts/
   sample_observed_ranges.py  # One-shot diagnostic: sample data/ files per feed, compute observed
                              # min/max per field. Used to derive #28's SOLAR_FIELD_RANGES /
                              # LOAD_FIELD_RANGES. Re-run when adding a new per-field range bound.
+  report_span_shortfall.py   # CI reporter for the span check (#53). ALWAYS exits 0 — an
+                             # alarm, not a gate. Distinguishes THREE states: not-verified
+                             # (no history yet), verified-clean (M of N members judged),
+                             # and shortfall. Sets `checked`/`shortfalls` step outputs; the
+                             # workflow alert gates on checked=='true'.
+  smoketest_alerting.sh      # Walks all six links of the alerting path against the REAL
+                             # repo, then cleans up. Exists because two defects in the
+                             # alert job survived a five-lens review and running it caught
+                             # both: `gh` resolves its repo from the git remote (not
+                             # GITHUB_REPOSITORY) so GH_REPO is required, and GitHub's
+                             # search index is eventually consistent so title-search dedup
+                             # duplicated the issue. Accepts LABEL= to test either alarm.
   probe_tennet_windows.py    # One-shot diagnostic: probe TenneT API across windows to identify
                              # endpoint availability. Used for #25 root-cause analysis.
   probe_openmeteo_concurrency.py  # One-shot diagnostic (H10/#58): replays the production
@@ -174,7 +200,10 @@ data/                        # Timestamped output (yymmdd_HHMMSS_*.json) + curre
                              # _shape_observations.jsonl learning record (#43, committed
                              # by its own workflow step BEFORE the drift gate so a failing
                              # run still teaches the classifier) +
-                             # _upstream_empty_streak.json (#38 + #42 counters)
+                             # _upstream_empty_streak.json (#38 + #42 counters) +
+                             # _span_shortfalls.json (#53: members_checked,
+                             # members_with_expectation, shortfalls — the denominator is
+                             # load-bearing, see report_span_shortfall.py)
 docs/                        # GitHub Pages PUBLISH ROOT — the whole directory is uploaded as
                              # the Pages artifact and served verbatim. Encrypted JSON +
                              # project documentation. Do not put internal notes here.
@@ -216,6 +245,12 @@ memory/                      # Layered agent memory (tracked). MEMORY.md index, 
                              # 3-attempt retry (Pages source = "GitHub Actions", not branch;
                              # the auto pages-build-deployment workflow no longer runs).
     test.yml                 # PR/push test pipeline (path-filtered, Python 3.12 only)
+    alerting-selfcheck.yml   # Manual-only. Runs smoketest_alerting.sh with secrets.PAT,
+                             # because the alert job's CREATE path only runs during an
+                             # outage and needs issues-WRITE where its close path needs
+                             # only read — same secret, different permission, so a PAT
+                             # fine for every healthy day can still be unable to raise the
+                             # alarm. Run after rotating the PAT or changing the alert job.
     openmeteo-probe.yml      # Manual-only (workflow_dispatch) H10/#58 diagnostic. No schedule,
                              # no secrets, touches nothing in the publish path. Do NOT dispatch
                              # within ~30 min of 16:00 UTC — it draws on the same shared runner
@@ -233,11 +268,14 @@ memory/                      # Layered agent memory (tracked). MEMORY.md index, 
 | `collectors/__init__.py` | All collector exports |
 | `utils/data_types.py` | EnhancedDataSet / CombinedDataSet classes (canonical envelope since v2.2) |
 | `utils/schema_registry.py` | Schema versioning + migration chain (currently v2.4). `stamp_metadata` embeds changelog slice. |
-| `utils/shape_signature.py` | Structural fingerprint for the schema-drift CI tripwire |
+| `utils/shape_signature.py` | Structural fingerprint for the schema-drift CI tripwire. Cannot see SPAN — 96 and 192 records hash identically. |
+| `utils/span_signature.py` | Span (time-extent) fingerprint — the fourth gate (#53). Per-member day counts, shortfall-only, non-blocking. Returns the denominator so "nothing verified" is never reported as "clean". |
 | `utils/data_quality.py` | FMEA quality validation. `DATASET_MISSING_SEVERITY` registry + `get_dataset_validation_config()` lookup. |
 | `settings.ini` | Public config (location, encryption flag) |
 | `secrets.ini` | API keys (gitignored) |
-| `.github/workflows/collect-data.yml` | Daily CI/CD pipeline (collect → sidecar → completeness tripwire → schema-drift tripwire → quality gate → publish → upload Pages artifact → `deploy` job with retry) |
+| `.github/workflows/collect-data.yml` | Daily CI/CD pipeline (collect → completeness tripwire → quality gate → sidecar + shape-observation commit → schema-drift tripwire → span check → publish → upload Pages artifact → `deploy` job with retry → `alert` job). The `alert` job and the span alert both open ONE labelled tracking issue and close it on recovery. |
+| `.github/workflows/alerting-selfcheck.yml` | Manual-only self-check of the alerting path, run with `secrets.PAT` — the credential the alert job actually uses. |
+| `scripts/smoketest_alerting.sh` | Six-link smoke test of the alerting path against the real repo, self-cleaning. `LABEL=span-shortfall` tests the other alarm. |
 | `scripts/detect_schema_drift.py` | CI tripwire — diffs `data/_shape_signatures.json` against `git show HEAD:`. Data-volatile feeds (declared + history-derived) warn instead of failing. Volatility is derived from `data/_shape_observations.jsonl` (#43), falling back to the sidecar's git history when that log has <2 records. **Member drift** (a location dropping out of a feed declared in `MEMBER_MAPPED_FEEDS`, all members sharing one shape) also warns — see `classify_data_member_drift`. Classified before volatility; `MEMBER_MAPPED_FEEDS` are excluded from derived volatility; `CRITICAL_FEEDS` never downgrade. |
 | `data/_shape_observations.jsonl` | Append-only learning record — one compact line per run (feed → shape_hash + schema_version). Written every run, committed *before* the drift gate. Never diff against it; it is history, not a baseline. |
 | `scripts/backfill_entsoe.py` | Backfill missing ENTSO-E prices into historical files |

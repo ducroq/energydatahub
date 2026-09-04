@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CI reporter for span (time-extent) shortfalls — issue #51.
+CI reporter for span (time-extent) shortfalls — closes #53 (incident: #51).
 
 Reads `data/_span_shortfalls.json`, written by `data_fetcher` from
 `utils/span_signature`, and reports it to the Actions run.
@@ -135,7 +135,7 @@ def main() -> int:
     rows = sorted(rows, key=lambda s: s.get("ratio", 1))
     print(f"::error::{len(rows)} member(s) are short of their usual span. A feed "
           "can lose half its forecast horizon with an IDENTICAL shape hash, so "
-          "the drift tripwire cannot see this (#51).")
+          "the drift tripwire cannot see this (#53; incident #51).")
     for s in rows:
         member = s.get("member") or "(root)"
         print(f"::warning::{s.get('feed')}:{member} carries "

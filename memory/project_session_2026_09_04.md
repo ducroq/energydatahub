@@ -161,6 +161,37 @@ A liveness check needs an external heartbeat: something that fires when a
 publish has NOT happened for N hours. Cannot live in this workflow, by
 construction.
 
+## Wrap-up state (end of session)
+
+Shipped and on `main`:
+
+| | |
+|---|---|
+| `a5993e7` | publish-failure alerting (#50, PR #64) + `scripts/smoketest_alerting.sh` |
+| `44f068a` | `.github/workflows/alerting-selfcheck.yml` — validates the PAT's issues-WRITE |
+| `aa683d2` | `scripts/**` added to `test.yml` push filters |
+| `5665d46` | span check — the fourth gate (#53), non-blocking |
+| `0742555` | span report carries the DENOMINATOR; "not verified" is no longer reported as "clean" |
+
+Closed: **#53** (span guard shipped). Commented: **#51** (diagnosis + my failed
+DE_LU prediction), **#50** (detection half shipped, liveness half open),
+**#46** (measurement; expanding CRITICAL_FEEDS is the wrong resolution).
+Opened: **#67** (off-host liveness watcher, deliberately not started).
+
+Decided and recorded, so they are not re-litigated:
+
+- `wind_forecast` → `CRITICAL_FEEDS`: **closed unmerged**, branch deleted.
+  Blocking withholds 19 healthy feeds and does not fix the degraded one.
+- Derived volatility: **left alone**. A 90% share floor would classify
+  correctly and cost ~1 blocked publish every 6 days; the imprecision is
+  load-bearing for availability.
+- No second blocking gate. New detection lands as warn + alert.
+
+Hypotheses: **H2** updated with the remedy actually chosen (detection without
+blocking — the downgrade path it pointed at was built and abandoned).
+**H11** opened for the span check's thresholds, review 2026-09-25, with an
+explicit "do not resolve this by loosening the threshold".
+
 ## Next
 
 1. **A span/horizon check** — the missing instrument. Needs a per-source

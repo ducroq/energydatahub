@@ -9,8 +9,17 @@ had three of the four and the gap cost four publishes:
   span       THIS MODULE                                       — does it cover the window?
   values     validate_value_ranges                            — are the numbers sane?
 
-Issue #51: `load_forecast` shipped 96 points / 1 day instead of 192 / 2 days for
-four consecutive publishes from 2026-08-28, and nothing objected. A shape
+Closes #53 — "No guard on delivered-vs-requested time span", filed as the THIRD
+instance of one pattern: published metadata describing the REQUEST rather than
+the RESPONSE. The first two were fixed and this one was not:
+
+  locations  2026-08-14  record_location_delivery  collectors/_openmeteo_shared.py
+  zones      2026-09-01  record_zone_delivery      collectors/_entsoe_shared.py
+  time span  2026-09-04  THIS MODULE
+
+The incident that exposed it is #51: `load_forecast` shipped 96 points / 1 day
+instead of 192 / 2 days for four consecutive publishes from 2026-08-28, and
+nothing objected. A shape
 signature cannot see it — 96 records and 192 records hash **identically**,
 because the signature describes the shape of a record, not how many days of them
 there are. `metadata.end_time` kept declaring +2 days throughout, so the envelope

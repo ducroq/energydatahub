@@ -156,7 +156,8 @@ jobs:
         python scripts/detect_schema_drift.py \
           --previous-ref HEAD
 
-    # Span (time-extent) check (#51). NOT a gate — always exits 0, and runs
+    # Span (time-extent) check (#53; the incident that exposed it is #51).
+    # NOT a gate — always exits 0, and runs
     # `if: always()` so it still reports when the drift tripwire above has
     # already failed the job. A feed can lose half its forecast horizon with an
     # IDENTICAL shape hash (96 records and 192 records hash the same), which is
@@ -201,7 +202,7 @@ jobs:
       run: |
         set -euo pipefail
         body=$(printf '%s\n' \
-          "One or more feeds published FEWER days than they normally carry. The shape-drift tripwire cannot see this — a feed at half its horizon hashes identically to a healthy one (#51)." \
+          "One or more feeds published FEWER days than they normally carry. The shape-drift tripwire cannot see this — a feed at half its horizon hashes identically to a healthy one (#53)." \
           "" \
           "\`\`\`" \
           "${SUMMARY}" \
@@ -210,7 +211,7 @@ jobs:
           "Run: ${RUN_URL}" \
           "" \
           "This is an alarm, not a gate — the publish went ahead. Check whether the upstream source has changed its publication horizon before assuming a collector bug. This issue closes automatically once every member carries its usual span again.")
-        gh label create "$SPAN_LABEL" --description "Automated: a feed is short of its usual time span (#51)" --color D93F0B 2>/dev/null || true
+        gh label create "$SPAN_LABEL" --description "Automated: a feed is short of its usual time span (#53)" --color D93F0B 2>/dev/null || true
         existing=$(gh issue list --state open --limit 200 --json number,labels \
           --jq "[.[] | select(any(.labels[]; .name == env.SPAN_LABEL))] | .[0].number // empty") \
           || { echo "::error::span alerting: could not query issues — the shortfall went unrecorded"; exit 1; }
