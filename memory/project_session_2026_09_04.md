@@ -89,6 +89,43 @@ block them. Prediction registered with them for tonight's ~19:00 UTC run:
 state") is falsified for NL if that holds — recorded by them as *falsified
 before its signal could accumulate*, not as a non-event.
 
+## Prediction outcome — NL leg right, DE_LU leg WRONG
+
+Stated in advance for tonight's run: NL 192/2, **DE_LU 96/1**, price 192/2.
+The DE_LU leg is falsified, and by our own publish 15 minutes after the probe:
+
+  260904_065333 (06:53 UTC)  load NL  96/1   DE_LU  96/1   price 96/1
+  260904_081356 (08:14 UTC)  load NL 192/2   DE_LU 192/2   price 96/1
+
+The 09:59 CEST (07:59 UTC) A65 probe caught DE_LU at 96 because German
+day-ahead load had not published yet — it appeared by 08:14 UTC. **The timing
+confound flagged as "cannot rule out" was real, and the prediction was made
+anyway.** The lesson is not about DE_LU: a probe at one instant cannot
+distinguish "absent" from "not published yet" for a source whose publication
+schedule is unknown, and the honest move was to withhold that leg rather than
+predict it. Caught by the downstream consumer measuring the published vintage.
+
+Reconciled #51 picture (both sides agree):
+
+  through 08-26   NL 192 / DE_LU 192            healthy
+  08-28..08-30    NL  96 / DE_LU  96            genuine both-zone A65 gap
+  09-04           both 192 by 08:14 UTC         recovered; the morning 96 is timing
+
+The 08-30 argument still stands and is what keeps this from being *entirely* a
+timing artifact: `260830_190255` was a **19:02** publish with DE_LU at 96, far
+later than today's ~08:14 UTC recovery. So 08-28..08-30 was a real gap.
+
+**#51 disposition**: Alternative 1 ("new steady state") is falsified — before
+its signal could accumulate, since the pre-committed threshold was three
+consecutive normal-hour publishes at price 192 / load 96 and it reached one.
+Keep #51 open until tonight's normal-hour publish confirms, then close as
+**resolved-upstream**, not as transient: it was a genuine multi-day A65 gap that
+recovered, and three vintages of forecast reach were really lost.
+
+Note both of today's publishes carry price at 96/1 — they are pre-auction
+(day-ahead clears ~12:00 CET), so neither is a usable vintage downstream. That
+is expected and not a defect; tonight's 19:00 UTC run is the first usable one.
+
 ## Findings worth more than the code
 
 Three gotcha-log entries added (`2b164fc`):
