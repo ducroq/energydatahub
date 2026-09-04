@@ -1,9 +1,14 @@
 {
-  "timestamp": "2026-09-04T10:16:58.056783+00:00",
+  "timestamp": "2026-09-04T18:46:58.102814+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "total_issues": 2,
+  "datasets_collected": 20,
+  "datasets_missing": [
+    "weather_forecast_buurt",
+    "solar_forecast_buurt",
+    "demand_weather_forecast",
+    "offshore_wind"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -11,7 +16,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +26,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -31,7 +36,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -41,7 +46,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 24,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -67,31 +72,11 @@
       "issues": []
     },
     {
-      "dataset_name": "weather_forecast_buurt",
-      "data_type": "weather",
-      "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 768,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "solar_forecast_buurt",
-      "data_type": "solar",
-      "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 730,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
       "dataset_name": "air_quality_buurt",
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -120,7 +105,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 336,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -129,31 +114,39 @@
       "dataset_name": "solar_forecast",
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 1176,
+      "status": "warning",
+      "data_points": 672,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "demand_weather_forecast",
-      "data_type": "weather",
-      "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 1848,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "offshore_wind",
-      "data_type": "offshore_wind",
-      "source": "Open-Meteo API (free) - ICON/GFS global models",
-      "status": "info",
-      "data_points": 2160,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "location_completeness",
+          "severity": "warning",
+          "message": "3 of 7 location(s) returned no data after 3 attempts: Groningen_NL, Stuttgart_DE, Antwerp_BE",
+          "details": {
+            "requested": [
+              "Rotterdam_NL",
+              "Eindhoven_NL",
+              "Lelystad_NL",
+              "Groningen_NL",
+              "Munich_DE",
+              "Stuttgart_DE",
+              "Antwerp_BE"
+            ],
+            "delivered": [
+              "Rotterdam_NL",
+              "Eindhoven_NL",
+              "Lelystad_NL",
+              "Munich_DE"
+            ],
+            "missing": [
+              "Groningen_NL",
+              "Stuttgart_DE",
+              "Antwerp_BE"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "cross_border_flows",
@@ -180,7 +173,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 48,
+      "data_points": 80,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -210,7 +203,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 331,
+      "data_points": 528,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
