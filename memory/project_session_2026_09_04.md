@@ -1,0 +1,116 @@
+# Session 2026-09-04 — publish restored; alerting shipped; a time box designed and abandoned
+
+## Outcome
+
+Publishing works again. Three green runs today (`33846069377` 06:50 dispatch,
+`33852197632` 10:14 dispatch, plus the scheduled run to come), after five
+consecutive failures 08-31..09-03. Last prior success was 08-30 `8e5cc52`.
+
+The 08-31 and 09-01 failures died in **Collect data** (ENTSO-E maintenance, now
+over). The 09-02 and 09-03 failures died at the **schema-drift tripwire**, each
+on a different feed. Nothing was changed to make the gate pass — upstream
+recovered and `derive_volatile_feeds` reclassified `nordic_hydro` from the
+observation log, which is #43 working as designed.
+
+## Shipped
+
+- **Publish-failure alerting** (`a5993e7`, PR #64, #50). An `alert` job needing
+  both `collect-and-publish` and `deploy`; one labelled tracking issue,
+  commented per failure, closed on recovery. Cannot affect publishing —
+  separate job, runs last, every step `continue-on-error`.
+- **`scripts/smoketest_alerting.sh`** — walks all six links against the real
+  repo and cleans up.
+- **`.github/workflows/alerting-selfcheck.yml`** (`44f068a`) — manual-only, runs
+  that script with `secrets.PAT`, because the alert job's *create* path only
+  runs during an outage and needs a different permission from its close path.
+  Validated on a real runner: all six links pass, issue deleted.
+- **`scripts/**` added to `test.yml`** push filters. A change to
+  `detect_schema_drift.py` previously ran zero tests on push.
+
+## Abandoned: a time box on the drift gate
+
+Built a mechanism to relent after N consecutive drift-blocked runs. The
+`/review-changes` battery rejected the **design**, not the implementation, and
+it was deleted rather than patched. Three findings, each verified:
+
+1. Its only *reachable* domain is `CRITICAL_FEEDS` ∪ `MEMBER_MAPPED_FEEDS` —
+   every other feed self-classifies volatile by its second drift run, and
+   derived volatility subtracts exactly those two sets. So it would relent
+   almost exclusively on the feeds that must never be waved through.
+2. It would have relented on **zero of the five** runs that motivated it.
+3. It published a drifted feed under an unchanged `schema_version`, with the
+   only signal an annotation in a log Augur never reads.
+
+**Do not rebuild this.** If the all-or-nothing gate is revisited, per-feed
+exclusion from the publish set is the shape to consider — but note it would
+have rescued only 1 of the 3 drift-blocked runs, because the other two blocked
+on `CRITICAL_FEEDS` members genuinely degrading. Diff parked at
+`/tmp/.../timebox-abandoned.patch` (ephemeral); the reasoning is what matters.
+
+The time box was cited as **#47** and then **#50**; neither is its number. It
+has none. #47 is the member-drift duration guard and #50 is the
+skipped-publishes issue that the alerting addresses — both live, both correct
+references for other things.
+
+## Parked, unmerged: `critical-feeds-wind-forecast`
+
+Adds `wind_forecast.json` to `CRITICAL_FEEDS`. Rationale: of Augur's three
+exogenous features (`load_forecast`, `solar_ghi`, `wind_speed_80m`) only
+`load_forecast` was covered, so `wind_forecast` was eligible for derived
+volatility, had auto-classified, and could no longer block — while Augur's own
+gate inspects only the price and load feeds. Neither side checked a live model
+input.
+
+Held back deliberately: it makes the gate **stricter** (~1 extra blocked run a
+month, measured), which is a hardening trade to make with someone watching, and
+it is the one change from this session with no adversarial review behind it.
+`solar_forecast.json` was deliberately *not* included — it is in
+`MEMBER_MAPPED_FEEDS`, already excluded from derived volatility, so promoting it
+would only strip its member-drift downgrade and re-arm the 2026-08-14 incident.
+
+## #51 diagnosed — upstream, zone-asymmetric, partly recovered
+
+`load_forecast` shipped 96 points / 1 day instead of 192 / 2 days for four
+publishes from 08-28. Decrypted the whole archive: 192/2 is the normal shape
+going back to 2025-12. Every *earlier* short vintage was an early-hour run that
+recovered on the same day's normal-hour run; `260830_190255` at 19:02 is the one
+unambiguous normal-hour short publish.
+
+Direct A65 probe at 09:59 CEST: **NL 192/2 days (recovered), DE_LU 96/1 day**.
+Widening the request to +3d changed nothing, so not window clamping. **Not our
+parser** — `_parse_response` builds each zone's timestamps from that zone's own
+series, no cross-zone alignment. `metadata.end_time` kept declaring +2 days
+throughout, so the envelope over-declared its own coverage.
+
+Augur confirmed from `ml/data/consolidate.py:320` that their features are
+**NL-only** (`DE_LU` appears nowhere in their repo), so the DE_LU half does not
+block them. Prediction registered with them for tonight's ~19:00 UTC run:
+**NL 192/2, DE_LU 96/1, price entsoe 192/2**. Their Alternative 1 ("new steady
+state") is falsified for NL if that holds — recorded by them as *falsified
+before its signal could accumulate*, not as a non-event.
+
+## Findings worth more than the code
+
+Three gotcha-log entries added (`2b164fc`):
+
+- **A five-lens review passed two defects a six-line smoke test caught in
+  seconds.** For anything talking to an external API, run it. Reviewers test
+  against already-settled state and cannot see a consistency model.
+- **A shape signature cannot see span.** 96 and 192 records hash identically.
+  A gate covers exactly one of {presence, structure, span, values} — name which,
+  and never let a registry of "important" inputs imply the rest.
+  `CRITICAL_FEEDS` is presence-and-structure with an importance-sounding name.
+- **A derived classification with no evidence threshold learns from noise.**
+  `wind_forecast` lost enforcement off two excursions in 60 runs against a
+  dominant shape in the other 58.
+
+## Next
+
+1. **A span/horizon check** — the missing instrument. Needs a per-source
+   expected span (NL and DE_LU publish day-ahead on different schedules) *and* a
+   minimum-observations floor before trusting a derived expectation.
+2. Decide on `critical-feeds-wind-forecast`.
+3. H10/#58 (Open-Meteo 429 storms) is the likeliest remaining cause of a blocked
+   publish; it caused the 09-03 06:06 failure via a 10-of-11-location dropout.
+4. Four of five review lenses never ran on the merged diff (session usage
+   limit). The alerting path is smoke-tested end to end instead.
