@@ -1,0 +1,40 @@
+name: Alerting self-check
+
+# Manual-only self-check for the publish-failure alerting path (#50).
+#
+# WHY IT EXISTS. The `alert` job in collect-data.yml only exercises its CREATE
+# path when a publish actually fails, which is exactly when nobody is watching.
+# Its close path runs on every healthy run and is therefore self-validating; its
+# create path is not. And the two are authenticated by the same secret but need
+# DIFFERENT permissions — reading issues vs writing them — so a PAT that is fine
+# for the daily run can still be unable to raise an alarm. That failure would
+# only surface during an outage, which is the worst possible time to discover it.
+#
+# So: run this after rotating the PAT, after changing the alert job, or whenever
+# you want to confirm the alarm can still fire. It creates a clearly-labelled
+# throwaway issue, walks the same six links the alert job uses, and deletes it.
+#
+# Deliberately no `schedule:` — it writes to the issue tracker, and a nightly
+# create/delete would be noise. Touches nothing in the publish path: no data/,
+# no docs/, no collectors, no Pages deploy.
+on:
+  workflow_dispatch:
+
+# GITHUB_TOKEN is unused; the script authenticates with the PAT, which is the
+# credential whose permissions we are actually testing.
+permissions: {}
+
+jobs:
+  selfcheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
+
+    # No continue-on-error, unlike the alert job itself. There the point is that
+    # alerting must never decide the pipeline's verdict; here the verdict IS
+    # whether alerting works, so a failure must fail the run loudly.
+    - name: Walk the alerting path end to end
+      env:
+        GH_TOKEN: ${{ secrets.PAT }}
+        GH_REPO: ${{ github.repository }}
+      run: ./scripts/smoketest_alerting.sh
