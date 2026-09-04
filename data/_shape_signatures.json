@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-09-04T08:13:56+00:00",
+  "computed_at": "2026-09-04T10:16:57+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -672,6 +672,103 @@
         "offshore_wind"
       ]
     },
+    "air_quality_buurt.json": {
+      "shape_hash": "77e7afe6b542c517b4061f846933bc2d",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Elderveld_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "AQI": "int",
+                    "PM10": "float",
+                    "PM25": "float"
+                  }
+                }
+              },
+              "Elsweide_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "AQI": "int",
+                    "NO": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "data_type": "str",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "stations": {
+                "_kind": "dict",
+                "keys": {
+                  "Elderveld_Arnhem_NL": {
+                    "_kind": "dict",
+                    "keys": {
+                      "city": "str",
+                      "components": {
+                        "_kind": "list",
+                        "value_shape": "str"
+                      },
+                      "requested_latitude": "float",
+                      "requested_longitude": "float",
+                      "station": "str",
+                      "station_latitude": "float",
+                      "station_location": "str",
+                      "station_longitude": "float"
+                    }
+                  },
+                  "Elsweide_Arnhem_NL": {
+                    "_kind": "dict",
+                    "keys": {
+                      "city": "str",
+                      "components": {
+                        "_kind": "list",
+                        "value_shape": "str"
+                      },
+                      "requested_latitude": "float",
+                      "requested_longitude": "float",
+                      "station": "str",
+                      "station_latitude": "float",
+                      "station_location": "str",
+                      "station_longitude": "float"
+                    }
+                  }
+                }
+              },
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "air",
+      "sources": null
+    },
     "weather_forecast_multi_location.json": {
       "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
       "shape_signature": {
@@ -978,7 +1075,7 @@
       "sources": null
     },
     "ned_production.json": {
-      "shape_hash": "a27584b93b681f1493e800060146a6d6",
+      "shape_hash": "624ca25bcf28797a299942ab7587a78f",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -989,18 +1086,6 @@
                 "_kind": "dict",
                 "keys": {
                   "actual": {
-                    "_kind": "timestamp_map",
-                    "value_shape": {
-                      "_kind": "dict",
-                      "keys": {
-                        "capacity_kw": "float",
-                        "co2_kg": "float",
-                        "utilization_pct": "float",
-                        "volume_kwh": "float"
-                      }
-                    }
-                  },
-                  "forecast": {
                     "_kind": "timestamp_map",
                     "value_shape": {
                       "_kind": "dict",
