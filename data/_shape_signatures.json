@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-09-04T18:46:58+00:00",
+  "computed_at": "2026-09-05T17:53:21+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -233,7 +233,7 @@
       ]
     },
     "wind_forecast.json": {
-      "shape_hash": "ab6e59c3c840900454cb5e425f00a571",
+      "shape_hash": "59fa8a4532a72f6bf31b31ccc33b2823",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -333,6 +333,293 @@
                     }
                   }
                 }
+              },
+              "offshore_wind": {
+                "_kind": "dict",
+                "keys": {
+                  "data": {
+                    "_kind": "dict",
+                    "keys": {
+                      "BorkumRiffgrund_DE": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "Borssele_NL": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "DoggerBank_UK": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "HelgolandCluster_DE": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "HollandseKust_NL": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "HornsRev_DK": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "IJmuidenVer_NL": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "NorthSeaBE_BE": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "metadata": {
+                    "_kind": "dict",
+                    "keys": {
+                      "api_rate_limit": "str",
+                      "collector": "str",
+                      "data_type": "str",
+                      "description": "str",
+                      "end_time": "str",
+                      "forecast_days": "int",
+                      "location_coordinates": {
+                        "_kind": "dict",
+                        "keys": {
+                          "BorkumRiffgrund_DE": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          },
+                          "Borssele_NL": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          },
+                          "DoggerBank_UK": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          },
+                          "Gemini_NL": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          },
+                          "HelgolandCluster_DE": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          },
+                          "HollandseKust_NL": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          },
+                          "HornsRev_DK": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          },
+                          "IJmuidenVer_NL": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          },
+                          "NorthSeaBE_BE": {
+                            "_kind": "dict",
+                            "keys": {
+                              "lat": "float",
+                              "lon": "float"
+                            }
+                          }
+                        }
+                      },
+                      "location_count": "int",
+                      "locations": {
+                        "_kind": "list",
+                        "value_shape": "str"
+                      },
+                      "model_info": "str",
+                      "schema_changelog_entry": {
+                        "_kind": "dict",
+                        "keys": {
+                          "changes": {
+                            "_kind": "list",
+                            "value_shape": "str"
+                          },
+                          "date": "str",
+                          "description": "str"
+                        }
+                      },
+                      "schema_version": "str",
+                      "source": "str",
+                      "start_time": "str",
+                      "units": "str",
+                      "variables": {
+                        "_kind": "dict",
+                        "keys": {
+                          "air_density": "str",
+                          "pressure": "str",
+                          "temperature": "str",
+                          "wind_direction_10m": "str",
+                          "wind_direction_120m": "str",
+                          "wind_direction_180m": "str",
+                          "wind_direction_80m": "str",
+                          "wind_gusts_10m": "str",
+                          "wind_speed_10m": "str",
+                          "wind_speed_120m": "str",
+                          "wind_speed_180m": "str",
+                          "wind_speed_80m": "str"
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           },
@@ -361,79 +648,9 @@
       },
       "data_type": "combined",
       "sources": [
-        "entsoe_wind_generation"
+        "entsoe_wind_generation",
+        "offshore_wind"
       ]
-    },
-    "air_quality_buurt.json": {
-      "shape_hash": "6b2b4b01d7ec97b990afb801a296e140",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int",
-                    "PM10": "float",
-                    "PM25": "float"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "data_type": "str",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "stations": {
-                "_kind": "dict",
-                "keys": {
-                  "Elderveld_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  }
-                }
-              },
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "air",
-      "sources": null
     },
     "weather_forecast_multi_location.json": {
       "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
@@ -880,14 +1097,40 @@
       "sources": null
     },
     "solar_forecast.json": {
-      "shape_hash": "95c7e4cef654af3e05cc75bbc89de5ed",
+      "shape_hash": "7510f34db80fb2d2ff39e44cc0ee3d62",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
           "data": {
             "_kind": "dict",
             "keys": {
+              "Antwerp_BE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
               "Eindhoven_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Groningen_NL": {
                 "_kind": "timestamp_map",
                 "value_shape": {
                   "_kind": "dict",
@@ -938,6 +1181,19 @@
                     "ghi": "float"
                   }
                 }
+              },
+              "Stuttgart_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
               }
             }
           },
@@ -946,34 +1202,565 @@
             "keys": {
               "api_rate_limit": "str",
               "collector": "str",
-              "collector_quality_issues": {
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "forecast_days": "int",
+              "location_count": "int",
+              "locations": {
                 "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str",
+              "variables": {
+                "_kind": "dict",
+                "keys": {
+                  "cloud_cover": "str",
+                  "dhi": "str",
+                  "direct": "str",
+                  "dni": "str",
+                  "ghi": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "solar_irradiance",
+      "sources": null
+    },
+    "demand_weather_forecast.json": {
+      "shape_hash": "e48bf3be782c83fdf7935af30a07fec4",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Amsterdam_NL": {
+                "_kind": "timestamp_map",
                 "value_shape": {
                   "_kind": "dict",
                   "keys": {
-                    "check_name": "str",
-                    "details": {
-                      "_kind": "dict",
-                      "keys": {
-                        "delivered": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        },
-                        "missing": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        },
-                        "requested": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        }
-                      }
-                    },
-                    "message": "str",
-                    "severity": "str"
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
                   }
                 }
               },
+              "Antwerp_BE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Brussels_BE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Cologne_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Dusseldorf_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Eindhoven_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Groningen_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Hamburg_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Rotterdam_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "The_Hague_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Utrecht_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "data_type": "str",
+              "degree_day_config": {
+                "_kind": "dict",
+                "keys": {
+                  "cooling_base_temp": "float",
+                  "heating_base_temp": "float"
+                }
+              },
+              "description": "str",
+              "end_time": "str",
+              "forecast_days": "int",
+              "location_count": "int",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "total_population_covered": "int",
+              "units": "str",
+              "variables": {
+                "_kind": "dict",
+                "keys": {
+                  "apparent_temperature": "str",
+                  "cape": "str",
+                  "cdd": "str",
+                  "cloud_cover": "str",
+                  "condition": "str",
+                  "dew_point": "str",
+                  "hdd": "str",
+                  "humidity": "str",
+                  "precipitation": "str",
+                  "precipitation_probability": "str",
+                  "pressure": "str",
+                  "temperature": "str",
+                  "uv_index": "str",
+                  "visibility": "str",
+                  "weather_code": "str",
+                  "wind_direction": "str",
+                  "wind_speed": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "demand_weather",
+      "sources": null
+    },
+    "weather_forecast_buurt.json": {
+      "shape_hash": "0965ed96fb3058ab238d42bf109f8bff",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Elderveld_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              },
+              "Elsweide_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "data_type": "str",
+              "degree_day_config": {
+                "_kind": "dict",
+                "keys": {
+                  "cooling_base_temp": "float",
+                  "heating_base_temp": "float"
+                }
+              },
+              "description": "str",
+              "end_time": "str",
+              "forecast_days": "int",
+              "location_count": "int",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "total_population_covered": "int",
+              "units": "str",
+              "variables": {
+                "_kind": "dict",
+                "keys": {
+                  "apparent_temperature": "str",
+                  "cape": "str",
+                  "cdd": "str",
+                  "cloud_cover": "str",
+                  "condition": "str",
+                  "dew_point": "str",
+                  "hdd": "str",
+                  "humidity": "str",
+                  "precipitation": "str",
+                  "precipitation_probability": "str",
+                  "pressure": "str",
+                  "temperature": "str",
+                  "uv_index": "str",
+                  "visibility": "str",
+                  "weather_code": "str",
+                  "wind_direction": "str",
+                  "wind_speed": "str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "data_type": "demand_weather",
+      "sources": null
+    },
+    "solar_forecast_buurt.json": {
+      "shape_hash": "49a96e1dee4d3b61387fc2baa842a8e4",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Elderveld_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
+              "Elsweide_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
               "data_type": "str",
               "description": "str",
               "end_time": "str",

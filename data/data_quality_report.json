@@ -1,13 +1,10 @@
 {
-  "timestamp": "2026-09-04T18:46:58.102814+00:00",
+  "timestamp": "2026-09-05T17:53:21.759684+00:00",
   "overall_status": "warning",
   "total_issues": 2,
-  "datasets_collected": 20,
+  "datasets_collected": 23,
   "datasets_missing": [
-    "weather_forecast_buurt",
-    "solar_forecast_buurt",
-    "demand_weather_forecast",
-    "offshore_wind"
+    "air_quality_buurt"
   ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
@@ -72,12 +69,22 @@
       "issues": []
     },
     {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
+      "dataset_name": "weather_forecast_buurt",
+      "data_type": "weather",
+      "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 24,
-      "checks_passed": 4,
+      "data_points": 768,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "solar_forecast_buurt",
+      "data_type": "solar",
+      "source": "Open-Meteo API (free)",
+      "status": "info",
+      "data_points": 730,
+      "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
     },
@@ -114,39 +121,31 @@
       "dataset_name": "solar_forecast",
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
-      "data_points": 672,
+      "status": "info",
+      "data_points": 1176,
       "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "location_completeness",
-          "severity": "warning",
-          "message": "3 of 7 location(s) returned no data after 3 attempts: Groningen_NL, Stuttgart_DE, Antwerp_BE",
-          "details": {
-            "requested": [
-              "Rotterdam_NL",
-              "Eindhoven_NL",
-              "Lelystad_NL",
-              "Groningen_NL",
-              "Munich_DE",
-              "Stuttgart_DE",
-              "Antwerp_BE"
-            ],
-            "delivered": [
-              "Rotterdam_NL",
-              "Eindhoven_NL",
-              "Lelystad_NL",
-              "Munich_DE"
-            ],
-            "missing": [
-              "Groningen_NL",
-              "Stuttgart_DE",
-              "Antwerp_BE"
-            ]
-          }
-        }
-      ]
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "demand_weather_forecast",
+      "data_type": "weather",
+      "source": "Open-Meteo API (free)",
+      "status": "info",
+      "data_points": 1848,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "offshore_wind",
+      "data_type": "offshore_wind",
+      "source": "Open-Meteo API (free) - ICON/GFS global models",
+      "status": "info",
+      "data_points": 1920,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "cross_border_flows",
@@ -162,18 +161,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "6 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 6,
+            "examples": [
+              "NL/2026-09-05T10:15:00+02:00: forecast_error=3182.2, load_actual=5148.846, ratio=0.62",
+              "NL/2026-09-05T10:30:00+02:00: forecast_error=2577.7, load_actual=5396.106, ratio=0.48",
+              "NL/2026-09-05T10:45:00+02:00: forecast_error=2267.0, load_actual=5376.436, ratio=0.42",
+              "NL/2026-09-05T11:00:00+02:00: forecast_error=2170.2, load_actual=5261.026, ratio=0.41",
+              "NL/2026-09-05T11:15:00+02:00: forecast_error=2140.5, load_actual=4981.726, ratio=0.43"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 80,
+      "data_points": 76,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -203,7 +219,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 528,
+      "data_points": 516,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
