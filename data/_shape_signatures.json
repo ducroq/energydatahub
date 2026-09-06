@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-09-05T17:53:21+00:00",
+  "computed_at": "2026-09-06T17:57:09+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -233,7 +233,7 @@
       ]
     },
     "wind_forecast.json": {
-      "shape_hash": "59fa8a4532a72f6bf31b31ccc33b2823",
+      "shape_hash": "99a0460b47c951788c494c6659a70d80",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -381,6 +381,26 @@
                         }
                       },
                       "DoggerBank_UK": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "Gemini_NL": {
                         "_kind": "timestamp_map",
                         "value_shape": {
                           "_kind": "dict",
@@ -651,6 +671,102 @@
         "entsoe_wind_generation",
         "offshore_wind"
       ]
+    },
+    "air_quality_buurt.json": {
+      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "Elderveld_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "AQI": "int",
+                    "PM10": "float",
+                    "PM25": "float"
+                  }
+                }
+              },
+              "Elsweide_Arnhem_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "AQI": "int"
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "data_type": "str",
+              "locations": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "stations": {
+                "_kind": "dict",
+                "keys": {
+                  "Elderveld_Arnhem_NL": {
+                    "_kind": "dict",
+                    "keys": {
+                      "city": "str",
+                      "components": {
+                        "_kind": "list",
+                        "value_shape": "str"
+                      },
+                      "requested_latitude": "float",
+                      "requested_longitude": "float",
+                      "station": "str",
+                      "station_latitude": "float",
+                      "station_location": "str",
+                      "station_longitude": "float"
+                    }
+                  },
+                  "Elsweide_Arnhem_NL": {
+                    "_kind": "dict",
+                    "keys": {
+                      "city": "str",
+                      "components": {
+                        "_kind": "list",
+                        "value_shape": "str"
+                      },
+                      "requested_latitude": "float",
+                      "requested_longitude": "float",
+                      "station": "str",
+                      "station_latitude": "float",
+                      "station_location": "str",
+                      "station_longitude": "float"
+                    }
+                  }
+                }
+              },
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "air",
+      "sources": null
     },
     "weather_forecast_multi_location.json": {
       "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
