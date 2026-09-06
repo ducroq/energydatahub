@@ -12,9 +12,17 @@
 
      /curate surfaces entries whose `Review by:` has passed or whose `Revisit trigger:`
      has fired. It does NOT resolve them — reading the Method and applying it is the
-     engineer's call. Move resolved entries to `## Resolved` with the outcome. -->
+     engineer's call. Move resolved entries to `## Resolved` with the outcome.
 
-## Resolved` with the outcome. -->
+     WRITE THE ENTRY AT THE MOMENT THE CLAIM IS MADE, not at end-of-session
+     (agent-ready-projects v1.25.0). The alternatives and the refutation
+     criterion are live while you are making the claim; reconstructing them
+     hours later loses exactly the part worth keeping. A review lens flagging
+     a claim whose measurement cannot be taken yet is the cue — the lens
+     reports it as a finding, and the entry is written here. /curate keeps the
+     entries that EXIST honest, reviewing them for staleness and due dates; it
+     cannot detect a claim that never got an entry, so writing it at claim
+     time is the only thing that does. -->
 
 ## Open
 

@@ -2,7 +2,7 @@
 stack: Python 3.12, asyncio/aiohttp, pandas, GitHub Actions CI/CD
 status: Production (daily automated collection since Oct 2024)
 repo: github.com/ducroq/energydatahub
-framework: agent-ready-projects v1.18.0
+framework: agent-ready-projects v1.37.0   # a NUMBER, not a status — never write "current" here; the framework's release cadence falsifies the adjective, not the pin
 ---
 
 # energyDataHub
@@ -13,6 +13,7 @@ Automated energy market data collection platform for electricity price predictio
 
 | When | Read |
 |------|------|
+| Picking up where the last session left off | `memory/MEMORY.md` — **the index itself, not the topic files it lists**; those stay on demand. Nothing loads it automatically: it sits below the auto-loading cliff, so if this row goes, it is simply never read and the failure is silent. Keep it near the top — an open handoff is worthless one session late. |
 | Starting any session | Run `/update-drift` — finds every framework stamp, lists the intervening releases, and triages each as adopt / decline-with-reason / not-applicable / already-in-force. It stops before editing anything normative; adopting is your call. (Was a manual CHANGELOG comparison until v1.18.0 made it a skill.) |
 | Adding a new collector | `collectors/base.py` — BaseCollector pattern, `collectors/entsoe_generation.py` — good example, `collectors/entsoe_hydro.py` — minimal example. Also see `collectors/_http_classifier.py` for the HTTP-status bail-out pattern (raise_if_permanent) — use it from `_fetch_raw_data` to skip retries on permanent client errors (422/400/401/403/404). **If the host is already hit by another collector, pass `host_breaker_key`** so they share one circuit breaker (`collectors/_host_breaker.py`, #52) — per-instance breakers cannot see a host-wide outage. |
 | Changing data output format | `utils/data_types.py` — EnhancedDataSet/CombinedDataSet, `utils/schema_registry.py` — versioning + migration chain. **Any shape change requires bumping `CURRENT_SCHEMA_VERSION` + adding a `_migrate_X_to_Y` function + a SCHEMA_CHANGELOG entry**. The CI tripwire (`scripts/detect_schema_drift.py`) enforces this. |
@@ -22,9 +23,9 @@ Automated energy market data collection platform for electricity price predictio
 | Debugging data quality issues | `utils/data_quality.py` — FMEA validation. Per-dataset config via `get_dataset_validation_config()`. Missing-dataset severity via `DATASET_MISSING_SEVERITY` dict (single source of truth). A critical feed that is *upstream-empty* (source healthy, published no data for the window — `UpstreamNoDataError`) is downgraded `critical`→`warning` so the run still publishes the healthy feeds; the orchestrator passes `validate_pipeline(upstream_empty=…)` and only `SystemExit(1)`s on a genuine collector failure. A *sustained* gap (≥`UPSTREAM_EMPTY_ESCALATION_RUNS`=3 consecutive runs, tracked in the committed `data/_upstream_empty_streak.json`) escalates back to a hard failure so it can't degrade silently forever (#38). Separately, a *present-but-empty* dataset (collector returned a truthy `EnhancedDataSet` with `data={}` — e.g. an all-locations Open-Meteo timeout) would otherwise hard-fail the completeness gate (`validate_completeness` → `CRITICAL` on 0 points) and abort the whole publish. `data_fetcher` coerces such a feed to `None` so it routes through the (non-blocking) missing path instead — treating present-empty as absent. Applies to all six Open-Meteo feeds in `PRESENT_EMPTY_GRACE_FEEDS` (generalised from buurt-only on 2026-08-08, #42) and is **time-boxed**: after `UPSTREAM_EMPTY_ESCALATION_RUNS` consecutive empty runs the coercion stops and the gate fails the publish loudly, so a sustained outage cannot degrade silently. Streaks share `data/_upstream_empty_streak.json` with the #38 counters (disjoint keys). |
 | Adding a published dataset | `memory/project_published_dataset_checklist.md` — 8-touchpoint checklist across `data_fetcher.py`, `utils/data_quality.py`, and `.github/workflows/collect-data.yml`. **Missing one silently breaks publishing** (BLOCKER on c40a53b). Read before wiring a new collector into the publish set. |
 | Stuck or debugging something weird | `memory/gotcha-log.md` — problem-fix archive |
-| About to act on "it's probably transient" / "that's probably safe" | `memory/hypothesis-log.md` — open positions (H1–H5) with the method that would settle each. Check before treating a recurring failure as known-benign; `/curate` surfaces overdue entries. |
+| About to act on "it's probably transient" / "that's probably safe" | `memory/hypothesis-log.md` — open positions (H2, H4, H6, H7, H8, H10, H11 as of 2026-09-06; H1/H3/H5/H9 resolved) with the method that would settle each. Check before treating a recurring failure as known-benign; `/curate` surfaces overdue entries. |
 | Picking up work that spans sessions | `memory/work-items/` — savepoints for in-flight work (what is decided, what is still open). Create one at the *start* of anything spanning >2 sessions; see `memory/work-items/README.md`. Distinct from `memory/project_session_*.md`, which are retrospectives. |
-| Before committing | Run `/review-changes` — picks review lenses from what changed (one adversarial pass for a small diff, up to the full 5-lens battery for `collectors/`, `utils/`, `scripts/`, CI, `.claude/**`, `.gitignore`, or `settings.ini`). Project-local skill, never install it globally. |
+| Before committing | Run `/review-changes` — picks review lenses from what changed (one adversarial pass for a small diff, up to the full 5-lens battery for `collectors/`, `utils/`, `scripts/`, CI, `.claude/**`, `.gitignore`, or `settings.ini`). **Step 1 resolves a `$BASE` baseline first** — it used `git log @{u}..`, which is empty on a pushed-but-unmerged branch, so the skill reported "nothing to review" on a whole PR (reproduced 2026-09-06). **Step 1.5 is a deterministic markdown structural check that runs at every tier**, before any lens; run it in the same shell as Step 1 or it aborts. Project-local skill, never install it globally. |
 | Bumping the published data schema | Run `/release` — classifies the bump, verifies preconditions, writes the SCHEMA_CHANGELOG entry, syncs version references, **stops before the run that publishes**. User-typed only. |
 | Ending a session | Run `/curate` — reviews gotcha log, promotes patterns, syncs docs, surfaces stale memory. New gotcha entries are 2-3 lines: the lesson and the action, not the narrative of the session that found it. The 24 pre-2026-08-08 entries use an older four-field long form — read them, don't imitate them; the budget is restated in the log's own header. |
 | Monthly or after major restructuring | Run `/audit-context` — structural audit (duplication, wrong-layer placement, broken refs) |
@@ -229,8 +230,11 @@ memory/                      # Layered agent memory (tracked). MEMORY.md index, 
                              # exits 2 so the failure reaches the agent (exit 0 = silent hook).
                              # Scoped to collectors/ utils/ scripts/ tests/ data_fetcher.py
                              # + workflow YAML. Test mapping is derived by glob, not hand-listed.
-  skills/review-changes/     # /review-changes — pre-commit lens battery (project-local by design:
-                             # its risk tiers name files in this tree)
+  skills/review-changes/     # /review-changes — pre-commit lens battery + Step 1.5 structural
+                             # pre-check (project-local by design: its risk tiers, guarantee lens
+                             # and end-to-end-trace lens name files in this tree). Merged from
+                             # framework v1.37.0 on 2026-09-06 — MERGED, never re-copied; it
+                             # keeps `--untracked-files=all` in Step 1, which the template dropped.
   skills/release/            # /release — published-schema version cut. User-typed only.
 .github/
   dependabot.yml             # github-actions ecosystem, weekly grouped — auto-bumps the

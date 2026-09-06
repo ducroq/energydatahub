@@ -1,9 +1,12 @@
-# Framework drift catch-up: agent-ready-projects v1.18.0 → v1.26.0
+# Framework drift catch-up: agent-ready-projects v1.18.0 → v1.37.0
 
 ## What & Why
 
-The project pins `framework: agent-ready-projects v1.18.0` (`CLAUDE.md:5`). The framework
-is at **v1.26.0** — eight releases ahead. This surfaced on 2026-08-14 while answering a
+The project pinned `framework: agent-ready-projects v1.18.0` (`CLAUDE.md:5`) when this item was opened; it now reads v1.37.0. The framework
+was at v1.26.0 when this item was opened on 2026-08-14 — eight releases ahead. By the time
+`/update-drift` actually ran, on 2026-09-06, it was at **v1.37.0**: twenty-four. The item's
+own headline understated the gap by a factor of three for three weeks, which is the cost of
+a savepoint whose numbers are not re-derived when it is picked up. This surfaced on 2026-08-14 while answering a
 different question, not from `/update-drift`, which `CLAUDE.md`'s own first row says to run
 at session start and which was **not run that session**.
 
@@ -27,8 +30,15 @@ how its own negative findings are reported.
 
 ## Current Status
 
-Nothing adopted. Drift identified and quantified only. Filed upstream as
-`ducroq/agent-ready-projects#68` (see Decisions).
+**Done, 2026-09-06.** Triage at RELEASE granularity: 10 adopt, 13 already in force, 1 not applicable, 0 declined.
+**Two declines were recorded WITHIN adopted releases** and are the load-bearing part — see
+below. Do not read the release-level zero as "nothing was refused"; that reading is what
+would re-adopt the dropped `--untracked-files=all` term on the next merge.
+The 13 needed nothing because all three user-global skills (`curate`, `audit-context`,
+`update-drift`) are byte-identical to their v1.37.0 reference installs — verified by diffing
+the installed file against `.claude/skills/<name>/SKILL.md` at every tag (monotone fall to an
+exact 0 at v1.37.0), and corroborated by `install-global-skills.sh --check`. The whole real
+gap was the two project-local skills, which that installer deliberately never inspects.
 
 ## Decisions
 
@@ -45,7 +55,28 @@ Nothing adopted. Drift identified and quantified only. Filed upstream as
   measures `review-changes` installed in 15 repos and explicitly leaves open whether any of
   them ever invoke it.
 
-## Open Questions
+## Answers
+
+- **Adopt or decline, per release?** Answered in the triage table (session 2026-09-06).
+  `#68` is closed upstream — the project-file template now names all five skills.
+- **Re-copy `review-changes` wholesale, or port selectively?** **Merge.** Five pieces ported
+  (`$BASE` block, Step 1.5 whole, the two adversarial claim rules, `### Unclassified` +
+  structural count in the report, Step 5), and one template change deliberately **declined**:
+  v1.37.0's Step 1 drops `git status --porcelain --untracked-files=all` and carries untracked
+  files only in Step 1.5's list, so *classification* there cannot see a new file. This repo
+  added that term after a measured blocker (695-line commit, 645 lines untracked). It stays,
+  and the divergence is now recorded in the skill's own header so a future merge does not
+  silently undo it.
+- **Does anything make project-local skill staleness visible?** **No — confirmed by running
+  it.** `install-global-skills.sh --check ~/repos` scans for *inert* project-local copies
+  (ones shadowing a global skill) and correctly found none; it says nothing about whether a
+  project-local skill is behind its template. `/update-drift` Step 3's content check —
+  grepping the marker strings the framework names per #94 — is the only thing that saw this.
+  Before the merge: `isdelim($(0))`, `sub(/\r$/, "")`, `infm`, `nrisk`, `\001`, `BASE`,
+  `Step 1.5`, `Step 5` all returned **0** in a skill whose stamp gave no hint. The stamp is
+  not the instrument; the markers are.
+
+## Superseded Open Questions
 
 - **Adopt or decline, per release, v1.19.0 → v1.26.0.** `/update-drift` triages; adopting
   is the engineer's call and it stops before editing normative surfaces.
@@ -63,4 +94,28 @@ Nothing adopted. Drift identified and quantified only. Filed upstream as
 
 ## Outcome
 
-<!-- Fill in when the work lands or is abandoned. -->
+**Landed 2026-09-06.** Seven files changed: both `.claude/skills/*/SKILL.md`, `CLAUDE.md`,
+`memory/MEMORY.md`, `memory/gotcha-log.md`, `memory/hypothesis-log.md`, and this file —
+which the first draft of this sentence omitted, having counted six. The review caught it,
+three paragraphs below a note saying a count embedded in prose is not maintained. Stamps moved
+v1.18.0/v1.17.0 → v1.37.0 **after** the content landed, not before.
+
+Three things worth promoting out of here before this file is deleted:
+
+1. **#64 was live and reproduced before it was fixed.** On a throwaway repo with a pushed,
+   unmerged branch carrying a real 3-line commit, all four of the old Step 1 commands
+   returned empty — the skill would have reported "nothing to review" on a whole PR. This
+   repo pushes branches (`fix/entsoe-upstream-nodata-38`, `feature/local-forecasting`,
+   `dev`; `entsoe-zone-delivery` was reviewed on 2026-08-31), so it was one push away.
+   → belongs in the gotcha log.
+2. **A negative needs a seeded positive, again.** Step 1.5 reported 0 hits across all 49
+   tracked markdown files. That is only meaningful because a seeded file with three known
+   defects returned exactly three hits from the *same extracted awk program*. This is the
+   `[x3]` guard-signal-integrity pattern for the third time; it worked here because the
+   pattern was consciously applied, not because anything enforced it.
+3. **The Occurrences column found a defect on adoption day** — the shape-churn row said
+   "4-incident pattern" while its own cell listed five. A count embedded in prose is not
+   maintained.
+
+Residue promoted → delete this file once 1–3 are in `memory/gotcha-log.md` and
+`memory/MEMORY.md`.

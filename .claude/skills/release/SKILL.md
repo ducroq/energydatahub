@@ -6,7 +6,9 @@ disable-model-invocation: true
 
 Cut a schema release. Work through the steps in order and **stop at the end of Step 6** — publishing is the engineer's call, never the agent's. Step 7 runs only after the engineer confirms the production run.
 
-Adopted from agent-ready-projects `templates/release.md` (v1.17.0), **adapted**: this repo cuts no git tags and ships no package. Its versioned, consumer-facing artifact is the **published data schema** — `CURRENT_SCHEMA_VERSION` in `utils/schema_registry.py`, its `SCHEMA_CHANGELOG`, and the migration chain. The downstream consumer is Augur, which reads `metadata.schema_version` off every published file and cannot see this code. The template's "a pushed tag is permanent" reasoning applies verbatim: once a run publishes files stamped `2.5`, Augur has seen `2.5`, and you cannot unsee it.
+Adopted from agent-ready-projects `templates/release.md` (v1.37.0), **adapted**: this repo cuts no git tags and ships no package. Its versioned, consumer-facing artifact is the **published data schema** — `CURRENT_SCHEMA_VERSION` in `utils/schema_registry.py`, its `SCHEMA_CHANGELOG`, and the migration chain. The downstream consumer is Augur, which reads `metadata.schema_version` off every published file and cannot see this code. The template's "a pushed tag is permanent" reasoning applies verbatim: once a run publishes files stamped `2.5`, Augur has seen `2.5`, and you cannot unsee it.
+
+Two template changes since v1.17.0 are deliberately **not** carried here, so a future merge does not re-derive the question. The v1.21.0 tag selector (`--merged HEAD`, `--list 'v[0-9]*'`, the prerelease filter, the shallow-clone guard) exists to stop `git tag` picking the wrong release baseline — there are no tags here, and Step 1 derives the baseline from `SCHEMA_CHANGELOG` instead. And v1.34.0's #94 rule, *name the surgical change and its marker strings for a copied artifact*, addresses a consumer who holds an adapted **copy** of your artifact; Augur holds no copy, it reads `metadata.schema_version` off published files. (That rule does bite this repo — on `.claude/skills/`, which are copies of framework templates — but that is `/update-drift`'s surface, not this one.)
 
 `disable-model-invocation: true` is deliberate. An agent deciding on its own that it is time to bump the schema is a failure the Step 6 stop-gate cannot catch, because by then the bump is already written. Type `/release` yourself.
 
@@ -160,7 +162,7 @@ Only once the engineer confirms the run:
    sidecar and to a decrypted published file before claiming the release landed.
 
 2. Confirm the schema-drift tripwire passed a **fully-rolled window** — the first run after a bump can pass for the wrong reason.
-3. Update `memory/MEMORY.md` Current State to the new version.
+3. Update `memory/MEMORY.md` Current State to the new version — and **rescope the `<!-- verify: -->` probe on the line you just superseded.** A *current version* claim and a *previous version* claim are different claims: a probe reading "`CURRENT_SCHEMA_VERSION` is 2.4" is true the day it is written and false the moment the next bump ships, and it travels down with the line unless you change it. A historical line's probe asserts that version **exists in the migration chain**. This repo has already measured the general failure — on 2026-08-31 its `<!-- verify: -->` annotations all passed their known-good path and none had ever been run against a known-bad one. (The session note says "eight"; at `74106c8` the executable annotations number **seven** — two in `CLAUDE.md`, five in `memory/MEMORY.md` — the remaining hits being prose *about* annotations.) Note the Schema-version line in `memory/MEMORY.md` currently carries **no** probe, so on the next bump this step is *adding* one, not rescoping one.
 4. Close any issue the release resolves.
 5. Fill in the Outcome section of any `memory/work-items/` file this release completed.
 
