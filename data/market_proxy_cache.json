@@ -1,17 +1,17 @@
 {
-  "cached_at": "2026-09-06T19:56:24.827879+02:00",
+  "cached_at": "2026-09-08T21:11:59.048793+02:00",
   "data": {
     "carbon": {
-      "ticker": "KEUA",
-      "price": 22.82,
-      "date": "2026-03-20",
-      "open": 22.82,
-      "high": 22.82,
-      "low": 22.82,
-      "volume": 0,
-      "prev_close": 22.82,
-      "change": 0.0,
-      "change_pct": 0.0,
+      "ticker": "KRBN",
+      "price": 34.88,
+      "date": "2026-09-04",
+      "open": 34.75,
+      "high": 34.88,
+      "low": 34.6,
+      "volume": 12840,
+      "prev_close": 34.74,
+      "change": 0.14,
+      "change_pct": 0.39,
       "source": "alpha_vantage",
       "description": "EU Carbon Allowance (EUA) proxy",
       "units": "USD/share (correlates to EUR/tonne EUA)",
@@ -19,28 +19,27 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 71.95,
-      "date": "2026-09-04",
-      "open": 71.32,
-      "high": 72.46,
-      "low": 70.84,
-      "volume": 814,
-      "prev_close": 71.81,
-      "change_pct": 0.2,
+      "price": 76.7,
+      "date": "2026-09-08",
+      "open": 75.07,
+      "high": 76.82,
+      "low": 73.8,
+      "volume": 1397,
+      "prev_close": 71.95,
+      "change_pct": 6.6,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
       "name": "Dutch TTF Natural Gas Futures",
       "note": "Primary European natural gas price benchmark, traded on ICE",
       "currency": "EUR",
-      "price_lag1": 71.81,
-      "price_lag2": 73.63,
-      "price_lag7": 65.63,
-      "mean_7d": 70.64,
-      "volatility_7d": 2.24,
+      "price_lag1": 71.95,
+      "price_lag2": 71.81,
+      "price_lag7": 68.1,
+      "mean_7d": 71.87,
+      "volatility_7d": 2.8,
       "trend_7d": "up",
       "history": {
-        "2026-08-03": 57.51,
         "2026-08-04": 55.92,
         "2026-08-05": 52.4,
         "2026-08-06": 55.77,
@@ -64,7 +63,8 @@
         "2026-09-01": 72.22,
         "2026-09-02": 73.63,
         "2026-09-03": 71.81,
-        "2026-09-04": 71.95
+        "2026-09-04": 71.95,
+        "2026-09-08": 76.7
       }
     },
     "gas": {
@@ -85,5 +85,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "28ee1f0db7a4b890f2ff5ed186c87af4fd64dbab8d6e78a3f819ee4be41c1735"
+  "signature": "418943dcd3dddea1b6ae7a6c1a0e363a0b86d6bc734cfc669141adba0b05b327"
 }
