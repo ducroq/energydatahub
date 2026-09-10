@@ -103,3 +103,48 @@ Two things this run did **not** settle:
   rejected within 14 seconds, at 07:35 UTC here against 19:04 UTC the day before. Two
   consecutive runs, two very different times of day — so not a diurnal egress pattern. #71
   updated; it is now a repeatedly-lost feed rather than only wasted wall time.
+
+## Postscript — the recovery dispatch was a mistake
+
+Augur flagged that the 07:41Z publish carries `entsoe = 96`, same-day only. Verified by
+decrypting it, and by decrypting the last 14 vintages:
+
+```
+2026-09-10T07:41   96  1d  <- this dispatch
+2026-09-08T19:15   96  1d  <- SCHEDULED evening, and still short
+2026-09-06T17:57  192  2d
+2026-09-05T17:53  192  2d
+2026-09-04T18:47  192  2d
+2026-09-04T10:17   96  1d  } three dispatches, all pre-auction
+2026-09-04T08:14   96  1d  }
+2026-09-04T06:53   96  1d  }
+2026-08-30T19:03  192  2d
+2026-08-29T00:20   96  1d
+2026-08-28T00:44   96  1d
+2026-08-26T16:44   96  1d  <- SCHEDULED evening, and still short
+2026-08-25T16:32  192  2d
+2026-08-24T16:32  192  2d
+```
+
+**8 of 14 half-size**, which is why Augur's median expectation decayed from 192 to 96 and their
+gate will now accept a pre-auction vintage as normal.
+
+Two lessons, and the first is mine. Dispatching at 07:33 UTC to "close the gap sooner" shipped a
+knowingly half-size critical feed, and downstream that is *worse* than no publish — their gate
+consumes it, marks it, and skips the healthy evening run as not-strictly-newer. The instinct
+"restore the feed faster" ignored that the feed has an upstream publication schedule. Recorded in
+CLAUDE.md next to the dispatch command, with the empirical bound (09-04: 10:17Z → 96, 18:47Z → 192).
+
+The second is not mine and is the more serious one: **09-08 19:15Z and 08-26 16:44Z were scheduled
+evening runs and were short anyway**, hours after any auction. That is unexplained and is #74's
+real content. Augur's diagnosis attributed the whole decay to recovery publishes; it does not
+cover those two.
+
+Both were invisible to every gate. The shape signature hashes 96 and 192 identically by
+construction, and the span check built for exactly this (#53) still reports
+`members_with_expectation: 0` — deployed, correct, and not yet armed. That is the second time this
+repo has had a detector whose warm-up state reads as a pass.
+
+Also corrected on #73: Augur does not read the quality report over HTTP, it runs
+`git show origin/main:data/data_quality_report.json` against a local clone — so an external
+consumer is pinned to a git path with no schema contract, which is a bigger exposure than filed.

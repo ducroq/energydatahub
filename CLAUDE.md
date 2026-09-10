@@ -322,7 +322,15 @@ venv/bin/python scripts/detect_schema_drift.py --previous-ref HEAD --warn-only
 # Check GitHub Actions status
 gh run list --limit 5
 
-# Trigger a manual collection run (requires PAT secret in workflow)
+# Trigger a manual collection run (requires PAT secret in workflow).
+# ⚠️ NOT before ~midday UTC. Tomorrow's day-ahead auction has not cleared, so
+# `entsoe` publishes SAME-DAY ONLY (96 points, not 192) and the vintage is
+# half-size on the critical feed. Measured 2026-09-04: a 10:17 UTC dispatch
+# got 96, the 18:47 UTC scheduled run got 192. A half-size publish is WORSE
+# for Augur than no publish — their gate consumes it, marks it, and then skips
+# the healthy evening publish as not-strictly-newer (#74, augur#31). If the
+# daily publish has failed, the cheap recovery is to wait for the scheduled
+# run; dispatch early only to test the pipeline, not to restore the feed.
 gh workflow run "Collect and Publish Data"
 
 # Exercise the verification hook by hand. A healthy file exits 0 and prints nothing —
