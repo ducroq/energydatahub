@@ -83,3 +83,23 @@ The Augur session asked what was happening upstream. Told it: 09-07 upstream, 09
 it actually lacked — the `publish-failure` label is a machine-readable "stop waiting" signal its gate
 could poll instead of timing out at 03:00 UTC. Its ARF backup is wall-clock anchored, so an EDH gap
 takes out its primary and its fallback through one door; flagged as theirs.
+
+## Outcome
+
+Committed `6eee519`, rebased onto 8 CI commits (clean — they touch only `data/` and `docs/`),
+pushed with the previously-unpushed framework catch-up `0699fdc`.
+
+**Publish restored** by dispatched run `34450530525` (07:33 UTC, 7m57s): collect + deploy green,
+`overall_status=warning` with the single known `grid_imbalance` issue, 19 feeds in the sidecar,
+and the alert job auto-closed #70 on recovery. Augur's ~48h gap is closed; it was told the
+vintage would jump rather than backfill.
+
+Two things this run did **not** settle:
+
+- `ned_production` published healthily — NED recovered by itself, so the coercion path *still*
+  has never run in production and #42's closure gate is still unmet. The fix is deployed and
+  unexercised, which is exactly the state this work item has been in since 2026-08-08.
+- `air_quality_buurt` was lost **again** to a Luchtmeetnet 429 collision: both instances
+  rejected within 14 seconds, at 07:35 UTC here against 19:04 UTC the day before. Two
+  consecutive runs, two very different times of day — so not a diurnal egress pattern. #71
+  updated; it is now a repeatedly-lost feed rather than only wasted wall time.
