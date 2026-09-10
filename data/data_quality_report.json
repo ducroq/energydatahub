@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-08T19:15:52.749879+00:00",
+  "timestamp": "2026-09-10T07:41:04.859559+00:00",
   "overall_status": "warning",
   "total_issues": 1,
   "datasets_collected": 23,
@@ -33,7 +33,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -43,7 +43,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 47,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -83,7 +83,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 750,
+      "data_points": 726,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -162,7 +162,7 @@
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 384,
+      "data_points": 288,
       "checks_passed": 6,
       "checks_failed": 0,
       "issues": []
@@ -172,7 +172,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 40,
+      "data_points": 28,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -192,7 +192,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 22,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -202,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 439,
+      "data_points": 166,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -212,7 +212,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 27,
+      "data_points": 25,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -222,7 +222,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 139,
+      "data_points": 136,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
