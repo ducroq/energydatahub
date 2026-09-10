@@ -826,10 +826,10 @@ class TestClassifyDataMemberDrift:
         assert two["keys"]["data"] != one["keys"]["data"]
 
     def test_all_members_gone_is_not_member_drift(self):
-        """An emptied member map never legitimately reaches here — the six
-        Open-Meteo feeds are coerced to absent upstream by
-        PRESENT_EMPTY_GRACE_FEEDS, and every other feed fails the completeness
-        gate. Either way it must not be laundered into a warning."""
+        """An emptied member map never legitimately reaches here — the feeds
+        in PRESENT_EMPTY_GRACE_FEEDS are coerced to absent upstream, and every
+        other feed fails the completeness gate. Either way it must not be
+        laundered into a warning."""
         prev = self._sig(["Elsweide_Arnhem_NL", "Elderveld_Arnhem_NL"])
         empty = self._buurt_payload(["Elsweide_Arnhem_NL"])
         empty["data"] = {}

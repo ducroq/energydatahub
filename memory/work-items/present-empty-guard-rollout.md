@@ -107,5 +107,22 @@ from fail to warn, which is a decision with its own review bar, and #43 is the p
 fix rather than another hand-maintained allowlist entry — the exact whack-a-mole
 `derive_volatile_feeds()` was built to end.
 
+**Update 2026-09-10 — the registry grew a seventh feed, and the guard was found not to work.**
+`ned_production` was added after run `34392331572` (09-09): six NED.nl timeouts, an envelope with
+zero data points, `completeness` CRITICAL, 19 healthy feeds withheld. The registration was inert —
+the guard tested `not ds.data` while `collectors/ned.py:255` seeds `parsed[energy_type] = {}` per
+type, so the outage envelope is truthy. Predicate replaced with `present_empty_feeds()`
+(`_count_data_points(ds.data) == 0`, the same expression `validate_completeness` uses). This
+retires the Outcome's line above about "the six Open-Meteo-backed feeds": membership is now keyed
+on the failure mode, and the Open-Meteo and NED empty envelopes are NOT the same shape — which is
+exactly what the truthiness test could not see.
+
+The declined mitigation recorded above (adding `wind_forecast.json`/`ned_production.json` to
+`VOLATILE_SHAPE_FEEDS`) is still declined and is now moot for `ned_production`, which
+`derive_volatile_feeds()` classifies on its own (93% modal share, measured 2026-09-04).
+
 This file can be deleted once `7ff9623` is pushed and one production run has exercised
-the coercion path.
+the coercion path. **Neither gate is met as of 2026-09-10**: `7ff9623` is in `main` but the
+coercion path has still never run in production, and 34392331572 could not have exercised it.
+The escalation branch has never fired either. Do not close #42 on "the code is written" — that
+was tried on 2026-08-14 and reversed the same session.

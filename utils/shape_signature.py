@@ -484,9 +484,9 @@ def classify_data_member_drift(
       - the container is a plain dict on both sides (a timestamp-keyed data
         block collapses to `_kind: timestamp_map` and never matches here);
       - at least one member is retained — a feed emptied completely never
-        reaches here: the six Open-Meteo feeds in `PRESENT_EMPTY_GRACE_FEEDS`
-        are coerced to absent upstream in `data_fetcher`, and every other feed
-        fails `validate_completeness` before publish. Either way an empty
+        reaches here: the feeds in `PRESENT_EMPTY_GRACE_FEEDS` are coerced to
+        absent upstream in `data_fetcher`, and every other feed fails
+        `validate_completeness` before publish. Either way an empty
         member map must not be laundered into a warning;
       - ALL members on BOTH sides share one identical signature. This is the
         homogeneity rule: a member catalog is a map of like things, so every

@@ -77,6 +77,7 @@ from utils.data_quality import (
     escalated_upstream_feeds,
     UPSTREAM_EMPTY_ESCALATION_RUNS,
     PRESENT_EMPTY_GRACE_FEEDS,
+    present_empty_feeds,
 )
 from utils.data_types import CombinedDataSet, EnhancedDataSet
 from utils.timezone_helpers import get_timezone_and_country
@@ -668,16 +669,27 @@ async def main() -> None:
         hydro_data = results['entsoe_hydro']
         buurt_weather_data = results['buurt_weather']
         buurt_solar_data = results['buurt_solar']
-        # Present-but-empty guard for the Open-Meteo feeds (#42, generalised from
-        # the buurt-only guard of 2026-07-07). base.collect() returns a truthy
-        # EnhancedDataSet with data={} even when every location timed out (it
-        # builds the dataset regardless of _validate_data), so a transient
-        # all-locations Open-Meteo timeout — the late-wave regression documented
-        # in _openmeteo_shared.py / gotcha-log.md — would otherwise be *saved* as
-        # an empty envelope and then hard-fail the completeness gate
-        # (validate_completeness → CRITICAL on 0 points), aborting the whole
-        # daily publish. Run 30838120578 (2026-08-03) showed every offshore
-        # location timing out in one wave, so this is not hypothetical.
+        # Extracted here rather than with the rest of the late block below
+        # because it takes part in the present-but-empty guard that follows.
+        ned_data = results.get('ned')
+        # Present-but-empty guard (#42, generalised from the buurt-only guard of
+        # 2026-07-07 and again from Open-Meteo-only on 2026-09-10).
+        # base.collect() builds its EnhancedDataSet regardless of _validate_data,
+        # so a collector that traps its own sub-request errors returns an envelope
+        # carrying NO DATA POINTS, which is *saved* and then hard-fails the
+        # completeness gate (validate_completeness → CRITICAL on 0 points),
+        # aborting the whole daily publish. Two production instances, both real:
+        # run 30838120578 (2026-08-03) had every offshore Open-Meteo location time
+        # out in one wave; run 34392331572 (2026-09-09) had all six NED.nl fetches
+        # time out inside 50s, and ned_production alone cost the publish of 19
+        # healthy feeds. Membership is PRESENT_EMPTY_GRACE_FEEDS, keyed on that
+        # failure mode and not on the vendor.
+        #
+        # The two vendors do NOT produce the same empty envelope, which is why the
+        # predicate lives in present_empty_feeds() and counts data points instead
+        # of testing `not ds.data`: Open-Meteo collapses to `{}`, NED to
+        # `{'solar': {}, ...}` — truthy, zero points. The first version of this
+        # registration used truthiness and was dead on arrival.
         #
         # The grace is time-boxed. For the first UPSTREAM_EMPTY_ESCALATION_RUNS
         # consecutive runs a feed is coerced empty→None and routes through the
@@ -686,18 +698,16 @@ async def main() -> None:
         # not be laundered into silence, which is the whole point of #38's
         # counter for the price feeds. Streaks are read here and persisted with
         # the #38 ones further down.
-        _openmeteo_now = {
+        _grace_candidates = {
             'weather_forecast_multi_location': strategic_weather_data,
             'solar_forecast':                  solar_data,
             'demand_weather_forecast':         demand_weather_data,
             'offshore_wind':                   offshore_wind_data,
             'weather_forecast_buurt':          buurt_weather_data,
             'solar_forecast_buurt':            buurt_solar_data,
+            'ned_production':                  ned_data,
         }
-        present_empty_datasets = {
-            name for name, ds in _openmeteo_now.items()
-            if ds is not None and not ds.data
-        }
+        present_empty_datasets = present_empty_feeds(_grace_candidates)
         _prior_streaks_early = {}
         _streak_path_early = os.path.join(output_path, "_upstream_empty_streak.json")
         if os.path.exists(_streak_path_early):
@@ -721,25 +731,26 @@ async def main() -> None:
                 )
             else:
                 logging.warning(
-                    f"{_name}: all locations returned no data (transient "
-                    f"Open-Meteo timeout?) — treating as absent this run "
+                    f"{_name}: every sub-request returned no data (transient "
+                    f"upstream timeout?) — treating as absent this run "
                     f"({_streak}/{UPSTREAM_EMPTY_ESCALATION_RUNS} before escalation)"
                 )
         _coerce = present_empty_datasets - present_empty_past_grace
-        if 'weather_forecast_multi_location' in _coerce:
-            strategic_weather_data = None
-        if 'solar_forecast' in _coerce:
-            solar_data = None
-        if 'demand_weather_forecast' in _coerce:
-            demand_weather_data = None
-        if 'offshore_wind' in _coerce:
-            offshore_wind_data = None
-        if 'weather_forecast_buurt' in _coerce:
-            buurt_weather_data = None
-        if 'solar_forecast_buurt' in _coerce:
-            buurt_solar_data = None
+        # Coerce in the dict, then read every local back from it unconditionally.
+        # The read-back is not decoration: a per-feed `if name in _coerce:` ladder
+        # lets a registered feed silently keep its empty envelope when someone adds
+        # the registry entry and forgets the branch, and that is the same silent
+        # class as the predicate bug this guard shipped with on 2026-09-10.
+        for _name in _coerce:
+            _grace_candidates[_name] = None
+        strategic_weather_data = _grace_candidates['weather_forecast_multi_location']
+        solar_data             = _grace_candidates['solar_forecast']
+        demand_weather_data    = _grace_candidates['demand_weather_forecast']
+        offshore_wind_data     = _grace_candidates['offshore_wind']
+        buurt_weather_data     = _grace_candidates['weather_forecast_buurt']
+        buurt_solar_data       = _grace_candidates['solar_forecast_buurt']
+        ned_data               = _grace_candidates['ned_production']
         buurt_aq_data = [results[f'buurt_aq_{i}'] for i in range(len(luchtmeetnet_buurt_collectors))]
-        ned_data = results.get('ned')
         market_proxy_data = results.get('market_proxy')
         gie_storage_data = results.get('gie_storage')
         entsog_flows_data = results['entsog_flows']
@@ -1241,7 +1252,7 @@ async def main() -> None:
         streaks = update_upstream_empty_streaks(
             prior_streaks, upstream_empty_datasets, CRITICAL_DATASETS
         )
-        # #42: the Open-Meteo present-but-empty counters share this sidecar. Keys
+        # #42: the present-but-empty counters share this sidecar. Keys
         # are dataset names and do not collide with the #38 price-feed keys. The
         # decision they drive (coerce vs let it fail) was already taken above
         # using the prior values; this only advances them.

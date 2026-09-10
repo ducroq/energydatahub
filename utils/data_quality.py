@@ -424,9 +424,9 @@ DATASET_MISSING_SEVERITY: Dict[str, str] = {
                                   # timeout, gotcha-log.md:95) to None so it lands
                                   # here as 'info' rather than hard-failing the
                                   # completeness gate and aborting the publish.
-    # The other four PRESENT_EMPTY_GRACE_FEEDS (#42). Registered explicitly at
-    # 'warning', NOT left to the implicit 'info' default: unlike the buurt pair
-    # these ARE consumed by Augur, and during the grace window their absence
+    # The remaining PRESENT_EMPTY_GRACE_FEEDS (#42) — no count here, a number in
+    # prose is not maintained. Registered explicitly at 'warning', NOT left to the
+    # implicit 'info' default: unlike the buurt pair these ARE consumed by Augur, and during the grace window their absence
     # means yesterday's file is silently re-copied to docs/ as current. 'info'
     # would make three days of stale weather indistinguishable from a healthy
     # run in the quality report. 'warning' surfaces it without blocking the
@@ -436,6 +436,14 @@ DATASET_MISSING_SEVERITY: Dict[str, str] = {
     'solar_forecast':                  'warning',
     'demand_weather_forecast':         'warning',
     'offshore_wind':                   'warning',
+    # ned_production joined PRESENT_EMPTY_GRACE_FEEDS on 2026-09-10 after run
+    # 34392331572: all six NED.nl fetches timed out inside 50s and the collector
+    # published an envelope with no data points, which failed completeness and
+    # aborted the publish of 19 healthy feeds. Same 'warning' reasoning as the
+    # feeds above — Augur consumes it (solar/wind actual + forecast), so a graced
+    # run republishes yesterday's file to docs/, and that must be visible in the
+    # report rather than sitting at the implicit 'info'.
+    'ned_production':                  'warning',
 }
 
 # Back-compat shims: derive the three named lists from the dict so any
@@ -459,12 +467,20 @@ WARNING_IF_MISSING_DATASETS = [
 # hard failure (loud CI alert) instead of a warning.
 UPSTREAM_EMPTY_ESCALATION_RUNS = 3
 
-# Feeds eligible for the present-but-empty grace (#42). All six are backed by
-# Open-Meteo and collected in one late request wave, so a CDN cooldown or
-# connection timeout can empty any of them at once. base.collect() returns a
-# truthy EnhancedDataSet with data={} in that case, which validate_completeness
-# scores CRITICAL (0 points) and which aborts the whole publish — even though a
-# genuinely *absent* feed here is a non-event.
+# Feeds eligible for the present-but-empty grace (#42). Membership is not about
+# the vendor but about the failure mode: a collector that traps its own
+# per-sub-request errors and returns an envelope carrying NO DATA POINTS.
+# validate_completeness scores that CRITICAL and aborts the whole publish —
+# even though a genuinely *absent* feed here is a non-event, so empty is
+# punished harder than missing.
+#
+# Six are Open-Meteo, collected in one late request wave, where a CDN cooldown
+# or connection timeout can empty any of them at once. ned_production is the
+# seventh (2026-09-10): collectors/ned.py logs and swallows each per-type fetch
+# failure, so an NED.nl timeout produces an envelope with the same zero points.
+#
+# "No data points" is NOT the same test as "falsy .data", and the difference is
+# what makes this list apply to ned_production at all — see present_empty_feeds().
 #
 # The grace is deliberately time-boxed, not unconditional. Coercing empty→absent
 # forever would let a real, sustained outage degrade silently, which is exactly
@@ -479,7 +495,37 @@ PRESENT_EMPTY_GRACE_FEEDS = (
     'offshore_wind',
     'weather_forecast_buurt',
     'solar_forecast_buurt',
+    'ned_production',
 )
+
+
+def present_empty_feeds(candidates: Dict[str, Any]) -> set:
+    """Which of `candidates` are present-but-empty: envelope exists, no data.
+
+    `candidates` maps dataset name -> EnhancedDataSet or None. A feed that is
+    None is *absent*, which already routes through the non-blocking missing
+    path and is not this function's business.
+
+    The emptiness test deliberately mirrors validate_completeness's own measure
+    (`_count_data_points`) instead of testing `not ds.data`. Asking a different
+    question than the gate you exist to forestall is how a grace ends up dead on
+    arrival, and this one did: the first version of the ned_production
+    registration tested truthiness, and `collectors/ned.py` seeds
+    `parsed[energy_type] = {}` for every configured type BEFORE it knows whether
+    anything parsed. A total NED.nl outage therefore yields
+
+        {'solar': {}, 'wind_onshore': {}, 'wind_offshore': {}}
+
+    which is truthy and carries zero points. Caught in review 2026-09-10 with
+    the whole suite green, because the tests asserted the wiring and not the
+    predicate. The six Open-Meteo collectors gate their per-location assignment
+    on `if location_data:`, so they really do collapse to `{}` — which is why
+    truthiness happened to work for them and hid the flaw.
+    """
+    return {
+        name for name, ds in candidates.items()
+        if ds is not None and _count_data_points(ds.data) == 0
+    }
 
 
 def update_upstream_empty_streaks(
