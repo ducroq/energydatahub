@@ -1,27 +1,43 @@
 {
-  "cached_at": "2026-09-10T09:35:22.700441+02:00",
+  "cached_at": "2026-09-10T20:53:06.878822+02:00",
   "data": {
+    "carbon": {
+      "ticker": "KEUA",
+      "price": 22.82,
+      "date": "2026-03-20",
+      "open": 22.82,
+      "high": 22.82,
+      "low": 22.82,
+      "volume": 0,
+      "prev_close": 22.82,
+      "change": 0.0,
+      "change_pct": 0.0,
+      "source": "alpha_vantage",
+      "description": "EU Carbon Allowance (EUA) proxy",
+      "units": "USD/share (correlates to EUR/tonne EUA)",
+      "name": "KraneShares European Carbon Allowance ETF"
+    },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 79.25,
-      "date": "2026-09-09",
-      "open": 78.2,
-      "high": 80.0,
-      "low": 77.84,
-      "volume": 1397,
-      "prev_close": 75.84,
-      "change_pct": 4.49,
+      "price": 81.96,
+      "date": "2026-09-10",
+      "open": 80.6,
+      "high": 82.17,
+      "low": 80.6,
+      "volume": 133,
+      "prev_close": 79.25,
+      "change_pct": 3.43,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
       "name": "Dutch TTF Natural Gas Futures",
       "note": "Primary European natural gas price benchmark, traded on ICE",
       "currency": "EUR",
-      "price_lag1": 75.84,
-      "price_lag2": 71.95,
-      "price_lag7": 66.98,
-      "mean_7d": 73.5,
-      "volatility_7d": 2.9,
+      "price_lag1": 79.25,
+      "price_lag2": 75.84,
+      "price_lag7": 69.81,
+      "mean_7d": 75.24,
+      "volatility_7d": 3.7,
       "trend_7d": "up",
       "history": {
         "2026-08-06": 55.77,
@@ -47,7 +63,8 @@
         "2026-09-03": 71.81,
         "2026-09-04": 71.95,
         "2026-09-08": 75.84,
-        "2026-09-09": 79.25
+        "2026-09-09": 79.25,
+        "2026-09-10": 81.96
       }
     },
     "gas": {
@@ -68,5 +85,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "f66a027054551d5d33a611ee6da642cc5b2f1ae7423530ebc32a1a7acd8e1823"
+  "signature": "5a156ed33437c77e7034c4dfaa94c93c2439c9da0f2927cec0c670d694bdd820"
 }

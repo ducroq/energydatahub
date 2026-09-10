@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-09-10T07:41:04+00:00",
+  "computed_at": "2026-09-10T18:53:50+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -233,7 +233,7 @@
       ]
     },
     "wind_forecast.json": {
-      "shape_hash": "eaf46c48db144ec086d2a8b024afca33",
+      "shape_hash": "99a0460b47c951788c494c6659a70d80",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -340,6 +340,26 @@
                   "data": {
                     "_kind": "dict",
                     "keys": {
+                      "BorkumRiffgrund_DE": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
                       "Borssele_NL": {
                         "_kind": "timestamp_map",
                         "value_shape": {
@@ -958,7 +978,7 @@
       "sources": null
     },
     "ned_production.json": {
-      "shape_hash": "c92fb72194e5ab57e5a751c1bcebfd8a",
+      "shape_hash": "a27584b93b681f1493e800060146a6d6",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -967,7 +987,32 @@
             "keys": {
               "solar": {
                 "_kind": "dict",
-                "keys": {}
+                "keys": {
+                  "actual": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  },
+                  "forecast": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  }
+                }
               },
               "wind_offshore": {
                 "_kind": "dict",
@@ -1002,6 +1047,18 @@
                 "_kind": "dict",
                 "keys": {
                   "actual": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  },
+                  "forecast": {
                     "_kind": "timestamp_map",
                     "value_shape": {
                       "_kind": "dict",
@@ -2274,13 +2331,32 @@
       "sources": null
     },
     "market_proxies.json": {
-      "shape_hash": "a6d7a303d71509a806d12292e524ef90",
+      "shape_hash": "e5231b062e10a6aba4721e9f781c4133",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
           "data": {
             "_kind": "dict",
             "keys": {
+              "carbon": {
+                "_kind": "dict",
+                "keys": {
+                  "change": "float",
+                  "change_pct": "float",
+                  "date": "str",
+                  "description": "str",
+                  "high": "float",
+                  "low": "float",
+                  "name": "str",
+                  "open": "float",
+                  "prev_close": "float",
+                  "price": "float",
+                  "source": "str",
+                  "ticker": "str",
+                  "units": "str",
+                  "volume": "int"
+                }
+              },
               "gas": {
                 "_kind": "dict",
                 "keys": {

@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-09-10T07:41:04.859559+00:00",
+  "timestamp": "2026-09-10T18:53:50.795278+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
+  "total_issues": 2,
   "datasets_collected": 23,
   "datasets_missing": [
     "air_quality_buurt"
@@ -13,7 +13,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -23,7 +23,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -33,7 +33,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -43,7 +43,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 24,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -83,7 +83,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 726,
+      "data_points": 750,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -112,7 +112,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 312,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -142,7 +142,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 1920,
+      "data_points": 2160,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -161,18 +161,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
-      "data_points": 288,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "status": "warning",
+      "data_points": 384,
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "10 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 10,
+            "examples": [
+              "NL/2026-09-10T10:30:00+02:00: forecast_error=3487.7, load_actual=7995.236, ratio=0.44",
+              "NL/2026-09-10T10:45:00+02:00: forecast_error=3868.1, load_actual=7601.886, ratio=0.51",
+              "NL/2026-09-10T11:00:00+02:00: forecast_error=3942.0, load_actual=7519.826, ratio=0.52",
+              "NL/2026-09-10T11:15:00+02:00: forecast_error=4691.6, load_actual=6650.746, ratio=0.71",
+              "NL/2026-09-10T11:30:00+02:00: forecast_error=4952.4, load_actual=6311.296, ratio=0.78"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 28,
+      "data_points": 80,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -182,7 +199,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 214,
+      "data_points": 215,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -202,7 +219,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 166,
+      "data_points": 529,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -212,7 +229,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 25,
+      "data_points": 27,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -222,7 +239,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 136,
+      "data_points": 137,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
