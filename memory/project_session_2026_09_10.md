@@ -148,3 +148,38 @@ repo has had a detector whose warm-up state reads as a pass.
 Also corrected on #73: Augur does not read the quality report over HTTP, it runs
 `git show origin/main:data/data_quality_report.json` against a local clone — so an external
 consumer is pinned to a git path with no schema contract, which is a bigger exposure than filed.
+
+## Root cause of the scheduled shorts (#74)
+
+Diffed the collect logs. Same query, same four-day window, same normal pagination termination:
+
+```
+09-06 17:56:24  Parsed 192 data points from ENTSO-E response   healthy
+09-08 19:12:53  Parsed  96 data points from ENTSO-E response   short
+```
+
+ENTSO-E answered a four-day NL day-ahead price query with one day of data, at 19:12 UTC, with no
+HTTP error and no retry on the price path. The 429 burst in that run is Luchtmeetnet interleaved
+in the log — a different collector, and I nearly misattributed it. 09-07, already in the past, was
+missing from the response too.
+
+**Fourth request-vs-response instance**: locations (08-14), zones (08-30), borders (#54), now
+time span. The first three were all caught by the drift tripwire *aborting the publish* — an
+instrument not designed for them, responding by breaking everything. Span is the axis where that
+accident cannot happen: 96 and 192 hash identically by construction, which is the founding example
+in `shape_signature.py`'s own docstring. So the one axis with no accidental detector is the one
+that went unnoticed for 9 days.
+
+Told Augur: **accept and alarm**, not wait — a short scheduled publish means upstream had less
+data when we asked, and our next publish is 24h away regardless. Holding would convert an upstream
+gap into a downstream outage, which is exactly what our quality gate did with `ned_production` on
+09-09.
+
+**Unverified and flagged as such**: whether ENTSO-E genuinely lacked those days, or whether the
+four-day window is itself the trigger. `backfill_entsoe.py` would answer it but is broken against
+the v2.2+ envelope (#57).
+
+**Both detectors for this class are currently down.** Our span check is unarmed
+(`members_with_expectation: 0`) for roughly another week; Augur's expectation has decayed to 96 so
+it would not refuse a short vintage either. This class is unmonitored end to end right now — not
+covered by the other party.
