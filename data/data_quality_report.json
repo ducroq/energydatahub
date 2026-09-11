@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-09-10T18:53:50.795278+00:00",
+  "timestamp": "2026-09-11T18:56:19.188164+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "total_issues": 1,
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -89,6 +87,16 @@
       "issues": []
     },
     {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 24,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
@@ -161,28 +169,11 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
+      "status": "info",
       "data_points": 384,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "10 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 10,
-            "examples": [
-              "NL/2026-09-10T10:30:00+02:00: forecast_error=3487.7, load_actual=7995.236, ratio=0.44",
-              "NL/2026-09-10T10:45:00+02:00: forecast_error=3868.1, load_actual=7601.886, ratio=0.51",
-              "NL/2026-09-10T11:00:00+02:00: forecast_error=3942.0, load_actual=7519.826, ratio=0.52",
-              "NL/2026-09-10T11:15:00+02:00: forecast_error=4691.6, load_actual=6650.746, ratio=0.71",
-              "NL/2026-09-10T11:30:00+02:00: forecast_error=4952.4, load_actual=6311.296, ratio=0.78"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
@@ -199,7 +190,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 215,
+      "data_points": 216,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -239,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 137,
+      "data_points": 138,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -249,7 +240,7 @@
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 8,
+      "data_points": 7,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
