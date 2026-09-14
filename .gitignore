@@ -18,6 +18,8 @@ secrets.local.ini
 !.claude/skills/
 !.claude/settings.json
 !.claude/hooks/
+# the per-repo half of review-changes; the skill REFUSES without it
+!.claude/review-profile.md
 .claude/hooks/__pycache__/
 tmpclaude-*
 
