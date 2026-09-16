@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-15T19:26:47.187758+00:00",
+  "timestamp": "2026-09-16T19:18:41.672880+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -177,15 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "16 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 16,
+            "count": 8,
             "examples": [
-              "NL/2026-09-15T09:30:00+02:00: forecast_error=3624.3, load_actual=8855.586, ratio=0.41",
-              "NL/2026-09-15T09:45:00+02:00: forecast_error=3747.3, load_actual=8524.256, ratio=0.44",
-              "NL/2026-09-15T10:00:00+02:00: forecast_error=4150.0, load_actual=8028.226, ratio=0.52",
-              "NL/2026-09-15T10:15:00+02:00: forecast_error=4762.1, load_actual=7211.806, ratio=0.66",
-              "NL/2026-09-15T10:30:00+02:00: forecast_error=4999.3, load_actual=6831.046, ratio=0.73"
+              "NL/2026-09-16T11:30:00+02:00: forecast_error=2894.5, load_actual=6972.376, ratio=0.42",
+              "NL/2026-09-16T11:45:00+02:00: forecast_error=2851.7, load_actual=6960.286, ratio=0.41",
+              "NL/2026-09-16T12:00:00+02:00: forecast_error=3201.4, load_actual=6654.066, ratio=0.48",
+              "NL/2026-09-16T12:15:00+02:00: forecast_error=2987.7, load_actual=6855.906, ratio=0.44",
+              "NL/2026-09-16T12:30:00+02:00: forecast_error=3108.0, load_actual=6879.116, ratio=0.45"
             ],
             "threshold": 0.4
           }
@@ -217,7 +217,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 22,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -227,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 535,
+      "data_points": 534,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -247,7 +247,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 134,
+      "data_points": 133,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
