@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-16T19:18:41.672880+00:00",
+  "timestamp": "2026-09-17T19:30:33.485162+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -91,7 +91,7 @@
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -129,11 +129,39 @@
       "dataset_name": "solar_forecast",
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 1176,
+      "status": "warning",
+      "data_points": 1008,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "location_completeness",
+          "severity": "warning",
+          "message": "1 of 7 location(s) returned no data after 3 attempts: Munich_DE",
+          "details": {
+            "requested": [
+              "Rotterdam_NL",
+              "Eindhoven_NL",
+              "Lelystad_NL",
+              "Groningen_NL",
+              "Munich_DE",
+              "Stuttgart_DE",
+              "Antwerp_BE"
+            ],
+            "delivered": [
+              "Rotterdam_NL",
+              "Eindhoven_NL",
+              "Lelystad_NL",
+              "Groningen_NL",
+              "Stuttgart_DE",
+              "Antwerp_BE"
+            ],
+            "missing": [
+              "Munich_DE"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "demand_weather_forecast",
@@ -169,28 +197,11 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
+      "status": "info",
       "data_points": 384,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 8,
-            "examples": [
-              "NL/2026-09-16T11:30:00+02:00: forecast_error=2894.5, load_actual=6972.376, ratio=0.42",
-              "NL/2026-09-16T11:45:00+02:00: forecast_error=2851.7, load_actual=6960.286, ratio=0.41",
-              "NL/2026-09-16T12:00:00+02:00: forecast_error=3201.4, load_actual=6654.066, ratio=0.48",
-              "NL/2026-09-16T12:15:00+02:00: forecast_error=2987.7, load_actual=6855.906, ratio=0.44",
-              "NL/2026-09-16T12:30:00+02:00: forecast_error=3108.0, load_actual=6879.116, ratio=0.45"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
@@ -227,7 +238,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 534,
+      "data_points": 535,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -247,7 +258,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 133,
+      "data_points": 132,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
