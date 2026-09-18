@@ -1,9 +1,11 @@
 {
-  "timestamp": "2026-09-17T19:30:33.485162+00:00",
+  "timestamp": "2026-09-18T18:48:40.333185+00:00",
   "overall_status": "warning",
   "total_issues": 2,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "datasets_collected": 23,
+  "datasets_missing": [
+    "air_quality_buurt"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -81,18 +83,8 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 750,
+      "data_points": 730,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 24,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -129,39 +121,11 @@
       "dataset_name": "solar_forecast",
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
-      "data_points": 1008,
+      "status": "info",
+      "data_points": 1176,
       "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "location_completeness",
-          "severity": "warning",
-          "message": "1 of 7 location(s) returned no data after 3 attempts: Munich_DE",
-          "details": {
-            "requested": [
-              "Rotterdam_NL",
-              "Eindhoven_NL",
-              "Lelystad_NL",
-              "Groningen_NL",
-              "Munich_DE",
-              "Stuttgart_DE",
-              "Antwerp_BE"
-            ],
-            "delivered": [
-              "Rotterdam_NL",
-              "Eindhoven_NL",
-              "Lelystad_NL",
-              "Groningen_NL",
-              "Stuttgart_DE",
-              "Antwerp_BE"
-            ],
-            "missing": [
-              "Munich_DE"
-            ]
-          }
-        }
-      ]
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "demand_weather_forecast",
@@ -197,18 +161,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "11 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 11,
+            "examples": [
+              "NL/2026-09-18T10:15:00+02:00: forecast_error=3845.7, load_actual=8033.756, ratio=0.48",
+              "NL/2026-09-18T10:30:00+02:00: forecast_error=4485.5, load_actual=7633.676, ratio=0.59",
+              "NL/2026-09-18T10:45:00+02:00: forecast_error=4832.7, load_actual=7410.346, ratio=0.65",
+              "NL/2026-09-18T11:00:00+02:00: forecast_error=5406.7, load_actual=6940.626, ratio=0.78",
+              "NL/2026-09-18T11:15:00+02:00: forecast_error=5863.1, load_actual=6622.606, ratio=0.89"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 84,
+      "data_points": 76,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -238,7 +219,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 535,
+      "data_points": 528,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -258,7 +239,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 132,
+      "data_points": 133,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []

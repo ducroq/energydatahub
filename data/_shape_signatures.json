@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-09-17T19:30:33+00:00",
+  "computed_at": "2026-09-18T18:48:40+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -672,75 +672,6 @@
         "offshore_wind"
       ]
     },
-    "air_quality_buurt.json": {
-      "shape_hash": "b343fc99e0a8d734a8efd9cd615fd814",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Elsweide_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "data_type": "str",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "stations": {
-                "_kind": "dict",
-                "keys": {
-                  "Elsweide_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  }
-                }
-              },
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "air",
-      "sources": null
-    },
     "weather_forecast_multi_location.json": {
       "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
       "shape_signature": {
@@ -1186,7 +1117,7 @@
       "sources": null
     },
     "solar_forecast.json": {
-      "shape_hash": "047c69b3d4b3967da84ade6f2713aa87",
+      "shape_hash": "7510f34db80fb2d2ff39e44cc0ee3d62",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -1245,6 +1176,19 @@
                   }
                 }
               },
+              "Munich_DE": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "cloud_cover": "float",
+                    "dhi": "float",
+                    "direct": "float",
+                    "dni": "float",
+                    "ghi": "float"
+                  }
+                }
+              },
               "Rotterdam_NL": {
                 "_kind": "timestamp_map",
                 "value_shape": {
@@ -1278,34 +1222,6 @@
             "keys": {
               "api_rate_limit": "str",
               "collector": "str",
-              "collector_quality_issues": {
-                "_kind": "list",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "check_name": "str",
-                    "details": {
-                      "_kind": "dict",
-                      "keys": {
-                        "delivered": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        },
-                        "missing": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        },
-                        "requested": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        }
-                      }
-                    },
-                    "message": "str",
-                    "severity": "str"
-                  }
-                }
-              },
               "data_type": "str",
               "description": "str",
               "end_time": "str",
