@@ -19,8 +19,10 @@ import pytest
 from utils.shape_signature import (
     OBSERVATIONS_KEEP_LINES,
     append_shape_observation,
+    compute_shape_signature,
     load_shape_observations,
     observation_from_sidecar,
+    signature_hash,
     volatile_feeds_from_observations,
 )
 
@@ -196,3 +198,104 @@ class TestCurrentRunExclusion:
         must still see every record."""
         log = self._log("A", current="B")
         assert "feed" in volatile_feeds_from_observations(log)
+
+
+# --- Diagnostic-blind volatility evidence (#45 / H7, 2026-09-21) ------------
+
+QUALITY_ISSUES = [{"check_name": "balance_delta_synthesised", "severity": "warning",
+                   "message": "endpoint dead", "details": {}}]
+
+
+def _envelope(*, issues=False):
+    """A `grid_imbalance`-shaped envelope; `issues` toggles the diagnostic key."""
+    meta = {"data_type": "grid_imbalance", "balance_delta_status": "synthesised"}
+    if issues:
+        meta["collector_quality_issues"] = QUALITY_ISSUES
+    return {"metadata": meta,
+            "data": {"imbalance_price": {"2026-09-20T00:00:00+02:00": 42.0}}}
+
+
+def _real_sidecar(*, issues=False, at="2026-09-20T18:00:00+02:00", break_it=False):
+    payload = _envelope(issues=issues)
+    if break_it:                       # a genuine unversioned break: field gone
+        del payload["data"]["imbalance_price"]
+        payload["data"]["something_else"] = {"2026-09-20T00:00:00+02:00": 42.0}
+    sig = compute_shape_signature(payload)
+    return {"computed_at": at, "schema_version": "2.4",
+            "feeds": {"grid_imbalance.json": {
+                "shape_hash": signature_hash(sig), "shape_signature": sig}}}
+
+
+class TestDiagnosticBlindEvidence:
+    """The tripwire excuses diagnostic-key churn; this log must not still count
+    it as evidence that the feed wobbles.
+
+    Without this, one excused flip promotes `grid_imbalance` — a FIELD-keyed
+    feed, where a vanished key IS the break — to derived-volatile, downgrading
+    every real break on it until 54 of the 60 records age out. Measured on the
+    real log before the fix.
+    """
+
+    def test_record_marks_itself_blind_capable(self):
+        rec = observation_from_sidecar(_real_sidecar())
+        assert rec["pruned_hashes"] is True, (
+            "the marker is what distinguishes an old record from a new one "
+            "where nothing needed pruning"
+        )
+
+    def test_only_feeds_the_prune_changes_are_listed(self):
+        """Size matters: the whole log is rewritten and committed every run."""
+        assert "feeds_pruned" not in observation_from_sidecar(_real_sidecar())
+        degraded = observation_from_sidecar(_real_sidecar(issues=True))
+        assert list(degraded["feeds_pruned"]) == ["grid_imbalance.json"]
+        assert (degraded["feeds_pruned"]["grid_imbalance.json"]
+                != degraded["feeds"]["grid_imbalance.json"])
+
+    def test_excused_flip_does_not_make_the_feed_volatile(self):
+        """The refutation this fix answers."""
+        obs = [observation_from_sidecar(_real_sidecar(issues=i % 2 == 0,
+                                                      at=f"2026-09-{i:02d}"))
+               for i in range(1, 11)]
+        assert len({r["feeds"]["grid_imbalance.json"] for r in obs}) == 2, (
+            "fixture must actually flip the RAW hash, or this proves nothing"
+        )
+        assert "grid_imbalance.json" not in volatile_feeds_from_observations(obs)
+
+    def test_a_genuine_break_still_makes_it_volatile(self):
+        """The fix must not blind the classifier to real churn."""
+        obs = [observation_from_sidecar(_real_sidecar(at=f"2026-09-{i:02d}"))
+               for i in range(1, 10)]
+        obs.append(observation_from_sidecar(_real_sidecar(break_it=True,
+                                                          at="2026-09-10")))
+        assert "grid_imbalance.json" in volatile_feeds_from_observations(obs)
+
+    def test_break_hidden_under_the_diagnostic_key_still_counts(self):
+        """A real break arriving on the SAME run as the quality issue."""
+        obs = [observation_from_sidecar(_real_sidecar(at=f"2026-09-{i:02d}"))
+               for i in range(1, 10)]
+        obs.append(observation_from_sidecar(
+            _real_sidecar(issues=True, break_it=True, at="2026-09-10")))
+        assert "grid_imbalance.json" in volatile_feeds_from_observations(obs)
+
+    def test_mixed_window_falls_back_to_raw_hashes(self):
+        """A window still holding pre-2026-09-21 records behaves as it did
+        before — no backfill, no reinterpretation, no invented churn."""
+        obs = [observation_from_sidecar(_real_sidecar(issues=i % 2 == 0,
+                                                      at=f"2026-09-{i:02d}"))
+               for i in range(1, 11)]
+        legacy = {k: v for k, v in obs[0].items()
+                  if k not in ("pruned_hashes", "feeds_pruned")}
+        assert "grid_imbalance.json" in volatile_feeds_from_observations(
+            [legacy] + obs[1:]
+        ), "one legacy record must force the whole feed back to raw evidence"
+
+    def test_other_feeds_are_judged_independently(self):
+        """Completeness is per FEED, not per log: one feed's legacy record
+        must not drag a fully-blind feed back to raw evidence."""
+        obs = []
+        for i in range(1, 11):
+            rec = observation_from_sidecar(_real_sidecar(issues=i % 2 == 0,
+                                                         at=f"2026-09-{i:02d}"))
+            rec["feeds"]["other.json"] = "stable"
+            obs.append(rec)
+        assert volatile_feeds_from_observations(obs) == frozenset()

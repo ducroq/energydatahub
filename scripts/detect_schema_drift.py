@@ -30,6 +30,27 @@ Catalog vs shape drift:
   surface as warnings, never failures. Without this split, the
   tripwire would fire on every transient collector miss-and-recover.
 
+Diagnostic-key churn (a collector reporting its own degradation):
+  `BaseCollector.collect()` attaches `metadata['collector_quality_issues']`
+  only when the run raised an issue, so the key arrives on exactly the degraded
+  runs and leaves again on the next healthy one. It IS a published key — the
+  v2.4 SCHEMA_CHANGELOG documents it on `grid_imbalance` — but documents it as
+  **optional**: "may carry a 'balance_delta_synthesised' warning". A key whose
+  own changelog entry says *may* cannot be a structural invariant, so its
+  presence is a property of the run, not of the shape. `_partition_diagnostic_only()`
+  removes a feed from the comparison entirely when its two signatures are equal
+  once DIAGNOSTIC_ENVELOPE_KEYS are pruned at every depth.
+
+  This is NOT a downgrade, which is why it has no CRITICAL_FEEDS carve-out
+  where the two classes below do: the diff is not drift at all, so there is
+  nothing to downgrade. It is classified FIRST, before the clean-pass check, so
+  a run whose only diff is the diagnostic key ends clean rather than merely
+  warned. Anything else in the diff survives the prune and enforces normally —
+  the 2026-09-20 `load_forecast` failure had a real field loss underneath the
+  key and still fails (#79). Generalised from `classify_data_member_drift` on
+  2026-09-21 (#45, hypothesis-log H7) after that failure measured the second
+  shape flip the narrow version could not reach.
+
 Member drift (a location dropping out of one feed):
   A member-mapped feed keys its `data` block by location name. When one
   member's fetch exhausts its retries it drops out of the payload, which the
@@ -93,7 +114,9 @@ from utils.shape_signature import (  # noqa: E402
     classify_data_member_drift,
     diff_signatures,
     load_shape_observations,
+    prune_diagnostic_keys,
     volatile_feeds_from_observations,
+    DIAGNOSTIC_ENVELOPE_KEYS,
     OBSERVATIONS_FILENAME,
 )
 
@@ -247,14 +270,14 @@ VOLATILE_SHAPE_FEEDS = frozenset({
 # precisely why it was missed on the first pass, when this same argument was
 # correctly applied to generation_mix and not to nordic_hydro.
 #
-# Register it once the diagnostic-key exemption is generalised from
-# `classify_data_member_drift` to the tripwire's envelope comparison
-# (hypothesis-log H7). That change makes this registration correct, and
-# registering nordic_hydro is its natural acceptance test.
-#
-# NOTE for whoever lands H7: `_without_diagnostic_keys` currently applies only
-# to non-`data` top-level keys, and wind_forecast's ENTSO-E metadata sits
-# INSIDE the data block — generalising it has to walk nested envelopes.
+# PRECONDITION MET 2026-09-21: the exemption is generalised
+# (`_partition_diagnostic_only` + the recursive `prune_diagnostic_keys`, which
+# does walk nested envelopes — wind_forecast's ENTSO-E metadata sits INSIDE the
+# data block and the old one-node prune could not reach it). The registration
+# is now unblocked, and registering nordic_hydro is its natural acceptance
+# test. Still NOT done here: it is H6's call and wants its own measurement,
+# because declaring a feed also strips it from derive_volatile_feeds() and that
+# trade has to be re-argued against the post-H7 behaviour, not the old one.
 MEMBER_MAPPED_FEEDS = frozenset({
     'weather_forecast_buurt.json',
     'solar_forecast_buurt.json',
@@ -454,6 +477,14 @@ def _emit_summary(report: Dict[str, Any], current_path: Path,
     print(f"  feeds added:    {report['feeds_added'] or '(none)'}")
     print(f"  feeds removed:  {report['feeds_removed'] or '(none)'}")
     print(f"  feeds unchanged: {len(report['feeds_unchanged'])}")
+    # Named here, not only in the ::notice::. These feeds ARE inside the
+    # unchanged count above, and a count that silently absorbs them is the
+    # thing the other classes get a [tag] to avoid — the summary block is
+    # what reconciles with the ::error:: count, so an excused feed that
+    # appears in no line of it is a silent swallow whatever the notice says.
+    diagnostic_only = report.get("feeds_diagnostic_only") or []
+    if diagnostic_only:
+        print(f"    of which [diagnostic-only]: {', '.join(diagnostic_only)}")
     if report["feeds_changed"]:
         print("  feeds CHANGED:")
         for c in report["feeds_changed"]:
@@ -482,6 +513,73 @@ def _emit_summary(report: Dict[str, Any], current_path: Path,
                     print(f"        - collectors: {sd['removed']}")
     else:
         print("  feeds CHANGED:  (none)")
+
+
+def _partition_diagnostic_only(feeds_changed, previous, current):
+    """Split changed feeds into ``(diagnostic_only, remaining)``.
+
+    A feed lands in ``diagnostic_only`` when its two shape signatures are
+    IDENTICAL once `DIAGNOSTIC_ENVELOPE_KEYS` are pruned at every depth — i.e.
+    the entire diff is `metadata.collector_quality_issues` arriving on a
+    degraded run, or leaving again on the next healthy one. That key is
+    attached by `BaseCollector.collect()` only when the run raised an issue, so
+    its presence is a property of the RUN. It is a published key (v2.4, on
+    `grid_imbalance`) and `utils/data_quality.py` reads it — but the changelog
+    declares it **optional** ("may carry"), which is what makes it unusable as
+    a structural invariant. A feed cannot be failed for describing its own
+    degradation.
+
+    This is not a downgrade like the two partitions below it, and the
+    difference matters:
+
+      - Volatility and member drift say "this IS drift, but an operational
+        kind" and warn. They deliberately exclude `CRITICAL_FEEDS`, because on
+        the feeds Augur depends on a wrong heuristic turns a hard failure into
+        a warning nobody reads.
+      - This says the diff is not drift AT ALL, so there is nothing to
+        downgrade and no ``protected`` parameter. It applies to critical feeds
+        too. Exempting them would mean a critical feed's shape contract
+        includes a key that is absent from every healthy publish, which is not
+        a contract anyone can consume.
+
+    Anything else in the diff survives the prune and is enforced normally: the
+    2026-09-20 `load_forecast` failure (#79) had a real field loss underneath
+    the diagnostic key and still fails here, by design. The prune buys a
+    legible diff, not a pass.
+
+    A feed missing its `shape_signature` on either side (an older sidecar than
+    the field) is left in ``remaining`` — unprunable means unexcused.
+
+    The exemption also requires that a diagnostic key was actually PRESENT on
+    one of the two sides. Pruned-equality alone is too weak a test: in
+    production a hash is derived from its signature, so two equal signatures
+    have equal hashes and never reach `feeds_changed` at all — which means
+    "signatures equal, hashes differ" can only arise from a sidecar whose hash
+    and signature disagree. Excusing that would excuse a corrupt or
+    hand-written sidecar as diagnostic churn. Caught by the existing
+    end-to-end tests, whose fixtures are exactly that shape.
+    """
+    prev_feeds = (previous.get("feeds") or {}) if isinstance(previous, dict) else {}
+    curr_feeds = (current.get("feeds") or {}) if isinstance(current, dict) else {}
+    diagnostic_only, remaining = [], []
+    for c in feeds_changed:
+        name = c["feed"]
+        prev_sig = (prev_feeds.get(name) or {}).get("shape_signature")
+        curr_sig = (curr_feeds.get(name) or {}).get("shape_signature")
+        if prev_sig is None or curr_sig is None:
+            remaining.append(c)
+            continue
+        pruned_prev = prune_diagnostic_keys(prev_sig)
+        pruned_curr = prune_diagnostic_keys(curr_sig)
+        # `prune_diagnostic_keys` returns its ARGUMENT when it removed nothing,
+        # so identity on both sides means neither signature carried a
+        # diagnostic key and there is nothing for this partition to excuse.
+        carried_key = pruned_prev is not prev_sig or pruned_curr is not curr_sig
+        if carried_key and pruned_prev == pruned_curr:
+            diagnostic_only.append(c)
+        else:
+            remaining.append(c)
+    return diagnostic_only, remaining
 
 
 def _partition_within_feed_drift(feeds_changed, volatile_feeds=VOLATILE_SHAPE_FEEDS):
@@ -590,6 +688,30 @@ def main() -> int:
         return 0
 
     report = diff_signatures(previous, current)
+
+    # Diagnostic-key churn is not drift, so it is taken out of `feeds_changed`
+    # BEFORE the clean-pass check below — a run whose only diff is a collector
+    # reporting its own degradation has to be able to end clean, not merely be
+    # downgraded further down. The feeds move into `feeds_unchanged` so the
+    # three-way partition still accounts for every feed (the denominator is
+    # load-bearing: see report_span_shortfall.py for the cost of losing it),
+    # and are listed separately so this is a NOTICE in the run log rather than
+    # a silent swallow.
+    diagnostic_only, report["feeds_changed"] = _partition_diagnostic_only(
+        report["feeds_changed"], previous, current
+    )
+    report["feeds_diagnostic_only"] = [c["feed"] for c in diagnostic_only]
+    if diagnostic_only:
+        report["feeds_unchanged"] = sorted(
+            report["feeds_unchanged"] + report["feeds_diagnostic_only"]
+        )
+        print(
+            f"::notice::{len(diagnostic_only)} feed(s) differ only by "
+            f"{'/'.join(sorted(DIAGNOSTIC_ENVELOPE_KEYS))} — a collector "
+            "reported its own degradation, which is not a schema change: "
+            f"{', '.join(report['feeds_diagnostic_only'])}. Check the quality "
+            "report for what it said."
+        )
 
     # No change → clean pass
     if not report["feeds_changed"] and not report["feeds_added"] \

@@ -23,6 +23,7 @@ from utils.shape_signature import (
     _merge_signatures,
     classify_data_member_drift,
     compute_shape_signature,
+    prune_diagnostic_keys,
     signature_hash,
     signatures_for_published_feeds,
     diff_signatures,
@@ -1100,3 +1101,123 @@ class TestMagnitudeFloor:
         verdict = self._verdict(["A"], ["A", "B", "C", "D"])
         assert verdict is not None
         assert verdict["added"] == ["B", "C", "D"]
+
+
+class TestPruneDiagnosticKeys:
+    """`prune_diagnostic_keys` walks the WHOLE tree, not one node.
+
+    The one-node version (2026-08-14) reached `metadata.collector_quality_
+    issues` on a `{metadata, data}` envelope and nothing else. `wind_forecast`
+    keeps its ENTSO-E metadata at `data.<source>.metadata`, inside the data
+    block, which is why generalising the exemption (#45 / H7) needed the walk.
+    """
+
+    ISSUES = [{"check_name": "field_completeness", "severity": "warning",
+               "message": "DE_LU carries no actual load", "details": {}}]
+
+    def test_top_level_envelope_key_pruned(self):
+        with_issues = compute_shape_signature(
+            {"metadata": {"units": "MW", "collector_quality_issues": self.ISSUES},
+             "data": {"NL": 1.0}}
+        )
+        clean = compute_shape_signature(
+            {"metadata": {"units": "MW"}, "data": {"NL": 1.0}}
+        )
+        assert prune_diagnostic_keys(with_issues) == clean
+
+    def test_key_nested_inside_the_data_block_pruned(self):
+        """The wind_forecast shape: metadata sits under data.<source>."""
+        with_issues = compute_shape_signature({
+            "metadata": {"data_type": "combined"},
+            "data": {"entsoe_wind_generation": {
+                "metadata": {"units": "MW",
+                             "collector_quality_issues": self.ISSUES},
+                "data": {"2026-09-20T00:00:00+02:00": {"wind": 1.0}},
+            }},
+        })
+        clean = compute_shape_signature({
+            "metadata": {"data_type": "combined"},
+            "data": {"entsoe_wind_generation": {
+                "metadata": {"units": "MW"},
+                "data": {"2026-09-20T00:00:00+02:00": {"wind": 1.0}},
+            }},
+        })
+        assert with_issues != clean, "fixture must actually differ"
+        assert prune_diagnostic_keys(with_issues) == clean
+
+    def test_key_inside_a_timestamp_map_record_is_NOT_pruned(self):
+        """The walk stops at dict nodes, and that boundary is deliberate.
+
+        ⚠️ These two tests asserted the OPPOSITE until 2026-09-21, when the
+        `timestamp_map`/`list` recursion was removed. They were not weakened to
+        go green: the behaviour was deliberately narrowed and they were
+        inverted to pin the new boundary, which is the stricter direction —
+        an unpruned key means the feed is NOT excused and still fails the gate.
+
+        Why the branches went: a collector writes `collector_quality_issues`
+        into `metadata` only (`collectors/base.py`, `data_fetcher.py`), and
+        metadata is always reached through plain dict nodes — including the
+        nested `data.<source>.metadata` case that justified the recursion in
+        the first place. Ablation measured it: patching the recursion out left
+        every partition and end-to-end test green, and failed only these two,
+        whose payloads no collector can emit. A prune branch that no real
+        payload exercises is a branch that can only ever erase a real
+        difference by accident, and this one would do it inside published
+        records rather than envelope metadata.
+        """
+        with_issues = compute_shape_signature(
+            {"2026-09-20T00:00:00+02:00": {
+                "v": 1.0, "collector_quality_issues": self.ISSUES}}
+        )
+        clean = compute_shape_signature(
+            {"2026-09-20T00:00:00+02:00": {"v": 1.0}}
+        )
+        pruned = prune_diagnostic_keys(with_issues)
+        assert pruned is with_issues, "unwalked node must come back untouched"
+        assert pruned != clean, (
+            "a per-record key must NOT be laundered — leaving it in means the "
+            "feed keeps failing the gate, which is the safe direction"
+        )
+
+    def test_key_inside_a_list_element_is_NOT_pruned(self):
+        with_issues = compute_shape_signature(
+            [{"v": 1.0, "collector_quality_issues": self.ISSUES}]
+        )
+        clean = compute_shape_signature([{"v": 1.0}])
+        pruned = prune_diagnostic_keys(with_issues)
+        assert pruned is with_issues
+        assert pruned != clean
+
+    def test_returns_the_same_object_when_nothing_pruned(self):
+        """Identity is a CONTRACT, not an optimisation.
+
+        `_partition_diagnostic_only` distinguishes "no diagnostic key was
+        present" from "one was present and pruned" by identity. Rebuilding an
+        untouched node would make every hash-vs-signature mismatch look like
+        diagnostic churn and excuse it.
+        """
+        sig = compute_shape_signature(
+            {"metadata": {"units": "MW"},
+             "data": {"NL": {"2026-09-20T00:00:00+02:00": {"v": 1.0}}}}
+        )
+        assert prune_diagnostic_keys(sig) is sig
+
+    def test_scalars_and_unknown_nodes_pass_through(self):
+        assert prune_diagnostic_keys("float") == "float"
+        assert prune_diagnostic_keys(None) is None
+        opaque = {"_kind": "conflict", "shapes": ['"float"', '"str"']}
+        assert prune_diagnostic_keys(opaque) is opaque
+
+    def test_a_real_field_loss_is_not_laundered(self):
+        """The prune removes exactly one key set, and nothing else."""
+        degraded = compute_shape_signature(
+            {"metadata": {"units": "MW", "collector_quality_issues": self.ISSUES},
+             "data": {"DE_LU": {"2026-09-20T00:00:00+02:00": {"load_forecast": 1.0}}}}
+        )
+        healthy = compute_shape_signature(
+            {"metadata": {"units": "MW"},
+             "data": {"DE_LU": {"2026-09-20T00:00:00+02:00": {
+                 "load_forecast": 1.0, "load_actual": 1.0,
+                 "forecast_error": 0.0}}}}
+        )
+        assert prune_diagnostic_keys(degraded) != healthy

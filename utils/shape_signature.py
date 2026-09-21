@@ -421,17 +421,72 @@ def _merge_signatures(a: Any, b: Any) -> Any:
 DIAGNOSTIC_ENVELOPE_KEYS = frozenset({"collector_quality_issues"})
 
 
-def _without_diagnostic_keys(sig: Any) -> Any:
-    """Strip `DIAGNOSTIC_ENVELOPE_KEYS` from a dict shape node, if present."""
-    if not _is_dict_signature(sig):
+def prune_diagnostic_keys(sig: Any) -> Any:
+    """Strip `DIAGNOSTIC_ENVELOPE_KEYS` from every dict node in a shape tree.
+
+    The 2026-08-14 version pruned ONE node — the top level of an envelope key,
+    which is where `metadata.collector_quality_issues` sits on a feed using the
+    canonical `{metadata, data}` envelope. That is not the only place it sits:
+    `wind_forecast` carries its ENTSO-E metadata at
+    `data.entsoe_wind_generation.metadata`, INSIDE the data block, where a
+    single-node prune cannot reach it. Generalising the exemption to the
+    tripwire's envelope comparison (hypothesis-log H7, #45) therefore has to
+    walk nested envelopes, which is what this does.
+
+    Walks `dict` nodes ONLY, at any depth. `timestamp_map`, `list` and
+    `conflict` nodes are returned untouched, and that is the whole reach:
+    a collector writes `collector_quality_issues` into `metadata`
+    (`collectors/base.py`, `data_fetcher.py`) and nowhere else, and metadata is
+    always arrived at through plain dict keys — `metadata` on a standard
+    envelope, `data.<source>.metadata` on a combined one. Both are dict nodes.
+
+    ⚠️ **The unwalked kinds are a fail-CLOSED gap, not an impossibility.** A
+    first draft walked `timestamp_map` and `list` too, on the theory that more
+    reach is safer. It is not, for a prune: every node it walks is a node where
+    it can erase a real difference, and those two branches could only ever
+    erase one inside published RECORDS rather than envelope metadata. Measured
+    before removing them (2026-09-21): patching the recursion out left every
+    partition test and both end-to-end tests green, failing only two unit tests
+    whose payloads no collector can produce. `conflict` was never walked, for a
+    second reason — its members are JSON-encoded strings whose set is
+    normalised so `_merge_signatures` stays associative, so pruning one means
+    decode → prune → re-normalise → re-encode, and getting that wrong
+    reintroduces the order-dependence `_conflict_node` exists to remove. Also
+    measured: across all 106 committed vintages of `data/_shape_signatures.json`
+    there are ZERO conflict nodes of any kind (a positive would have printed a
+    feed and a JSON path).
+
+    In every unwalked case the consequence is the same and it is the safe one:
+    the key survives, the signatures differ, the feed is NOT excused, and it
+    keeps failing the gate. Silently, which is why it is written down here
+    rather than left to be rediscovered — if per-record diagnostics are ever
+    added, this is the decision to revisit, deliberately.
+
+    Returns the input object itself when nothing was pruned, so a payload with
+    no diagnostic keys is untouched and hashes exactly as before.
+    """
+    if not isinstance(sig, dict):
         return sig
-    keys = sig.get("keys")
-    if not isinstance(keys, dict):
-        return sig
-    pruned = {k: v for k, v in keys.items() if k not in DIAGNOSTIC_ENVELOPE_KEYS}
-    if len(pruned) == len(keys):
-        return sig
-    return {"_kind": "dict", "keys": pruned}
+
+    kind = sig.get("_kind")
+    if kind == "dict":
+        keys = sig.get("keys")
+        if not isinstance(keys, dict):
+            return sig
+        pruned: Dict[str, Any] = {}
+        changed = False
+        for k, v in keys.items():
+            if k in DIAGNOSTIC_ENVELOPE_KEYS:
+                changed = True
+                continue
+            pv = prune_diagnostic_keys(v)
+            changed = changed or pv is not v
+            pruned[k] = pv
+        return {"_kind": "dict", "keys": pruned} if changed else sig
+
+    # `timestamp_map` and `list` are deliberately NOT walked — see the
+    # docstring. Falling through leaves them, and anything else, untouched.
+    return sig
 
 
 def classify_data_member_drift(
@@ -475,6 +530,10 @@ def classify_data_member_drift(
     field, or the envelope changing anywhere outside the data block, still
     reads as a real break and still fails.
 
+    Both signatures are passed through `prune_diagnostic_keys` first, so every
+    condition below is evaluated on the structure a healthy run would have
+    published, not on the extra key a degraded one attaches to report itself.
+
     Returns None (→ "not a member-set change, enforce normally") unless ALL of:
       - both signatures are plain-dict envelopes with the same top-level keys;
       - every envelope key other than `container_key` is byte-identical
@@ -513,6 +572,14 @@ def classify_data_member_drift(
         `{"added": [...], "removed": [...], "retained": [...]}` when the diff
         is purely a member-set change, else None.
     """
+    # Diagnostic keys are pruned from BOTH sides, at every depth, before any
+    # comparison below. They appear exactly on the degraded runs this
+    # classifier exists to judge, so leaving them in makes a feed fail for the
+    # act of reporting its own degradation. See `prune_diagnostic_keys` for
+    # why the prune is recursive rather than one node deep.
+    previous_signature = prune_diagnostic_keys(previous_signature)
+    current_signature = prune_diagnostic_keys(current_signature)
+
     if not (_is_dict_signature(previous_signature)
             and _is_dict_signature(current_signature)):
         return None
@@ -524,14 +591,13 @@ def classify_data_member_drift(
     if set(prev_keys) != set(curr_keys) or container_key not in prev_keys:
         return None
 
-    # Everything outside the data block must be structurally identical, except
-    # that a diagnostic key appearing or disappearing does not count — see
-    # DIAGNOSTIC_ENVELOPE_KEYS.
+    # Everything outside the data block must be structurally identical. A
+    # diagnostic key appearing or disappearing does not count, and is already
+    # gone from both sides — see DIAGNOSTIC_ENVELOPE_KEYS and the prune above.
     for key in prev_keys:
         if key == container_key:
             continue
-        if _without_diagnostic_keys(prev_keys[key]) != \
-                _without_diagnostic_keys(curr_keys[key]):
+        if prev_keys[key] != curr_keys[key]:
             return None
 
     prev_data = prev_keys[container_key]
@@ -793,6 +859,7 @@ def observation_from_sidecar(
     can tell "no spans computed" from "spans were empty".
     """
     feeds = {}
+    pruned_feeds: Dict[str, str] = {}
     raw_feeds = sidecar.get("feeds")
     # Defensive: a malformed sidecar must degrade to an empty record, never
     # raise. This runs after collection but before the quality report, so an
@@ -801,11 +868,29 @@ def observation_from_sidecar(
         for feed, info in raw_feeds.items():
             if isinstance(info, dict) and info.get("shape_hash") is not None:
                 feeds[feed] = info["shape_hash"]
+                sig = info.get("shape_signature")
+                if sig is not None:
+                    pruned = prune_diagnostic_keys(sig)
+                    if pruned is not sig:
+                        pruned_feeds[feed] = signature_hash(pruned)
     record: Dict[str, Any] = {
         "observed_at": sidecar.get("computed_at"),
         "schema_version": sidecar.get("schema_version"),
         "feeds": feeds,
+        # Marker, not data: it says this writer COMPUTED diagnostic-blind
+        # hashes, which is what lets `volatile_feeds_from_observations` tell an
+        # old record apart from a new one where nothing needed pruning. Without
+        # it, "no entry in feeds_pruned" is ambiguous between the two, and the
+        # classifier would have to assume the pessimistic reading forever.
+        "pruned_hashes": True,
     }
+    # Only the feeds whose hash actually CHANGES under the prune are listed;
+    # for every other feed the pruned hash is the raw one. On the 2026-09-21
+    # baseline that is 1 feed of 20, so the record grows by one line-noise
+    # entry rather than doubling. The whole log is rewritten and committed
+    # every run, so its size is repo growth (#9), not just file size.
+    if pruned_feeds:
+        record["feeds_pruned"] = pruned_feeds
     if spans:
         record["spans"] = spans
     return record
@@ -876,19 +961,61 @@ def volatile_feeds_from_observations(
     real log: a fabricated break in `load_forecast` (a CRITICAL_FEED, one hash
     across 75 runs) flipped the verdict to volatile and exit 0. Evidence for
     "this feed churns" has to be strictly PRIOR to the run being judged.
+
+    DIAGNOSTIC-BLIND EVIDENCE (2026-09-21). The drift tripwire excuses a diff
+    that is only `metadata.collector_quality_issues` arriving or leaving, but
+    this log records the RAW hash, which still changes — so the excused churn
+    was still counted as "this feed wobbles" and promoted the feed to volatile,
+    downgrading every real break on it for a whole window. Measured on the real
+    log: `grid_imbalance` (field-keyed, where a vanished key IS the break) sits
+    on one hash today, goes volatile after ONE such flip, and stays volatile
+    through subsequent clean runs — 54 of 60 records have to age out. This is
+    the same trap the tripwire's `- CRITICAL_FEEDS - MEMBER_MAPPED_FEEDS`
+    subtraction was written for in 2026-08-14.
+
+    Note this predates the exemption: the flip polluted the log before it too,
+    because the observation is committed BEFORE the gate. The exemption did not
+    create the promotion, it removed the exit 1 that made it visible.
+
+    So records now carry `pruned_hashes: true` plus a `feeds_pruned` map of the
+    feeds whose hash changes under `prune_diagnostic_keys`. Per feed, the blind
+    evidence is used only when EVERY record in the window supplies it; a window
+    still holding pre-2026-09-21 records falls back to raw hashes, which is
+    exactly the old behaviour. The improvement therefore arrives by itself as
+    the window rolls, and nothing has to be backfilled or reinterpreted — a
+    mixed window is the one case where a naive switch would invent churn where
+    there was none.
     """
     if exclude_observed_at is not None:
         observations = [
             r for r in observations if r.get("observed_at") != exclude_observed_at
         ]
     seen: Dict[str, Dict[Any, set]] = {}
+    blind: Dict[str, Dict[Any, set]] = {}
+    # Per feed: did EVERY record in the window that mentions it come from a
+    # writer that computed diagnostic-blind hashes? Only then is the blind
+    # evidence complete enough to judge on.
+    blind_complete: Dict[str, bool] = {}
     for rec in observations[-window:] if window else observations:
         version = rec.get("schema_version")
+        has_blind = bool(rec.get("pruned_hashes"))
+        pruned = rec.get("feeds_pruned") or {}
         for feed, h in (rec.get("feeds") or {}).items():
             if h is None:
                 continue
             seen.setdefault(feed, {}).setdefault(version, set()).add(h)
-    return frozenset(
-        feed for feed, by_version in seen.items()
-        if any(len(hashes) > 1 for hashes in by_version.values())
-    )
+            if not has_blind:
+                blind_complete[feed] = False
+                continue
+            blind_complete.setdefault(feed, True)
+            # A feed absent from `feeds_pruned` on a blind-capable record is a
+            # feed the prune did not change, so its blind hash IS its raw one.
+            blind.setdefault(feed, {}).setdefault(version, set()).add(
+                pruned.get(feed, h)
+            )
+    out = set()
+    for feed, by_version in seen.items():
+        evidence = blind.get(feed, {}) if blind_complete.get(feed) else by_version
+        if any(len(hashes) > 1 for hashes in evidence.values()):
+            out.add(feed)
+    return frozenset(out)

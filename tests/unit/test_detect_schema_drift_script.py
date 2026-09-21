@@ -997,3 +997,242 @@ class TestVolatilityDoesNotPreemptMemberDrift:
         assert "[member-drift]" in result.stdout
         assert "Elsweide_Arnhem_NL" in result.stdout
         assert "[volatile]" not in result.stdout
+
+
+# --- Diagnostic-key churn is not drift (#45 / hypothesis-log H7) ------------
+
+QUALITY_ISSUES = [{
+    "check_name": "field_completeness",
+    "severity": "warning",
+    "message": "actual load (A67) was requested but 1 of 2 published zone(s) "
+               "carry none — load_actual and forecast_error are absent for: DE_LU",
+    "details": {"missing_fields": ["load_actual", "forecast_error"],
+                "zones_without_actual": ["DE_LU"],
+                "zones_published": ["NL", "DE_LU"]},
+}]
+
+
+def _load_payload(*, actual_zones=("NL", "DE_LU"), issues=False):
+    """`load_forecast`-shaped: envelope + zone-keyed timestamp maps.
+
+    `actual_zones` are the zones carrying load_actual/forecast_error. On
+    2026-09-20 ENTSO-E published no A67 actual load for DE_LU anywhere in the
+    window, so those two fields left DE_LU's merged value_shape entirely.
+    """
+    meta = {"data_type": "load_forecast", "units": "MW",
+            "country_codes": ["NL", "DE_LU"]}
+    if issues:
+        meta["collector_quality_issues"] = QUALITY_ISSUES
+
+    def records(zone):
+        point = {"load_forecast": 12500.0}
+        if zone in actual_zones:
+            point["load_actual"] = 12300.0
+            point["forecast_error"] = 200.0
+        return {"2026-09-20T00:00:00+02:00": point}
+
+    return {"metadata": meta,
+            "data": {z: records(z) for z in ("NL", "DE_LU")}}
+
+
+class TestPartitionDiagnosticOnly:
+    """Direct tests for the pure partition helper."""
+
+    def _sidecars(self, prev_payload, curr_payload,
+                  feed="load_forecast.json", data_type="load_forecast"):
+        prev = _sidecar_with_feeds("2.4", {
+            feed: _sig_feed(prev_payload, "h1", data_type)})
+        curr = _sidecar_with_feeds("2.4", {
+            feed: _sig_feed(curr_payload, "h2", data_type)})
+        return prev, curr
+
+    def test_quality_issue_arriving_alone_is_excused(self):
+        prev, curr = self._sidecars(_load_payload(),
+                                    _load_payload(issues=True))
+        diag, remaining = detect_schema_drift._partition_diagnostic_only(
+            [{"feed": "load_forecast.json"}], prev, curr
+        )
+        assert [c["feed"] for c in diag] == ["load_forecast.json"]
+        assert remaining == []
+
+    def test_quality_issue_leaving_on_recovery_is_excused(self):
+        """Symmetric: the baseline advanced on a degraded run, so the healthy
+        run that follows drops the key and flips the hash back."""
+        prev, curr = self._sidecars(_load_payload(issues=True),
+                                    _load_payload())
+        diag, remaining = detect_schema_drift._partition_diagnostic_only(
+            [{"feed": "load_forecast.json"}], prev, curr
+        )
+        assert [c["feed"] for c in diag] == ["load_forecast.json"]
+
+    def test_field_loss_under_the_quality_issue_is_still_enforced(self):
+        """The 2026-09-20 failure itself. The prune buys a legible diff, not
+        a pass: DE_LU's vanished actuals survive it and still fail (#79)."""
+        prev, curr = self._sidecars(
+            _load_payload(),
+            _load_payload(actual_zones=("NL",), issues=True),
+        )
+        diag, remaining = detect_schema_drift._partition_diagnostic_only(
+            [{"feed": "load_forecast.json"}], prev, curr
+        )
+        assert diag == []
+        assert [c["feed"] for c in remaining] == ["load_forecast.json"]
+
+    def test_critical_feed_is_excused_too(self):
+        """Unlike volatility and member drift, this partition has no
+        `protected` carve-out — the key is not part of ANY feed's contract."""
+        assert "load_forecast.json" in detect_schema_drift.CRITICAL_FEEDS
+        prev, curr = self._sidecars(_load_payload(),
+                                    _load_payload(issues=True))
+        diag, _ = detect_schema_drift._partition_diagnostic_only(
+            [{"feed": "load_forecast.json"}], prev, curr
+        )
+        assert [c["feed"] for c in diag] == ["load_forecast.json"]
+
+    def test_equal_signatures_without_the_key_are_not_excused(self):
+        """A sidecar whose hash and signature disagree is corrupt, not
+        degraded. In production an equal signature means an equal hash, so
+        this pair can never arise from a real run."""
+        prev, curr = self._sidecars(_load_payload(), _load_payload())
+        diag, remaining = detect_schema_drift._partition_diagnostic_only(
+            [{"feed": "load_forecast.json"}], prev, curr
+        )
+        assert diag == []
+        assert [c["feed"] for c in remaining] == ["load_forecast.json"]
+
+    def test_feed_without_a_signature_is_not_excused(self):
+        prev = _sidecar_with_feeds("2.4", {"load_forecast.json": _feed("h1")})
+        curr = _sidecar_with_feeds("2.4", {"load_forecast.json": _feed("h2")})
+        diag, remaining = detect_schema_drift._partition_diagnostic_only(
+            [{"feed": "load_forecast.json"}], prev, curr
+        )
+        assert diag == []
+        assert len(remaining) == 1
+
+
+class TestDiagnosticOnlyEndToEnd:
+    def test_quality_issue_alone_exits_0_with_a_notice(self, tmp_path):
+        prev = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_load_payload(), "h1",
+                                            "load_forecast")})
+        curr = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_load_payload(issues=True), "h2",
+                                            "load_forecast")})
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0, result.stdout
+        assert "::error::" not in result.stdout
+        assert "collector_quality_issues" in result.stdout      # named, not silent
+        assert "load_forecast.json" in result.stdout
+        # Accounted for, not dropped: the feed moves to the unchanged side.
+        assert "feeds unchanged: 1" in result.stdout
+        assert "feeds CHANGED:  (none)" in result.stdout
+
+    def test_field_loss_under_the_key_still_exits_1(self, tmp_path):
+        prev = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_load_payload(), "h1",
+                                            "load_forecast")})
+        curr = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(
+                _load_payload(actual_zones=("NL",), issues=True), "h2",
+                "load_forecast")})
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1, result.stdout
+        assert "Within-feed shape drift" in result.stdout
+
+
+def _wind_payload(*, issues=False):
+    """`wind_forecast`-shaped: a COMBINED feed whose per-source metadata sits
+    INSIDE the data block, at `data.<source>.metadata`.
+
+    This is the shape the one-node prune could not reach, and therefore the
+    whole justification for `prune_diagnostic_keys` being recursive. Reviewed
+    2026-09-21: the recursion was pinned only by synthetic unit tests on the
+    prune itself, so a prune that walked `dict` nodes and nothing else passed
+    every partition test. Exercised here through the partition and the script.
+    """
+    meta = {"data_type": "entsoe_wind", "units": "MW"}
+    if issues:
+        meta["collector_quality_issues"] = QUALITY_ISSUES
+    return {
+        "metadata": {"data_type": "combined", "sources": ["entsoe_wind_generation"]},
+        "data": {"entsoe_wind_generation": {
+            "metadata": meta,
+            "data": {"2026-09-20T00:00:00+02:00": {"wind_onshore": 1200.0}},
+        }},
+    }
+
+
+class TestDiagnosticOnlyNestedEnvelope:
+    def test_nested_quality_issue_is_excused_through_the_partition(self):
+        prev = _sidecar_with_feeds("2.4", {
+            "wind_forecast.json": _sig_feed(_wind_payload(), "h1", "combined")})
+        curr = _sidecar_with_feeds("2.4", {
+            "wind_forecast.json": _sig_feed(_wind_payload(issues=True), "h2",
+                                            "combined")})
+        diag, remaining = detect_schema_drift._partition_diagnostic_only(
+            [{"feed": "wind_forecast.json"}], prev, curr
+        )
+        assert [c["feed"] for c in diag] == ["wind_forecast.json"], (
+            "a diagnostic key inside the data block must be pruned too — "
+            "this is the case the one-node prune could not reach"
+        )
+        assert remaining == []
+
+    def test_nested_field_loss_under_the_key_is_still_enforced(self):
+        broken = _wind_payload(issues=True)
+        del broken["data"]["entsoe_wind_generation"]["data"][
+            "2026-09-20T00:00:00+02:00"]["wind_onshore"]
+        broken["data"]["entsoe_wind_generation"]["data"][
+            "2026-09-20T00:00:00+02:00"]["other"] = 1.0
+        prev = _sidecar_with_feeds("2.4", {
+            "wind_forecast.json": _sig_feed(_wind_payload(), "h1", "combined")})
+        curr = _sidecar_with_feeds("2.4", {
+            "wind_forecast.json": _sig_feed(broken, "h2", "combined")})
+        diag, remaining = detect_schema_drift._partition_diagnostic_only(
+            [{"feed": "wind_forecast.json"}], prev, curr
+        )
+        assert diag == []
+        assert [c["feed"] for c in remaining] == ["wind_forecast.json"]
+
+
+class TestDiagnosticOnlyAlongsideCatalogDrift:
+    """The clean-pass at the top of main() is SKIPPED when a feed was added or
+    removed, so an excused feed then falls through to the catalog branch. That
+    path was untested (review 2026-09-21)."""
+
+    def test_excused_feed_plus_removed_feed_warns_and_exits_0(self, tmp_path):
+        prev = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_load_payload(), "h1",
+                                            "load_forecast"),
+            "air_quality_buurt.json": _sig_feed(_buurt_payload(BOTH), "h9"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_load_payload(issues=True), "h2",
+                                            "load_forecast"),
+        })
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 0, result.stdout
+        assert "Catalog drift" in result.stdout
+        assert "collector_quality_issues" in result.stdout
+        assert "::error::" not in result.stdout
+
+    def test_excused_feed_does_not_mask_a_removed_critical_feed(self, tmp_path):
+        """A removed CRITICAL_FEED still exits 1 on the same run."""
+        prev = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_load_payload(), "h1",
+                                            "load_forecast"),
+            "energy_price_forecast.json": _sig_feed(_load_payload(), "h9",
+                                                    "energy_price"),
+        })
+        curr = _sidecar_with_feeds("2.4", {
+            "load_forecast.json": _sig_feed(_load_payload(issues=True), "h2",
+                                            "load_forecast"),
+        })
+        assert "energy_price_forecast.json" in detect_schema_drift.CRITICAL_FEEDS
+        repo = _make_repo_with_two_sidecars(tmp_path, prev, curr)
+        result = _run_script(repo)
+        assert result.returncode == 1, result.stdout
+        assert "Critical feed(s) removed" in result.stdout

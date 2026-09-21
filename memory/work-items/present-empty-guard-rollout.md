@@ -17,11 +17,22 @@ buurt did. Buurt was patched because buurt is what happened to fail.
 
 ## Current Status
 
-**Not started.** Issue #42 is open with three options written up and no decision taken.
-Nothing in the tree has changed since `ad008df`.
+**Code landed; both closure gates still unmet.** ⚠️ This section read "Not started. Nothing in
+the tree has changed since `ad008df`" until 2026-09-21, while the Outcome below already recorded
+the implementation shipping in `f95e660` (2026-08-08) and growing a seventh feed in `7ff9623`
+(2026-09-10) — the savepoint and the outcome of the same file disagreed for six weeks. Trust the
+Outcome; it was maintained.
 
-Next concrete step: decide between the three options below, then implement. Option 3 is
-the standing recommendation in the issue body.
+Where it actually stands (2026-09-21):
+- Implementation is in `main`. `PRESENT_EMPTY_GRACE_FEEDS` covers the Open-Meteo feeds plus
+  `ned_production`, and the predicate is `present_empty_feeds()` after the truthiness bug.
+- **Gate 1 — the coercion path has never run in production.** NED recovered on its own before the
+  2026-09-10 dispatch, so nothing has exercised it.
+- **Gate 2 — the escalation branch has never fired.**
+
+Next concrete step: nothing to build. Watch for a run where a graced feed publishes an empty
+envelope, confirm the run still publishes, then close #42 and delete this file. Do NOT close it on
+"the code is written" — that was tried on 2026-08-14 and reversed the same session.
 
 ## Decisions
 
