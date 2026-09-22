@@ -1,6 +1,21 @@
 {
-  "members_checked": 72,
-  "members_with_expectation": 68,
+  "members_checked": 71,
+  "members_with_expectation": 69,
   "min_observations": 10,
-  "shortfalls": []
+  "shortfalls": [
+    {
+      "feed": "nordic_hydro.json",
+      "member": "NO",
+      "observed": 10,
+      "expected": 11,
+      "ratio": 0.909
+    },
+    {
+      "feed": "nordic_hydro.json",
+      "member": "SE",
+      "observed": 10,
+      "expected": 11,
+      "ratio": 0.909
+    }
+  ]
 }
