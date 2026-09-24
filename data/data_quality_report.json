@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-09-23T19:24:31.574512+00:00",
+  "timestamp": "2026-09-24T19:43:23.314717+00:00",
   "overall_status": "warning",
   "total_issues": 2,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -85,6 +83,16 @@
       "status": "info",
       "data_points": 750,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -169,15 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "9 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "13 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 9,
+            "count": 13,
             "examples": [
-              "NL/2026-09-23T11:15:00+02:00: forecast_error=3173.9, load_actual=6672.576, ratio=0.48",
-              "NL/2026-09-23T11:30:00+02:00: forecast_error=3039.9, load_actual=6663.466, ratio=0.46",
-              "NL/2026-09-23T11:45:00+02:00: forecast_error=3303.6, load_actual=6495.576, ratio=0.51",
-              "NL/2026-09-23T12:00:00+02:00: forecast_error=3357.8, load_actual=6342.806, ratio=0.53",
-              "NL/2026-09-23T12:15:00+02:00: forecast_error=4008.5, load_actual=5659.136, ratio=0.71"
+              "NL/2026-09-24T10:30:00+02:00: forecast_error=3441.5, load_actual=7584.506, ratio=0.45",
+              "NL/2026-09-24T10:45:00+02:00: forecast_error=3702.1, load_actual=7191.856, ratio=0.51",
+              "NL/2026-09-24T11:00:00+02:00: forecast_error=3716.1, load_actual=6987.196, ratio=0.53",
+              "NL/2026-09-24T11:15:00+02:00: forecast_error=3885.3, load_actual=6471.616, ratio=0.60",
+              "NL/2026-09-24T11:30:00+02:00: forecast_error=4134.6, load_actual=6106.086, ratio=0.68"
             ],
             "threshold": 0.4
           }
@@ -219,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 535,
+      "data_points": 540,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
