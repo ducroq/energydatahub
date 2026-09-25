@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-24T19:43:23.314717+00:00",
+  "timestamp": "2026-09-25T19:46:17.162655+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 750,
+      "data_points": 754,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -177,15 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "13 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "18 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 13,
+            "count": 18,
             "examples": [
-              "NL/2026-09-24T10:30:00+02:00: forecast_error=3441.5, load_actual=7584.506, ratio=0.45",
-              "NL/2026-09-24T10:45:00+02:00: forecast_error=3702.1, load_actual=7191.856, ratio=0.51",
-              "NL/2026-09-24T11:00:00+02:00: forecast_error=3716.1, load_actual=6987.196, ratio=0.53",
-              "NL/2026-09-24T11:15:00+02:00: forecast_error=3885.3, load_actual=6471.616, ratio=0.60",
-              "NL/2026-09-24T11:30:00+02:00: forecast_error=4134.6, load_actual=6106.086, ratio=0.68"
+              "NL/2026-09-25T09:30:00+02:00: forecast_error=3780.9, load_actual=8613.776, ratio=0.44",
+              "NL/2026-09-25T09:45:00+02:00: forecast_error=4071.9, load_actual=8091.316, ratio=0.50",
+              "NL/2026-09-25T10:00:00+02:00: forecast_error=4114.1, load_actual=7825.926, ratio=0.53",
+              "NL/2026-09-25T10:15:00+02:00: forecast_error=4180.4, load_actual=7524.416, ratio=0.56",
+              "NL/2026-09-25T10:30:00+02:00: forecast_error=4630.7, load_actual=7028.246, ratio=0.66"
             ],
             "threshold": 0.4
           }
@@ -247,7 +247,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 132,
+      "data_points": 133,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
