@@ -1,10 +1,11 @@
 {
-  "timestamp": "2026-09-26T18:55:45.825134+00:00",
-  "overall_status": "warning",
-  "total_issues": 2,
-  "datasets_collected": 23,
+  "timestamp": "2026-09-27T19:28:05.512207+00:00",
+  "overall_status": "error",
+  "total_issues": 4,
+  "datasets_collected": 22,
   "datasets_missing": [
-    "air_quality_buurt"
+    "air_quality_buurt",
+    "ned_production"
   ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
@@ -83,7 +84,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 730,
+      "data_points": 750,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -169,15 +170,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "6 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "13 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 6,
+            "count": 13,
             "examples": [
-              "NL/2026-09-26T11:30:00+02:00: forecast_error=2878.1, load_actual=6871.126, ratio=0.42",
-              "NL/2026-09-26T11:45:00+02:00: forecast_error=2905.9, load_actual=6647.206, ratio=0.44",
-              "NL/2026-09-26T12:00:00+02:00: forecast_error=3154.4, load_actual=6261.196, ratio=0.50",
-              "NL/2026-09-26T12:15:00+02:00: forecast_error=3348.7, load_actual=6066.756, ratio=0.55",
-              "NL/2026-09-26T12:30:00+02:00: forecast_error=3208.2, load_actual=5961.796, ratio=0.54"
+              "NL/2026-09-27T10:15:00+02:00: forecast_error=3722.9, load_actual=7395.306, ratio=0.50",
+              "NL/2026-09-27T10:30:00+02:00: forecast_error=4101.4, load_actual=7022.246, ratio=0.58",
+              "NL/2026-09-27T10:45:00+02:00: forecast_error=4365.3, load_actual=6869.326, ratio=0.64",
+              "NL/2026-09-27T11:00:00+02:00: forecast_error=4973.4, load_actual=6410.626, ratio=0.78",
+              "NL/2026-09-27T11:15:00+02:00: forecast_error=5283.8, load_actual=5972.146, ratio=0.88"
             ],
             "threshold": 0.4
           }
@@ -189,7 +190,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 84,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -215,34 +216,46 @@
       "issues": []
     },
     {
-      "dataset_name": "ned_production",
-      "data_type": "energy_production",
-      "source": "NED.nl (Nationaal Energie Dashboard)",
-      "status": "info",
-      "data_points": 529,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "info",
-      "data_points": 27,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
+      "status": "error",
+      "data_points": 26,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "error",
+          "message": "Newest data is 67.5h old (threshold: 48h)",
+          "details": {
+            "newest_timestamp": "2026-09-25T00:00:00+00:00",
+            "age_hours": 67.5,
+            "threshold_hours": 48
+          }
+        }
+      ]
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
-      "status": "info",
-      "data_points": 133,
-      "checks_passed": 4,
-      "checks_failed": 0,
-      "issues": []
+      "status": "error",
+      "data_points": 132,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "error",
+          "message": "Newest data is 67.5h old (threshold: 48h)",
+          "details": {
+            "newest_timestamp": "2026-09-25T00:00:00+00:00",
+            "age_hours": 67.5,
+            "threshold_hours": 48
+          }
+        }
+      ]
     },
     {
       "dataset_name": "gas_storage",

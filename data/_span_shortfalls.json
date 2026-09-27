@@ -1,6 +1,14 @@
 {
-  "members_checked": 70,
-  "members_with_expectation": 68,
+  "members_checked": 64,
+  "members_with_expectation": 62,
   "min_observations": 10,
-  "shortfalls": []
+  "shortfalls": [
+    {
+      "feed": "market_proxies.json",
+      "member": "gas_ttf/history",
+      "observed": 24,
+      "expected": 25,
+      "ratio": 0.96
+    }
+  ]
 }
