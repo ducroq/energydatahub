@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-30T20:27:57.291138+00:00",
+  "timestamp": "2026-10-01T20:46:51.015254+00:00",
   "overall_status": "warning",
   "total_issues": 1,
   "datasets_collected": 24,
@@ -210,7 +210,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 547,
+      "data_points": 552,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -230,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 132,
+      "data_points": 133,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
