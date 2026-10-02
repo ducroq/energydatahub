@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-01T20:46:51.015254+00:00",
+  "timestamp": "2026-10-02T20:17:33.684609+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
+  "total_issues": 3,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -102,9 +102,20 @@
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
       "data_points": 288,
-      "checks_passed": 5,
-      "checks_failed": 1,
+      "checks_passed": 4,
+      "checks_failed": 2,
       "issues": [
+        {
+          "check_name": "value_range",
+          "severity": "warning",
+          "message": "1 values outside range [-500.0, 10000.0] EUR/MWh",
+          "details": {
+            "count": 1,
+            "examples": [
+              "imbalance_price/2026-10-01T11:00:00+02:00: -1000.0"
+            ]
+          }
+        },
         {
           "check_name": "balance_delta_synthesised",
           "severity": "warning",
@@ -169,11 +180,28 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "11 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 11,
+            "examples": [
+              "NL/2026-10-02T11:45:00+02:00: forecast_error=2539.3, load_actual=6004.156, ratio=0.42",
+              "NL/2026-10-02T12:00:00+02:00: forecast_error=2676.7, load_actual=5730.926, ratio=0.47",
+              "NL/2026-10-02T12:15:00+02:00: forecast_error=2587.3, load_actual=5788.536, ratio=0.45",
+              "NL/2026-10-02T12:30:00+02:00: forecast_error=2603.4, load_actual=5763.336, ratio=0.45",
+              "NL/2026-10-02T12:45:00+02:00: forecast_error=2707.8, load_actual=5663.966, ratio=0.48"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
@@ -210,7 +238,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 552,
+      "data_points": 538,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -230,7 +258,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 133,
+      "data_points": 134,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
