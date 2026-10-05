@@ -31,3 +31,18 @@ def _reset_host_breakers():
     reset_host_breakers()
     yield
     reset_host_breakers()
+
+
+@pytest.fixture(autouse=True)
+def _reset_openmeteo_cooldown():
+    """Clear the Open-Meteo rate-limit cooldown around every test.
+
+    `collectors/_openmeteo_shared._cooldown_until` is module-global for the same
+    reason as the host breakers above. A test that feeds a real Open-Meteo
+    collector a 429 would leave it armed, and every later Open-Meteo test would
+    then sleep it out on the real clock (up to ~32s per extension).
+    """
+    from collectors._openmeteo_shared import reset_rate_limit_state
+    reset_rate_limit_state()
+    yield
+    reset_rate_limit_state()

@@ -389,3 +389,7 @@ Patched `if kind in ("timestamp_map", "list")` to disable a prune branch; the sa
 ### Re-fetching the window turns an opaque hash flip into a measured cause (2026-09-21)
 `load_forecast` failed the tripwire with only two hashes to show for it. Re-fetching the same window from ENTSO-E a day later, then stripping candidate fields from the live payload and re-hashing, reproduced the exact failing hash and named both causes in ~10 minutes.
 **Lesson**: the sidecar stores hashes, not reasons, but the upstream API still has the window. Reconstruct rather than infer — and a hash that matches byte-exactly is proof, where a plausible story is not. (#48 asks for the tripwire to report this itself.)
+
+### A fake clock that sums sleeps makes concurrent retry tests pass anything (2026-10-05)
+The first storm-replay test advanced one shared fake clock by every `asyncio.sleep`. Twenty-five concurrent locations therefore added their sleeps end to end and "outlasted" a 61 s storm under the OLD 3 s retry budget too. It passed on the pre-fix code, and only the deliberate run against `git show HEAD:` caught it. Rewritten on the real clock with every delay scaled down 100×.
+**Lesson**: a fake clock is sound for ONE task. For concurrent tasks, scale real time instead, and always run a regression test against the unfixed code before trusting it.

@@ -262,3 +262,256 @@ class TestSingletonReloadGuard:
         importlib.reload(_openmeteo_shared)
         # Identity preserved: guard in module body refused to overwrite.
         assert _openmeteo_shared.OPENMETEO_SEMAPHORE is original
+
+
+class _FakeClock:
+    """Monotonic clock that only moves when the code under test sleeps.
+
+    The shared cooldown compares against ``time.monotonic()``, so a fake
+    ``asyncio.sleep`` alone would leave every cooldown permanently active.
+    """
+
+    def __init__(self):
+        self.now = 0.0
+        self.sleeps = []
+        self._real_sleep = asyncio.sleep
+
+    def monotonic(self):
+        return self.now
+
+    async def sleep(self, d):
+        self.sleeps.append(d)
+        self.now += max(d, 0)
+        await self._real_sleep(0)
+
+
+@pytest.fixture
+def fake_clock(monkeypatch):
+    clock = _FakeClock()
+    monkeypatch.setattr(_openmeteo_shared.time, 'monotonic', clock.monotonic)
+    monkeypatch.setattr(asyncio, 'sleep', clock.sleep)
+    monkeypatch.setattr(_openmeteo_shared, 'RATE_LIMIT_JITTER_SECONDS', 0.0)
+    _openmeteo_shared.reset_rate_limit_state()
+    yield clock
+    _openmeteo_shared.reset_rate_limit_state()
+
+
+def _rate_limited(location):
+    return {
+        'name': location['name'], 'data': None, 'status': 429,
+        'error': '{"error":true,"reason":"Too many concurrent requests"}',
+    }
+
+
+class TestRateLimitRetry:
+    """2026-10-04 (run 37226371364): a ~60s Open-Meteo 429 storm outlasted the
+    1s + 2s transient backoff, lost 29 per-location fetches and cost the whole
+    publish. A
+    rate-limited response now takes a longer schedule and arms a shared
+    cooldown."""
+
+    def test_is_rate_limited_on_status(self):
+        assert _openmeteo_shared.is_rate_limited({'status': 429, 'error': ''})
+
+    def test_is_rate_limited_on_body_marker(self):
+        assert _openmeteo_shared.is_rate_limited(
+            {'error': '{"reason":"Too many concurrent requests","error":true}'}
+        )
+
+    def test_timeout_is_not_rate_limited(self):
+        assert not _openmeteo_shared.is_rate_limited({'error': 'timeout', 'status': None})
+        assert not _openmeteo_shared.is_rate_limited({'error': 'x', 'status': 500})
+
+    @pytest.mark.asyncio
+    async def test_rate_limit_schedule(self, fake_clock):
+        import logging
+
+        async def always_429(session, location):
+            return _rate_limited(location)
+
+        result = await _openmeteo_shared.fetch_location_with_retry(
+            None, {'name': 'L1'}, always_429, logging.getLogger('test'), apply_gap=False,
+        )
+        assert result['data'] is None
+        # The cooldown armed by each 429 has already elapsed when the next
+        # attempt starts, so the only sleeps are the backoffs themselves.
+        assert fake_clock.sleeps == [5.0, 10.0, 20.0, 30.0, 30.0]
+
+    @pytest.mark.asyncio
+    async def test_rate_limit_does_not_consume_transient_budget(self, fake_clock):
+        import logging
+        calls = 0
+
+        async def fetch_fn(session, location):
+            nonlocal calls
+            calls += 1
+            if calls <= _openmeteo_shared.RATE_LIMIT_MAX_RETRIES:
+                return _rate_limited(location)
+            if calls < _openmeteo_shared.RATE_LIMIT_MAX_RETRIES + _openmeteo_shared.MAX_RETRIES:
+                return {'name': location['name'], 'data': None, 'error': 'timeout'}
+            return {'name': location['name'], 'data': {'ok': True}, 'error': None}
+
+        result = await _openmeteo_shared.fetch_location_with_retry(
+            None, {'name': 'L1'}, fetch_fn, logging.getLogger('test'), apply_gap=False,
+        )
+        assert result['data'] == {'ok': True}
+        assert calls == _openmeteo_shared.RATE_LIMIT_MAX_RETRIES + _openmeteo_shared.MAX_RETRIES
+
+    @pytest.mark.asyncio
+    async def test_cooldown_holds_other_locations(self, fake_clock):
+        """One location's 429 delays every other location's next attempt."""
+        import logging
+        _openmeteo_shared._extend_cooldown(12.0)
+        started_at = []
+
+        async def fetch_fn(session, location):
+            started_at.append(fake_clock.now)
+            return {'name': location['name'], 'data': {'ok': True}, 'error': None}
+
+        await _openmeteo_shared.fetch_location_with_retry(
+            None, {'name': 'L2'}, fetch_fn, logging.getLogger('test'), apply_gap=False,
+        )
+        assert started_at == [12.0]
+
+    @pytest.mark.asyncio
+    async def test_no_cooldown_sleep_on_healthy_run(self, fake_clock):
+        import logging
+
+        async def ok(session, location):
+            return {'name': location['name'], 'data': {'ok': True}, 'error': None}
+
+        await _openmeteo_shared.fetch_location_with_retry(
+            None, {'name': 'L1'}, ok, logging.getLogger('test'), apply_gap=False,
+        )
+        assert fake_clock.sleeps == []
+
+    @pytest.mark.asyncio
+    async def test_replay_of_2026_10_04_storm(self, monkeypatch):
+        """Every request refused for the first ~61s, then healthy — the 10-04
+        profile, on the REAL clock with every delay scaled down 100x.
+
+        Real time, not `fake_clock`: that clock advances by each sleep in turn,
+        so 25 concurrent locations would add their sleeps up end to end and
+        "outlast" the storm under any retry policy. This test passed against
+        the pre-fix code until it was rewritten this way. Under the old
+        ~3s (here ~0.03s) transient budget every location is lost.
+        """
+        import logging
+        import time as real_time
+        scale = 0.01
+        for name in ('RATE_LIMIT_INITIAL_DELAY_SECONDS', 'RATE_LIMIT_MAX_DELAY_SECONDS',
+                     'RATE_LIMIT_JITTER_SECONDS', 'RETRY_INITIAL_DELAY_SECONDS',
+                     'OPENMETEO_GAP_SECONDS'):
+            monkeypatch.setattr(_openmeteo_shared, name,
+                                getattr(_openmeteo_shared, name) * scale)
+        # A LOCAL semaphore: contending on the module singleton binds it to
+        # this test's event loop, and the next contending test then raises
+        # "bound to a different event loop" (see TestSharedSemaphoreEnforces-
+        # Concurrency for the same rule).
+        monkeypatch.setattr(_openmeteo_shared, 'OPENMETEO_SEMAPHORE',
+                            asyncio.Semaphore(_openmeteo_shared.OPENMETEO_SEMAPHORE_CAP))
+        _openmeteo_shared.reset_rate_limit_state()
+        storm_ends = real_time.monotonic() + 61.0 * scale
+
+        async def fetch_fn(session, location):
+            if real_time.monotonic() < storm_ends:
+                return _rate_limited(location)
+            return {'name': location['name'], 'data': {'ok': True}, 'error': None}
+
+        locations = [{'name': f'L{i}'} for i in range(25)]
+        try:
+            results = await asyncio.gather(*[
+                _openmeteo_shared.fetch_location_with_retry(
+                    None, loc, fetch_fn, logging.getLogger('test'), apply_gap=(i > 0),
+                )
+                for i, loc in enumerate(locations)
+            ])
+        finally:
+            _openmeteo_shared.reset_rate_limit_state()
+        assert all(r['data'] == {'ok': True} for r in results)
+
+
+class TestCooldownHonouredUnderContention:
+    """Review finding (2026-10-05): with more locations than semaphore slots,
+    workers that passed a pre-semaphore cooldown check at t=0 queued on the
+    semaphore and then fired into a cooldown armed while they waited — 135 of
+    178 attempts in a 38-location simulation. Real clock, delays scaled 100x."""
+
+    @pytest.mark.asyncio
+    async def test_no_attempt_starts_during_active_cooldown(self, monkeypatch):
+        import logging
+        import time as real_time
+        scale = 0.01
+        for name in ('RATE_LIMIT_INITIAL_DELAY_SECONDS', 'RATE_LIMIT_MAX_DELAY_SECONDS',
+                     'RATE_LIMIT_JITTER_SECONDS', 'RETRY_INITIAL_DELAY_SECONDS',
+                     'OPENMETEO_GAP_SECONDS'):
+            monkeypatch.setattr(_openmeteo_shared, name,
+                                getattr(_openmeteo_shared, name) * scale)
+        # A LOCAL semaphore: contending on the module singleton binds it to
+        # this test's event loop, and the next contending test then raises
+        # "bound to a different event loop" (see TestSharedSemaphoreEnforces-
+        # Concurrency for the same rule).
+        monkeypatch.setattr(_openmeteo_shared, 'OPENMETEO_SEMAPHORE',
+                            asyncio.Semaphore(_openmeteo_shared.OPENMETEO_SEMAPHORE_CAP))
+        storm_ends = real_time.monotonic() + 30.0 * scale
+        attempts = 0
+        during_cooldown = 0
+
+        async def fetch_fn(session, location):
+            nonlocal attempts, during_cooldown
+            attempts += 1
+            if _openmeteo_shared._cooldown_remaining() > 0:
+                during_cooldown += 1
+            await asyncio.sleep(0.2 * scale)  # request latency
+            if real_time.monotonic() < storm_ends:
+                return _rate_limited(location)
+            return {'name': location['name'], 'data': {'ok': True}, 'error': None}
+
+        locations = [{'name': f'L{i}'} for i in range(38)]
+        results = await asyncio.gather(*[
+            _openmeteo_shared.fetch_location_with_retry(
+                None, loc, fetch_fn, logging.getLogger('test'), apply_gap=(i > 0),
+            )
+            for i, loc in enumerate(locations)
+        ])
+        assert all(r['data'] == {'ok': True} for r in results)
+        assert during_cooldown == 0, f"{during_cooldown} of {attempts} attempts fired into a cooldown"
+
+
+class _Fake429Response:
+    status = 429
+
+    async def text(self):
+        return '{"error":true,"reason":"Too many concurrent requests"}'
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+class _Fake429Session:
+    def get(self, *args, **kwargs):
+        return _Fake429Response()
+
+
+class TestRealCollectorsReportRateLimit:
+    """The retry tests above use a synthetic fetch_fn. This checks the REAL
+    `_fetch_location_data` of each collector class produces a response that
+    `is_rate_limited` recognises — the link a synthetic fetch_fn cannot prove."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('cls', [
+        openmeteo_weather.OpenMeteoWeatherCollector,
+        openmeteo_solar.OpenMeteoSolarCollector,
+        openmeteo_offshore_wind.OpenMeteoOffshoreWindCollector,
+    ])
+    async def test_429_is_classified_rate_limited(self, cls):
+        collector = cls(locations=[{'name': 'L1', 'lat': 52.0, 'lon': 5.0}])
+        response = await collector._fetch_location_data(
+            _Fake429Session(), {'name': 'L1', 'lat': 52.0, 'lon': 5.0},
+        )
+        assert response['data'] is None
+        assert response['status'] == 429
+        assert _openmeteo_shared.is_rate_limited(response)

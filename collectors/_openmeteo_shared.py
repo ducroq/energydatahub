@@ -49,8 +49,31 @@ Per-request retry
 -----------------
 The cap above mitigates the upstream cooldown trigger; ``MAX_RETRIES`` /
 ``RETRY_INITIAL_DELAY_SECONDS`` provide belt-and-suspenders resilience
-for any transient (timeout, 429, 503) regardless of root cause. Used by
-each OpenMeteo collector's per-location fetch helper.
+for transients (timeout, 503, a malformed body). A 429 takes the separate
+rate-limit budget below. Used by each OpenMeteo collector's per-location
+fetch helper.
+
+Rate-limit retry (2026-10-05)
+-----------------------------
+A 429 / ``Too many concurrent requests`` is handled on a separate, longer
+budget, because the transient budget above cannot outlast a storm. Run
+``37226371364`` (2026-10-04): Open-Meteo refused requests for ~60s
+(18:57:52-18:58:53), starting with our very first request. The transient
+budget waits only 1s + 2s between attempts (semaphore queueing stretched
+that to ~25s for some locations, still well short), so 29 per-location
+fetches were lost to the storm across the six collectors, plus two to
+malformed 200 bodies. Only the six that ran as it thinned survived. Two
+partial feeds then cost the whole publish at the drift gate.
+
+So a rate-limited response (1) gets up to ``RATE_LIMIT_MAX_RETRIES`` retries
+on a 5s -> 10s -> 20s -> 30s -> 30s schedule (+ jitter, ~95s+ in total), and
+(2) sets a MODULE-WIDE cooldown that every location checks before each
+attempt, both before and after taking a semaphore slot. Without (2) the other workers keep firing into the storm
+and each 429 re-arms it. The cooldown costs nothing on a healthy run: it is
+only ever set by a 429. Because the cooldown gates EVERY attempt, a
+non-429 failure during a storm (e.g. a malformed 200 body, two of which
+appeared on 2026-10-04) also waits it out rather than burning its 1s + 2s
+transient budget inside the storm.
 
 Singleton lifecycle
 -------------------
@@ -63,19 +86,39 @@ the old one — do NOT reload this module inside tests or notebooks. The
 
 import asyncio
 import logging
+import random
+import time
 
 OPENMETEO_SEMAPHORE_CAP: int = 6
 OPENMETEO_GAP_SECONDS: float = 0.5
 
-# Per-request retry budget for per-location fetches. Three attempts with
-# exponential backoff (1s → 2s → 4s). Triggered whenever the fetch helper
-# returns ``data=None`` (covers aiohttp timeouts, HTTP non-200, transport
-# errors — all caught and represented as ``{name, data=None, error=...}``
-# by the collectors' ``_fetch_location_data``). Total worst-case wall time
-# per location: ~3 attempts + 1s + 2s waits ≈ 6s before final failure.
+# Transient retry budget for per-location fetches: MAX_RETRIES is the total
+# number of attempts (so 2 retries), waiting 1s then 2s. Applies whenever the
+# fetch helper returns ``data=None`` for anything but a rate limit (aiohttp
+# timeouts, non-429 HTTP errors, transport errors, malformed bodies — all
+# represented as ``{name, data=None, error=...}`` by the collectors'
+# ``_fetch_location_data``). A rate-limited location can additionally spend
+# the RATE_LIMIT_* schedule below (~95s + jitter) plus shared cooldown waits.
 MAX_RETRIES: int = 3
 RETRY_INITIAL_DELAY_SECONDS: float = 1.0
 RETRY_BACKOFF_BASE: float = 2.0
+
+# Rate-limit budget — see "Rate-limit retry" in the module docstring. These
+# retries do NOT consume MAX_RETRIES: a location can take the full rate-limit
+# schedule and still have its transient budget for a timeout afterwards.
+RATE_LIMIT_MAX_RETRIES: int = 5
+RATE_LIMIT_INITIAL_DELAY_SECONDS: float = 5.0
+RATE_LIMIT_MAX_DELAY_SECONDS: float = 30.0
+RATE_LIMIT_JITTER_SECONDS: float = 2.0
+
+# Body markers Open-Meteo has been observed to send with a 429. The status
+# code is the primary signal; the markers cover a fetch_fn that does not
+# report one.
+_RATE_LIMIT_MARKERS = ('too many concurrent requests', 'too many requests')
+
+# Monotonic deadline before which no location may start a new attempt. Set
+# only by a rate-limited response; see `_extend_cooldown`.
+_cooldown_until: float = 0.0
 
 # Module-level construction is safe on Python 3.10+ (no running loop
 # required). The project's minimum is 3.12. The hasattr guard makes a
@@ -85,6 +128,46 @@ if 'OPENMETEO_SEMAPHORE' not in globals():
     OPENMETEO_SEMAPHORE: asyncio.Semaphore = asyncio.Semaphore(OPENMETEO_SEMAPHORE_CAP)
 
 
+def is_rate_limited(response: dict) -> bool:
+    """True when a fetch_fn response is Open-Meteo refusing us for rate.
+
+    Prefers the ``status`` key (the collectors set it on any non-200) and
+    falls back to the body markers for a response that carries none.
+    """
+    if response.get('status') == 429:
+        return True
+    error = str(response.get('error') or '').lower()
+    return any(marker in error for marker in _RATE_LIMIT_MARKERS)
+
+
+def _extend_cooldown(seconds: float) -> None:
+    """Push the shared cooldown out to at least ``now + seconds``. Never shortens it."""
+    global _cooldown_until
+    _cooldown_until = max(_cooldown_until, time.monotonic() + seconds)
+
+
+def _cooldown_remaining() -> float:
+    return _cooldown_until - time.monotonic()
+
+
+async def _wait_for_cooldown() -> None:
+    """Sleep until no shared cooldown is active. No sleep at all when none is.
+
+    Loops, because another location's 429 can extend the cooldown while we
+    sleep — a single sleep would wake into a cooldown that is still running.
+    """
+    while (remaining := _cooldown_remaining()) > 0:
+        # Jitter so the waiting locations do not all fire at the same instant
+        # the cooldown lifts — that would be the burst that re-arms it.
+        await asyncio.sleep(remaining + random.uniform(0, RATE_LIMIT_JITTER_SECONDS))
+
+
+def reset_rate_limit_state() -> None:
+    """Clear the shared cooldown. For tests; production never needs it."""
+    global _cooldown_until
+    _cooldown_until = 0.0
+
+
 async def fetch_location_with_retry(
     session,
     location,
@@ -92,15 +175,18 @@ async def fetch_location_with_retry(
     logger: logging.Logger,
     apply_gap: bool = True,
 ):
-    """Shared per-location wrapper for the three OpenMeteo* collectors.
+    """Shared per-location wrapper for the three OpenMeteo* collector classes.
 
     Acquires ``OPENMETEO_SEMAPHORE``, optionally sleeps ``OPENMETEO_GAP_SECONDS``
     between requests, then calls ``fetch_fn(session, location)`` — which must
     return ``{'name': str, 'data': Any|None, 'error': str|None}`` per the
     OpenMeteo collectors' ``_fetch_location_data`` contract.
 
-    On failure (``data is None``), retries up to ``MAX_RETRIES`` times with
+    On failure (``data is None``), makes up to ``MAX_RETRIES`` attempts in total with
     exponential backoff (``RETRY_INITIAL_DELAY_SECONDS`` × ``RETRY_BACKOFF_BASE^n``).
+    A rate-limited failure (`is_rate_limited`) instead takes the separate
+    ``RATE_LIMIT_*`` schedule and arms the shared cooldown; it does not consume
+    the ``MAX_RETRIES`` budget.
     Belt-and-suspenders resilience against the offshore+buurt timeouts seen
     on 2026-06-07 — even after the cap was raised to match collector count,
     transient Open-Meteo issues should self-heal without a full re-run.
@@ -120,25 +206,58 @@ async def fetch_location_with_retry(
         last failure message.
     """
     last_response = {'name': location.get('name', '?'), 'data': None, 'error': 'no attempt made'}
-    for attempt in range(1, MAX_RETRIES + 1):
+    attempts = 0
+    transient_failures = 0
+    rate_limit_retries = 0
+    while True:
+        # The cooldown is checked AGAIN inside the semaphore. Checking only
+        # before it is not enough: with more locations than slots, most workers
+        # pass the outer check at t=0, queue on the semaphore, and then fire
+        # into a cooldown armed while they queued. Measured in review before
+        # this re-check: 135 of 178 attempts started during an active cooldown
+        # (38 locations, 60s storm). On a hit, release the slot and wait again.
+        await _wait_for_cooldown()
         async with OPENMETEO_SEMAPHORE:
             if apply_gap:
                 await asyncio.sleep(OPENMETEO_GAP_SECONDS)
+            if _cooldown_remaining() > 0:
+                continue
             last_response = await fetch_fn(session, location)
+        attempts += 1
         if last_response.get('data') is not None:
-            if attempt > 1:
-                logger.info(f"{location['name']}: succeeded on attempt {attempt}/{MAX_RETRIES}")
+            if attempts > 1:
+                logger.info(f"{location['name']}: succeeded on attempt {attempts}")
             return last_response
-        if attempt < MAX_RETRIES:
-            delay = RETRY_INITIAL_DELAY_SECONDS * (RETRY_BACKOFF_BASE ** (attempt - 1))
-            err_snippet = str(last_response.get('error', '?'))[:80]
+        err_snippet = str(last_response.get('error', '?'))[:80]
+
+        if is_rate_limited(last_response):
+            if rate_limit_retries >= RATE_LIMIT_MAX_RETRIES:
+                break
+            delay = min(
+                RATE_LIMIT_INITIAL_DELAY_SECONDS * (RETRY_BACKOFF_BASE ** rate_limit_retries),
+                RATE_LIMIT_MAX_DELAY_SECONDS,
+            ) + random.uniform(0, RATE_LIMIT_JITTER_SECONDS)
+            rate_limit_retries += 1
+            _extend_cooldown(delay)
             logger.info(
-                f"{location['name']}: attempt {attempt}/{MAX_RETRIES} failed "
-                f"({err_snippet}), retrying in {delay:.1f}s"
+                f"{location['name']}: rate-limited (retry {rate_limit_retries}/"
+                f"{RATE_LIMIT_MAX_RETRIES}, {err_snippet}), backing off {delay:.1f}s"
             )
             await asyncio.sleep(delay)
+            continue
+
+        transient_failures += 1
+        if transient_failures >= MAX_RETRIES:
+            break
+        delay = RETRY_INITIAL_DELAY_SECONDS * (RETRY_BACKOFF_BASE ** (transient_failures - 1))
+        logger.info(
+            f"{location['name']}: attempt {transient_failures}/{MAX_RETRIES} failed "
+            f"({err_snippet}), retrying in {delay:.1f}s"
+        )
+        await asyncio.sleep(delay)
     logger.warning(
-        f"{location['name']}: all {MAX_RETRIES} attempts failed; "
+        f"{location['name']}: all {attempts} attempts failed "
+        f"({rate_limit_retries} rate-limited); "
         f"final error: {str(last_response.get('error', '?'))[:120]}"
     )
     return last_response
@@ -189,7 +308,7 @@ def record_location_delivery(collector, delivered: dict) -> None:
         severity='warning',
         message=(
             f"{len(missing)} of {len(configured)} location(s) returned no data "
-            f"after {MAX_RETRIES} attempts: {', '.join(missing)}"
+            f"after retries: {', '.join(missing)}"
         ),
         details={
             'requested': configured,

@@ -90,6 +90,9 @@ collectors/
                              # five zone-keyed feeds are individually accounted for
                              # in its "Deliberately NOT in scope" section.
   _openmeteo_shared.py       # Shared Semaphore + per-location retry/backoff for OpenMeteo*.
+                             # A 429 takes its own longer budget (5/10/20/30/30s + jitter)
+                             # and arms a MODULE-WIDE cooldown every location honours
+                             # (2026-10-05, after a 60s storm outlasted the 1s+2s budget).
                              # Also record_location_delivery() / published_locations()
                              # (2026-08-14): a location whose fetch exhausts its retries
                              # drops out of `data`, so metadata publishes the DELIVERED

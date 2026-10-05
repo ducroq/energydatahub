@@ -203,7 +203,7 @@ class OpenMeteoWeatherCollector(BaseCollector):
                     self.logger.warning(
                         f"{location['name']}: HTTP {response.status} - {error_text[:200]}"
                     )
-                    return {"name": location["name"], "data": None, "error": error_text}
+                    return {"name": location["name"], "data": None, "error": error_text, "status": response.status}
 
                 data = await response.json()
                 return {"name": location["name"], "data": data, "error": None}
