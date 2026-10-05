@@ -28,7 +28,7 @@ How this differs from what is already here:
 |---|---|
 | `docs/decisions/ADR-*.md` | One-way-door decisions, frozen |
 | `memory/gotcha-log.md` | Problems already solved |
-| `memory/project_session_*.md` | What a *past* session did — a retrospective |
+| `memory/archive/project_session_*.md` | What a *past* session did — a retrospective |
 | `memory/work-items/*.md` | What is **in flight** right now |
 
 The session files are the closest neighbour and the reason this directory was added late:

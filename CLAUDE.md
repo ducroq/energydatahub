@@ -23,8 +23,8 @@ Automated energy market data collection platform for electricity price predictio
 | Debugging data quality issues | `utils/data_quality.py` — FMEA validation. Per-dataset config via `get_dataset_validation_config()`. Missing-dataset severity via `DATASET_MISSING_SEVERITY` dict (single source of truth). A critical feed that is *upstream-empty* (source healthy, published no data for the window — `UpstreamNoDataError`) is downgraded `critical`→`warning` so the run still publishes the healthy feeds; the orchestrator passes `validate_pipeline(upstream_empty=…)` and only `SystemExit(1)`s on a genuine collector failure. A *sustained* gap (≥`UPSTREAM_EMPTY_ESCALATION_RUNS`=3 consecutive runs, tracked in the committed `data/_upstream_empty_streak.json`) escalates back to a hard failure so it can't degrade silently forever (#38). Separately, a *present-but-empty* dataset (collector returned an `EnhancedDataSet` carrying no data points — e.g. an all-locations Open-Meteo timeout) would otherwise hard-fail the completeness gate (`validate_completeness` → `CRITICAL` on 0 points) and abort the whole publish. `data_fetcher` coerces such a feed to `None` so it routes through the (non-blocking) missing path instead — treating present-empty as absent. Applies to the feeds in `PRESENT_EMPTY_GRACE_FEEDS` — the Open-Meteo ones (generalised from buurt-only on 2026-08-08, #42) plus `ned_production` (added 2026-09-10 after run `34392331572`: six NED.nl timeouts, an empty envelope, and the publish of 19 healthy feeds lost). **Membership is the failure mode, not the vendor**: any collector that traps its own per-sub-request errors and returns an envelope carrying **no data points** belongs here. The predicate is `present_empty_feeds()`, which COUNTS POINTS rather than testing `not ds.data` — the first `ned_production` registration tested truthiness, was dead on arrival, and the suite stayed green (see gotcha log, 2026-09-10). It is **time-boxed**: after `UPSTREAM_EMPTY_ESCALATION_RUNS` consecutive empty runs the coercion stops and the gate fails the publish loudly, so a sustained outage cannot degrade silently. Streaks share `data/_upstream_empty_streak.json` with the #38 counters (disjoint keys). |
 | Adding a published dataset | `memory/project_published_dataset_checklist.md` — 8-touchpoint checklist across `data_fetcher.py`, `utils/data_quality.py`, and `.github/workflows/collect-data.yml`. **Missing one silently breaks publishing** (BLOCKER on c40a53b). Read before wiring a new collector into the publish set. |
 | Stuck or debugging something weird | `memory/gotcha-log.md` — problem-fix archive |
-| About to act on "it's probably transient" / "that's probably safe" | `memory/hypothesis-log.md` — open positions (H2, H4, H6, H7, H8, H10, H11 as of 2026-09-21; H1/H3/H5/H9 resolved) with the method that would settle each. Check before treating a recurring failure as known-benign; `/curate` surfaces overdue entries. |
-| Picking up work that spans sessions | `memory/work-items/` — savepoints for in-flight work (what is decided, what is still open). Create one at the *start* of anything spanning >2 sessions; see `memory/work-items/README.md`. Distinct from `memory/project_session_*.md`, which are retrospectives. |
+| About to act on "it's probably transient" / "that's probably safe" | `memory/hypothesis-log.md` — open positions (H2, H4, H6, H7, H8, H10, H11 as of 2026-09-21; resolved ones in `memory/archive/hypothesis-log-resolved.md`) with the method that would settle each. Check before treating a recurring failure as known-benign; `/curate` surfaces overdue entries. |
+| Picking up work that spans sessions | `memory/work-items/` — savepoints for in-flight work (what is decided, what is still open). Create one at the *start* of anything spanning >2 sessions; see `memory/work-items/README.md`. Distinct from `memory/archive/project_session_*.md`, which are retrospectives. |
 | Before committing | Run `/review-changes` — picks review lenses from what changed (one adversarial pass for a small diff; at HIGH, adversarial + guarantee-preservation + doc-accuracy, plus shell-correctness only when a shell/YAML file changed). **The skill is USER-GLOBAL; this repo's half is `.claude/review-profile.md`** (tiers, guarantee surfaces, test baseline, two project lenses). The project-local copy was inert from v1.40.0 until migrated 2026-09-14. **Step 1 resolves a `$BASE` baseline first** — it used `git log @{u}..`, which is empty on a pushed-but-unmerged branch, so the skill reported "nothing to review" on a whole PR (reproduced 2026-09-06). **Step 1.5 is a deterministic markdown structural check that runs at every tier**, before any lens; run it in the same shell as Step 1 or it aborts. **Cost is set by the skill, not the profile**: >200 changed lines, a diff that loosens a check, or a change to a shell script/executable forces full depth — a mode-644 file under `scripts/` does *not*. HIGH runs four lenses here (shipped three + `end-to-end-trace`), five with shell/YAML. |
 | Bumping the published data schema | Run `/release` — classifies the bump, verifies preconditions, writes the SCHEMA_CHANGELOG entry, syncs version references, **stops before the run that publishes**. User-typed only. |
 | Ending a session | Run `/curate` — reviews gotcha log, promotes patterns, syncs docs, surfaces stale memory. New entries are the lesson and the action, not the session narrative; the log's own header carries the budget and the older long form. |
@@ -177,6 +177,9 @@ scripts/
                              # excluded from derived volatility, so the blunt rule cannot
                              # pre-empt the precise one. CRITICAL_FEEDS always fail.
   backfill_entsoe.py / archive_to_monthly.py / backfill_gas_storage.py
+  backfill_missed_run.py     # Re-collects the six ONE-DAY feeds of a run that never published
+                             # (NED, TenneT, flows, genmix, ENTSOG, Luchtmeetnet). Writes
+                             # data/<yymmdd>_235959_*.json only — gitignored, so `git add -f`.
   sample_observed_ranges.py  # One-shot diagnostic: sample data/ files per feed, compute observed
                              # min/max per field. Used to derive #28's SOLAR_FIELD_RANGES /
                              # LOAD_FIELD_RANGES. Re-run when adding a new per-field range bound.
@@ -220,7 +223,8 @@ legacy/                      # Retired code kept for cold revert. LOW risk tier 
 run_script.sh                # Local convenience wrapper for a collection run.
 memory/                      # Layered agent memory (tracked). MEMORY.md index, gotcha-log.md,
                              # hypothesis-log.md (open positions + revisit triggers),
-                             # project_session_*.md retrospectives, project_*.md topic files.
+                             # project_*.md topic files. archive/ holds session retrospectives,
+                             # resolved gotchas and resolved hypotheses — not read by default.
   work-items/                # Savepoints for in-flight multi-session work (agent-ready-projects
                              # work-item template). Temporary — deleted once the Outcome's
                              # residue is promoted to an ADR / gotcha log / CLAUDE.md.
@@ -308,7 +312,10 @@ venv/bin/python -m pytest tests/unit/test_base_collector.py -v
 # Run data collection locally (needs secrets.ini)
 venv/bin/python data_fetcher.py
 
-# Backfill missing ENTSO-E data (idempotent, safe to re-run)
+# Backfill the one-day feeds of a run that failed to publish (then: git add -f data/<yymmdd>_235959_*.json)
+venv/bin/python scripts/backfill_missed_run.py --run-date 2026-10-04 --dry-run
+
+# Backfill missing ENTSO-E data — BROKEN on v2.2+ files (#57), dry-run only
 venv/bin/python scripts/backfill_entsoe.py --dry-run  # report only
 venv/bin/python scripts/backfill_entsoe.py            # patch files
 
