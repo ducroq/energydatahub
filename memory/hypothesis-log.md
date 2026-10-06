@@ -1,28 +1,13 @@
 # Hypothesis Log
 
-<!-- Beliefs this project acts on that are NOT yet established fact. Each entry states a
-     position, the method that would settle it, and a date or trigger to come back to it.
-
-     This exists because unverified beliefs otherwise decay into assumed truth: the entry
-     that says "probably transient" gets read six weeks later as "known transient". An
-     entry belongs here when acting on it has a cost and the evidence is incomplete.
-
-     Not for: settled decisions (→ MEMORY.md Active Decisions or an ADR), solved problems
-     (→ gotcha-log.md), or in-flight work plans (→ memory/work-items/).
-
-     /curate surfaces entries whose `Review by:` has passed or whose `Revisit trigger:`
-     has fired. It does NOT resolve them — reading the Method and applying it is the
-     engineer's call. Move resolved entries to `## Resolved` with the outcome.
-
-     WRITE THE ENTRY AT THE MOMENT THE CLAIM IS MADE, not at end-of-session
-     (agent-ready-projects v1.25.0). The alternatives and the refutation
-     criterion are live while you are making the claim; reconstructing them
-     hours later loses exactly the part worth keeping. A review lens flagging
-     a claim whose measurement cannot be taken yet is the cue — the lens
-     reports it as a finding, and the entry is written here. /curate keeps the
-     entries that EXIST honest, reviewing them for staleness and due dates; it
-     cannot detect a claim that never got an entry, so writing it at claim
-     time is the only thing that does. -->
+<!-- Beliefs this project acts on that are NOT yet established fact: position,
+     counter-position, the method that would settle it, and a review date or trigger.
+     Not for settled decisions (-> project_active_decisions.md), solved problems
+     (-> gotcha-log.md) or work plans (-> work-items/).
+     Write the entry WHEN the claim is made, not at end of session.
+     /curate surfaces overdue entries; resolving them is the engineer's call.
+     RETIRE: resolved or dormant entries move to `memory/archive/hypothesis-log-resolved.md`;
+     a dormant one leaves a one-line pointer below with its reopen trigger. -->
 
 ## Open
 
@@ -58,16 +43,6 @@ So the remedy is *detection without blocking*: publish-failure alerting (#50) so
 **Data point 2026-10-06**: 10-05 failed at the drift tripwire. The tripwire was not the cause: a runner delay of 6h16m rolled the collection day, so `generation_forecast` came back empty. That is a new class, the scheduled run starting late, and it is now fixed by `COLLECTION_DATE`. Count it as runner timing, not upstream, when the Method is run. This review is now DUE (2026-10-05).
 **Method RUN 2026-10-06** (30 scheduled runs, 09-06 → 10-05): 25 success, 5 failure. By failing step: **Schema-drift tripwire 3** (09-20 `load_forecast` lost a whole-window field, still open as #79; 10-04 Open-Meteo 429 storm, fixed `a1a944e`; 10-05 late cron rolled the day, fixed `bb39beb`), **Assert data quality 1** (09-09 NED timeouts, fixed by the `ned_production` present-empty grace), **Collect data 1** (09-07). The drift class is 3 of 30 = 10%, exactly at the threshold and down from 15.4% on 09-03. Every failure has a known, distinct cause, and none of them was "transient" in the sense this position means: four were defects that are now fixed, and one is still open. **Next review**: 2026-11-05, running the same Method.
 
-### H6 — A declared `MEMBER_MAPPED_FEEDS` set plus member homogeneity is a sufficient discriminator for member drift (tracked: #44)
-**Position**: The member-drift downgrade (2026-08-14) is safely bounded by two gates: the feed must be declared member-mapped, and every member on both sides must share one signature. A feed that keys `data` by field name is rejected by either gate, so the tripwire keeps failing on real unversioned breaks while a dropped location warns.
-**Counter-position**: The declared set is a hand-maintained registry keyed on a feed identifier, and this repo has two recorded incidents of exactly that shape drifting out of sync (`DATASET_MISSING_SEVERITY`'s three parallel severity lists; `collect-data.yml`'s two publishable-feed lists, where `nordic_hydro` was added to one and not the other). A sixth member-mapped feed added later, and not registered, silently reverts to publish-blocking on its first dropout — the 2026-08-14 failure again, with the fix already in the tree. Homogeneity does not save it: it is a *necessary* condition that gates nothing on its own, since an unregistered feed never reaches it.
-**Method**: The registry is only checkable against reality by asking, per published feed, whether its `data` keys are locations. That is derivable — `data_fetcher` knows which collectors were constructed with a `locations=` list. A startup or CI assertion that every feed whose collector took `locations=` is either in `MEMBER_MAPPED_FEEDS` or explicitly excluded would make the set self-maintaining, the way `derive_volatile_feeds()` did for volatility. Until then this is a hand-maintained list and should be read as one.
-**Status**: Shipped 2026-08-14 with the registry hand-written (5 feeds). The self-maintaining version is not built.
-**2026-08-30 — trigger fired; counter-position NOT confirmed, and the registry turned out to be the wrong lever.** Four collectors gained per-member delivery tracking (`collectors/_entsoe_shared.py`), producing five zone-keyed feeds — the "new per-member feed" case. All five were checked with `classify_data_member_drift` against the live sidecar rather than assumed. Only `nordic_hydro.json` is eligible at all: `generation_mix.json` and `wind_forecast.json` return `None` (non-homogeneous members; member map two levels down), and `load_forecast.json` / `generation_forecast.json` short-circuit as CRITICAL_FEEDS. So homogeneity did far MORE gating than the counter-position credited — four of five were rejected by it, not by the registry, and the hand-maintained list was never the binding constraint. Note also that H6's **Method** would not have found these: it proposes deriving membership from collectors constructed with `locations=`, and all four take `country_codes=`.
-**And registering the one eligible feed would have been a net regression**, which is the real finding. Declaring a feed also strips it from `derive_volatile_feeds()`. Registration rescues only a member-SET change; the likelier drift here is `metadata.collector_quality_issues` arriving while both zones are present, which classifies `None` and hard-fails. Unregistered, that flip fails once, seeds a second hash, and self-classifies volatile thereafter. Registered, it would abort the publish every run forever — `nordic_hydro` has exactly one hash across 97 observations, so the hazard is latent rather than absent. Deferred pending H7, which is its precondition. The reasoning is recorded in full in `scripts/detect_schema_drift.py`.
-**Review by**: 2026-10-01, or immediately when a new per-member feed is added — that is the moment the gap bites.
-**Status 2026-10-06: DORMANT** (maintainer decision). There are no more review dates. It reopens when a new per-location feed is added, which is the moment the hand-kept registry can go stale.
-
 ### H7 — Scoping the diagnostic-key exemption to member drift is enough (tracked: #45 — now a PRECONDITION for H6's registration and for #79, not an improvement)
 **Position**: `metadata['collector_quality_issues']` appears only when a run raises an issue, so its arrival changes a feed's envelope shape. `DIAGNOSTIC_ENVELOPE_KEYS` exempts it inside `classify_data_member_drift`, which is where it demonstrably broke something: without it, the collectors' new `location_completeness` issue would have re-blocked the publish for the exact reason of the 2026-08-14 incident (verified — the verdict came back `None`).
 **Counter-position**: The churn is not specific to member drift. Every collector using `_add_quality_issue` — `tennet`, `luchtmeetnet`, `entsoe_hydro`, and now both OpenMeteo classes — flips its metadata shape the first time it raises an issue, on *any* feed. For a feed that is neither member-mapped nor volatile, that is still an unexplained hard failure waiting to happen, and it would look exactly like a schema break to whoever debugs it. It may also be part of why `air_quality_buurt` reads as volatile at all.
@@ -98,17 +73,10 @@ Two things follow, and only the second is evidence about H10. (1) 429s from GitH
 
 **Data point 2026-10-06**: run `37381385635` (10-05, started 22:16 UTC, off-peak) logged zero 429s and zero `rate-limited (retry` lines, so the new 429 budget from `a1a944e` was never exercised. One quiet late-evening run says nothing about shared-egress contention at peak.
 
-### H8 — Merging all timestamp-map records (instead of sampling one) ends the sampled-record false-positive class, without needing the diagnostic-key exemption generalised
-**Position**: The 2026-08-23 `load_forecast` failure was the sampled-record defect the tripwire's own comments had documented since June, firing for the first time on a CRITICAL feed it could not downgrade. Merging every record into the `value_shape` (`_merge_signatures`) makes the fingerprint order-independent, so intra-day completeness variance can no longer masquerade as a schema break — a field gone from *every* record still drifts, a field gone from some does not.
-**Counter-position**: The merge is lossy in the tolerant direction: a field surviving in even one record is "present", so a partial removal (191 of 192 records) no longer drifts, and a genuinely removed field is only caught once it leaves the rolling window. That boundary is the FMEA gate's job, not the fingerprint's — but if the DQ gate is itself blind (see the `ned_production` silent-skip gotcha), the union removes the tripwire's last sight of partial-availability drift without a replacement.
-**Method**: Watch the next ~10 scheduled runs: if a partial upstream gap no longer aborts a publish (good) AND no shape break slips through the union uncaught (still-good), the boundary holds. The counter-position's objection is settled only when the DQ presence-check for the `ned_production` `actual` half is built — see follow-up issue.
-**Status**: Shipped 2026-08-23 (uncommitted at session end, to land 2026-08-24). All 20 committed feeds verified byte-identical under the merge; live 08-23 payload confirmed to hash to baseline.
-**Review by**: 2026-09-07 — **OVERDUE, reviewed 2026-09-10.** The Method's watch window ("the next ~10 scheduled runs") is satisfied for its first half: no publish since 2026-08-24 has been aborted by a sampled-record false positive, and the 09-02 `load_forecast` drift verified byte-identical to baseline the next day. The second half — "no shape break slips through the union uncaught" — remains unmeasurable, because a break that slips through is by construction not observed.
+## Dormant (full entries in `memory/archive/hypothesis-log-resolved.md`)
 
-**The counter-position moved, and it moved the way it predicted.** It said the union removes the tripwire's last sight of partial-availability drift "if the DQ gate is itself blind (see the `ned_production` silent-skip gotcha)". On 2026-09-10 `ned_production` was added to `PRESENT_EMPTY_GRACE_FEEDS`, so its TOTAL emptiness is now coerced to absent and non-blocking too. Both of that feed's detectors are now tolerant: the fingerprint unions records, the quality gate graces zero-point runs for up to 3 of them, and `EXPECTED_MIN_POINTS['ned_production'] = 24` cannot see a partial loss across six timestamp maps. The counter-position's precondition — "settled only when the DQ presence-check for the `ned_production` `actual` half is built" — is now **load-bearing rather than a nicety**, and it is still unbuilt (#49).
-
-**Status**: Open, position unchanged, counter-position strengthened. **Review by**: 2026-10-01, or immediately when #49 is built — which is the event that settles it.
-**Status 2026-10-06: DORMANT** (maintainer decision). There are no more review dates. It reopens when #49 is built, which is the event that settles it.
+- **H6** — `MEMBER_MAPPED_FEEDS` + member homogeneity suffices for member drift (#44). **Reopens when a new per-location feed is added.**
+- **H8** — merging all timestamp-map records ends the sampled-record false-positive class. **Reopens when #49 is built.**
 
 ## Resolved
 

@@ -1,60 +1,34 @@
 # Gotcha Log
 
-<!-- Structured problem/solution journal. Append-only within the active window.
-     Part of the self-learning loop: Capture -> Surface -> Promote -> Retire.
-
-     PROMOTION LIFECYCLE:
-     - New entries start here (Capture phase)
-     - At end-of-session, review for patterns (Surface phase)
-     - When an entry recurs 2-3 times, promote to topic file (Promote phase)
-     - When root cause is fixed, mark [RESOLVED] (Retire phase)
-
-     ARCHIVE: [RESOLVED] entries live in `memory/archive/gotcha-log-archive.md`
-     (pre-2026-05-01 ones since 2026-06-08; every [RESOLVED] entry moved there
-     2026-10-05). When you mark an entry [RESOLVED], move it. Grep the archive
-     if a symptom matches a historical incident this active log doesn't cover.
-
-     ENTRY BUDGET (2026-08-08): NEW entries are 2-3 lines — the lesson and
-     the action, not the narrative of the session that found it. Keep the
-     `### Title (date)` heading; drop the Problem/Root cause/Fix/Lesson
-     scaffold. This file is re-read in full every session, so length here is
-     a recurring cost paid by every future session, not a one-time write.
-
-     The 24 entries below PREDATE that budget and use the old four-field
-     long form. They are correct, just verbose — leave them alone unless you
-     are doing the retrofit deliberately. Do not treat them as the format to
-     copy; this comment is the format to copy.
-
-     OCCURRENCES (agent-ready-projects v1.20.0, adopted 2026-09-06): the
-     Promoted table's third column, and the reason that table has four
-     columns rather than three. Two mechanisms above compress the record,
-     both correctly — the 2-3 line cap folds each recurrence into one lesson,
-     and promotion folds N recurrences into one row. Together they drop the
-     RATE: after promotion, "five times this week" and "twice since April"
-     render identically. Keep incrementing AFTER promotion, and date each
-     recurrence. A promoted pattern that recurs means the promotion did not
-     take — the lesson is already written where the agent reads it and is
-     being missed anyway — which is exactly what a bare [PROMOTED] tag hides.
-     Put a recurrence count in the ENTRY HEADING too (`[x3]`), like
-     [RESOLVED], so the promotion step can see it without opening the entry.
-
-     ⚠️ This column found a defect on the day it was adopted: the
-     within-feed-shape-churn row said "4-incident pattern" while its own cell
-     listed five, the fifth having been appended on 2026-09-02 without
-     updating the label. A count embedded in prose is not maintained; a
-     count in its own column is. -->
+<!-- Problem/fix journal: Capture -> Surface -> Promote -> Retire.
+     NEW ENTRIES: 2-3 lines, the lesson and the action — no session narrative.
+     Entries live below the two tables; append new ones at the end of the file.
+     PROMOTE when an entry recurs 2-3 times; keep counting in Occurrences after
+     promotion and put `[xN]` in the entry heading — a promoted pattern that recurs
+     means the promotion did not take.
+     RETIRE: mark [RESOLVED] and move to `memory/archive/gotcha-log-archive.md`;
+     also archive entries >60 days old whose lesson is promoted or now a check.
+     MECHANIZE: a review finding a script could have caught goes in `## Mechanized`
+     (proposed -> live); /curate reads both tables. -->
 
 ## Promoted
 
 | Date | Gotcha | Occurrences | Promoted to |
 |------|--------|-------------|-------------|
-| 2026-06-07 | Multi-collector concurrent → upstream rate-limit / CDN cascades (6-incident pattern: ENTSO-E 503, Luchtmeetnet 429, Open-Meteo 429, Open-Meteo CDN cooldown, TenneT 422→429; **2026-09-03** ENTSO-E 8 collectors / 8 per-instance breakers on one host, #52 — the prescription now names `host_breaker_key` as the fourth remedy) | **6** — 2026-06-07 first; ENTSO-E 503, Luchtmeetnet 429, Open-Meteo 429, Open-Meteo CDN cooldown, TenneT 422→429; 2026-09-03 after promotion (ENTSO-E, #52) | `memory/MEMORY.md` → Active Decisions |
-| 2026-06-07 | Parallel hard-coded registries keyed on the same identifier (2-incident pattern: 3-list missing-severity collapse in `data_quality.py`; 2-list expected-files vs docs-prepare in `collect-data.yml`) | **2** — 2026-06-07 first (`data_quality.py` 3-list); same day (`collect-data.yml` 2-list) | `memory/MEMORY.md` → Active Decisions |
-| 2026-06-07 (broadened 2026-06-08, 2026-08-23; recurred 2026-09-04) | Silent quality-gate skip (**5-incident pattern**, broadened 2026-08-23 and again 2026-09-04: GoogleWeather `API_KEY_INVALID` silent-success for 7 months; `validate_value_ranges` 2-level nesting silent-skip for ~3 months; TenneT custom `collect()` override silently dropped `balance_delta_status` + `collector_quality_issues` at publish boundary, ab3dcd4; `ned_production` lost its whole `actual` half while DQ logged "all 4 checks passed"; **2026-09-04** the new span reporter printed "every member carries its usual number of days" while ZERO members had enough history to be judged). **RECURRED 2026-09-04 [x5] — the promotion did not take, and the circumstances make that hard to explain away.** The recurrence was authored *by the session that had just written three gotcha entries about this exact pattern*, inside the check built to close a gap of this exact kind, roughly one hour apart. Reading the lesson, restating it, and then shipping it again in the same sitting says the prescription is not operational as written. What actually caught it was reading the production run log — not a test, not a review, and not the promoted pattern. **Sharpened prescription: a check must report its DENOMINATOR, not just its verdict.** "0 problems found" and "0 problems findable" are the same string and different facts; make the code emit `M of N judged` so they cannot be confused, and assert the denominator in tests, because a suite that only asserts the verdict passes in both worlds (43 tests did). | **7** — 2026-06-07 first; 2026-06-08 and 2026-08-23 broadened; 2026-09-04 twice after promotion (`ned_production`; the span reporter itself); **2026-09-06** again, in the adopted `/review-changes` `$BASE` fallback — an empty diff indistinguishable from a clean tree, and the resolution guard above it passed; **2026-09-10** again, and this time the silent skip was the FIX for a previous instance — the `ned_production` present-empty grace tested `not ds.data` where the gate counts points, so registry, coercion branch and 14 tests were all inert | `memory/MEMORY.md` → Active Decisions |
-| 2026-06-12 | Warn-only bedding-in periods swallow real findings (2-incident pattern: catalog-vs-shape conflation warning unread on 2026-06-08; `_TS_PATTERN` date-only false-positive class swallowed until the 2026-06-10 fail-mode flip) | **2** — 2026-06-08 first; 2026-06-10 again | `memory/MEMORY.md` → Active Decisions |
-| 2026-06-14 (broadened 2026-08-23) | Data-driven within-feed shape churn → schema-drift false positives (4-incident pattern: `air_quality_buurt` station/pollutant keys 06-13; `cross_border_flows` per-hour border key 06-14; `calendar_features` empty→populated `upcoming_holidays` 06-14; `load_forecast` DE_LU first-record missing `load_actual` 08-23; **2026-09-02** `load_forecast` again, verified byte-identical to baseline the next day — a whole run lost to churn that resolved itself). Fixed structurally 2026-08-23 by merging all timestamp-map records (`_merge_signatures`) instead of sampling one — history-derived volatility remains for cross-day churn | **5** — 2026-06-13 first; 2026-06-14 twice; 2026-08-23; 2026-09-02 after promotion. ⚠️ The Gotcha cell still says *4-incident*; the 09-02 instance was appended without updating the label, which is what this column exists to expose | `memory/MEMORY.md` → Active Decisions + `scripts/detect_schema_drift.py::derive_volatile_feeds` |
-| 2026-08-08 (recurred 2026-08-31) | Guard signal integrity — always-red is as corrosive as always-green (inverse of the 3-incident silent-skip pattern; 2026-08-08: verification hook's YAML branch failed 100% of the time on a valid workflow). **RECURRED 2026-08-31 [x3] — promotion did not take**: three cache hit/miss greps and this repo's own 8 green `<!-- verify: -->` annotations all failed the known-bad path, because a grep and an annotation are not recognised as guards. Prescription unchanged and now explicitly extended to instruments: exercise BOTH paths — known-good passes, known-bad fails — before trusting any guard OR any measurement | **4** — 2026-08-08 first; 2026-08-31 twice after promotion (three cache greps; this repo's own 8 `<!-- verify: -->` annotations); **2026-09-10** again — the present-empty grace's new tests were never run against the known-bad path, and the known-bad path was the shipped state. Ablating them (revert the predicate; delete the registry entry) is what turned them red, and it took ~1 minute | `memory/MEMORY.md` → Active Decisions |
-| 2026-08-08 (recurred 2026-09-21) | History-derived classifiers only learn from recorded observations — and **the converse**: what the gate stops counting, the classifier keeps counting. (06-14: drift tripwire runs before the commit step, so a failing run taught `derive_volatile_feeds()` nothing. 09-21: the tripwire learned to excuse diagnostic-key churn while the observation log still recorded the raw hash, so the excused flip still voted 'volatile'.) | **2** — 2026-08-08, 2026-09-21 | `memory/MEMORY.md` → Active Decisions + `memory/hypothesis-log.md` H3/H7 |
+| 2026-06-07 | Multi-collector concurrent → upstream rate-limit / CDN cascades (6-incident pattern: ENTSO-E 503, Luchtmeetnet 429, Open-Meteo 429, Open-Meteo CDN cooldown, TenneT 422→429; **2026-09-03** ENTSO-E 8 collectors / 8 per-instance breakers on one host, #52 — the prescription now names `host_breaker_key` as the fourth remedy) | **6** — 2026-06-07 first; ENTSO-E 503, Luchtmeetnet 429, Open-Meteo 429, Open-Meteo CDN cooldown, TenneT 422→429; 2026-09-03 after promotion (ENTSO-E, #52) | `memory/project_active_decisions.md` |
+| 2026-06-07 | Parallel hard-coded registries keyed on the same identifier (2-incident pattern: 3-list missing-severity collapse in `data_quality.py`; 2-list expected-files vs docs-prepare in `collect-data.yml`) | **2** — 2026-06-07 first (`data_quality.py` 3-list); same day (`collect-data.yml` 2-list) | `memory/project_active_decisions.md` |
+| 2026-06-07 (broadened 2026-06-08, 2026-08-23; recurred 2026-09-04) | Silent quality-gate skip (**5-incident pattern**, broadened 2026-08-23 and again 2026-09-04: GoogleWeather `API_KEY_INVALID` silent-success for 7 months; `validate_value_ranges` 2-level nesting silent-skip for ~3 months; TenneT custom `collect()` override silently dropped `balance_delta_status` + `collector_quality_issues` at publish boundary, ab3dcd4; `ned_production` lost its whole `actual` half while DQ logged "all 4 checks passed"; **2026-09-04** the new span reporter printed "every member carries its usual number of days" while ZERO members had enough history to be judged). **RECURRED 2026-09-04 [x5] — the promotion did not take, and the circumstances make that hard to explain away.** The recurrence was authored *by the session that had just written three gotcha entries about this exact pattern*, inside the check built to close a gap of this exact kind, roughly one hour apart. Reading the lesson, restating it, and then shipping it again in the same sitting says the prescription is not operational as written. What actually caught it was reading the production run log — not a test, not a review, and not the promoted pattern. **Sharpened prescription: a check must report its DENOMINATOR, not just its verdict.** "0 problems found" and "0 problems findable" are the same string and different facts; make the code emit `M of N judged` so they cannot be confused, and assert the denominator in tests, because a suite that only asserts the verdict passes in both worlds (43 tests did). | **7** — 2026-06-07 first; 2026-06-08 and 2026-08-23 broadened; 2026-09-04 twice after promotion (`ned_production`; the span reporter itself); **2026-09-06** again, in the adopted `/review-changes` `$BASE` fallback — an empty diff indistinguishable from a clean tree, and the resolution guard above it passed; **2026-09-10** again, and this time the silent skip was the FIX for a previous instance — the `ned_production` present-empty grace tested `not ds.data` where the gate counts points, so registry, coercion branch and 14 tests were all inert | `memory/project_active_decisions.md` |
+| 2026-06-12 | Warn-only bedding-in periods swallow real findings (2-incident pattern: catalog-vs-shape conflation warning unread on 2026-06-08; `_TS_PATTERN` date-only false-positive class swallowed until the 2026-06-10 fail-mode flip) | **2** — 2026-06-08 first; 2026-06-10 again | `memory/project_active_decisions.md` |
+| 2026-06-14 (broadened 2026-08-23) | Data-driven within-feed shape churn → schema-drift false positives (4-incident pattern: `air_quality_buurt` station/pollutant keys 06-13; `cross_border_flows` per-hour border key 06-14; `calendar_features` empty→populated `upcoming_holidays` 06-14; `load_forecast` DE_LU first-record missing `load_actual` 08-23; **2026-09-02** `load_forecast` again, verified byte-identical to baseline the next day — a whole run lost to churn that resolved itself). Fixed structurally 2026-08-23 by merging all timestamp-map records (`_merge_signatures`) instead of sampling one — history-derived volatility remains for cross-day churn | **5** — 2026-06-13 first; 2026-06-14 twice; 2026-08-23; 2026-09-02 after promotion. ⚠️ The Gotcha cell still says *4-incident*; the 09-02 instance was appended without updating the label, which is what this column exists to expose | `memory/project_active_decisions.md` + `scripts/detect_schema_drift.py::derive_volatile_feeds` |
+| 2026-08-08 (recurred 2026-08-31) | Guard signal integrity — always-red is as corrosive as always-green (inverse of the 3-incident silent-skip pattern; 2026-08-08: verification hook's YAML branch failed 100% of the time on a valid workflow). **RECURRED 2026-08-31 [x3] — promotion did not take**: three cache hit/miss greps and this repo's own 8 green `<!-- verify: -->` annotations all failed the known-bad path, because a grep and an annotation are not recognised as guards. Prescription unchanged and now explicitly extended to instruments: exercise BOTH paths — known-good passes, known-bad fails — before trusting any guard OR any measurement | **4** — 2026-08-08 first; 2026-08-31 twice after promotion (three cache greps; this repo's own 8 `<!-- verify: -->` annotations); **2026-09-10** again — the present-empty grace's new tests were never run against the known-bad path, and the known-bad path was the shipped state. Ablating them (revert the predicate; delete the registry entry) is what turned them red, and it took ~1 minute | `memory/project_active_decisions.md` |
+| 2026-08-08 (recurred 2026-09-21) | History-derived classifiers only learn from recorded observations — and **the converse**: what the gate stops counting, the classifier keeps counting. (06-14: drift tripwire runs before the commit step, so a failing run taught `derive_volatile_feeds()` nothing. 09-21: the tripwire learned to excuse diagnostic-key churn while the observation log still recorded the raw hash, so the excused flip still voted 'volatile'.) | **2** — 2026-08-08, 2026-09-21 | `memory/project_active_decisions.md` + `memory/hypothesis-log.md` H3/H7 |
+
+## Mechanized
+
+Review findings turned into deterministic checks (agent-ready-projects v1.41.0). `proposed` = named, not built; `live` = runs; `retired` = check removed, with why.
+
+| Date | Finding | Check (what it greps/parses/runs) | Lands in | Status |
+|------|---------|-----------------------------------|----------|--------|
 
 ### One file serving as both baseline and history will silently pick one (2026-08-08)
 **Problem**: `_shape_signatures.json` was the drift gate's baseline *and* the volatility classifier's history. The two roles need opposite commit rules — baseline only on pass, history on every run — and the tripwire running before the commit step meant "baseline" quietly won.
@@ -91,42 +65,6 @@
 **Root cause**: PyYAML was in neither the venv nor `requirements.txt`, and `run()` could not tell `ModuleNotFoundError` from a parse error, so it printed the parse-error message and blamed the file.
 **Fix**: Added PyYAML to `requirements.txt`; the hook now distinguishes the two. Lesson: an always-red guard trains you to disable it just as surely as an always-green one trains you to trust it — both destroy the signal.
 
-### `git diff` cannot see untracked files, so a review skill saw 0 of 645 new lines (2026-08-08)
-**Problem**: `/review-changes` Step 1 prescribed only `git diff --stat/--cached/--summary`. On the commit that introduced it, all three returned empty for 6 new files — 645 of 695 lines.
-**Root cause**: No `git diff` variant reports untracked files, and the skill's own magnitude gate declares "a new file in a HIGH path" always-full-depth — a carve-out its procedure could not observe.
-**Fix**: Step 1 now runs `git status --porcelain --untracked-files=all`. Any diff-classification step that omits it is reviewing nothing on a new-file change.
-
-### Work items were created inside the GitHub Pages publish root (2026-08-08)
-**Problem**: `docs/work-items/` held a live inventory of an unfixed availability weakness (which feeds can abort the daily publish, and how). `collect-data.yml` uploads all of `docs/` as the Pages artifact.
-**Root cause**: Followed the upstream template path without checking that this repo's `docs/` *is* the published web root.
-**Fix**: Moved to `memory/work-items/` before anything published. Before placing a new *kind* of content under `docs/`, ask whether it should be world-readable.
-
-### `overall_status=error` on weekends is a market-staleness artifact, not a regression (2026-06-14)
-**Problem**: Wrap-up smoke test on Sunday 2026-06-14 found the published quality report at `overall_status=error, total_issues=4`, vs the documented steady state of `warning, total_issues=2`. Looked like a degradation snuck in.
-**Root cause**: Two of the four are weekend artifacts: `market_proxies` and `market_history` flagged `staleness` (`Newest data is 56.0h old, threshold 48h`). Carbon (EUA) and gas (TTF) markets don't trade Sat/Sun, so on Sunday the newest data is Friday's close (~56h old). `validate_staleness` defaults to 48h (`utils/data_quality.py:831`); `STALENESS_OVERRIDES` (`:1021`) raises it for slow feeds (`gas_storage`=96, `nordic_hydro`=672) but has no entry for the weekday-only market feeds, and 48h can't span a weekend. The other two issues are the documented `grid_imbalance` soft-gate + `load_forecast` #30 watch item.
-**Fix**: None applied (non-blocking — `error` doesn't abort publish, only `critical` does). Diagnosed + documented. Proposed fix: add `market_proxies`/`market_history` to `STALENESS_OVERRIDES` with a weekend-spanning floor (e.g. 96h, matching gas_storage), or weekend-aware staleness. **Filed as #36.**
-**Lesson**: The documented "warning/2 steady state" was a *weekday* observation — quality status is day-of-week dependent. Same flavor as the schema-drift volatile-feed class: a threshold (48h staleness) that ignores a feed's legitimate data cadence (markets closed weekends). When a status field is meant to signal real problems, recurring benign-but-noisy trips erode its signal value — the market-staleness `error` every weekend makes a real market-data outage look identical to a normal Sunday.
-
-### `backtest_quality_report.json` stores only example issues, not the full list (2026-06-12)
-**Problem**: After running `tests/backtest_data_quality.py`, tried to enumerate all 19 flagged files from the saved `data/backtest_quality_report.json` to confirm none were in June 2026. The JSON only contains `issue_examples` (first 3 per check type) — programmatic extraction found 3 dates and silently missed the rest.
-**Root cause**: The report writer summarizes (`files_scanned`, `by_file_type`, `issue_examples`); the complete per-file issue list is only emitted to stdout under `--verbose`.
-**Fix**: Re-ran with `--issues-only --verbose` and grepped the console output for the full enumeration. If full-list-in-JSON is ever needed (e.g. for trend tracking), add an `all_issues` key to the report writer.
-**Lesson**: The saved report answers "how healthy is the archive" not "which exact files are flagged". Use `--verbose` for forensics.
-
-### ENTSO-E NL load over-forecast — #30 check fired on first production run (2026-06-09)
-**Observation**: First dispatched run after shipping the #30 cross-field consistency check (3b04f1b, 0.40 threshold) fired 6 warnings on NL load between 08:15-09:30 Amsterdam. Pattern: forecast steady at ~10 GW, actual ramping 7.4 → 5.5 GW, error climbing from +3.3 to +4.5 GW, ratio climbing from 0.45 to 0.81. All six records consecutive 15-min slots → not noise, a real model miss.
-**Hypothesis**: ENTSO-E's NL load forecast for Tue 2026-06-09 morning didn't account for either (a) behind-the-meter PV ramp on a sunny June morning depressing net load, or (b) a wrong day-type calendar feature (post-Pinksteren week?). The signal is exactly the kind #30 was designed to catch — `|forecast_error|/load_actual` between 45-81% is physically implausible if forecast and actual are independently correct.
-**Action**: None yet — keep 0.40 threshold and watch. The #30 issue derivation said max observed Mar-Jun ratio was 0.27, so today's data extends the sample. If this recurs on multiple non-anomalous days, recalibrate; if it's confined to summer mornings, may need a `is_summer_morning_ramp` exemption rather than blanket loosening.
-**Where**: `utils/data_quality.py::validate_load_cross_field_consistency`, threshold `LOAD_CROSS_FIELD_RATIO_THRESHOLD = 0.4`. Tighten or loosen here if recalibration needed.
-**Pickup signal**: if subsequent daily runs surface non-morning-ramp records too (e.g. evening or random midday slots), the threshold itself is wrong rather than the underlying data being anomalous.
-
-### Worktree path mismatch broke 4 of 12 reviewer agents (2026-06-07)
-**Problem**: Created git worktrees at `/tmp/wt-prN` via bash for the multi-model review battery on 4 PRs. 4 of 12 spawned reviewer agents (Opus code-reviewer for PRs #16/#18/#19 + Sonnet for #16) returned "I cannot review code I cannot read" — their Read tool couldn't access the paths.
-**Root cause**: On Windows, bash's `/tmp` maps to `C:\Users\<user>\AppData\Local\Temp` (a separate per-user temp dir, not the system `/tmp` that POSIX expects). The reviewer agents tried `/tmp/wt-prN` and got "not found"; only the agents that happened to try the Windows path succeeded.
-**Fix (one-shot)**: Per-agent path translation worked for some agents; others gave up. For the failed ones, no review was produced — partial battery coverage.
-**Lesson**: When briefing sub-agents that will use Read/Glob, give them OS-native absolute paths. On Windows, prefer `%LOCALAPPDATA%\Temp\...` or pass the diff inline rather than relying on `/tmp`. Better: have the orchestrator generate diffs and embed them in the agent prompts directly.
-**Positive side-effect**: Three of the four agents that couldn't read the code refused to fabricate findings (cited the "When something is unclear, ask rather than guess" harness-defense rule), which is the desired behavior. The fix is upstream — don't put them in that position.
-
 ### A version stamp is not an instrument; marker strings are (2026-09-06)
 A project-local skill sat 20 framework releases behind while its stamp read v1.17.0 and nothing in the estate ever mentioned the file. `install-global-skills.sh --check` excludes project-local copies **by design**, so it reported a clean estate — correctly. A re-mapped copy also defeats byte comparison by construction.
 **Lesson**: for a copied-and-adapted artifact, grep the marker strings the upstream release names (`/update-drift` Step 3), never the stamp. Eight markers returned 0 in a file whose stamp gave no hint.
@@ -135,10 +73,6 @@ A project-local skill sat 20 framework releases behind while its stamp read v1.1
 `/review-changes` ported the framework's `$BASE` block, whose unresolved-baseline fallback sets `BASE=<root commit>` and diffs `"$BASE"...HEAD`. Three-dot diffs from `merge-base(BASE,HEAD)` — which *is* the root commit — so its content is excluded: a repo whose whole change is its first commit reports 0 of 1 while `git show --stat HEAD` lists the file. Measured 2 of 3 and 4 of 5 on multi-commit repos.
 **Fix**: name the empty tree — `git diff --stat $(git hash-object -t tree /dev/null)..HEAD`, two dots — and treat an unresolved baseline as a finding, never a clean result. Filed upstream as agent-ready-projects#149.
 **Lesson**: `$BASE` *resolving* is not `$BASE` being *right*. The guard that checks resolution passed on every one of these.
-
-### `git diff` cannot see untracked files — still true in the framework, 13 months on (2026-09-06) [x2]
-The 2026-08-08 entry below logged this repo losing 645 of 695 lines to it. Today's drift check found the framework template **still** has no untracked term in Step 1 (`grep -c untracked` over the Step 1 span = 0 at every tag v1.17.0→v1.37.0) while its magnitude gate carves out "any new file in a HIGH path" — a carve-out its own text says is "not in force" if unobservable.
-**Lesson**: a gotcha fixed locally is not fixed upstream, and an adoption merge is exactly where the upstream version comes back. Record local divergences *in the adapted file* so the next merge cannot silently undo them. Filed as agent-ready-projects#145.
 
 ### A repair tool that over-reports reads as a finding, not as a defect (2026-09-03)
 `backfill_entsoe.py` tests for `entsoe` at the TOP level, but the v2.2 envelope wrap (2026-06-07) moved the datasets under `data`. It was written 2026-03-28, when the key genuinely was top-level, and never migrated — so it reports all 108 dates degraded, including ones verified healthy (192 points each). Its patch path writes at the same wrong level, so an un-dry-run would have re-fetched ~108 dates from an ENTSO-E just out of maintenance and written `{metadata, data, entsoe, entsoe_de}` — a malformed envelope with the real data still under `data` (#57).

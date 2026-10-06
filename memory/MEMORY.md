@@ -33,7 +33,7 @@
 | File | When to load | Key insight |
 |------|-------------|-------------|
 | `memory/gotcha-log.md` | Stuck or debugging | Open problem-fix entries + Promoted/Mechanized tables. Resolved ones: `memory/archive/gotcha-log-archive.md` |
-| `memory/hypothesis-log.md` | Before acting on a "probably transient / probably safe" belief | Open positions with the method that would settle them. Resolved (incl. H5: #9 git-as-archive **accepted, do not re-raise on size alone**): `memory/archive/hypothesis-log-resolved.md` |
+| `memory/hypothesis-log.md` | Before acting on a "probably transient / probably safe" belief | Open positions with the method that would settle them. Dormant (H6, H8) and resolved (incl. H5: #9 git-as-archive **accepted, do not re-raise on size alone**): `memory/archive/hypothesis-log-resolved.md` |
 | `memory/project_active_decisions.md` | Changing a severity, adding a collector on a shared host, adding a registry entry, building or loosening a guard | Standing decisions + promoted patterns. **`DATASET_MISSING_SEVERITY['entsoe'] = 'critical'` is load-bearing for Augur's training target — do not relax it without telling them** |
 | `memory/project_data_backfill_gaps.md` | Outage recovery, prioritising manual runs | Which collectors can backfill vs lose data permanently. Tool: `scripts/backfill_missed_run.py` |
 | `memory/project_actions_optimization.md` | Adding workflows or scheduled triggers | Account-wide 3k min/month budget, what we cut to fit |
@@ -49,9 +49,9 @@
 - **NEXT SESSION STARTS HERE (2026-10-05 handoff).** On "continue", in order:
   1. ~~Check the 2026-10-05 scheduled run~~ **Done 2026-10-06**: it failed for a different reason (see the 10-06 line above). Zero 429s, so the 429 budget is still unexercised; this is recorded under H10. The next real test is the next storm. Original step: (~19:00 UTC): `gh run list --workflow "Collect and Publish Data" --limit 2`. Expect success and #84 auto-closed. In its log, `grep -c 'rate-limited (retry'` shows whether the new Open-Meteo 429 budget fired, and `grep 'all .* attempts failed'` whether any location was still lost. Record the result under H10 (review by 2026-10-19). If it failed: `/review-changes` found no open issue in the fix, so diagnose fresh.
   2. **Confirm Augur consumed the backfill**: its 10-05 commit subject should carry no `[ALARM: t0 stale]` (`git -C ~/repos/veen-systems/augur log origin/main -1`).
-  3. **Read-surface pass 2 — `CLAUDE.md`** → `memory/work-items/read-surface-thinning.md` [in progress; pass 1 done 2026-10-05].
+  3. ~~Read-surface pass 2~~ **Done 2026-10-06**: `CLAUDE.md` 38.3k → 13.8k chars (original verbatim in `memory/archive/claude-md-2026-10-06.md`). Next in that work item: mechanize.
   4. ~~Due hypotheses~~ **Done 2026-10-06**: H11 and H4 resolved (span tolerance + 96h market staleness), H6 and H8 dormant, H2 Method run (next review 2026-11-05). Present-empty work item dormant.
-  5. Carried over from 2026-09-21, still open: **#79** (a member losing a whole-window field hard-fails while a member vanishing only warns; `_partition_member_drift` short-circuits `CRITICAL_FEEDS` *before* classifying, so decide the carve-out first); one adversarial pass over the diagnostic-blind evidence delta (`observation_from_sidecar` + `volatile_feeds_from_observations`); `/update-drift` (stamped v1.37.0).
+  5. Carried over from 2026-09-21, still open: **#79** (a member losing a whole-window field hard-fails while a member vanishing only warns; `_partition_member_drift` short-circuits `CRITICAL_FEEDS` *before* classifying, so decide the carve-out first); one adversarial pass over the diagnostic-blind evidence delta (`observation_from_sidecar` + `volatile_feeds_from_observations`). (`/update-drift` done 2026-10-06: v1.37.0 → v1.49.2.)
 - Present-empty guard rollout (#42) → `memory/work-items/present-empty-guard-rollout.md` [DORMANT 2026-10-06; reopens on the next graced-empty run that publishes. Gate 1 is half met: the 10-04 run coerced its feeds but did not publish].
 - Read-surface thinning → `memory/work-items/read-surface-thinning.md` [in progress].
 

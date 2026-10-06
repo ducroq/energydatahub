@@ -206,3 +206,47 @@ The 2026-08-31 run spent 48 minutes and ~295 requests on an ENTSO-E API that ret
 
 ### A sampled first record turned a partial upstream gap into a full publish abort (2026-08-23) [RESOLVED]
 `compute_shape_signature` described a timestamp map by sampling `next(iter(...))` — the FIRST record. ENTSO-E published no actual load for DE_LU, so record `00:00` lacked `load_actual`/`forecast_error`; the fingerprint read "fields removed", the drift tripwire failed, and all 20 feeds went unpublished. NL passed the same run only because its 00:00 record happened to be complete. `load_forecast` is in CRITICAL_FEEDS so it could not downgrade. Fix: the timestamp-map value_shape is now the MERGE of every record (`_merge_signatures`), so a field present in ANY record survives and only a field gone from EVERY record still drifts — order-independent, and measured byte-identical on all 20 committed feeds (no schema bump). Recurrence of the 2026-06-14 "which data happened to be present" churn class, this time on a critical feed.
+
+## Archived 2026-10-06
+
+### `git diff` cannot see untracked files, so a review skill saw 0 of 645 new lines (2026-08-08) [RESOLVED]
+**Problem**: `/review-changes` Step 1 prescribed only `git diff --stat/--cached/--summary`. On the commit that introduced it, all three returned empty for 6 new files — 645 of 695 lines.
+**Root cause**: No `git diff` variant reports untracked files, and the skill's own magnitude gate declares "a new file in a HIGH path" always-full-depth — a carve-out its procedure could not observe.
+**Fix**: Step 1 now runs `git status --porcelain --untracked-files=all`. Any diff-classification step that omits it is reviewing nothing on a new-file change.
+_Archived 2026-10-06: fixed upstream in agent-ready-projects v1.43.0 (#145); the installed review-changes Step 1 lists untracked files._
+
+### Work items were created inside the GitHub Pages publish root (2026-08-08) [RESOLVED]
+**Problem**: `docs/work-items/` held a live inventory of an unfixed availability weakness (which feeds can abort the daily publish, and how). `collect-data.yml` uploads all of `docs/` as the Pages artifact.
+**Root cause**: Followed the upstream template path without checking that this repo's `docs/` *is* the published web root.
+**Fix**: Moved to `memory/work-items/` before anything published. Before placing a new *kind* of content under `docs/`, ask whether it should be world-readable.
+
+### `overall_status=error` on weekends is a market-staleness artifact, not a regression (2026-06-14) [RESOLVED]
+**Problem**: Wrap-up smoke test on Sunday 2026-06-14 found the published quality report at `overall_status=error, total_issues=4`, vs the documented steady state of `warning, total_issues=2`. Looked like a degradation snuck in.
+**Root cause**: Two of the four are weekend artifacts: `market_proxies` and `market_history` flagged `staleness` (`Newest data is 56.0h old, threshold 48h`). Carbon (EUA) and gas (TTF) markets don't trade Sat/Sun, so on Sunday the newest data is Friday's close (~56h old). `validate_staleness` defaults to 48h (`utils/data_quality.py:831`); `STALENESS_OVERRIDES` (`:1021`) raises it for slow feeds (`gas_storage`=96, `nordic_hydro`=672) but has no entry for the weekday-only market feeds, and 48h can't span a weekend. The other two issues are the documented `grid_imbalance` soft-gate + `load_forecast` #30 watch item.
+**Fix**: None applied (non-blocking — `error` doesn't abort publish, only `critical` does). Diagnosed + documented. Proposed fix: add `market_proxies`/`market_history` to `STALENESS_OVERRIDES` with a weekend-spanning floor (e.g. 96h, matching gas_storage), or weekend-aware staleness. **Filed as #36.**
+**Lesson**: The documented "warning/2 steady state" was a *weekday* observation — quality status is day-of-week dependent. Same flavor as the schema-drift volatile-feed class: a threshold (48h staleness) that ignores a feed's legitimate data cadence (markets closed weekends). When a status field is meant to signal real problems, recurring benign-but-noisy trips erode its signal value — the market-staleness `error` every weekend makes a real market-data outage look identical to a normal Sunday.
+
+### `backtest_quality_report.json` stores only example issues, not the full list (2026-06-12) [RESOLVED]
+**Problem**: After running `tests/backtest_data_quality.py`, tried to enumerate all 19 flagged files from the saved `data/backtest_quality_report.json` to confirm none were in June 2026. The JSON only contains `issue_examples` (first 3 per check type) — programmatic extraction found 3 dates and silently missed the rest.
+**Root cause**: The report writer summarizes (`files_scanned`, `by_file_type`, `issue_examples`); the complete per-file issue list is only emitted to stdout under `--verbose`.
+**Fix**: Re-ran with `--issues-only --verbose` and grepped the console output for the full enumeration. If full-list-in-JSON is ever needed (e.g. for trend tracking), add an `all_issues` key to the report writer.
+**Lesson**: The saved report answers "how healthy is the archive" not "which exact files are flagged". Use `--verbose` for forensics.
+
+### ENTSO-E NL load over-forecast — #30 check fired on first production run (2026-06-09) [RESOLVED]
+**Observation**: First dispatched run after shipping the #30 cross-field consistency check (3b04f1b, 0.40 threshold) fired 6 warnings on NL load between 08:15-09:30 Amsterdam. Pattern: forecast steady at ~10 GW, actual ramping 7.4 → 5.5 GW, error climbing from +3.3 to +4.5 GW, ratio climbing from 0.45 to 0.81. All six records consecutive 15-min slots → not noise, a real model miss.
+**Hypothesis**: ENTSO-E's NL load forecast for Tue 2026-06-09 morning didn't account for either (a) behind-the-meter PV ramp on a sunny June morning depressing net load, or (b) a wrong day-type calendar feature (post-Pinksteren week?). The signal is exactly the kind #30 was designed to catch — `|forecast_error|/load_actual` between 45-81% is physically implausible if forecast and actual are independently correct.
+**Action**: None yet — keep 0.40 threshold and watch. The #30 issue derivation said max observed Mar-Jun ratio was 0.27, so today's data extends the sample. If this recurs on multiple non-anomalous days, recalibrate; if it's confined to summer mornings, may need a `is_summer_morning_ramp` exemption rather than blanket loosening.
+**Where**: `utils/data_quality.py::validate_load_cross_field_consistency`, threshold `LOAD_CROSS_FIELD_RATIO_THRESHOLD = 0.4`. Tighten or loosen here if recalibration needed.
+**Pickup signal**: if subsequent daily runs surface non-morning-ramp records too (e.g. evening or random midday slots), the threshold itself is wrong rather than the underlying data being anomalous.
+
+### Worktree path mismatch broke 4 of 12 reviewer agents (2026-06-07) [RESOLVED]
+**Problem**: Created git worktrees at `/tmp/wt-prN` via bash for the multi-model review battery on 4 PRs. 4 of 12 spawned reviewer agents (Opus code-reviewer for PRs #16/#18/#19 + Sonnet for #16) returned "I cannot review code I cannot read" — their Read tool couldn't access the paths.
+**Root cause**: On Windows, bash's `/tmp` maps to `C:\Users\<user>\AppData\Local\Temp` (a separate per-user temp dir, not the system `/tmp` that POSIX expects). The reviewer agents tried `/tmp/wt-prN` and got "not found"; only the agents that happened to try the Windows path succeeded.
+**Fix (one-shot)**: Per-agent path translation worked for some agents; others gave up. For the failed ones, no review was produced — partial battery coverage.
+**Lesson**: When briefing sub-agents that will use Read/Glob, give them OS-native absolute paths. On Windows, prefer `%LOCALAPPDATA%\Temp\...` or pass the diff inline rather than relying on `/tmp`. Better: have the orchestrator generate diffs and embed them in the agent prompts directly.
+**Positive side-effect**: Three of the four agents that couldn't read the code refused to fabricate findings (cited the "When something is unclear, ask rather than guess" harness-defense rule), which is the desired behavior. The fix is upstream — don't put them in that position.
+
+### `git diff` cannot see untracked files — still true in the framework, 13 months on (2026-09-06) [x2] [RESOLVED]
+The 2026-08-08 entry below logged this repo losing 645 of 695 lines to it. Today's drift check found the framework template **still** has no untracked term in Step 1 (`grep -c untracked` over the Step 1 span = 0 at every tag v1.17.0→v1.37.0) while its magnitude gate carves out "any new file in a HIGH path" — a carve-out its own text says is "not in force" if unobservable.
+**Lesson**: a gotcha fixed locally is not fixed upstream, and an adoption merge is exactly where the upstream version comes back. Record local divergences *in the adapted file* so the next merge cannot silently undo them. Filed as agent-ready-projects#145.
+_Archived 2026-10-06: fixed upstream in agent-ready-projects v1.43.0 (#145); the installed review-changes Step 1 lists untracked files._

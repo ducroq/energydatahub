@@ -24,7 +24,13 @@ thinning, mechanizing, retiring!" (2026-10-05).
 - MEMORY.md Current State (20.7k of session narrative) → `memory/archive/current-state-2026-10-05.md`;
   Active Decisions (10.2k) → `memory/project_active_decisions.md` (on-demand topic file).
 
-**Next action — pass 2, `CLAUDE.md` (the auto-loaded one, so it matters most):**
+**Pass 2 done 2026-10-06:** `CLAUDE.md` 38,271 → ~13.8k chars (`wc -m`), under the 15k flag. Original
+verbatim in `memory/archive/claude-md-2026-10-06.md`. Survival check run: every Hard Constraint line
+`grep -F`-found, both `<!-- verify -->` probes kept and run (955 tests collected; hook exit 0).
+Also: 7 gotcha entries archived (log 50.1k → 40.6k), H6/H8 dormant → archive (hypothesis log 31.7k → 24.0k),
+both log headers thinned, `## Mechanized` table added (framework v1.41.0).
+
+**Next action — mechanize** (below). Pass 2 plan, kept for the record:
 1. **Architecture block (~18.8k)** is per-file narrative: incident history, dates, run IDs.
    Cut each entry to *what the file is + the one rule you must not break*; move the history
    to the module docstrings (most already carry it) or `memory/archive/`. Do not lose any

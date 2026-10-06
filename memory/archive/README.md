@@ -4,7 +4,8 @@ Not read by default. Grep here when a symptom or decision has history.
 
 - `project_session_*.md` — session retrospectives (index below)
 - `gotcha-log-archive.md` — every `[RESOLVED]` gotcha
-- `hypothesis-log-resolved.md` — resolved hypotheses (H1, H3, H5, H9)
+- `hypothesis-log-resolved.md` — resolved hypotheses (H1, H3, H4, H5, H9, H11) and dormant ones (H6, H8)
+- `claude-md-2026-10-06.md` — `CLAUDE.md` verbatim before read-surface pass 2: the incident history behind each rule
 - `current-state-2026-10-05.md` — the long Current State that MEMORY.md carried until 2026-10-05
 
 ## Session index
