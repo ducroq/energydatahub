@@ -55,6 +55,8 @@ So the remedy is *detection without blocking*: publish-failure alerting (#50) so
 
 **Method for the next review** (unchanged instrument, widened axis): tabulate the last 30 scheduled runs by FAILING STEP, counting *Assert data quality* as its own class rather than folding it into the drift tripwire. **Review by**: 2026-10-05.
 
+**Data point 2026-10-06**: 10-05 failed at the drift tripwire. The tripwire was not the cause: a runner delay of 6h16m rolled the collection day, so `generation_forecast` came back empty. That is a new class, the scheduled run starting late, and it is now fixed by `COLLECTION_DATE`. Count it as runner timing, not upstream, when the Method is run. This review is now DUE (2026-10-05).
+
 ### H11 — The span check's derived expectations hold in production (tracked: #53)
 **Position**: `MIN_SPAN_OBSERVATIONS=10` and `MIN_SPAN_AGREEMENT=0.6` separate "this member's span legitimately varies" from "this member lost days", with no false alarms on the scheduled run. Basis: 30 vintages of every published feed measured 2026-09-04. The two genuinely-growing series (`market_history` carbon_eua 13%, gas_ttf 30%) sit far below the floor and correctly get no expectation; everything else sits at 77-100% and gets one. 0.6 falls in an empty band — nothing measured between 30% and 77%.
 
@@ -65,6 +67,8 @@ So the remedy is *detection without blocking*: publish-failure alerting (#50) so
 **Do NOT resolve this by loosening the threshold.** A global loosen buys silence on the false alarm and blinds every other member. Case (c) is a per-member problem and wants a per-member answer.
 
 **Review by**: 2026-09-25, or immediately if the `span-shortfall` issue opens on a scheduled run.
+
+**Data point 2026-10-06** (not a resolution): the 10-05 run `37381385635` reported 14 short members on #83. Cause established — the cron started 22:16 UTC, past Amsterdam midnight, so every day-ahead member carried only 10-06 (gotcha log 2026-10-06). That shortfall was a TRUE positive, not a bad expectation. Whether #83's earlier comments were too is still unchecked.
 
 **Known inert period**: the check reports `checked=false` ("not verified") until 10 observations with spans accumulate. First span-bearing observation was 2026-09-04, so it cannot judge anything before ~2026-09-14. A clean result before then means nothing was verifiable, and the reporter says so.
 
@@ -104,6 +108,8 @@ Two things follow, and only the second is evidence about H10. (1) 429s from GitH
 **Reviewed 2026-10-05: TRIGGER FIRED. A 429 storm blocked a publish (run `37226371364`, 2026-10-04).** 203 lines say `Too many concurrent requests` (`gh run view 37226371364 --log | grep -c 'Too many concurrent'`), with no 5xx. The previous five runs logged 0, 2, 0, 2 and 0 such lines, on unchanged code (no `collectors/` or `data_fetcher.py` commit since 09-25). The storm ran from 18:57:52 to about 18:58:53, at 2–6 rejections per second, and **the very first Open-Meteo request was refused**. Our cap is 6, so nothing of ours could have been crowding the API at that moment. That leans toward the **position** (another tenant on the shared runner IP using up the allowance), and it outweighs the "concurrency-shaped wording" point from 09-10: the wording describes Open-Meteo's counter, not whose requests filled it. It does not settle H10 — load on Open-Meteo's side is still not excluded.
 
 **Shipped 2026-10-05, independent of how H10 resolves:** a separate rate-limit budget in `_openmeteo_shared.py` (5 retries at 5/10/20/30/30 s plus jitter, which do not consume `MAX_RETRIES`) and a module-wide cooldown armed by any 429. This is what actually failed on 10-04: the old budget gave up about 3 s after a location's first try, so it could not outlast a 60 s storm. Locations whose turn fell as the storm thinned (18:58:30) all succeeded. `test_replay_of_2026_10_04_storm` fails on the pre-fix code and passes after. **This does not reduce our concurrency**, which is correct only if the position holds. If storms keep blocking publishes *after* this change, the counter-position gains and lowering the cap is the next lever. **New review by**: 2026-10-19 — count the runs with ≥1 `rate-limited (retry` log line and whether any of them still lost a location.
+
+**Data point 2026-10-06**: run `37381385635` (10-05, started 22:16 UTC, off-peak) logged zero 429s and zero `rate-limited (retry` lines, so the new 429 budget from `a1a944e` was never exercised. One quiet late-evening run says nothing about shared-egress contention at peak.
 
 ### H8 — Merging all timestamp-map records (instead of sampling one) ends the sampled-record false-positive class, without needing the diagnostic-key exemption generalised
 **Position**: The 2026-08-23 `load_forecast` failure was the sampled-record defect the tripwire's own comments had documented since June, firing for the first time on a CRITICAL feed it could not downgrade. Merging every record into the `value_shape` (`_merge_signatures`) makes the fingerprint order-independent, so intra-day completeness variance can no longer masquerade as a schema break — a field gone from *every* record still drifts, a field gone from some does not.
