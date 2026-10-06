@@ -154,6 +154,22 @@ class TestSpanShortfalls:
     def test_member_with_no_expectation_is_not_checked(self):
         assert span_shortfalls({'market_history.json': {'gas_ttf/data': 3}}, {}) == []
 
+    def test_tolerated_member_one_day_short_is_not_a_shortfall(self):
+        """H11: gas_ttf is 24 of 25 every Sunday, GIE lags a day — no loss."""
+        assert span_shortfalls(
+            {'market_proxies.json': {'gas_ttf/history': 24}, 'gas_storage.json': {'': 7}},
+            {'market_proxies.json': {'gas_ttf/history': 25}, 'gas_storage.json': {'': 8}}) == []
+
+    def test_tolerated_member_two_days_short_still_alarms(self):
+        got = span_shortfalls({'gas_storage.json': {'': 6}}, {'gas_storage.json': {'': 8}})
+        assert [(e['feed'], e['observed']) for e in got] == [('gas_storage.json', 6)]
+
+    def test_day_ahead_members_get_no_slack(self):
+        """Slack on a day-ahead member would hide the #51 half-horizon loss."""
+        got = span_shortfalls({'energy_price_forecast.json': {'entsoe/data': 1}},
+                              {'energy_price_forecast.json': {'entsoe/data': 2}})
+        assert len(got) == 1
+
     def test_sorted_worst_first(self):
         got = span_shortfalls(
             {'a.json': {'x': 9}, 'b.json': {'y': 1}},

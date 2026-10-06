@@ -1196,6 +1196,14 @@ STALENESS_OVERRIDES = {
     # 28 days (672h) flags only genuinely stale data while accommodating
     # normal publication delays and bank-holiday weeks.
     'nordic_hydro': 672,
+    # Daily market closes: no trades at the weekend, so every Sunday run saw
+    # Friday's close at 66-67.5h and set overall_status=error (#36, H4;
+    # measured over the 2026-09 Sunday reports, Mondays clean). 96h is the
+    # flat fix, matching gas_storage; the cost is that an outage starting
+    # Friday is flagged on Tuesday. Multi-day exchange holidays
+    # (Easter) still exceed it — that is the trading-day-aware fix.
+    'market_proxies': 96,
+    'market_history': 96,
 }
 
 

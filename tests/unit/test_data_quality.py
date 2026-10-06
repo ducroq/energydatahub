@@ -272,6 +272,13 @@ class TestDatasetValidationConfig:
         assert 'main_temp' in cfg['field_ranges']
         assert cfg['staleness_hours'] == 48  # default
 
+    def test_market_feeds_tolerate_a_weekend(self):
+        """#36/H4: Sunday runs saw Friday's close at 66-67.5h."""
+        for name in ('market_proxies', 'market_history'):
+            cfg = get_dataset_validation_config(name, 'market_proxies')
+            assert cfg['staleness_hours'] == 96
+            assert cfg['staleness_hours'] > 67.5
+
     def test_unknown_dataset_returns_safe_defaults(self):
         cfg = get_dataset_validation_config('unknown', 'unknown')
         assert cfg['field_ranges'] is None

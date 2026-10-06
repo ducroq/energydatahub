@@ -63,7 +63,7 @@ from __future__ import annotations
 import json
 import os
 from collections import Counter
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 # A timestamp key starts with an ISO date. Deliberately a prefix match and not
 # a full parse: `_is_timestamp_str` in data_quality accepts date-only keys too
@@ -176,6 +176,24 @@ MIN_SPAN_OBSERVATIONS = 10
 # really is short, and the downstream consumer rejects it on size anyway.
 MIN_SPAN_AGREEMENT = 0.6
 
+# Per-member slack (days) for series whose upstream legitimately runs one day
+# short now and then, with the day arriving on the next run. Keyed by
+# (feed, member); a member not listed has zero slack. Measured 2026-10-06
+# over 30 scheduled runs (H11):
+#
+#   gas_storage.json (root)           7 of 8 on 09-11, 09-14, 10-03, 10-04 —
+#                                     GIE AGSI+ publishes its newest day late
+#   market_proxies.json gas_ttf/history  24 of 25 on every Sunday (09-13,
+#                                     09-20, 09-27, 10-04) — no trading days
+#
+# Each fired the span-shortfall issue (#83) with nothing actually lost. Keep
+# this to measured cadence effects: slack on a day-ahead member would hide
+# exactly the half-horizon loss this check exists for (#51).
+SPAN_TOLERANCE_DAYS = {
+    ('gas_storage.json', ''): 1,
+    ('market_proxies.json', 'gas_ttf/history'): 1,
+}
+
 
 def expected_spans(
     observations: List[Dict[str, Any]],
@@ -226,6 +244,7 @@ def expected_spans(
 def span_shortfalls(
     current: Dict[str, Dict[str, int]],
     expected: Dict[str, Dict[str, int]],
+    tolerance: Optional[Dict[Tuple[str, str], int]] = None,
 ) -> List[Dict[str, Any]]:
     """Members carrying FEWER days than their expected span.
 
@@ -240,7 +259,11 @@ def span_shortfalls(
     -drift path (`classify_data_member_drift`); reporting it here as well would
     double-alarm one event through two instruments. A member carrying MORE days
     than expected is never a shortfall — `market_history` grows every run.
+    A member listed in `tolerance` (default SPAN_TOLERANCE_DAYS) may fall that
+    many days short before it counts.
     """
+    if tolerance is None:
+        tolerance = SPAN_TOLERANCE_DAYS
     out: List[Dict[str, Any]] = []
     for feed, members in (expected or {}).items():
         observed_members = (current or {}).get(feed)
@@ -248,7 +271,8 @@ def span_shortfalls(
             continue
         for member, exp_days in members.items():
             obs_days = observed_members.get(member)
-            if not isinstance(obs_days, int) or obs_days >= exp_days:
+            slack = tolerance.get((feed, member), 0)
+            if not isinstance(obs_days, int) or obs_days >= exp_days - slack:
                 continue
             out.append({
                 'feed': feed,
