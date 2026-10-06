@@ -17,6 +17,12 @@ buurt did. Buurt was patched because buurt is what happened to fail.
 
 ## Current Status
 
+**2026-10-06: DORMANT** (maintainer decision). This waits on an event, not a date, so it reopens on
+the next run where a graced feed publishes an empty envelope. Gate 1 is HALF met: the 10-04 run
+(`37226371364`) did coerce its four empty Open-Meteo feeds (streak 1/3), but that run did not
+publish, because the drift gate failed it over the same storm. So "the run still publishes" is
+still unobserved. Gate 2 is unchanged.
+
 **Code landed; both closure gates still unmet.** ⚠️ This section read "Not started. Nothing in
 the tree has changed since `ad008df`" until 2026-09-21, while the Outcome below already recorded
 the implementation shipping in `f95e660` (2026-08-08) and growing a seventh feed in `7ff9623`
