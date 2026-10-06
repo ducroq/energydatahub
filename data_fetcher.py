@@ -162,6 +162,26 @@ _BUURT_AIR_STATION_FIELDS = (
 )
 
 
+def resolve_collection_day(current_time: datetime, anchor_date: str | None = None) -> datetime:
+    """Return local midnight of the day this run collects for.
+
+    Without an anchor this is midnight of ``current_time``'s own day. With
+    ``anchor_date`` (``YYYY-MM-DD``, set by the workflow on scheduled runs
+    from the cron's UTC date) it is midnight of THAT day in
+    ``current_time``'s timezone.
+
+    Why: GitHub starts the 16:00 UTC cron 2-6h late. Run 37381385635 started
+    22:16 UTC on 2026-10-05 = 00:16 Amsterdam on 10-06, so the window rolled
+    to 10-06..10-07, tomorrow's day-ahead data did not exist yet,
+    generation_forecast came back empty and the drift gate lost the publish.
+    Anchoring keeps a late run on the day it was scheduled for.
+    """
+    if anchor_date:
+        day = datetime.strptime(anchor_date, '%Y-%m-%d')
+        return day.replace(tzinfo=current_time.tzinfo)
+    return current_time.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
 def assemble_buurt_air_envelope(buurt_locations, buurt_aq_data):
     """Combine per-location Luchtmeetnet datasets into one EnhancedDataSet.
 
@@ -402,8 +422,15 @@ async def main() -> None:
         # Calculate day boundaries for proper day-ahead forecasting
         current_time = datetime.now(timezone)
 
-        # Start from beginning of current day
-        today = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
+        # Start from beginning of the collection day — the scheduled day on a
+        # late cron run, otherwise the current day (see resolve_collection_day)
+        anchor_date = os.environ.get('COLLECTION_DATE') or None
+        today = resolve_collection_day(current_time, anchor_date)
+        if anchor_date and today.date() != current_time.date():
+            logging.warning(
+                f"Late scheduled run: local date is {current_time.date()}, "
+                f"collecting for the scheduled day {today.date()} (COLLECTION_DATE)"
+            )
 
         # End at end of tomorrow (23:59:59) - for standard forecasts
         tomorrow = today + timedelta(days=2) - timedelta(seconds=1)

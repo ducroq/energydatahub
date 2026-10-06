@@ -248,3 +248,6 @@ Patched `if kind in ("timestamp_map", "list")` to disable a prune branch; the sa
 ### A fake clock that sums sleeps makes concurrent retry tests pass anything (2026-10-05)
 The first storm-replay test advanced one shared fake clock by every `asyncio.sleep`. Twenty-five concurrent locations therefore added their sleeps end to end and "outlasted" a 61 s storm under the OLD 3 s retry budget too. It passed on the pre-fix code, and only the deliberate run against `git show HEAD:` caught it. Rewritten on the real clock with every delay scaled down 100×.
 **Lesson**: a fake clock is sound for ONE task. For concurrent tasks, scale real time instead, and always run a regression test against the unfixed code before trusting it.
+
+### A late cron rolls the collection window past local midnight (2026-10-06)
+GitHub started the 16:00 UTC cron at 22:16 UTC on 10-05 = 00:16 Amsterdam, so `today` became 10-06, tomorrow's day-ahead did not exist, `generation_forecast` came back empty and the drift gate lost the publish (run `37381385635`; also the cause of the 14-member span shortfall that run). Scheduled runs now export `COLLECTION_DATE` = the cron's UTC date and `resolve_collection_day()` anchors on it; holds while the delay stays <8h. If a late run fails again, check `grep 'Late scheduled run'` in its log first.

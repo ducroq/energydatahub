@@ -48,7 +48,18 @@ jobs:
         ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
         GIE_API_KEY: ${{ secrets.GIE_API_KEY }}
 
-      run: python data_fetcher.py
+      # Scheduled runs collect for the cron's UTC date, not the wall-clock
+      # Amsterdam date: GitHub starts the 16:00 UTC cron 2-6h late, and past
+      # 22:00 UTC (CEST) / 23:00 UTC (CET) the local day has already rolled,
+      # so tomorrow's day-ahead data does not exist yet (run 37381385635).
+      # Valid while the delay stays under 8h (UTC date unchanged). Manual
+      # dispatches keep the wall-clock date.
+      run: |
+        if [ "${{ github.event_name }}" = "schedule" ]; then
+          export COLLECTION_DATE="$(date -u +%F)"
+          echo "Scheduled run: COLLECTION_DATE=${COLLECTION_DATE}"
+        fi
+        python data_fetcher.py
 
     # Soft tripwire: warn (don't fail) when an expected output JSON is missing.
     # Surfaces silent collector dropouts in the Actions run summary without

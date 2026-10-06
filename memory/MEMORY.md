@@ -45,6 +45,7 @@
 
 <!-- One line per active work item. Empty is a valid state — do not invent entries. -->
 
+- **2026-10-06 (supersedes step 1 below):** the 10-05 run failed — cron started 22:16 UTC, past Amsterdam midnight, window rolled to 10-06 (gotcha log 2026-10-06). Fixed with `COLLECTION_DATE` anchoring; 10-05 one-day feeds backfilled. Check the 10-06 scheduled run succeeds, closes the publish-failure issue, and (if it starts after 22:00 UTC) logs `Late scheduled run`.
 - **NEXT SESSION STARTS HERE (2026-10-05 handoff).** On "continue", in order:
   1. **Check the 2026-10-05 scheduled run** (~19:00 UTC): `gh run list --workflow "Collect and Publish Data" --limit 2`. Expect success and #84 auto-closed. In its log, `grep -c 'rate-limited (retry'` shows whether the new Open-Meteo 429 budget fired, and `grep 'all .* attempts failed'` whether any location was still lost. Record the result under H10 (review by 2026-10-19). If it failed: `/review-changes` found no open issue in the fix, so diagnose fresh.
   2. **Confirm Augur consumed the backfill**: its 10-05 commit subject should carry no `[ALARM: t0 stale]` (`git -C ~/repos/veen-systems/augur log origin/main -1`).
