@@ -82,6 +82,7 @@ scripts/
   backfill_missed_run.py     # Re-collect the six one-day feeds of an unpublished run (`git add -f` output)
   backfill_entsoe.py         # BROKEN on v2.2+ files (#57) — dry-run only
   archive_to_monthly.py / backfill_gas_storage.py / sample_observed_ranges.py
+  decrypt_file.py / batch_decrypt.py / visualize_data.py   # local decrypt + plotting utilities
   smoketest_alerting.sh      # Six-link alerting smoke test against the real repo, self-cleaning
   probe_*.py                 # One-shot diagnostics; probe_openmeteo_concurrency.py goes with H10
 data/                        # yymmdd_HHMMSS_*.json + current copies + committed sidecars:

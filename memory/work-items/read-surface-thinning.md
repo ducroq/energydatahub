@@ -6,11 +6,11 @@ Every session pays to read `CLAUDE.md` (auto-loaded) and `memory/MEMORY.md` (rea
 via the Before-You-Start row), and `/curate` measures the whole `memory/` corpus.
 On 2026-10-05 these were well past their budgets, all measured in characters (`wc -m`):
 
-| Surface | 2026-10-05 before | After pass 1 | Target |
+| Surface | 2026-10-05 before | 2026-10-06 (after pass 2) | Target |
 |---|---|---|---|
-| `memory/` corpus (curate Step 0, excl. `archive/`) | 305,787 | see Current Status | < 300k hard, aim ~150k |
-| `CLAUDE.md` (auto-loaded) | 37,636 | ~37.9k (untouched apart from doc sync) | ≤ 15k flag; template ~6k |
-| `memory/MEMORY.md` (read every session) | 40,123 | see Current Status | ≤ ~8k |
+| `memory/` corpus (curate Step 0, excl. `archive/`) | 305,787 | 103,508 after pass 2 | < 300k hard, aim ~150k |
+| `CLAUDE.md` (auto-loaded) | 37,636 | 13,764 after pass 2 | ≤ 15k flag; template ~6k |
+| `memory/MEMORY.md` (read every session) | 40,123 | ~7.0k | ≤ ~8k |
 
 The user asked for this directly: "Large Read surface → we need to start pruning,
 thinning, mechanizing, retiring!" (2026-10-05).
@@ -30,7 +30,7 @@ verbatim in `memory/archive/claude-md-2026-10-06.md`. Survival check run: every 
 Also: 7 gotcha entries archived (log 50.1k → 40.6k), H6/H8 dormant → archive (hypothesis log 31.7k → 24.0k),
 both log headers thinned, `## Mechanized` table added (framework v1.41.0).
 
-**Next action — mechanize** (below). Pass 2 plan, kept for the record:
+**Next action — mechanize: #85 first** (below). `memory/` corpus excl. archive is 103.5k chars on 2026-10-06, under the 300k hard limit; next targets are the three open hypotheses (~6k each). Pass 2 plan, kept for the record:
 1. **Architecture block (~18.8k)** is per-file narrative: incident history, dates, run IDs.
    Cut each entry to *what the file is + the one rule you must not break*; move the history
    to the module docstrings (most already carry it) or `memory/archive/`. Do not lose any

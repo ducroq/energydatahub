@@ -185,3 +185,6 @@ The first storm-replay test advanced one shared fake clock by every `asyncio.sle
 
 ### A late cron rolls the collection window past local midnight (2026-10-06)
 GitHub started the 16:00 UTC cron at 22:16 UTC on 10-05 = 00:16 Amsterdam, so `today` became 10-06, tomorrow's day-ahead did not exist, `generation_forecast` came back empty and the drift gate lost the publish (run `37381385635`; also the cause of the 14-member span shortfall that run). Scheduled runs now export `COLLECTION_DATE` = the cron's UTC date and `resolve_collection_day()` anchors on it; holds while the delay stays <8h. If a late run fails again, check `grep 'Late scheduled run'` in its log first.
+
+### An index row describing a file is a state claim (2026-10-06)
+`memory/MEMORY.md` said the gotcha log held "Promoted/Mechanized tables"; it never had a Mechanized table, and no check reads index descriptions. Found only by the drift triage's by-eye comparison. When an index row names a section of another file, either give it a `<!-- verify -->` grep or name the file only.
