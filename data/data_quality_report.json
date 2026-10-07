@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-10-06T20:45:09.963411+00:00",
+  "timestamp": "2026-10-07T20:57:41.059536+00:00",
   "overall_status": "warning",
   "total_issues": 2,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -85,6 +83,16 @@
       "status": "info",
       "data_points": 754,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -169,11 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "1 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "17 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 1,
+            "count": 17,
             "examples": [
-              "NL/2026-10-06T14:45:00+02:00: forecast_error=3158.6, load_actual=7608.336, ratio=0.42"
+              "NL/2026-10-07T10:15:00+02:00: forecast_error=3441.1, load_actual=8345.226, ratio=0.41",
+              "NL/2026-10-07T11:00:00+02:00: forecast_error=3197.2, load_actual=7612.016, ratio=0.42",
+              "NL/2026-10-07T11:15:00+02:00: forecast_error=3063.4, load_actual=7263.836, ratio=0.42",
+              "NL/2026-10-07T11:30:00+02:00: forecast_error=3628.2, load_actual=6757.296, ratio=0.54",
+              "NL/2026-10-07T11:45:00+02:00: forecast_error=4371.9, load_actual=6031.016, ratio=0.72"
             ],
             "threshold": 0.4
           }
@@ -205,7 +217,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 22,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -215,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 552,
+      "data_points": 553,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
