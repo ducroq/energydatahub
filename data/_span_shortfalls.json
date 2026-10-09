@@ -2,5 +2,20 @@
   "members_checked": 72,
   "members_with_expectation": 71,
   "min_observations": 10,
-  "shortfalls": []
+  "shortfalls": [
+    {
+      "feed": "energy_price_forecast.json",
+      "member": "entsoe/data",
+      "observed": 1,
+      "expected": 2,
+      "ratio": 0.5
+    },
+    {
+      "feed": "energy_price_forecast.json",
+      "member": "entsoe_de/data",
+      "observed": 1,
+      "expected": 2,
+      "ratio": 0.5
+    }
+  ]
 }
