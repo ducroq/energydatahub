@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-09T20:29:28.043535+00:00",
+  "timestamp": "2026-10-10T19:41:34.575086+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
+  "total_issues": 2,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 754,
+      "data_points": 750,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -169,18 +169,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "9 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 9,
+            "examples": [
+              "NL/2026-10-10T10:30:00+02:00: forecast_error=3127.3, load_actual=6901.686, ratio=0.45",
+              "NL/2026-10-10T10:45:00+02:00: forecast_error=3352.8, load_actual=6357.236, ratio=0.53",
+              "NL/2026-10-10T11:00:00+02:00: forecast_error=3398.1, load_actual=6093.826, ratio=0.56",
+              "NL/2026-10-10T11:15:00+02:00: forecast_error=2932.6, load_actual=6270.806, ratio=0.47",
+              "NL/2026-10-10T11:30:00+02:00: forecast_error=2946.6, load_actual=6083.876, ratio=0.48"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 88,
+      "data_points": 84,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -210,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 547,
+      "data_points": 540,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
