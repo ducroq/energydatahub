@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-10T19:41:34.575086+00:00",
+  "timestamp": "2026-10-11T19:51:41.966942+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -11,7 +11,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +21,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -91,7 +91,7 @@
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -177,15 +177,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "9 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "14 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 9,
+            "count": 14,
             "examples": [
-              "NL/2026-10-10T10:30:00+02:00: forecast_error=3127.3, load_actual=6901.686, ratio=0.45",
-              "NL/2026-10-10T10:45:00+02:00: forecast_error=3352.8, load_actual=6357.236, ratio=0.53",
-              "NL/2026-10-10T11:00:00+02:00: forecast_error=3398.1, load_actual=6093.826, ratio=0.56",
-              "NL/2026-10-10T11:15:00+02:00: forecast_error=2932.6, load_actual=6270.806, ratio=0.47",
-              "NL/2026-10-10T11:30:00+02:00: forecast_error=2946.6, load_actual=6083.876, ratio=0.48"
+              "NL/2026-10-11T10:30:00+02:00: forecast_error=3165.8, load_actual=7377.316, ratio=0.43",
+              "NL/2026-10-11T10:45:00+02:00: forecast_error=3667.2, load_actual=6933.046, ratio=0.53",
+              "NL/2026-10-11T11:00:00+02:00: forecast_error=3945.5, load_actual=6645.526, ratio=0.59",
+              "NL/2026-10-11T11:15:00+02:00: forecast_error=4060.5, load_actual=6544.496, ratio=0.62",
+              "NL/2026-10-11T11:30:00+02:00: forecast_error=4473.0, load_actual=6271.726, ratio=0.71"
             ],
             "threshold": 0.4
           }
@@ -237,7 +237,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 27,
+      "data_points": 26,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -247,7 +247,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 134,
+      "data_points": 133,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
