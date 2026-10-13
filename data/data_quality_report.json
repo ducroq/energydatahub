@@ -1,12 +1,9 @@
 {
-  "timestamp": "2026-10-12T22:43:48.141302+00:00",
+  "timestamp": "2026-10-13T21:05:23.956035+00:00",
   "overall_status": "warning",
-  "total_issues": 3,
-  "datasets_collected": 22,
-  "datasets_missing": [
-    "air_quality_buurt",
-    "weather_forecast_buurt"
-  ],
+  "total_issues": 2,
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -14,7 +11,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -24,7 +21,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -64,7 +61,17 @@
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 1302,
+      "data_points": 1440,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "weather_forecast_buurt",
+      "data_type": "weather",
+      "source": "Open-Meteo API (free)",
+      "status": "info",
+      "data_points": 768,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -73,29 +80,21 @@
       "dataset_name": "solar_forecast_buurt",
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
-      "data_points": 353,
+      "status": "info",
+      "data_points": 754,
       "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "location_completeness",
-          "severity": "warning",
-          "message": "1 of 2 location(s) returned no data after retries: Elsweide_Arnhem_NL",
-          "details": {
-            "requested": [
-              "Elsweide_Arnhem_NL",
-              "Elderveld_Arnhem_NL"
-            ],
-            "delivered": [
-              "Elderveld_Arnhem_NL"
-            ],
-            "missing": [
-              "Elsweide_Arnhem_NL"
-            ]
-          }
-        }
-      ]
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "grid_imbalance",
@@ -140,18 +139,54 @@
       "dataset_name": "demand_weather_forecast",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 1848,
+      "status": "warning",
+      "data_points": 1680,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "location_completeness",
+          "severity": "warning",
+          "message": "1 of 11 location(s) returned no data after retries: Utrecht_NL",
+          "details": {
+            "requested": [
+              "Amsterdam_NL",
+              "Rotterdam_NL",
+              "The_Hague_NL",
+              "Utrecht_NL",
+              "Eindhoven_NL",
+              "Groningen_NL",
+              "Dusseldorf_DE",
+              "Cologne_DE",
+              "Hamburg_DE",
+              "Brussels_BE",
+              "Antwerp_BE"
+            ],
+            "delivered": [
+              "Amsterdam_NL",
+              "Rotterdam_NL",
+              "The_Hague_NL",
+              "Eindhoven_NL",
+              "Groningen_NL",
+              "Dusseldorf_DE",
+              "Cologne_DE",
+              "Hamburg_DE",
+              "Brussels_BE",
+              "Antwerp_BE"
+            ],
+            "missing": [
+              "Utrecht_NL"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "offshore_wind",
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 1953,
+      "data_points": 1920,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -170,35 +205,18 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
+      "status": "info",
       "data_points": 384,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "21 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 21,
-            "examples": [
-              "NL/2026-10-12T11:30:00+02:00: forecast_error=3032.7, load_actual=6952.506, ratio=0.44",
-              "NL/2026-10-12T11:45:00+02:00: forecast_error=3415.6, load_actual=6515.236, ratio=0.52",
-              "NL/2026-10-12T12:00:00+02:00: forecast_error=3813.6, load_actual=6108.366, ratio=0.62",
-              "NL/2026-10-12T12:15:00+02:00: forecast_error=3810.9, load_actual=6090.326, ratio=0.63",
-              "NL/2026-10-12T12:30:00+02:00: forecast_error=4180.3, load_actual=5693.646, ratio=0.73"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 88,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -218,7 +236,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 22,
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -228,7 +246,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 570,
+      "data_points": 553,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
