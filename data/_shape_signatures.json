@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-10-13T21:05:23+00:00",
+  "computed_at": "2026-10-14T19:56:59+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -233,7 +233,7 @@
       ]
     },
     "wind_forecast.json": {
-      "shape_hash": "6b5016c1dca9f36e90f6dec634b6e237",
+      "shape_hash": "99a0460b47c951788c494c6659a70d80",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -481,6 +481,26 @@
                         }
                       },
                       "IJmuidenVer_NL": {
+                        "_kind": "timestamp_map",
+                        "value_shape": {
+                          "_kind": "dict",
+                          "keys": {
+                            "air_density": "float",
+                            "pressure": "float",
+                            "temperature": "float",
+                            "wind_direction_10m": "float",
+                            "wind_direction_120m": "float",
+                            "wind_direction_180m": "float",
+                            "wind_direction_80m": "float",
+                            "wind_gusts_10m": "float",
+                            "wind_speed_10m": "float",
+                            "wind_speed_120m": "float",
+                            "wind_speed_180m": "float",
+                            "wind_speed_80m": "float"
+                          }
+                        }
+                      },
+                      "NorthSeaBE_BE": {
                         "_kind": "timestamp_map",
                         "value_shape": {
                           "_kind": "dict",
@@ -1340,7 +1360,7 @@
       "sources": null
     },
     "demand_weather_forecast.json": {
-      "shape_hash": "92a41053d10b69e775fe1d3e6d7c719d",
+      "shape_hash": "e48bf3be782c83fdf7935af30a07fec4",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -1596,6 +1616,31 @@
                     "wind_speed": "float"
                   }
                 }
+              },
+              "Utrecht_NL": {
+                "_kind": "timestamp_map",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "apparent_temperature": "float",
+                    "cape": "float",
+                    "cdd": "float",
+                    "cloud_cover": "float",
+                    "condition": "str",
+                    "dew_point": "float",
+                    "hdd": "float",
+                    "humidity": "float",
+                    "precipitation": "float",
+                    "precipitation_probability": "float",
+                    "pressure": "float",
+                    "temperature": "float",
+                    "uv_index": "float",
+                    "visibility": "float",
+                    "weather_code": "int",
+                    "wind_direction": "float",
+                    "wind_speed": "float"
+                  }
+                }
               }
             }
           },
@@ -1604,34 +1649,6 @@
             "keys": {
               "api_rate_limit": "str",
               "collector": "str",
-              "collector_quality_issues": {
-                "_kind": "list",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "check_name": "str",
-                    "details": {
-                      "_kind": "dict",
-                      "keys": {
-                        "delivered": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        },
-                        "missing": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        },
-                        "requested": {
-                          "_kind": "list",
-                          "value_shape": "str"
-                        }
-                      }
-                    },
-                    "message": "str",
-                    "severity": "str"
-                  }
-                }
-              },
               "data_type": "str",
               "degree_day_config": {
                 "_kind": "dict",

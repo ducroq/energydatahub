@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-13T21:05:23.956035+00:00",
+  "timestamp": "2026-10-14T19:56:59.514209+00:00",
   "overall_status": "warning",
   "total_issues": 2,
   "datasets_collected": 24,
@@ -11,7 +11,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +21,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 754,
+      "data_points": 730,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -139,54 +139,18 @@
       "dataset_name": "demand_weather_forecast",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
-      "data_points": 1680,
+      "status": "info",
+      "data_points": 1848,
       "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "location_completeness",
-          "severity": "warning",
-          "message": "1 of 11 location(s) returned no data after retries: Utrecht_NL",
-          "details": {
-            "requested": [
-              "Amsterdam_NL",
-              "Rotterdam_NL",
-              "The_Hague_NL",
-              "Utrecht_NL",
-              "Eindhoven_NL",
-              "Groningen_NL",
-              "Dusseldorf_DE",
-              "Cologne_DE",
-              "Hamburg_DE",
-              "Brussels_BE",
-              "Antwerp_BE"
-            ],
-            "delivered": [
-              "Amsterdam_NL",
-              "Rotterdam_NL",
-              "The_Hague_NL",
-              "Eindhoven_NL",
-              "Groningen_NL",
-              "Dusseldorf_DE",
-              "Cologne_DE",
-              "Hamburg_DE",
-              "Brussels_BE",
-              "Antwerp_BE"
-            ],
-            "missing": [
-              "Utrecht_NL"
-            ]
-          }
-        }
-      ]
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "offshore_wind",
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 1920,
+      "data_points": 2160,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -205,18 +169,35 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "12 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 12,
+            "examples": [
+              "NL/2026-10-14T11:00:00+02:00: forecast_error=3084.9, load_actual=7483.826, ratio=0.41",
+              "NL/2026-10-14T11:15:00+02:00: forecast_error=3289.7, load_actual=7039.896, ratio=0.47",
+              "NL/2026-10-14T11:30:00+02:00: forecast_error=3607.7, load_actual=6648.166, ratio=0.54",
+              "NL/2026-10-14T11:45:00+02:00: forecast_error=3677.1, load_actual=6335.076, ratio=0.58",
+              "NL/2026-10-14T12:00:00+02:00: forecast_error=3648.1, load_actual=6466.656, ratio=0.56"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 88,
+      "data_points": 84,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -236,7 +217,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 22,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -246,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 553,
+      "data_points": 541,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
