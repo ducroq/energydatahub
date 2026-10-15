@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-10-14T19:56:59+00:00",
+  "computed_at": "2026-10-15T19:39:31+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -1213,7 +1213,7 @@
       "sources": null
     },
     "solar_forecast.json": {
-      "shape_hash": "7510f34db80fb2d2ff39e44cc0ee3d62",
+      "shape_hash": "fb37a96145efb0e014af0a87b3632753",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -1221,32 +1221,6 @@
             "_kind": "dict",
             "keys": {
               "Antwerp_BE": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Eindhoven_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "cloud_cover": "float",
-                    "dhi": "float",
-                    "direct": "float",
-                    "dni": "float",
-                    "ghi": "float"
-                  }
-                }
-              },
-              "Groningen_NL": {
                 "_kind": "timestamp_map",
                 "value_shape": {
                   "_kind": "dict",
@@ -1318,6 +1292,34 @@
             "keys": {
               "api_rate_limit": "str",
               "collector": "str",
+              "collector_quality_issues": {
+                "_kind": "list",
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "check_name": "str",
+                    "details": {
+                      "_kind": "dict",
+                      "keys": {
+                        "delivered": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        },
+                        "missing": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        },
+                        "requested": {
+                          "_kind": "list",
+                          "value_shape": "str"
+                        }
+                      }
+                    },
+                    "message": "str",
+                    "severity": "str"
+                  }
+                }
+              },
               "data_type": "str",
               "description": "str",
               "end_time": "str",
@@ -2160,7 +2162,7 @@
       "sources": null
     },
     "generation_mix.json": {
-      "shape_hash": "0343381cb452e41fefb8193d97ecfdd8",
+      "shape_hash": "766039f6f614b3b91824fff50d6bd6e8",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -2174,6 +2176,7 @@
                   "keys": {
                     "fossil_gas_actual": "float",
                     "nuclear_actual": "float",
+                    "nuclear_availability": "float",
                     "solar_actual": "float",
                     "wind_offshore_actual": "float",
                     "wind_onshore_actual": "float"

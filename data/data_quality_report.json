@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-14T19:56:59.514209+00:00",
+  "timestamp": "2026-10-15T19:39:31.261167+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
+  "total_issues": 3,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 730,
+      "data_points": 750,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -129,11 +129,39 @@
       "dataset_name": "solar_forecast",
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 1176,
+      "status": "warning",
+      "data_points": 840,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "location_completeness",
+          "severity": "warning",
+          "message": "2 of 7 location(s) returned no data after retries: Eindhoven_NL, Groningen_NL",
+          "details": {
+            "requested": [
+              "Rotterdam_NL",
+              "Eindhoven_NL",
+              "Lelystad_NL",
+              "Groningen_NL",
+              "Munich_DE",
+              "Stuttgart_DE",
+              "Antwerp_BE"
+            ],
+            "delivered": [
+              "Rotterdam_NL",
+              "Lelystad_NL",
+              "Munich_DE",
+              "Stuttgart_DE",
+              "Antwerp_BE"
+            ],
+            "missing": [
+              "Eindhoven_NL",
+              "Groningen_NL"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "demand_weather_forecast",
@@ -177,15 +205,15 @@
         {
           "check_name": "load_cross_field_consistency",
           "severity": "warning",
-          "message": "12 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "message": "14 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
           "details": {
-            "count": 12,
+            "count": 14,
             "examples": [
-              "NL/2026-10-14T11:00:00+02:00: forecast_error=3084.9, load_actual=7483.826, ratio=0.41",
-              "NL/2026-10-14T11:15:00+02:00: forecast_error=3289.7, load_actual=7039.896, ratio=0.47",
-              "NL/2026-10-14T11:30:00+02:00: forecast_error=3607.7, load_actual=6648.166, ratio=0.54",
-              "NL/2026-10-14T11:45:00+02:00: forecast_error=3677.1, load_actual=6335.076, ratio=0.58",
-              "NL/2026-10-14T12:00:00+02:00: forecast_error=3648.1, load_actual=6466.656, ratio=0.56"
+              "NL/2026-10-15T10:15:00+02:00: forecast_error=3595.7, load_actual=8520.486, ratio=0.42",
+              "NL/2026-10-15T10:30:00+02:00: forecast_error=4179.6, load_actual=7723.966, ratio=0.54",
+              "NL/2026-10-15T10:45:00+02:00: forecast_error=4326.3, load_actual=7319.216, ratio=0.59",
+              "NL/2026-10-15T11:00:00+02:00: forecast_error=3979.7, load_actual=7335.086, ratio=0.54",
+              "NL/2026-10-15T11:15:00+02:00: forecast_error=3899.7, load_actual=7400.176, ratio=0.53"
             ],
             "threshold": 0.4
           }
@@ -227,7 +255,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 541,
+      "data_points": 540,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
