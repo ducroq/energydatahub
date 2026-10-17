@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-10-16T19:14:53.351177+00:00",
+  "timestamp": "2026-10-17T18:06:47.101778+00:00",
   "overall_status": "warning",
   "total_issues": 1,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -85,6 +83,16 @@
       "status": "info",
       "data_points": 730,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -172,7 +180,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 84,
+      "data_points": 76,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -202,7 +210,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 534,
+      "data_points": 517,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -212,7 +220,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 26,
+      "data_points": 27,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -222,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 133,
+      "data_points": 134,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
