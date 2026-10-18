@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-17T18:06:47.101778+00:00",
+  "timestamp": "2026-10-18T18:26:24.203356+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
+  "total_issues": 2,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -91,7 +91,7 @@
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -139,18 +139,54 @@
       "dataset_name": "demand_weather_forecast",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 1848,
+      "status": "warning",
+      "data_points": 1512,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "location_completeness",
+          "severity": "warning",
+          "message": "2 of 11 location(s) returned no data after retries: Groningen_NL, Hamburg_DE",
+          "details": {
+            "requested": [
+              "Amsterdam_NL",
+              "Rotterdam_NL",
+              "The_Hague_NL",
+              "Utrecht_NL",
+              "Eindhoven_NL",
+              "Groningen_NL",
+              "Dusseldorf_DE",
+              "Cologne_DE",
+              "Hamburg_DE",
+              "Brussels_BE",
+              "Antwerp_BE"
+            ],
+            "delivered": [
+              "Amsterdam_NL",
+              "Rotterdam_NL",
+              "The_Hague_NL",
+              "Utrecht_NL",
+              "Eindhoven_NL",
+              "Dusseldorf_DE",
+              "Cologne_DE",
+              "Brussels_BE",
+              "Antwerp_BE"
+            ],
+            "missing": [
+              "Groningen_NL",
+              "Hamburg_DE"
+            ]
+          }
+        }
+      ]
     },
     {
       "dataset_name": "offshore_wind",
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 2160,
+      "data_points": 1680,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -180,7 +216,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 76,
+      "data_points": 80,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -230,7 +266,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 134,
+      "data_points": 133,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
