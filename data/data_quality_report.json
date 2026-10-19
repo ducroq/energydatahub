@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-18T18:26:24.203356+00:00",
+  "timestamp": "2026-10-19T20:50:58.873271+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
+  "total_issues": 1,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 730,
+      "data_points": 754,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -91,7 +91,7 @@
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -139,54 +139,18 @@
       "dataset_name": "demand_weather_forecast",
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
-      "status": "warning",
-      "data_points": 1512,
+      "status": "info",
+      "data_points": 1848,
       "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "location_completeness",
-          "severity": "warning",
-          "message": "2 of 11 location(s) returned no data after retries: Groningen_NL, Hamburg_DE",
-          "details": {
-            "requested": [
-              "Amsterdam_NL",
-              "Rotterdam_NL",
-              "The_Hague_NL",
-              "Utrecht_NL",
-              "Eindhoven_NL",
-              "Groningen_NL",
-              "Dusseldorf_DE",
-              "Cologne_DE",
-              "Hamburg_DE",
-              "Brussels_BE",
-              "Antwerp_BE"
-            ],
-            "delivered": [
-              "Amsterdam_NL",
-              "Rotterdam_NL",
-              "The_Hague_NL",
-              "Utrecht_NL",
-              "Eindhoven_NL",
-              "Dusseldorf_DE",
-              "Cologne_DE",
-              "Brussels_BE",
-              "Antwerp_BE"
-            ],
-            "missing": [
-              "Groningen_NL",
-              "Hamburg_DE"
-            ]
-          }
-        }
-      ]
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "offshore_wind",
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 1680,
+      "data_points": 2160,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -216,7 +180,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 80,
+      "data_points": 88,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -246,7 +210,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 517,
+      "data_points": 552,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -256,7 +220,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 27,
+      "data_points": 26,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -266,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 133,
+      "data_points": 132,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -276,7 +240,7 @@
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 8,
+      "data_points": 7,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []

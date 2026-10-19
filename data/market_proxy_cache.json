@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-10-18T20:24:44.241114+02:00",
+  "cached_at": "2026-10-19T22:50:09.213210+02:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -40,7 +40,6 @@
       "volatility_7d": 3.13,
       "trend_7d": "up",
       "history": {
-        "2026-09-14": 82.57,
         "2026-09-15": 80.06,
         "2026-09-16": 78.03,
         "2026-09-17": 76.35,
@@ -69,15 +68,15 @@
     },
     "gas": {
       "ticker": "UNG",
-      "price": 10.66,
-      "date": "2026-10-16",
-      "open": 10.6,
-      "high": 10.76,
-      "low": 10.53,
-      "volume": 22007327,
-      "prev_close": 11.09,
-      "change": -0.43,
-      "change_pct": -3.88,
+      "price": 10.47,
+      "date": "2026-10-19",
+      "open": 10.65,
+      "high": 10.67,
+      "low": 10.45,
+      "volume": 19410260,
+      "prev_close": 10.66,
+      "change": -0.18,
+      "change_pct": -1.74,
       "source": "alpha_vantage",
       "description": "Natural Gas proxy (US benchmark, correlates with EU)",
       "units": "USD/share",
@@ -85,5 +84,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "a11c38f3a74d1ac3ca60ea37cc926305324d79d88d34c3fece7ca1eb43442331"
+  "signature": "9f88c6bcee6a575c10ada2f773c61cd736fbda1d75fe7197e5e54cc68105fc9b"
 }
