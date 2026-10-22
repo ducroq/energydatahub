@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-10-21T19:53:00+00:00",
+  "computed_at": "2026-10-22T19:41:56+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -672,102 +672,6 @@
         "offshore_wind"
       ]
     },
-    "air_quality_buurt.json": {
-      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
-      "shape_signature": {
-        "_kind": "dict",
-        "keys": {
-          "data": {
-            "_kind": "dict",
-            "keys": {
-              "Elderveld_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int",
-                    "PM10": "float",
-                    "PM25": "float"
-                  }
-                }
-              },
-              "Elsweide_Arnhem_NL": {
-                "_kind": "timestamp_map",
-                "value_shape": {
-                  "_kind": "dict",
-                  "keys": {
-                    "AQI": "int"
-                  }
-                }
-              }
-            }
-          },
-          "metadata": {
-            "_kind": "dict",
-            "keys": {
-              "data_type": "str",
-              "locations": {
-                "_kind": "list",
-                "value_shape": "str"
-              },
-              "schema_changelog_entry": {
-                "_kind": "dict",
-                "keys": {
-                  "changes": {
-                    "_kind": "list",
-                    "value_shape": "str"
-                  },
-                  "date": "str",
-                  "description": "str"
-                }
-              },
-              "schema_version": "str",
-              "source": "str",
-              "stations": {
-                "_kind": "dict",
-                "keys": {
-                  "Elderveld_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  },
-                  "Elsweide_Arnhem_NL": {
-                    "_kind": "dict",
-                    "keys": {
-                      "city": "str",
-                      "components": {
-                        "_kind": "list",
-                        "value_shape": "str"
-                      },
-                      "requested_latitude": "float",
-                      "requested_longitude": "float",
-                      "station": "str",
-                      "station_latitude": "float",
-                      "station_location": "str",
-                      "station_longitude": "float"
-                    }
-                  }
-                }
-              },
-              "units": "str"
-            }
-          }
-        }
-      },
-      "data_type": "air",
-      "sources": null
-    },
     "weather_forecast_multi_location.json": {
       "shape_hash": "3fd5b0c543328a216a69ae597a585b71",
       "shape_signature": {
@@ -1071,6 +975,145 @@
         }
       },
       "data_type": "grid_imbalance",
+      "sources": null
+    },
+    "ned_production.json": {
+      "shape_hash": "a27584b93b681f1493e800060146a6d6",
+      "shape_signature": {
+        "_kind": "dict",
+        "keys": {
+          "data": {
+            "_kind": "dict",
+            "keys": {
+              "solar": {
+                "_kind": "dict",
+                "keys": {
+                  "actual": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  },
+                  "forecast": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  }
+                }
+              },
+              "wind_offshore": {
+                "_kind": "dict",
+                "keys": {
+                  "actual": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  },
+                  "forecast": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  }
+                }
+              },
+              "wind_onshore": {
+                "_kind": "dict",
+                "keys": {
+                  "actual": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  },
+                  "forecast": {
+                    "_kind": "timestamp_map",
+                    "value_shape": {
+                      "_kind": "dict",
+                      "keys": {
+                        "capacity_kw": "float",
+                        "co2_kg": "float",
+                        "utilization_pct": "float",
+                        "volume_kwh": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "_kind": "dict",
+            "keys": {
+              "api_rate_limit": "str",
+              "collector": "str",
+              "country": "str",
+              "data_type": "str",
+              "description": "str",
+              "end_time": "str",
+              "energy_types": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "granularity": "str",
+              "include_actual": "bool",
+              "include_forecast": "bool",
+              "operators": {
+                "_kind": "list",
+                "value_shape": "str"
+              },
+              "schema_changelog_entry": {
+                "_kind": "dict",
+                "keys": {
+                  "changes": {
+                    "_kind": "list",
+                    "value_shape": "str"
+                  },
+                  "date": "str",
+                  "description": "str"
+                }
+              },
+              "schema_version": "str",
+              "source": "str",
+              "start_time": "str",
+              "units": "str"
+            }
+          }
+        }
+      },
+      "data_type": "energy_production",
       "sources": null
     },
     "solar_forecast.json": {
@@ -2288,7 +2331,7 @@
       "sources": null
     },
     "market_proxies.json": {
-      "shape_hash": "e5231b062e10a6aba4721e9f781c4133",
+      "shape_hash": "ffcae4b64f5526741509807b9f33a167",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -2303,14 +2346,25 @@
                   "date": "str",
                   "description": "str",
                   "high": "float",
+                  "history": {
+                    "_kind": "timestamp_map",
+                    "value_shape": "float"
+                  },
                   "low": "float",
+                  "mean_30d": "float",
+                  "mean_7d": "float",
                   "name": "str",
                   "open": "float",
                   "prev_close": "float",
                   "price": "float",
+                  "price_lag1": "float",
+                  "price_lag2": "float",
+                  "price_lag7": "float",
                   "source": "str",
                   "ticker": "str",
+                  "trend_7d": "str",
                   "units": "str",
+                  "volatility_7d": "float",
                   "volume": "int"
                 }
               },
@@ -2322,15 +2376,26 @@
                   "date": "str",
                   "description": "str",
                   "high": "float",
+                  "history": {
+                    "_kind": "timestamp_map",
+                    "value_shape": "float"
+                  },
                   "low": "float",
+                  "mean_30d": "float",
+                  "mean_7d": "float",
                   "name": "str",
                   "note": "str",
                   "open": "float",
                   "prev_close": "float",
                   "price": "float",
+                  "price_lag1": "float",
+                  "price_lag2": "float",
+                  "price_lag7": "float",
                   "source": "str",
                   "ticker": "str",
+                  "trend_7d": "str",
                   "units": "str",
+                  "volatility_7d": "float",
                   "volume": "int"
                 }
               },

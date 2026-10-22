@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-10-21T19:53:00.647295+00:00",
-  "overall_status": "warning",
-  "total_issues": 1,
+  "timestamp": "2026-10-22T19:41:56.838439+00:00",
+  "overall_status": "error",
+  "total_issues": 2,
   "datasets_collected": 23,
   "datasets_missing": [
-    "ned_production"
+    "air_quality_buurt"
   ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
@@ -85,16 +85,6 @@
       "status": "info",
       "data_points": 750,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -208,14 +198,35 @@
       "issues": []
     },
     {
-      "dataset_name": "market_proxies",
-      "data_type": "market_proxies",
-      "source": "Alpha Vantage API",
+      "dataset_name": "ned_production",
+      "data_type": "energy_production",
+      "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 27,
+      "data_points": 540,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
+    },
+    {
+      "dataset_name": "market_proxies",
+      "data_type": "market_proxies",
+      "source": "Alpha Vantage API",
+      "status": "error",
+      "data_points": 85,
+      "checks_passed": 3,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "staleness",
+          "severity": "error",
+          "message": "Newest data is 5203.7h old (threshold: 96h)",
+          "details": {
+            "newest_timestamp": "2026-03-20T00:00:00+00:00",
+            "age_hours": 5203.7,
+            "threshold_hours": 96
+          }
+        }
+      ]
     },
     {
       "dataset_name": "market_history",
