@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-10-22T19:41:56.838439+00:00",
-  "overall_status": "error",
-  "total_issues": 2,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "timestamp": "2026-10-23T19:43:25.340825+00:00",
+  "overall_status": "warning",
+  "total_issues": 1,
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -13,7 +11,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -23,7 +21,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -85,6 +83,16 @@
       "status": "info",
       "data_points": 750,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -211,29 +219,18 @@
       "dataset_name": "market_proxies",
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
-      "status": "error",
-      "data_points": 85,
-      "checks_passed": 3,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "staleness",
-          "severity": "error",
-          "message": "Newest data is 5203.7h old (threshold: 96h)",
-          "details": {
-            "newest_timestamp": "2026-03-20T00:00:00+00:00",
-            "age_hours": 5203.7,
-            "threshold_hours": 96
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 27,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "market_history",
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 133,
+      "data_points": 134,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
