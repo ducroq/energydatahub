@@ -1,5 +1,5 @@
 {
-  "cached_at": "2026-10-23T21:42:55.476852+02:00",
+  "cached_at": "2026-10-24T20:32:07.691797+02:00",
   "data": {
     "carbon": {
       "ticker": "KEUA",
@@ -19,14 +19,14 @@
     },
     "gas_ttf": {
       "ticker": "TTF=F",
-      "price": 93.3,
+      "price": 93.85,
       "date": "2026-10-23",
       "open": 92.97,
       "high": 94.03,
       "low": 92.57,
-      "volume": 338,
+      "volume": 265,
       "prev_close": 90.04,
-      "change_pct": 3.62,
+      "change_pct": 4.23,
       "source": "yfinance",
       "description": "European gas benchmark (Title Transfer Facility)",
       "units": "EUR/MWh",
@@ -36,8 +36,8 @@
       "price_lag1": 90.04,
       "price_lag2": 87.43,
       "price_lag7": 87.14,
-      "mean_7d": 88.26,
-      "volatility_7d": 2.49,
+      "mean_7d": 88.34,
+      "volatility_7d": 2.65,
       "trend_7d": "up",
       "history": {
         "2026-09-21": 73.25,
@@ -64,20 +64,20 @@
         "2026-10-20": 85.06,
         "2026-10-21": 87.43,
         "2026-10-22": 90.04,
-        "2026-10-23": 93.3
+        "2026-10-23": 93.85
       }
     },
     "gas": {
       "ticker": "UNG",
-      "price": 9.89,
-      "date": "2026-10-22",
-      "open": 10.0,
-      "high": 10.1,
-      "low": 9.88,
-      "volume": 21734439,
-      "prev_close": 9.97,
-      "change": -0.08,
-      "change_pct": -0.8,
+      "price": 9.58,
+      "date": "2026-10-23",
+      "open": 9.62,
+      "high": 9.66,
+      "low": 9.51,
+      "volume": 20767248,
+      "prev_close": 9.89,
+      "change": -0.31,
+      "change_pct": -3.13,
       "source": "alpha_vantage",
       "description": "Natural Gas proxy (US benchmark, correlates with EU)",
       "units": "USD/share",
@@ -85,5 +85,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "98fd4383ab331e2bb5594d0d89aaf5396e3d035e73a150b0b043e57f32e79fc4"
+  "signature": "9dc3a52ecbf703d368e8f860a1cbd6bb9dd2f1fbb158202016a2da05f6d07e25"
 }
