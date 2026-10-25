@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-10-24T18:34:16.565129+00:00",
+  "timestamp": "2026-10-25T18:42:39.636043+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "total_issues": 2,
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -53,7 +51,7 @@
       "data_type": "energy_price",
       "source": "Nord Pool Elspot API v2",
       "status": "info",
-      "data_points": 24,
+      "data_points": 25,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -83,8 +81,18 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 730,
+      "data_points": 728,
       "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -161,11 +169,28 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
-      "data_points": 388,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "status": "warning",
+      "data_points": 392,
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "6 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 6,
+            "examples": [
+              "NL/2026-10-25T10:15:00+01:00: forecast_error=3873.0, load_actual=8135.396, ratio=0.48",
+              "NL/2026-10-25T10:30:00+01:00: forecast_error=3865.1, load_actual=8218.466, ratio=0.47",
+              "NL/2026-10-25T10:45:00+01:00: forecast_error=4079.5, load_actual=8091.466, ratio=0.50",
+              "NL/2026-10-25T11:00:00+01:00: forecast_error=4101.4, load_actual=8216.496, ratio=0.50",
+              "NL/2026-10-25T11:15:00+01:00: forecast_error=4377.7, load_actual=8085.756, ratio=0.54"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
@@ -202,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 522,
+      "data_points": 540,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -222,7 +247,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 134,
+      "data_points": 133,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
