@@ -1,9 +1,11 @@
 {
-  "timestamp": "2026-10-25T18:42:39.636043+00:00",
+  "timestamp": "2026-10-26T20:52:02.767948+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "total_issues": 1,
+  "datasets_collected": 23,
+  "datasets_missing": [
+    "air_quality_buurt"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -11,7 +13,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 196,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +23,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 196,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -31,7 +33,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 49,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -41,7 +43,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 48,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -51,7 +53,7 @@
       "data_type": "energy_price",
       "source": "Nord Pool Elspot API v2",
       "status": "info",
-      "data_points": 25,
+      "data_points": 24,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -81,18 +83,8 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 728,
+      "data_points": 748,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -101,7 +93,7 @@
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
-      "data_points": 288,
+      "data_points": 300,
       "checks_passed": 5,
       "checks_failed": 1,
       "issues": [
@@ -120,7 +112,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 637,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -160,7 +152,7 @@
       "data_type": "cross_border_flows",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 97,
+      "data_points": 101,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -169,35 +161,18 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
-      "data_points": 392,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "6 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 6,
-            "examples": [
-              "NL/2026-10-25T10:15:00+01:00: forecast_error=3873.0, load_actual=8135.396, ratio=0.48",
-              "NL/2026-10-25T10:30:00+01:00: forecast_error=3865.1, load_actual=8218.466, ratio=0.47",
-              "NL/2026-10-25T10:45:00+01:00: forecast_error=4079.5, load_actual=8091.466, ratio=0.50",
-              "NL/2026-10-25T11:00:00+01:00: forecast_error=4101.4, load_actual=8216.496, ratio=0.50",
-              "NL/2026-10-25T11:15:00+01:00: forecast_error=4377.7, load_actual=8085.756, ratio=0.54"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 384,
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 80,
+      "data_points": 84,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -207,7 +182,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 216,
+      "data_points": 225,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
