@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-10-26T20:52:02.767948+00:00",
+  "timestamp": "2026-10-27T20:23:20.479340+00:00",
   "overall_status": "warning",
   "total_issues": 1,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "air_quality_buurt"
-  ],
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -89,11 +87,21 @@
       "issues": []
     },
     {
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
+      "status": "info",
+      "data_points": 48,
+      "checks_passed": 4,
+      "checks_failed": 0,
+      "issues": []
+    },
+    {
       "dataset_name": "grid_imbalance",
       "data_type": "grid_imbalance",
       "source": "TenneT TSO (tennet.eu API)",
       "status": "warning",
-      "data_points": 300,
+      "data_points": 288,
       "checks_passed": 5,
       "checks_failed": 1,
       "issues": [
@@ -152,7 +160,7 @@
       "data_type": "cross_border_flows",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 101,
+      "data_points": 97,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -182,7 +190,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 225,
+      "data_points": 216,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -192,7 +200,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 22,
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -202,7 +210,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 540,
+      "data_points": 535,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -232,7 +240,7 @@
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 8,
+      "data_points": 7,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
