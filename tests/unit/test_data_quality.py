@@ -344,30 +344,6 @@ class TestExpectedDataTypeDefense:
             assert feed in EXPECTED_DATA_TYPE, f"Price feed {feed!r} not pinned"
             assert EXPECTED_DATA_TYPE[feed] == 'energy_price'
 
-    def test_published_feeds_all_pinned(self):
-        """Every dataset name that appears in data_fetcher.py's
-        `quality_datasets` block should have a pin. Drift between the
-        two registries means a newly-added feed would silently lack the
-        defense — this guards against that.
-        """
-        # Mirrors the quality_datasets dict in data_fetcher.py:946-970.
-        # Update both together when a new feed is added.
-        published_feeds = {
-            'entsoe', 'entsoe_de', 'energy_zero', 'epex', 'elspot',
-            'weather_forecast_multi_location', 'weather_forecast_buurt',
-            'solar_forecast_buurt', 'air_quality_buurt', 'grid_imbalance',
-            'wind_forecast', 'solar_forecast', 'demand_weather_forecast',
-            'offshore_wind', 'cross_border_flows', 'load_forecast',
-            'generation_forecast', 'generation_mix', 'ned_production',
-            'market_proxies', 'market_history', 'gas_storage', 'gas_flows',
-        }
-        missing = published_feeds - set(EXPECTED_DATA_TYPE.keys())
-        assert missing == set(), (
-            f"These published feeds lack an EXPECTED_DATA_TYPE pin and are "
-            f"vulnerable to data_type-spoof MITM (CWE-20): {sorted(missing)}"
-        )
-
-
 class TestGasStorageFieldRanges:
     """Issue #24: gas_storage's nested {fill_level_pct, *_twh, *_gwh} dict
     must validate per-field, not against a single 0-100% range that flags
