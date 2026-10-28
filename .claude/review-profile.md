@@ -75,9 +75,11 @@ Check it in this direction: read each entry, then find its tier above.
   bails without retry; UpstreamNoDataError fast-fails without tripping the breaker.
   collect() resets quality issues and auto-injects metadata['collector_quality_issues'].
   A collector overriding collect() must preserve that whole chain.
-- data_fetcher.py: the 8-touchpoint published-dataset checklist in
-  memory/project_published_dataset_checklist.md. Adding a feed to some touchpoints but
-  not all silently breaks publishing — this was a real BLOCKER on c40a53b.
+- data_fetcher.py: every published feed sits in every publish list, `quality_datasets` and
+  `EXPECTED_DATA_TYPE`. Adding a feed to some
+  lists but not all silently breaks publishing — a real BLOCKER on c40a53b. Enforced by
+  tests/unit/test_published_feed_registries.py; the wiring it cannot see is in
+  memory/project_published_dataset_checklist.md.
 - .github/workflows/collect-data.yml: completeness tripwire, schema-drift tripwire, quality
   gate, and the Pages deploy job all still run and still fail loudly. Actions stay SHA-pinned.
 - scripts/detect_schema_drift.py: within-feed drift fails, catalog drift warns, removed

@@ -29,6 +29,7 @@ Review findings turned into deterministic checks (agent-ready-projects v1.41.0).
 
 | Date | Finding | Check (what it greps/parses/runs) | Lands in | Status |
 |------|---------|-----------------------------------|----------|--------|
+| 2026-10-28 | Published-dataset lists drift apart silently (c40a53b, #3) | AST of `data_fetcher.main` + workflow YAML; asserts dated save, current copy, sidecar and both workflow lists agree; published ⊆ `quality_datasets` (2 named exemptions) ⊆ `EXPECTED_DATA_TYPE` | `tests/unit/test_published_feed_registries.py` | live (6 ablations red) |
 
 ### One file serving as both baseline and history will silently pick one (2026-08-08)
 **Problem**: `_shape_signatures.json` was the drift gate's baseline *and* the volatility classifier's history. The two roles need opposite commit rules — baseline only on pass, history on every run — and the tripwire running before the commit step meant "baseline" quietly won.

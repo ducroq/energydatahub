@@ -30,7 +30,9 @@ verbatim in `memory/archive/claude-md-2026-10-06.md`. Survival check run: every 
 Also: 7 gotcha entries archived (log 50.1k → 40.6k), H6/H8 dormant → archive (hypothesis log 31.7k → 24.0k),
 both log headers thinned, `## Mechanized` table added (framework v1.41.0).
 
-**Next action — mechanize: #85 first** (below). `memory/` corpus excl. archive is 103.5k chars on 2026-10-06, under the 300k hard limit; next targets are the three open hypotheses (~6k each). Pass 2 plan, kept for the record:
+**Pass 3, 2026-10-28:** #85 mechanized — `tests/unit/test_published_feed_registries.py` (6 ablations red), checklist shrunk to what the test cannot see.
+
+**Next action — thin the open hypotheses.** `memory/` corpus excl. archive is 103.5k chars on 2026-10-06, under the 300k hard limit; next targets are the three open hypotheses (~6k each). Pass 2 plan, kept for the record:
 1. **Architecture block (~18.8k)** is per-file narrative: incident history, dates, run IDs.
    Cut each entry to *what the file is + the one rule you must not break*; move the history
    to the module docstrings (most already carry it) or `memory/archive/`. Do not lose any

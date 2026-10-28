@@ -38,7 +38,7 @@
 | `memory/project_data_backfill_gaps.md` | Outage recovery, prioritising manual runs | Which collectors can backfill vs lose data permanently. Tool: `scripts/backfill_missed_run.py` |
 | `memory/project_actions_optimization.md` | Adding workflows or scheduled triggers | Account-wide 3k min/month budget, what we cut to fit |
 | `memory/project_entsoe_old_files.md` | Touching pre-Oct-2025 historical files | 26 files have malformed timestamps; skip them unless fixing root cause |
-| `memory/project_published_dataset_checklist.md` | Wiring a new collector into the publish set | 8-touchpoint lock-step checklist; missing one silently breaks publishing |
+| `memory/project_published_dataset_checklist.md` | Wiring a new collector into the publish set | The wiring `tests/unit/test_published_feed_registries.py` cannot see |
 | `memory/archive/README.md` | A symptom or decision has history | Session retrospectives (index), resolved gotchas/hypotheses, the pre-2026-10-05 Current State |
 
 ## In flight
@@ -48,7 +48,7 @@
 - **NEXT SESSION STARTS HERE (2026-10-06 handoff).** On "continue", in order:
   1. **Check the 2026-10-06 scheduled run** (not yet started at 19:11 UTC): `gh run list --workflow "Collect and Publish Data" --limit 2`. Expect success, #84 auto-closed, and `Late scheduled run` in the log if it started after 22:00 UTC (the `COLLECTION_DATE` fix, `bb39beb`, first exercise). Any 429s → `grep -c 'rate-limited (retry'` and record under H10 (review by 2026-10-19). Failed → diagnose fresh.
   2. **Confirm Augur recovered**: `git -C ~/repos/veen-systems/augur log origin/main -1`. On 10-06 it still read `[ALARM: t0 stale 2026-10-04]` + `no new publish since 2026-10-03` — expected: the backfill (`66c4201`) committed data files but is not a Pages publish. Tonight's run is the recovery.
-  3. **Read-surface pass 3 — mechanize, then retire** → `memory/work-items/read-surface-thinning.md`. First: #85 (one test for the published-dataset registries + both workflow lists), then shrink `memory/project_published_dataset_checklist.md` to what the test cannot see. Then thin the three open hypotheses (H2/H7/H10 are ~6k chars each of dated review narrative).
+  3. **Read-surface pass 3 — mechanize, then retire** → `memory/work-items/read-surface-thinning.md`. #85 done 2026-10-28 (`tests/unit/test_published_feed_registries.py`, checklist shrunk). Next: thin the three open hypotheses (H2/H7/H10 are ~6k chars each of dated review narrative).
   4. **#79** (decide the `CRITICAL_FEEDS` carve-out before `_partition_member_drift` classifies), and one adversarial pass over `observation_from_sidecar` + `volatile_feeds_from_observations`.
 - Read-surface thinning → `memory/work-items/read-surface-thinning.md` [in progress; passes 1–2 done].
 - Present-empty guard rollout (#42) → `memory/work-items/present-empty-guard-rollout.md` [DORMANT; reopens on the next graced-empty run that publishes].
