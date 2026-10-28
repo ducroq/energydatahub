@@ -49,7 +49,8 @@
   1. **Read-surface pass 3, retire step** → `memory/work-items/read-surface-thinning.md`: gotcha entries whose lesson is now a check or a promoted pattern (log ~40k chars).
   2. **#91** — pick `info`/`warning` for the 9 feeds missing from `DATASET_MISSING_SEVERITY`, then extend `tests/unit/test_published_feed_registries.py` to require an entry.
   3. **#79** (decide the `CRITICAL_FEEDS` carve-out before `_partition_member_drift` classifies), and one adversarial pass over `observation_from_sidecar` + `volatile_feeds_from_observations`.
-  4. **#90** (`nordic_hydro` NO/SE 10d of 11d, opened 10-27): auto-closes on recovery; if still open, check ENTSO-E's horizon.
+  4. **PR #76** (Dependabot: `actions/checkout` 5→7, `setup-python` 6→7, `deploy-pages` 5.0.1 in the publish workflow; rebase requested 10-28). Read the checkout v6/v7 breaking changes, merge right AFTER a scheduled run publishes, watch the next run. Its sibling remote branches (`dependabot/...-02ab6eb143`, `-3e1200532a`) and `fix/entsoe-upstream-nodata-38` have no open PR: confirm merged/superseded, then ask before deleting.
+  5. **#90** (`nordic_hydro` NO/SE 10d of 11d, opened 10-27): auto-closes on recovery; if still open, check ENTSO-E's horizon.
 - Read-surface thinning → `memory/work-items/read-surface-thinning.md` [in progress; passes 1–2 done, pass 3 mechanize + hypotheses done 2026-10-28].
 - Present-empty guard rollout (#42) → `memory/work-items/present-empty-guard-rollout.md` [DORMANT; reopens on the next graced-empty run that publishes].
 
