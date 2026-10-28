@@ -45,19 +45,19 @@
 
 <!-- One line per active work item. Empty is a valid state — do not invent entries. -->
 
-- **NEXT SESSION STARTS HERE (2026-10-06 handoff).** On "continue", in order:
-  1. **Check the 2026-10-06 scheduled run** (not yet started at 19:11 UTC): `gh run list --workflow "Collect and Publish Data" --limit 2`. Expect success, #84 auto-closed, and `Late scheduled run` in the log if it started after 22:00 UTC (the `COLLECTION_DATE` fix, `bb39beb`, first exercise). Any 429s → `grep -c 'rate-limited (retry'` and record under H10 (review by 2026-10-19). Failed → diagnose fresh.
-  2. **Confirm Augur recovered**: `git -C ~/repos/veen-systems/augur log origin/main -1`. On 10-06 it still read `[ALARM: t0 stale 2026-10-04]` + `no new publish since 2026-10-03` — expected: the backfill (`66c4201`) committed data files but is not a Pages publish. Tonight's run is the recovery.
-  3. **Read-surface pass 3 — mechanize, then retire** → `memory/work-items/read-surface-thinning.md`. #85 done and open hypotheses thinned 2026-10-28 (log 24.0k → 3.7k). Next: retire gotcha entries whose lesson is now a check (log ~40k).
-  4. **#79** (decide the `CRITICAL_FEEDS` carve-out before `_partition_member_drift` classifies), and one adversarial pass over `observation_from_sidecar` + `volatile_feeds_from_observations`.
-- Read-surface thinning → `memory/work-items/read-surface-thinning.md` [in progress; passes 1–2 done].
+- **NEXT SESSION STARTS HERE (2026-10-28 handoff).** On "continue", in order:
+  1. **Read-surface pass 3, retire step** → `memory/work-items/read-surface-thinning.md`: gotcha entries whose lesson is now a check or a promoted pattern (log ~40k chars).
+  2. **#91** — pick `info`/`warning` for the 9 feeds missing from `DATASET_MISSING_SEVERITY`, then extend `tests/unit/test_published_feed_registries.py` to require an entry.
+  3. **#79** (decide the `CRITICAL_FEEDS` carve-out before `_partition_member_drift` classifies), and one adversarial pass over `observation_from_sidecar` + `volatile_feeds_from_observations`.
+  4. **#90** (`nordic_hydro` NO/SE 10d of 11d, opened 10-27): auto-closes on recovery; if still open, check ENTSO-E's horizon.
+- Read-surface thinning → `memory/work-items/read-surface-thinning.md` [in progress; passes 1–2 done, pass 3 mechanize + hypotheses done 2026-10-28].
 - Present-empty guard rollout (#42) → `memory/work-items/present-empty-guard-rollout.md` [DORMANT; reopens on the next graced-empty run that publishes].
 
 ## Current State
 
-- **Pipeline**: daily 16:00 UTC cron (actually starts ~18:55–20:45 UTC) + `workflow_dispatch`. Last failure: 2026-10-05 `37381385635` (cron started 22:16 UTC, after Amsterdam midnight, so the collection day rolled over → empty `generation_forecast` → drift gate). Fixed by `COLLECTION_DATE` anchoring (`bb39beb`) and backfilled (`66c4201`) on 2026-10-06. The one before: 2026-10-04 `37226371364` (Open-Meteo 429 storm), fixed 2026-10-05. Detail: `memory/archive/project_session_2026_10_05.md`.
-- **Harness**: framework agent-ready-projects v1.50.0 (2026-10-28). `Reviewer model` declined; reason in `memory/project_active_decisions.md`. `CLAUDE.md` 13.8k chars after read-surface pass 2.
+- **Pipeline**: daily 16:00 UTC cron (actually starts ~18:55–20:45 UTC) + `workflow_dispatch`. Last failure: 2026-10-05 `37381385635` (cron started 22:16 UTC, after Amsterdam midnight, so the collection day rolled over → empty `generation_forecast` → drift gate). Fixed by `COLLECTION_DATE` anchoring (`bb39beb`) and backfilled (`66c4201`) on 2026-10-06. The one before: 2026-10-04 `37226371364` (Open-Meteo 429 storm), fixed 2026-10-05. Since then 22 of 22 scheduled runs published (10-06 → 10-27); Augur recovered. Detail: `memory/archive/project_session_2026_10_05.md`.
+- **Harness**: framework agent-ready-projects v1.50.0 (2026-10-28). `Reviewer model` declined; reason in `memory/project_active_decisions.md`. Session: `memory/archive/project_session_2026_10_28.md`. `CLAUDE.md` 13.8k chars after read-surface pass 2.
 - **Feeds**: 20 in the committed baseline <!-- verify: n=$(git show origin/main:data/_shape_signatures.json | python -c "import json,sys; print(len(json.load(sys.stdin)['feeds']))"); echo "committed baseline carries $n feeds (claim 20)"; [ "$n" -eq 20 ] || exit 1 -->. Schema 2.4.
 - **Gates**: completeness, quality (`critical` blocks), schema drift (blocks, runs before publish), span (warn + alert, #53). **Do not add a second blocking gate** — see CLAUDE.md CI/CD row.
-- **Open issues**: 27 on 2026-10-06 (#36 closed, #85 filed) <!-- verify: n=$(gh issue list --state open --json number | jq length); echo "open=$n (claim 27 on 2026-10-06)"; [ "$n" -eq 27 ] || exit 1 -->. #84 (publish failing) should self-close on the next green run. #83 (span shortfall: gas_storage, gas_ttf) is open; H11 resolved it as cadence, and `2fdad76` added the per-member tolerance — expect it to stay quiet. The per-issue narrative that used to sit here is in `memory/archive/current-state-2026-10-05.md`.
+- **Open issues**: 26 on 2026-10-28 (#85 closed, #91 filed) <!-- verify: n=$(gh issue list --state open --json number | jq length); echo "open=$n (claim 26 on 2026-10-28)"; [ "$n" -eq 26 ] || exit 1 -->. #83 (span shortfall: gas_storage, gas_ttf) is open; H11 resolved it as cadence, and `2fdad76` added the per-member tolerance — expect it to stay quiet. The per-issue narrative that used to sit here is in `memory/archive/current-state-2026-10-05.md`.
 - **Known degraded**: `grid_imbalance` balance_delta synthesised (TenneT endpoint 404 since 2026-06-08). Weekend market staleness fixed by the 96h override (`2fdad76`, #36 closed, H4 resolved).
