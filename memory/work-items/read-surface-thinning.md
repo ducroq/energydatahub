@@ -32,7 +32,9 @@ both log headers thinned, `## Mechanized` table added (framework v1.41.0).
 
 **Pass 3, 2026-10-28:** #85 mechanized — `tests/unit/test_published_feed_registries.py` (6 ablations red), checklist shrunk to what the test cannot see.
 
-**Next action — thin the open hypotheses.** `memory/` corpus excl. archive is 103.5k chars on 2026-10-06, under the 300k hard limit; next targets are the three open hypotheses (~6k each). Pass 2 plan, kept for the record:
+Open hypotheses thinned: `memory/hypothesis-log.md` 24,013 → ~3.7k chars, dated reviews verbatim in `memory/archive/hypothesis-history-2026-10-28.md`. H10 reviewed (22/22 runs published since `a1a944e`).
+
+**Next action — retire**: gotcha entries older than ~60 days whose lesson is now a check or a promoted pattern (gotcha log ~40k). `memory/` corpus excl. archive is 103.5k chars on 2026-10-06, under the 300k hard limit; next targets are the three open hypotheses (~6k each). Pass 2 plan, kept for the record:
 1. **Architecture block (~18.8k)** is per-file narrative: incident history, dates, run IDs.
    Cut each entry to *what the file is + the one rule you must not break*; move the history
    to the module docstrings (most already carry it) or `memory/archive/`. Do not lose any

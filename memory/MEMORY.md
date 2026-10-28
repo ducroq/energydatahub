@@ -48,7 +48,7 @@
 - **NEXT SESSION STARTS HERE (2026-10-06 handoff).** On "continue", in order:
   1. **Check the 2026-10-06 scheduled run** (not yet started at 19:11 UTC): `gh run list --workflow "Collect and Publish Data" --limit 2`. Expect success, #84 auto-closed, and `Late scheduled run` in the log if it started after 22:00 UTC (the `COLLECTION_DATE` fix, `bb39beb`, first exercise). Any 429s → `grep -c 'rate-limited (retry'` and record under H10 (review by 2026-10-19). Failed → diagnose fresh.
   2. **Confirm Augur recovered**: `git -C ~/repos/veen-systems/augur log origin/main -1`. On 10-06 it still read `[ALARM: t0 stale 2026-10-04]` + `no new publish since 2026-10-03` — expected: the backfill (`66c4201`) committed data files but is not a Pages publish. Tonight's run is the recovery.
-  3. **Read-surface pass 3 — mechanize, then retire** → `memory/work-items/read-surface-thinning.md`. #85 done 2026-10-28 (`tests/unit/test_published_feed_registries.py`, checklist shrunk). Next: thin the three open hypotheses (H2/H7/H10 are ~6k chars each of dated review narrative).
+  3. **Read-surface pass 3 — mechanize, then retire** → `memory/work-items/read-surface-thinning.md`. #85 done and open hypotheses thinned 2026-10-28 (log 24.0k → 3.7k). Next: retire gotcha entries whose lesson is now a check (log ~40k).
   4. **#79** (decide the `CRITICAL_FEEDS` carve-out before `_partition_member_drift` classifies), and one adversarial pass over `observation_from_sidecar` + `volatile_feeds_from_observations`.
 - Read-surface thinning → `memory/work-items/read-surface-thinning.md` [in progress; passes 1–2 done].
 - Present-empty guard rollout (#42) → `memory/work-items/present-empty-guard-rollout.md` [DORMANT; reopens on the next graced-empty run that publishes].
