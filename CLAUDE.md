@@ -2,7 +2,7 @@
 stack: Python 3.12, asyncio/aiohttp, pandas, GitHub Actions CI/CD
 status: Production (daily automated collection since Oct 2024)
 repo: github.com/ducroq/energydatahub
-framework: agent-ready-projects v1.49.2   # a NUMBER, not a status — never write "current" here; the framework's release cadence falsifies the adjective, not the pin
+framework: agent-ready-projects v1.50.0   # a NUMBER, not a status — never write "current" here; the framework's release cadence falsifies the adjective, not the pin
 ---
 
 # energyDataHub

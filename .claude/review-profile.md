@@ -13,7 +13,7 @@ below. The deleted copy remains in this repo's git history.
 | Tier | File patterns |
 |------|-------------|
 | **HIGH** | `collectors/**`, `utils/**`, `/data_fetcher.py`, `scripts/**`, `.github/workflows/**`, `.claude/**`, `.gitignore`, `settings.ini`, `data/_shape_signatures.json`, `data/_upstream_empty_streak.json`, `tests/**`, `pytest.ini`, `requirements.txt` |
-| **MEDIUM** | `CLAUDE.md`, `docs/**`, `/README.md`, `.github/dependabot.yml` |
+| **MEDIUM** | `CLAUDE.md`, `docs/**`, `/README.md`, `.github/dependabot.yml`, `memory/project_published_dataset_checklist.md` |
 | **LOW** | `memory/**`, `memory/work-items/**`, `data/**`, `legacy/**` |
 
 **There is deliberately no Depth column.** The skill gates each lens on the tier itself
