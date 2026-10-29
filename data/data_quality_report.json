@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-28T20:44:58.989767+00:00",
+  "timestamp": "2026-10-29T20:50:06.731913+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
+  "total_issues": 1,
   "datasets_collected": 23,
   "datasets_missing": [
     "air_quality_buurt"
@@ -161,28 +161,11 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
+      "status": "info",
       "data_points": 384,
-      "checks_passed": 5,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "load_cross_field_consistency",
-          "severity": "warning",
-          "message": "7 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
-          "details": {
-            "count": 7,
-            "examples": [
-              "NL/2026-10-28T11:45:00+01:00: forecast_error=3000.9, load_actual=7272.066, ratio=0.41",
-              "NL/2026-10-28T12:00:00+01:00: forecast_error=2935.4, load_actual=7319.476, ratio=0.40",
-              "NL/2026-10-28T12:15:00+01:00: forecast_error=3275.8, load_actual=7221.836, ratio=0.45",
-              "NL/2026-10-28T12:30:00+01:00: forecast_error=3266.6, load_actual=7234.816, ratio=0.45",
-              "NL/2026-10-28T12:45:00+01:00: forecast_error=3210.4, load_actual=7337.626, ratio=0.44"
-            ],
-            "threshold": 0.4
-          }
-        }
-      ]
+      "checks_passed": 6,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_forecast",
@@ -249,7 +232,7 @@
       "data_type": "gas_storage",
       "source": "GIE AGSI+",
       "status": "info",
-      "data_points": 8,
+      "data_points": 7,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
