@@ -1,9 +1,11 @@
 {
-  "timestamp": "2026-10-30T20:20:39.930273+00:00",
+  "timestamp": "2026-10-31T19:41:52.432565+00:00",
   "overall_status": "warning",
   "total_issues": 1,
-  "datasets_collected": 24,
-  "datasets_missing": [],
+  "datasets_collected": 23,
+  "datasets_missing": [
+    "air_quality_buurt"
+  ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -81,18 +83,8 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 752,
+      "data_points": 728,
       "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "air_quality_buurt",
-      "data_type": "air",
-      "source": "Luchtmeetnet API",
-      "status": "info",
-      "data_points": 48,
-      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
@@ -180,7 +172,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 84,
+      "data_points": 80,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -210,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 534,
+      "data_points": 528,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
