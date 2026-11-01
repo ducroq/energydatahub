@@ -1,30 +1,14 @@
 {
-  "cached_at": "2026-10-31T20:40:16.431219+01:00",
+  "cached_at": "2026-11-01T21:03:07.721733+01:00",
   "data": {
-    "carbon": {
-      "ticker": "KEUA",
-      "price": 22.82,
-      "date": "2026-03-20",
-      "open": 22.82,
-      "high": 22.82,
-      "low": 22.82,
-      "volume": 0,
-      "prev_close": 22.82,
-      "change": 0.0,
-      "change_pct": 0.0,
-      "source": "alpha_vantage",
-      "description": "EU Carbon Allowance (EUA) proxy",
-      "units": "USD/share (correlates to EUR/tonne EUA)",
-      "name": "KraneShares European Carbon Allowance ETF"
-    },
     "gas_ttf": {
       "ticker": "TTF=F",
       "price": 103.94,
       "date": "2026-10-30",
       "open": 100.1,
-      "high": 103.94,
+      "high": 103.9,
       "low": 100.1,
-      "volume": 86,
+      "volume": 68,
       "prev_close": 98.59,
       "change_pct": 5.43,
       "source": "yfinance",
@@ -85,5 +69,5 @@
       "note": "US gas ETF used as fallback when TTF unavailable"
     }
   },
-  "signature": "1f3dd94d3f8fb6a88b1b8015eb73ff00eb4c459e0cb40a4d61e1f94895f8fc57"
+  "signature": "645a0f9eb600f1b0574037f14aa46d8464c221a2c5a7b8ea4cc7114557f84ce4"
 }
