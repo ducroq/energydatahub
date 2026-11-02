@@ -1,6 +1,21 @@
 {
-  "members_checked": 70,
-  "members_with_expectation": 69,
+  "members_checked": 72,
+  "members_with_expectation": 71,
   "min_observations": 10,
-  "shortfalls": []
+  "shortfalls": [
+    {
+      "feed": "solar_forecast_buurt.json",
+      "member": "Elderveld_Arnhem_NL",
+      "observed": 15,
+      "expected": 16,
+      "ratio": 0.938
+    },
+    {
+      "feed": "solar_forecast_buurt.json",
+      "member": "Elsweide_Arnhem_NL",
+      "observed": 15,
+      "expected": 16,
+      "ratio": 0.938
+    }
+  ]
 }
