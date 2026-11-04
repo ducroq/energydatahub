@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-03T21:32:13.832143+00:00",
+  "timestamp": "2026-11-04T21:41:28.084848+00:00",
   "overall_status": "warning",
   "total_issues": 1,
   "datasets_collected": 23,
@@ -192,7 +192,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 20,
+      "data_points": 22,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -202,7 +202,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 546,
+      "data_points": 552,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []

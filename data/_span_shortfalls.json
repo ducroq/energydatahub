@@ -9,20 +9,6 @@
       "observed": 1,
       "expected": 25,
       "ratio": 0.04
-    },
-    {
-      "feed": "nordic_hydro.json",
-      "member": "NO",
-      "observed": 10,
-      "expected": 11,
-      "ratio": 0.909
-    },
-    {
-      "feed": "nordic_hydro.json",
-      "member": "SE",
-      "observed": 10,
-      "expected": 11,
-      "ratio": 0.909
     }
   ]
 }
