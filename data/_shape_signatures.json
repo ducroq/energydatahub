@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-11-08T20:07:52+00:00",
+  "computed_at": "2026-11-09T23:57:43+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -673,7 +673,7 @@
       ]
     },
     "air_quality_buurt.json": {
-      "shape_hash": "c30a221ab9a9aa3d3937d4269ad758dc",
+      "shape_hash": "2812758638909680acfd0402c7ff691d",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -685,9 +685,7 @@
                 "value_shape": {
                   "_kind": "dict",
                   "keys": {
-                    "AQI": "int",
-                    "PM10": "float",
-                    "PM25": "float"
+                    "AQI": "int"
                   }
                 }
               },
