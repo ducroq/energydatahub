@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-09T23:57:43.994493+00:00",
+  "timestamp": "2026-11-10T21:38:07.382785+00:00",
   "overall_status": "warning",
   "total_issues": 1,
   "datasets_collected": 24,
@@ -61,7 +61,7 @@
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 1302,
+      "data_points": 1440,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -71,7 +71,7 @@
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 722,
+      "data_points": 768,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 704,
+      "data_points": 752,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -120,7 +120,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 528,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -150,7 +150,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 1953,
+      "data_points": 2160,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -180,7 +180,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 88,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -200,7 +200,7 @@
       "data_type": "hydro_reservoir",
       "source": "ENTSO-E Transparency Platform (A72)",
       "status": "info",
-      "data_points": 22,
+      "data_points": 20,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -210,7 +210,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 570,
+      "data_points": 552,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
