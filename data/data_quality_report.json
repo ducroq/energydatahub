@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-13T21:47:50.947232+00:00",
+  "timestamp": "2026-11-14T20:20:23.964868+00:00",
   "overall_status": "warning",
-  "total_issues": 1,
+  "total_issues": 2,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -81,7 +81,7 @@
       "data_type": "solar",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 752,
+      "data_points": 748,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -91,7 +91,7 @@
       "data_type": "air",
       "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 48,
+      "data_points": 24,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -169,11 +169,28 @@
       "dataset_name": "load_forecast",
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "info",
+      "status": "warning",
       "data_points": 384,
-      "checks_passed": 6,
-      "checks_failed": 0,
-      "issues": []
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "load_cross_field_consistency",
+          "severity": "warning",
+          "message": "8 load records have |forecast_error|/load_actual > 40% \u2014 possible field-tampered values or broken upstream arithmetic",
+          "details": {
+            "count": 8,
+            "examples": [
+              "NL/2026-11-14T11:30:00+01:00: forecast_error=4028.0, load_actual=8953.376, ratio=0.45",
+              "NL/2026-11-14T11:45:00+01:00: forecast_error=4085.1, load_actual=8872.016, ratio=0.46",
+              "NL/2026-11-14T12:00:00+01:00: forecast_error=3949.3, load_actual=8978.706, ratio=0.44",
+              "NL/2026-11-14T12:15:00+01:00: forecast_error=3805.4, load_actual=9115.406, ratio=0.42",
+              "NL/2026-11-14T12:30:00+01:00: forecast_error=3803.8, load_actual=9074.886, ratio=0.42"
+            ],
+            "threshold": 0.4
+          }
+        }
+      ]
     },
     {
       "dataset_name": "generation_forecast",
@@ -210,7 +227,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 552,
+      "data_points": 439,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -230,7 +247,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 135,
+      "data_points": 136,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
