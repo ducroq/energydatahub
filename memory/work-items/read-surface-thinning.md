@@ -34,7 +34,9 @@ both log headers thinned, `## Mechanized` table added (framework v1.41.0).
 
 Open hypotheses thinned: `memory/hypothesis-log.md` 24,013 → ~3.7k chars, dated reviews verbatim in `memory/archive/hypothesis-history-2026-10-28.md`. H10 reviewed (22/22 runs published since `a1a944e`).
 
-**Next action — retire**: gotcha entries older than ~60 days whose lesson is now a check or a promoted pattern (gotcha log ~40k). `memory/` corpus excl. archive is 103.5k chars on 2026-10-06, under the 300k hard limit; next targets are the three open hypotheses (~6k each). Pass 2 plan, kept for the record:
+**Pass 3 retire, 2026-11-18:** 32 gotcha entries dated 2026-08-08 → 2026-09-10 moved verbatim to `memory/archive/gotcha-log-archive.md` (log 42,198 → ~12.5k chars). Moved by age, not judged one by one: their recurring lessons are in the Promoted table. `memory/` corpus excl. archive: 84,394 before this pass.
+
+**Next action**: (1) the gotcha log's Promoted table is now most of the log: thin its cells to pattern + count + destination, history to the archive; (2) `memory/project_active_decisions.md` (11.6k): retire decisions a test now enforces; (3) `present-empty-guard-rollout.md` (9.4k, dormant): shrink its savepoint to the two open gates. Pass 2 plan, kept for the record:
 1. **Architecture block (~18.8k)** is per-file narrative: incident history, dates, run IDs.
    Cut each entry to *what the file is + the one rule you must not break*; move the history
    to the module docstrings (most already carry it) or `memory/archive/`. Do not lose any

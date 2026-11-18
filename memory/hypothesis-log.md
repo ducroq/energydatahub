@@ -15,8 +15,8 @@
 **Position**: failures are environmental. **Counter**: a failure rate called "transient" is how GoogleWeather 401'd for seven months.
 **Method**: tabulate the last 30 scheduled runs by FAILING STEP (*Collect data*, *Assert data quality*, *Schema-drift tripwire*, runner). A non-infrastructure class above ~1 in 10 is a defect: open an issue, do not re-run.
 **Standing conclusion**: the position does not hold. Every failure since 08-14 had a distinct, findable cause; the defect is that each all-or-nothing gate's only lever is withholding all 20 feeds. Remedy chosen 2026-09-04: detect, don't relent (#50 alerting, #53 span check). **Do not rebuild a relent** (measured and declined: `memory/archive/project_session_2026_09_04.md`).
-**Last run**: 2026-10-06, drift class 3 of 30 = 10%, all causes known (#79 open). Since then: 22 of 22 scheduled runs published (10-06 → 10-27).
-**Review by**: 2026-11-05, same Method.
+**Last run**: 2026-11-18. Last 30 scheduled runs (10-19 → 11-17): 1 failure, drift class (1 of 30 = 3%): `load_forecast` NL lost all A67 actuals for the window, which is #79, cause known (run `44197847187`). 10-28 → 11-17: 20 of 21 published.
+**Review by**: 2026-12-18, same Method; immediately if a third #79-shaped loss lands before #79 is decided.
 
 ### H7 — The diagnostic-key exemption must apply across the tripwire, not only member drift (#45)
 **Status**: shipped 2026-09-21 (`prune_diagnostic_keys`, `_partition_diagnostic_only`, diagnostic-blind observation records `pruned_hashes` + `feeds_pruned`). Blind evidence applies per feed only once every record in the 60-run window carries it; until then the old raw-hash behaviour stands.

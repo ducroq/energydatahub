@@ -114,7 +114,7 @@ memory/                      # Tracked agent memory: MEMORY.md index, gotcha/hyp
 | `secrets.ini` | API keys (gitignored) |
 | `tests/backtest_data_quality.py` | FMEA quality framework over all historical files |
 | `tests/` | Unit + integration tests <!-- verify: venv/bin/python -m pytest tests/ --collect-only -q \| tail -1 --> |
-| `.claude/hooks/verify_edit.py` | Compile check + mapped unit tests; exit 2 + stderr on failure. Needs PyYAML for the workflow branch. <!-- verify: echo '{"tool_input":{"file_path":"collectors/base.py"}}' \| .claude/hooks/verify_edit.py; echo $?   # expect 0 --> |
+| `.claude/hooks/verify_edit.py` | Compile check + mapped unit tests; exit 2 + stderr on failure. Needs PyYAML for the workflow branch. <!-- verify: echo '{"tool_input":{"file_path":"collectors/base.py"}}' \| .claude/hooks/verify_edit.py; rc=$?; echo "hook exit $rc (expect 0)"; [ $rc -eq 0 ] --> |
 
 ## How to Work Here
 
