@@ -1,10 +1,11 @@
 {
-  "timestamp": "2026-11-18T22:50:38.550300+00:00",
+  "timestamp": "2026-11-19T22:53:40.236605+00:00",
   "overall_status": "warning",
   "total_issues": 1,
-  "datasets_collected": 23,
+  "datasets_collected": 22,
   "datasets_missing": [
-    "air_quality_buurt"
+    "weather_forecast_buurt",
+    "solar_forecast_buurt"
   ],
   "datasets_upstream_empty": [],
   "dataset_reports": [
@@ -13,7 +14,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -23,7 +24,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 96,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -69,22 +70,12 @@
       "issues": []
     },
     {
-      "dataset_name": "weather_forecast_buurt",
-      "data_type": "weather",
-      "source": "Open-Meteo API (free)",
+      "dataset_name": "air_quality_buurt",
+      "data_type": "air",
+      "source": "Luchtmeetnet API",
       "status": "info",
-      "data_points": 768,
-      "checks_passed": 5,
-      "checks_failed": 0,
-      "issues": []
-    },
-    {
-      "dataset_name": "solar_forecast_buurt",
-      "data_type": "solar",
-      "source": "Open-Meteo API (free)",
-      "status": "info",
-      "data_points": 752,
-      "checks_passed": 5,
+      "data_points": 48,
+      "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
     },
