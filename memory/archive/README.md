@@ -7,6 +7,8 @@ Not read by default. Grep here when a symptom or decision has history.
 - `hypothesis-history-2026-10-28.md` — verbatim dated reviews behind the open hypotheses (H2, H7, H10) as of 2026-10-28
 - `hypothesis-log-resolved.md` — resolved hypotheses (H1, H3, H4, H5, H9, H11) and dormant ones (H6, H8)
 - `claude-md-2026-10-06.md` — `CLAUDE.md` verbatim before read-surface pass 2: the incident history behind each rule
+- `gotcha-promoted-history-2026-11-24.md` — the gotcha log's Promoted table with full incident-history cells, before thinning
+- `work-item-present-empty-guard-rollout.md` — #42 rollout work item, DORMANT (reopens on the next graced-empty run that publishes)
 - `current-state-2026-10-05.md` — the long Current State that MEMORY.md carried until 2026-10-05
 
 ## Session index

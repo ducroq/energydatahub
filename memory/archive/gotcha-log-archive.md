@@ -387,3 +387,16 @@ Root-caused #74's unexplained scheduled shorts by diffing collect logs. Same que
 ### Publishing on a schedule hides how often the payload is short (2026-09-10)
 Decrypting the last 14 `energy_price_forecast.json` vintages: **8 are half-size** (96 points, same-day only) and 6 are the healthy today+tomorrow 192. Nobody noticed, because every gate was green throughout — the shape signature hashes 96 and 192 identically by construction, and the span check built for exactly this (#53) reports `members_with_expectation: 0` since no member yet has its 10-observation floor. The consumer noticed, via a median that had decayed from 192 to 96 underneath their gate.
 **Lesson**: a gate that is deployed but not yet armed reads identically to a gate that is passing, and this repo now has that failure twice (the span reporter's "nothing verified" vs "all clean", 2026-09-04). When shipping a detector with a warm-up period, state the warm-up in the thing that consumes it, and treat the window before it arms as uncovered rather than as clean.
+
+### A gate exemption does not reach the evidence the classifier learns from (2026-09-21)  (retired 2026-11-24: promoted as the classifier/converse row)
+The drift tripwire learned to excuse `collector_quality_issues` churn, but `_shape_observations.jsonl` still recorded the RAW hash, so the excused flip still counted as "this feed wobbles" — one flip would have made `grid_imbalance` derived-volatile and downgraded every real break on it for 60 runs. Fixed by recording a diagnostic-blind hash beside the raw one.
+**Lesson**: when you teach a gate to ignore something, ask what else consumes the same signal. Detection, downgrade and *learning* are three consumers here, and only the first two live in the tripwire.
+
+### A copied path list is not the predicate it stood for (2026-09-21)  (retired 2026-11-24: fixed in `.claude/review-profile.md` lens trigger)
+Corrected a project review lens whose trigger read `scripts/**` when the rule was "contains shell or YAML" — then wrote the identical error one section above it, claiming "any change under `scripts/**` forces full depth" when the framework's carve-out is "any shell script or executable". A mode-644 Python file matches the path and not the predicate.
+**Lesson**: a path glob is evidence for a predicate, never the predicate. When copying a rule, copy the condition and re-derive the paths — and note this was caught by the review of the very commit that introduced it, not by re-reading.
+
+### Ablating the wrong function reads exactly like a passing ablation (2026-09-21)  (retired 2026-11-24: covered by the guard-signal-integrity promoted row)
+Patched `if kind in ("timestamp_map", "list")` to disable a prune branch; the same line exists in `_merge_signatures` earlier in the file, so the edit hit that instead. Target tests stayed green — which I nearly recorded as "the branch is dead code" — and three unrelated merge tests went red, which is the only reason it surfaced.
+**Lesson**: an ablation must fail the tests it targets. If the ablation is green, suspect the ablation before concluding anything about the code, and run the FULL suite so a mis-aimed patch has somewhere to show up.
+

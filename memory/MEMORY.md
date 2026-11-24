@@ -45,21 +45,20 @@
 
 <!-- One line per active work item. Empty is a valid state — do not invent entries. -->
 
-- **NEXT SESSION STARTS HERE (2026-11-18 handoff).** On "continue", in order:
-  1. **Confirm the 2026-11-18 scheduled run published** (`gh run list --limit 3`); it should auto-close #96. The 11-17 vintage failed on #79's gap (NL lost all A67 actuals) and its six one-day feeds were backfilled (`5f19eca0`).
-  2. **PR #76** (Dependabot: `actions/checkout` 5→7, `setup-python` 6→7, `deploy-pages` 5.0.1). Read the checkout v6/v7 breaking changes, merge right AFTER a scheduled run publishes, watch the next run. Sibling remote branches (`dependabot/...-02ab6eb143`, `-3e1200532a`), `fix/entsoe-upstream-nodata-38`, `backup-before-cleanup`, `dev`, `feature/local-forecasting` have no open PR: confirm merged/superseded, then ask before deleting.
-  3. **#79**: now 2 instances (DE_LU 09-20, NL 11-17), each costing a full publish. Decide the `CRITICAL_FEEDS` carve-out before `_partition_member_drift` classifies; one adversarial pass over `observation_from_sidecar` + `volatile_feeds_from_observations`.
-  4. **#91**: pick `info`/`warning` for the 9 feeds missing from `DATASET_MISSING_SEVERITY`, then extend `tests/unit/test_published_feed_registries.py` to require an entry.
-  5. **Read-surface, next cuts** → `memory/work-items/read-surface-thinning.md` (Next action).
-  6. **#95** (span shortfall: `nordic_hydro` NO/SE 10/11d, `solar_forecast_buurt` 15/16d since 11-16): auto-closes on recovery; if still open, check the upstream horizons. H7 review is due 11-20.
+- **NEXT SESSION STARTS HERE (2026-11-24 handoff).** On "continue", in order:
+  1. **Judge H11** (cron `23 13`, slot-date `COLLECTION_DATE`, shipped 2026-11-24): for each scheduled run since, note start lag, the `COLLECTION_DATE=` log line, entsoe points (want 192). Tell Augur (session `augur-0a`, via SendMessage) the result. Lag still > 8h or any run > 24h late → walk Jeroen through **#67** (off-host `workflow_dispatch` timer + liveness check; needs a workflow-scoped token on an infra host — his decision).
+  2. **H10 decision** (2026-11-20 publish lost to an Open-Meteo *daily-quota* 429 on every location): keyed/paid endpoint vs grace on quota-429. Also unexplained: same run, ENTSO-E day-ahead NL/DE_LU `UpstreamNoDataError` for 11-19..11-21.
+  3. **Read-surface cuts** → `memory/work-items/read-surface-thinning.md` (Next action). Jeroen wants prune/thin/mechanize/retire pushed hard.
+  4. **PR #76** (Dependabot actions bumps): read checkout v6/v7 breaking changes, merge right AFTER a scheduled run publishes. Stale remote branches: confirm merged, ask before deleting.
+  5. **#79** (2 lost publishes), **#91** (9 feeds lack a severity), **H7** review (overdue since 11-20).
 - Read-surface thinning → `memory/work-items/read-surface-thinning.md` [in progress; passes 1–3 done, gotcha retire done 2026-11-18].
-- Present-empty guard rollout (#42) → `memory/work-items/present-empty-guard-rollout.md` [DORMANT; reopens on the next graced-empty run that publishes].
+- Present-empty guard rollout (#42) → `memory/archive/work-item-present-empty-guard-rollout.md` [DORMANT, archived 2026-11-24; reopens on the next graced-empty run that publishes].
 
 ## Current State
 
-- **Pipeline**: daily 16:00 UTC cron (actually starts ~19:45–23:55 UTC) + `workflow_dispatch`. Last failure: 2026-11-17 `44197847187`, drift gate on `load_forecast` (NL zero A67 actuals, #79); backfilled `5f19eca0`. Before that: 2026-10-05 (late-cron day roll, fixed by `COLLECTION_DATE`, `bb39beb`). Last 30 scheduled runs: 29 published (H2).
+- **Pipeline**: daily cron `23 13` UTC since 2026-11-24 (was `0 16`, started 4–11h late in Nov) + `workflow_dispatch`. Last failures: 11-20 `44829093119` (Open-Meteo daily-quota 429 → weather feeds empty → drift gate, H10), 11-17 `44197847187` (#79, backfilled `5f19eca0`). 11-23 slot published entsoe at 96 points (late run past UTC midnight, H11).
 - **Harness**: framework agent-ready-projects v1.50.0 (2026-10-28). `Reviewer model` declined; reason in `memory/project_active_decisions.md`. Session: `memory/archive/project_session_2026_10_28.md`. `CLAUDE.md` 13.8k chars after read-surface pass 2.
 - **Feeds**: 20 in the committed baseline <!-- verify: n=$(git show origin/main:data/_shape_signatures.json | python -c "import json,sys; print(len(json.load(sys.stdin)['feeds']))"); echo "committed baseline carries $n feeds (claim 20)"; [ "$n" -eq 20 ] || exit 1 -->. Schema 2.4.
 - **Gates**: completeness, quality (`critical` blocks), schema drift (blocks, runs before publish), span (warn + alert, #53). **Do not add a second blocking gate** — see CLAUDE.md CI/CD row.
-- **Open issues**: 26 on 2026-11-18 after #94 closed <!-- verify: n=$(gh issue list --state open --limit 500 --json number | jq length); echo "open=$n (claim 26 on 2026-11-18)"; [ "$n" -eq 26 ] || exit 1 -->. Two auto-alert issues self-close on recovery: #96 (publish failure), #95 (span shortfall). Per-issue narrative before 10-05: `memory/archive/current-state-2026-10-05.md`.
+- **Open issues**: 25 on 2026-11-24 <!-- verify: n=$(gh issue list --state open --limit 500 --json number | jq length); echo "open=$n (claim 25 on 2026-11-24)"; [ "$n" -eq 25 ] || exit 1 -->. Auto-alert issues self-close on recovery: #100 (span shortfall, 11-23 late run) is open. Per-issue narrative before 10-05: `memory/archive/current-state-2026-10-05.md`.
 - **Known degraded**: `grid_imbalance` balance_delta synthesised (TenneT endpoint 404 since 2026-06-08). Weekend market staleness fixed by the 96h override (`2fdad76`, #36 closed, H4 resolved).

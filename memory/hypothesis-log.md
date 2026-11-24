@@ -24,9 +24,14 @@
 
 ### H10 — Open-Meteo 429 storms are shared-runner-IP contention, not our concurrency (#58)
 **Position**: our cap (6) is not the cause; 10-04's storm refused our very first request. **Counter**: storms come with "Too many concurrent requests" and sometimes 5xx; a 6-wide unpaced burst did 429 locally once.
-**Method**: `scripts/probe_openmeteo_concurrency.py` via `.github/workflows/openmeteo-probe.yml` plus a local run close in time; both-clean is INCONCLUSIVE. Never dispatch within ~30 min of 16:00 UTC.
+**Method**: `scripts/probe_openmeteo_concurrency.py` via `.github/workflows/openmeteo-probe.yml` plus a local run close in time; both-clean is INCONCLUSIVE. Never dispatch while a collection run is in flight.
 **Cost, reviewed 2026-10-28**: after the 10-05 429 budget (`a1a944e`), 22 of 22 scheduled runs from 10-06 to 10-27 published (10-05's own run failed on the unrelated late-cron day roll, fixed `bb39beb`). 9 logged a `rate-limited (retry` line; one real storm (10-13 `38466658651`: 68 rejections, 31 retries) lost 1 of 11 `demand_weather_forecast` locations (`Utrecht_NL`) and still published. Cause unsettled; cost now low. If storms block publishes again, lowering the cap is the next lever.
-**Review by**: 2026-11-28, or immediately when a 429 storm blocks a publish.
+**Review by**: 2026-11-28. **Trigger fired 2026-11-20** (`44829093119`): every location got 429 `"Daily API request limit exceeded"` — a DAILY QUOTA message, not "too many concurrent". 3 weather feeds empty → critical-feed removal → drift gate blocked the publish. Our ~6-wide burst cannot spend a daily quota at 22:28Z; this favours the shared-IP position. Next lever to decide: retry-elsewhere is impossible on hosted runners, so either a paid/keyed Open-Meteo endpoint or grace the weather feeds on a quota-429.
+
+### H11 — Slot-date anchoring + an earlier, off-hour cron ends half-size day-ahead publishes (2026-11-24)
+**Position**: the 96-point entsoe publishes come from a run collecting the wrong day; anchoring COLLECTION_DATE to the cron slot (now − cron hh:mm) fixes that for any lag < 24h, and moving `0 16` → `23 13` lowers the lag. **Counter**: GitHub lag is unbounded (11-23: 10.7h, growing since Oct); some 96-point days (11-20, 11-22) may have other causes (#74 conflated two).
+**Method**: for each scheduled run from 11-24: start lag (`createdAt` − 13:23Z), the `COLLECTION_DATE=` log line, entsoe point count, and any span-shortfall issue on `wind_forecast`/`generation_forecast` (ENTSO-E A69/A71 day-ahead forecasts are due only by 18:00 Brussels — an ON-TIME 13:23Z run can precede them; if so, move the cron to ~`23 16`). Settled-yes: 7 runs, all 192 points, none crossing a wrong date. Settled-no: a 96 with the correct slot date → separate cause; lag > 24h → off-host dispatch (#67) is required, not optional.
+**Review by**: 2026-12-01. Augur (session `augur-0a`) is told the outcome.
 
 ## Dormant (full entries in `memory/archive/hypothesis-log-resolved.md`)
 

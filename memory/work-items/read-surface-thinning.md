@@ -36,7 +36,9 @@ Open hypotheses thinned: `memory/hypothesis-log.md` 24,013 → ~3.7k chars, date
 
 **Pass 3 retire, 2026-11-18:** 32 gotcha entries dated 2026-08-08 → 2026-09-10 moved verbatim to `memory/archive/gotcha-log-archive.md` (log 42,198 → ~12.5k chars). Moved by age, not judged one by one: their recurring lessons are in the Promoted table. `memory/` corpus excl. archive: 84,394 before this pass.
 
-**Next action**: (1) the gotcha log's Promoted table is now most of the log: thin its cells to pattern + count + destination, history to the archive; (2) `memory/project_active_decisions.md` (11.6k): retire decisions a test now enforces; (3) `present-empty-guard-rollout.md` (9.4k, dormant): shrink its savepoint to the two open gates. Pass 2 plan, kept for the record:
+**Pass 4, 2026-11-24:** Promoted table thinned to pattern + count + destination (full cells → `memory/archive/gotcha-promoted-history-2026-11-24.md`); 3 promoted 09-21 gotchas retired; dormant `present-empty-guard-rollout.md` (9.4k) archived. Gotcha log 12.8k → ~5.8k chars; `memory/` excl. archive 56.7k → 40394 chars.
+
+**Next action**: (1) `memory/project_active_decisions.md` (11.7k, now the largest topic file): retire decisions a test enforces, thin the rest to rule + pointer; (2) CLAUDE.md (14.0k): the Before You Start rows for CI/CD, data quality and the hook are still paragraphs — cut to pointer + one "do not"; (3) mechanize: hoist `buurt_locations` so `scripts/backfill_missed_run.py` imports it (or a test asserting they match). Pass 2 plan, kept for the record:
 1. **Architecture block (~18.8k)** is per-file narrative: incident history, dates, run IDs.
    Cut each entry to *what the file is + the one rule you must not break*; move the history
    to the module docstrings (most already carry it) or `memory/archive/`. Do not lose any
