@@ -46,7 +46,7 @@
 <!-- One line per active work item. Empty is a valid state — do not invent entries. -->
 
 - **NEXT SESSION STARTS HERE (2026-11-24 handoff).** On "continue", in order:
-  1. **Judge H11** (cron `23 13`, slot-date `COLLECTION_DATE`, shipped 2026-11-24): for each scheduled run since, note start lag, the `COLLECTION_DATE=` log line, entsoe points (want 192). Tell Augur (session `augur-0a`, via SendMessage) the result. Lag still > 8h or any run > 24h late → walk Jeroen through **#67** (off-host `workflow_dispatch` timer + liveness check; needs a workflow-scoped token on an infra host — his decision).
+  1. **Judge H11** (cron `23 13`, slot-date `COLLECTION_DATE`, shipped 2026-11-24): for each scheduled run since, note start lag, the `COLLECTION_DATE=` log line, entsoe points (want 192). Tell Augur the result (`ListAgents`; its 11-24 session `augur-0a` had ended before it heard the fix went live in `dc64c967`; if no Augur session is listed, tell Jeroen). Lag still > 8h or any run > 24h late → walk Jeroen through **#67** (off-host `workflow_dispatch` timer + liveness check; needs a workflow-scoped token on an infra host — his decision).
   2. **H10 decision** (2026-11-20 publish lost to an Open-Meteo *daily-quota* 429 on every location): keyed/paid endpoint vs grace on quota-429. Also unexplained: same run, ENTSO-E day-ahead NL/DE_LU `UpstreamNoDataError` for 11-19..11-21.
   3. **Read-surface cuts** → `memory/work-items/read-surface-thinning.md` (Next action). Jeroen wants prune/thin/mechanize/retire pushed hard.
   4. **PR #76** (Dependabot actions bumps): read checkout v6/v7 breaking changes, merge right AFTER a scheduled run publishes. Stale remote branches: confirm merged, ask before deleting.
