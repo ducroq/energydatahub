@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-24T02:44:22.846569+00:00",
+  "timestamp": "2026-11-24T23:07:08.348241+00:00",
   "overall_status": "warning",
-  "total_issues": 2,
+  "total_issues": 1,
   "datasets_collected": 24,
   "datasets_missing": [],
   "datasets_upstream_empty": [],
@@ -11,7 +11,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -21,7 +21,7 @@
       "data_type": "energy_price",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 96,
+      "data_points": 192,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -31,7 +31,7 @@
       "data_type": "energy_price",
       "source": "EnergyZero API v5.0",
       "status": "info",
-      "data_points": 24,
+      "data_points": 48,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -41,7 +41,7 @@
       "data_type": "energy_price",
       "source": "Awattar API (EPEX SPOT)",
       "status": "info",
-      "data_points": 24,
+      "data_points": 47,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -61,7 +61,7 @@
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 1440,
+      "data_points": 1302,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -71,7 +71,7 @@
       "data_type": "weather",
       "source": "Open-Meteo API (free)",
       "status": "info",
-      "data_points": 760,
+      "data_points": 722,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -120,7 +120,7 @@
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 312,
+      "data_points": 624,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -150,7 +150,7 @@
       "data_type": "offshore_wind",
       "source": "Open-Meteo API (free) - ICON/GFS global models",
       "status": "info",
-      "data_points": 2160,
+      "data_points": 1953,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -170,7 +170,7 @@
       "data_type": "load",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 192,
+      "data_points": 384,
       "checks_passed": 6,
       "checks_failed": 0,
       "issues": []
@@ -179,22 +179,11 @@
       "dataset_name": "generation_forecast",
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
-      "status": "warning",
-      "data_points": 12,
-      "checks_passed": 4,
-      "checks_failed": 1,
-      "issues": [
-        {
-          "check_name": "completeness",
-          "severity": "warning",
-          "message": "Only 12 data points (expected >= 24, 50% complete)",
-          "details": {
-            "actual": 12,
-            "expected_min": 24,
-            "completeness_ratio": 0.5
-          }
-        }
-      ]
+      "status": "info",
+      "data_points": 92,
+      "checks_passed": 5,
+      "checks_failed": 0,
+      "issues": []
     },
     {
       "dataset_name": "generation_mix",
@@ -221,7 +210,7 @@
       "data_type": "energy_production",
       "source": "NED.nl (Nationaal Energie Dashboard)",
       "status": "info",
-      "data_points": 324,
+      "data_points": 570,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -241,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 134,
+      "data_points": 135,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
