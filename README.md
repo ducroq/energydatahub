@@ -11,7 +11,7 @@ A robust Python-based system for collecting, processing, and publishing energy p
 - **Schema Registry**: Versioned data schemas (v1.0→v2.0→v2.1→v2.2→v2.3→v2.4) with automatic migration for backward-compatible reading
 - **Calendar Features**: DST-aware holiday/working-day features for NL/DE/BE/FR (electricity demand prediction)
 - **Secure Publishing**: AES-CBC encryption with HMAC-SHA256 for all published data
-- **Automated Workflows**: GitHub Actions for scheduled data collection and publishing (daily at 16:00 UTC)
+- **Automated Workflows**: GitHub Actions for scheduled data collection and publishing (daily, scheduled 13:23 UTC; GitHub often starts it hours late)
 - **High Test Coverage**: 49% code coverage with comprehensive unit and integration tests
 - **Production Ready**: Circuit breaker pattern prevents API overload, caching optimizes performance
 
@@ -83,7 +83,7 @@ Encrypted data is automatically published to GitHub Pages daily:
 
 ### Data Update Schedule
 
-- **Collection Frequency**: Daily at 16:00 UTC (18:00 CEST / 17:00 CET)
+- **Collection Frequency**: Daily, scheduled 13:23 UTC (GitHub often starts it hours late)
 - **Encryption**: All data encrypted before publishing
 - **Publishing**: Current data endpoints updated on GitHub Pages
 
@@ -301,7 +301,7 @@ Visual interface for the collected data:
 
 ```
 energyDataHub (This Repo)
-    ↓ (Daily at 16:00 UTC)
+    ↓ (Daily, scheduled 13:23 UTC)
 GitHub Pages (Encrypted JSON)
     ↓ (Webhook trigger)
 energyDataDashboard

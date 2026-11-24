@@ -20,7 +20,7 @@ The Energy Dashboard is a live web application that displays energy price foreca
 ### Key Components
 
 1. **energyDataHub** (this repository)
-   - Collects data from 7+ APIs daily at 16:00 UTC
+   - Collects data from 7+ APIs daily (scheduled 13:23 UTC)
    - Encrypts and publishes to GitHub Pages
    - Triggers dashboard rebuild via webhook
 
@@ -37,7 +37,7 @@ The Energy Dashboard is a live web application that displays energy price foreca
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  1. energyDataHub GitHub Actions (16:00 UTC daily)          │
+│  1. energyDataHub GitHub Actions (13:23 UTC daily)          │
 │     - Collects 48-hour forecast (full today + full tomorrow)│
 │     - Encrypts with AES-256-CBC                             │
 │     - Publishes to GitHub Pages                             │
@@ -76,7 +76,7 @@ The Energy Dashboard is a live web application that displays energy price foreca
 - **URL**: https://energy.jeroenveen.nl
 - **Hosted on**: Netlify
 - **Repository**: https://github.com/ducroq/energyDataDashboard
-- **Auto-updates**: Daily at 16:00 UTC (via webhook)
+- **Auto-updates**: Daily, scheduled 13:23 UTC (via webhook)
 
 ### Data Source (Backend)
 - **URL**: https://ducroq.github.io/energydatahub/
@@ -96,7 +96,7 @@ The Energy Dashboard is a live web application that displays energy price foreca
 The dashboard automatically updates daily through a webhook system:
 
 1. **energyDataHub workflow runs** (`.github/workflows/collect-data.yml`)
-   - Scheduled: Daily at 16:00 UTC (18:00 CET)
+   - Scheduled: Daily, scheduled 13:23 UTC
    - Can also be triggered manually
 
 2. **Workflow publishes data** to GitHub Pages
@@ -176,7 +176,7 @@ gh workflow run "collect-data.yml"
 **Solution**:
 1. Check when energyDataHub last ran:
    - Go to https://github.com/ducroq/energydatahub/actions
-   - Should run daily at 16:00 UTC
+   - Should run daily (scheduled 13:23 UTC)
 2. Clear cache: **Trigger deploy** → **Clear cache and deploy site**
 
 ### Webhook Not Triggering
@@ -261,7 +261,7 @@ In `.github/workflows/collect-data.yml`:
 ```yaml
 on:
   schedule:
-    - cron: '0 16 * * *'  # 16:00 UTC daily (18:00 CET)
+    - cron: '23 13 * * *'  # 13:23 UTC daily
   workflow_dispatch:       # Manual trigger allowed
 ```
 

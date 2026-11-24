@@ -2,7 +2,11 @@ name: Collect and Publish Data
 
 on:
   schedule:
-    - cron: '0 16 * * *'  # Runs daily at 16:00 UTC (18:00 CET / 20:00 CEST)
+    # Off the top of the hour (the most congested slot in GitHub's best-effort
+    # queue) and early: day-ahead clears ~12:00 UTC, and GitHub starts this
+    # cron hours late (Nov 2026: 4-11h). The slot date is derived from this
+    # expression (single numeric minute and hour only; anything else fails the run).
+    - cron: '23 13 * * *'  # 13:23 UTC daily
   workflow_dispatch:  # Allows manual triggering
 
 # Serialize Pages deployments so a retrying deploy never races a later run.
@@ -48,16 +52,25 @@ jobs:
         ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
         GIE_API_KEY: ${{ secrets.GIE_API_KEY }}
 
-      # Scheduled runs collect for the cron's UTC date, not the wall-clock
-      # Amsterdam date: GitHub starts the 16:00 UTC cron 2-6h late, and past
-      # 22:00 UTC (CEST) / 23:00 UTC (CET) the local day has already rolled,
-      # so tomorrow's day-ahead data does not exist yet (run 37381385635).
-      # Valid while the delay stays under 8h (UTC date unchanged). Manual
-      # dispatches keep the wall-clock date.
+      # Scheduled runs collect for the SLOT's UTC date, not the wall-clock
+      # date: GitHub starts the cron hours late. Past 22:00/23:00 UTC the
+      # Amsterdam day has rolled (run 37381385635), and past 00:00 UTC so has
+      # the UTC day: the 2026-11-23 slot fired at 02:42Z on 11-24 (run
+      # 45314302508), collected 11-24..11-25, and entsoe published 96 points.
+      # Subtracting the cron's own hh:mm from now gives the slot's date for any
+      # lag under 24h. Manual dispatches keep the wall-clock date.
       run: |
         if [ "${{ github.event_name }}" = "schedule" ]; then
-          export COLLECTION_DATE="$(date -u +%F)"
-          echo "Scheduled run: COLLECTION_DATE=${COLLECTION_DATE}"
+          read -r cron_min cron_hour _ <<< "${{ github.event.schedule }}"
+          # Fail loudly: an unparsable slot would silently fall back to the
+          # wall-clock date, which is the bug this replaces.
+          if ! [[ "$cron_min" =~ ^[0-9]+$ && "$cron_hour" =~ ^[0-9]+$ ]]; then
+            echo "::error::cannot derive slot date from schedule '${{ github.event.schedule }}' (single numeric minute and hour only)"
+            exit 1
+          fi
+          COLLECTION_DATE="$(date -u -d "-${cron_hour} hours -${cron_min} minutes" +%F)"
+          export COLLECTION_DATE
+          echo "Scheduled run (slot ${cron_hour}:${cron_min} UTC): COLLECTION_DATE=${COLLECTION_DATE}"
         fi
         python data_fetcher.py
 

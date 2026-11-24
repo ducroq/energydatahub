@@ -109,7 +109,7 @@ python -m pytest -m timezone
 ## Continuous Deployment
 
 ### Current Workflow (`.github/workflows/collect-data.yml`)
-- Runs daily at 16:00 UTC (or manual `workflow_dispatch`)
+- Scheduled daily at 13:23 UTC, starts hours late (or manual `workflow_dispatch`)
 - Collects energy and weather data
 - Publishes the encrypted JSON to GitHub Pages
 

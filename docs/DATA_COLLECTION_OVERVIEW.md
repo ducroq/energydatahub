@@ -8,7 +8,7 @@ This document provides a comprehensive overview of all data collected by the Ene
 ## Current Data Collection
 
 ### Collection Schedule
-- **Frequency**: Daily at 16:00 UTC (18:00 CET / 17:00 CEST)
+- **Frequency**: Daily, scheduled 13:23 UTC (GitHub often starts it hours late)
 - **Method**: GitHub Actions workflow
 - **Storage**: Timestamped JSON files + latest version for GitHub Pages
 

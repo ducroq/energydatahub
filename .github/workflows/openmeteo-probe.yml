@@ -10,8 +10,8 @@ name: Open-Meteo Concurrency Probe
 # not to add recurring load to an upstream that is already refusing us.
 # Delete the workflow once H10 is resolved.
 #
-# DO NOT DISPATCH WITHIN ~30 MINUTES OF 16:00 UTC. The daily collection runs
-# then, from the same shared runner egress pool. Under H10's own premise a
+# DO NOT DISPATCH WHILE A COLLECTION RUN IS IN FLIGHT (slot 13:23 UTC, but it
+# starts hours late: check `gh run list`). The daily collection runs from the same shared runner egress pool. Under H10's own premise a
 # probe firing alongside it would spend the budget the publish needs — and the
 # resulting storm would read as confirming H10. Closed evidentiary loop.
 #

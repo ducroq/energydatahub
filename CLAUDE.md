@@ -103,7 +103,7 @@ memory/                      # Tracked agent memory: MEMORY.md index, gotcha/hyp
                              # drift gate → span check → publish → Pages deploy (3-attempt retry) → alert
     test.yml                 # PR/push tests (Python 3.12)
     alerting-selfcheck.yml   # Manual: smoketest with secrets.PAT. Run after rotating the PAT.
-    openmeteo-probe.yml      # Manual H10 probe. Not within ~30 min of 16:00 UTC. Delete with H10.
+    openmeteo-probe.yml      # Manual H10 probe. Not while a collection run is in flight. Delete with H10.
 ```
 
 ## Key Paths

@@ -26,7 +26,7 @@
    - ✅ GitHub Actions workflow updated and tested
    - ✅ Resilient file copying (handles missing files gracefully)
    - ✅ Publishing to GitHub Pages working
-   - ✅ Daily automated collection at 16:00 UTC
+   - ✅ Daily automated collection (scheduled 13:23 UTC)
 
 ### 📊 Production Metrics
 
@@ -59,7 +59,7 @@ tennet = YOUR_API_KEY_HERE
 
 ### Data Collection Schedule
 - **Frequency:** Daily
-- **Time:** 16:00 UTC (18:00 CET / 20:00 CEST)
+- **Time:** 13:23 UTC scheduled (GitHub often starts it hours late)
 - **Workflow:** `.github/workflows/collect-data.yml`
 - **Time Range:** Yesterday to today (TenneT data has reporting delay)
 

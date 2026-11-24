@@ -170,7 +170,7 @@ def resolve_collection_day(current_time: datetime, anchor_date: str | None = Non
     from the cron's UTC date) it is midnight of THAT day in
     ``current_time``'s timezone.
 
-    Why: GitHub starts the 16:00 UTC cron 2-6h late. Run 37381385635 started
+    Why: GitHub starts the scheduled cron hours late. Run 37381385635 started
     22:16 UTC on 2026-10-05 = 00:16 Amsterdam on 10-06, so the window rolled
     to 10-06..10-07, tomorrow's day-ahead data did not exist yet,
     generation_forecast came back empty and the drift gate lost the publish.
