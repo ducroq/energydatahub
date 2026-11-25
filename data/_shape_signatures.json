@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-11-24T23:07:08+00:00",
+  "computed_at": "2026-11-25T22:38:59+00:00",
   "schema_version": "2.4",
   "feeds": {
     "energy_price_forecast.json": {
@@ -2343,7 +2343,7 @@
       "sources": null
     },
     "calendar_features.json": {
-      "shape_hash": "032b4980f3430acfe13fa2684c9c7149",
+      "shape_hash": "0ed9b8506dc94c2ab28494f16a233862",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -2410,7 +2410,15 @@
               "start_time": "str",
               "upcoming_holidays": {
                 "_kind": "list",
-                "value_shape": null
+                "value_shape": {
+                  "_kind": "dict",
+                  "keys": {
+                    "country": "str",
+                    "date": "str",
+                    "day_of_week": "str",
+                    "name": "str"
+                  }
+                }
               }
             }
           }
@@ -2420,7 +2428,7 @@
       "sources": null
     },
     "market_proxies.json": {
-      "shape_hash": "e5231b062e10a6aba4721e9f781c4133",
+      "shape_hash": "5b309eeff5f951e88306b0ad867e9f85",
       "shape_signature": {
         "_kind": "dict",
         "keys": {
@@ -2454,15 +2462,26 @@
                   "date": "str",
                   "description": "str",
                   "high": "float",
+                  "history": {
+                    "_kind": "timestamp_map",
+                    "value_shape": "float"
+                  },
                   "low": "float",
+                  "mean_30d": "float",
+                  "mean_7d": "float",
                   "name": "str",
                   "note": "str",
                   "open": "float",
                   "prev_close": "float",
                   "price": "float",
+                  "price_lag1": "float",
+                  "price_lag2": "float",
+                  "price_lag7": "float",
                   "source": "str",
                   "ticker": "str",
+                  "trend_7d": "str",
                   "units": "str",
+                  "volatility_7d": "float",
                   "volume": "int"
                 }
               },
