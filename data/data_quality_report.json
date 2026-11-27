@@ -1,11 +1,9 @@
 {
-  "timestamp": "2026-11-26T22:28:49.098252+00:00",
+  "timestamp": "2026-11-27T22:09:28.647842+00:00",
   "overall_status": "warning",
-  "total_issues": 0,
-  "datasets_collected": 23,
-  "datasets_missing": [
-    "grid_imbalance"
-  ],
+  "total_issues": 1,
+  "datasets_collected": 24,
+  "datasets_missing": [],
   "datasets_upstream_empty": [],
   "dataset_reports": [
     {
@@ -99,6 +97,25 @@
       "issues": []
     },
     {
+      "dataset_name": "grid_imbalance",
+      "data_type": "grid_imbalance",
+      "source": "TenneT TSO (tennet.eu API)",
+      "status": "warning",
+      "data_points": 288,
+      "checks_passed": 5,
+      "checks_failed": 1,
+      "issues": [
+        {
+          "check_name": "balance_delta_synthesised",
+          "severity": "warning",
+          "message": "TenneT balance_delta endpoint returned no data \u2014 balance_delta values defaulted to 0.0 and direction='unknown' across the published day. Treat as MISSING, not as a balanced grid.",
+          "details": {
+            "reason": "endpoint permanent error or empty response"
+          }
+        }
+      ]
+    },
+    {
       "dataset_name": "wind_forecast",
       "data_type": "wind_generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
@@ -163,7 +180,7 @@
       "data_type": "generation",
       "source": "ENTSO-E Transparency Platform API v1.3",
       "status": "info",
-      "data_points": 92,
+      "data_points": 88,
       "checks_passed": 5,
       "checks_failed": 0,
       "issues": []
@@ -203,7 +220,7 @@
       "data_type": "market_proxies",
       "source": "Alpha Vantage API",
       "status": "info",
-      "data_points": 28,
+      "data_points": 27,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
@@ -213,7 +230,7 @@
       "data_type": "market_history",
       "source": "Alpha Vantage / yfinance (accumulated)",
       "status": "info",
-      "data_points": 136,
+      "data_points": 138,
       "checks_passed": 4,
       "checks_failed": 0,
       "issues": []
